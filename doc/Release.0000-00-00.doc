@@ -14,6 +14,9 @@ Bug fixes.
 
 1) Documentation for the 'plot' mc operation has been corrected.
 
+2) Incorrect prior specification (not matching ccmds.net) corrected in
+   Ex_netgp-c.doc (and Ex_netgp-c.html).
+
 Known bugs and other deficiencies.
 
 1) The facility for plotting quantities using "plot" operations in xxx-mc

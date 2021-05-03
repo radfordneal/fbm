@@ -25,7 +25,7 @@ a small set, and the Automatic Relevance Determination (ARD) prior for
 input-to-hidden weights.  The network and model specifications used
 were as follows:
 
-    > net-spec clog.net 4 8 3 / ih=x0.2:0.5:0.5 bh=0.05:0.5 \
+    > net-spec clog.net 4 8 3 / ih=x0.2:0.5:1 bh=0.05:0.5 \
                                 ho=x0.05:0.5 bo=0.05:0.5
     > model-spec clog.net class
 

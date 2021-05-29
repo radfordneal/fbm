@@ -146,68 +146,76 @@ static void bias_values
    due to connections from one source layer to the current unit values for
    the destination layer. */
 
+#define ADD_CONNECTIONS(offset,omit) \
+do \
+{ int i, j; \
+  if (nd==1) \
+  { double sv[4] = { 0, 0, 0, 0 }; \
+    i = 3; \
+    while (i<ns) \
+    { if (!(omit)) sv[0] += (v[i-3] + (offset)) * w[i-3]; \
+      if (!(omit)) sv[1] += (v[i-2] + (offset)) * w[i-2]; \
+      if (!(omit)) sv[2] += (v[i-1] + (offset)) * w[i-1]; \
+      if (!(omit)) sv[3] += (v[i-0] + (offset)) * w[i-0]; \
+      i += 4; \
+    } \
+    i -= 3; \
+    *s += (sv[0] + sv[2]) + (sv[1] + sv[3]); \
+    while (i<ns) \
+    { if (!(omit)) *s += (v[i] + (offset)) * w[i]; \
+      i += 1; \
+    } \
+  } \
+  else \
+  { for (i = 0; i<ns; i++, w+=nd) \
+    { if (omit) continue; \
+      net_value tv = v[i] + (offset); \
+      if (tv==0)  \
+      { continue; \
+      } \
+      j = 3; \
+      while (j<nd) \
+      { s[j-3] += w[j-3] * tv; \
+        s[j-2] += w[j-2] * tv; \
+        s[j-1] += w[j-1] * tv; \
+        s[j-0] += w[j-0] * tv; \
+        j += 4; \
+      } \
+      j -= 3; \
+      while (j<nd) \
+      { s[j] += w[j] * tv; \
+        j += 1; \
+      } \
+    } \
+  } \
+} while (0)
+
+
 static void add_connections
 ( net_value *s,		/* Summed input for destination units to add to */
   int nd,		/* Number of destination units */
   net_value *v,		/* Values for source units */
   int ns,		/* Number of source units */
   net_param *w,		/* Connection weights */
-  net_param *t,		/* Offsets to add to source unit values */
+  net_param *off,	/* Offsets to add to source unit values */
   char *omit,		/* Omit flags, null if not present */
-  int b			/* Bit to look at in omit flags */
+  int ob		/* Bit to look at in omit flags */
 )
 {
-  net_value tv;
-  int i, j;
-
   if (omit==0)
-  {
-    if (t!=0)
-    {
-      for (i = 0; i<ns; i++)
-      { tv = v[i] + *t++;
-        j = 0;
-        do { s[j] += *w++ * tv; j += 1; } while (j<nd);
-      }
+  { if (off==0)
+    { ADD_CONNECTIONS(0,0);
     }
     else
-    {
-      for (i = 0; i<ns; i++)
-      { tv = v[i];
-        if (tv==0) 
-        { w += nd;
-          continue;
-        }
-        j = 0;
-        do { s[j] += *w++ * tv; j += 1; } while (j<nd);
-      }
+    { ADD_CONNECTIONS(*off++,0);
     }
   }
   else
-  {
-    if (t!=0)
-    {
-      for (i = 0; i<ns; i++)
-      { if ((omit[i]&b)==0)
-        { tv = v[i] + *t++;
-          j = 0;
-          do { s[j] += *w++ * tv; j += 1; } while (j<nd);
-        }
-      }
+  { if (off==0)
+    { ADD_CONNECTIONS(0,(*omit++)&ob);
     }
     else
-    {
-      for (i = 0; i<ns; i++)
-      { if ((omit[i]&b)==0)
-        { tv = v[i];
-          if (tv==0) 
-          { w += nd;
-            continue;
-          }
-          j = 0;
-          do { s[j] += *w++ * tv; j += 1; } while (j<nd);
-        }
-      }
+    { ADD_CONNECTIONS(*off++,(*omit++)&ob);
     }
   }
 }

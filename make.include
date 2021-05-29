@@ -3,7 +3,7 @@
 # You may wish to modify this file to fit your local installation.
 
 CC = gcc               # C compiler to use
-CFLAGS = -O3 -g \
+CFLAGS = -g -O3 -march=native -mtune=native \
   -Wno-logical-op-parentheses \
   -Wno-absolute-value  # Options compiling .c files to .o files
 LFLAGS =               # Options when linking .o files

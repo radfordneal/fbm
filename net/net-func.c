@@ -26,6 +26,11 @@
 #include "net.h"
 
 
+#if USE_AVX_INTRINSICS && __AVX__
+#include  <immintrin.h>
+#endif
+
+
 /* This module calculates the values of the output units in a network, given 
    values for the input units.  The values of hidden units are calculated
    along the way.  There are facilities for starting the calculation on the 
@@ -190,6 +195,116 @@ do \
   } \
 } while (0)
 
+#if USE_AVX_INTRINSICS && __AVX__ && __FMA__ && 0 /* seems to be slower?? */
+
+#define ADD_CONNECTIONS00 \
+do \
+{ int i, j; \
+  if (nd==1) \
+  { __m256d SV = _mm256_setzero_pd(); \
+    i = 3; \
+    while (i<ns) \
+    { SV = _mm256_fmadd_pd (_mm256_loadu_pd(v+i-3), \
+                            _mm256_loadu_pd(w+i-3), SV); \
+      i += 4; \
+    } \
+    __m128d S; \
+    S = _mm_add_pd (_mm256_castpd256_pd128(SV), \
+                    _mm256_extractf128_pd(SV,1)); \
+    if (i-2<ns) \
+    { S = _mm_fmadd_pd (_mm_loadu_pd(v+i-3), \
+                        _mm_loadu_pd(w+i-3), S); \
+    } \
+    S = _mm_hadd_pd(S,S); \
+    if (i<=ns) \
+    { S = _mm_fmadd_sd (_mm_load_sd(v+i-1), \
+                        _mm_load_sd(w+i-1), S); \
+    } \
+    S = _mm_add_sd (_mm_load_sd(s), S); \
+    _mm_store_sd (s, S); \
+  } \
+  else \
+  { for (i = 0; i<ns; i++, w+=nd) \
+    { net_value tv = v[i]; \
+      if (tv==0)  \
+      { continue; \
+      } \
+      j = 3; \
+      __m256d TV = _mm256_set1_pd(tv); \
+      while (j<nd) \
+      { _mm256_storeu_pd (s+j-3, _mm256_fmadd_pd (TV, \
+                           _mm256_loadu_pd(w+j-3), _mm256_loadu_pd(s+j-3))); \
+        j += 4; \
+      } \
+      if (j-2<nd) \
+      { _mm_storeu_pd (s+j-3, _mm_fmadd_pd (_mm256_castpd256_pd128(TV), \
+                        _mm_loadu_pd(w+j-3), _mm_loadu_pd(s+j-3))); \
+      } \
+      if (j<=nd) \
+      { _mm_store_sd (s+j-1, _mm_fmadd_sd (_mm256_castpd256_pd128(TV), \
+                       _mm_load_sd(w+j-3), _mm_load_sd(s+j-3))); \
+      } \
+    } \
+  } \
+} while (0)
+
+#elif USE_AVX_INTRINSICS && __AVX__
+
+#define ADD_CONNECTIONS00 \
+do \
+{ int i, j; \
+  if (nd==1) \
+  { __m256d SV = _mm256_setzero_pd(); \
+    i = 3; \
+    while (i<ns) \
+    { SV = _mm256_add_pd (SV, _mm256_mul_pd (_mm256_loadu_pd(v+i-3), \
+                                             _mm256_loadu_pd(w+i-3))); \
+      i += 4; \
+    } \
+    __m128d S; \
+    S = _mm_add_pd (_mm256_castpd256_pd128(SV), \
+                    _mm256_extractf128_pd(SV,1)); \
+    if (i-2<ns) \
+    { S = _mm_add_pd (S, _mm_mul_pd(_mm_loadu_pd(v+i-3),_mm_loadu_pd(w+i-3))); \
+    } \
+    S = _mm_hadd_pd(S,S); \
+    if (i<=ns) \
+    { S = _mm_add_sd (S, _mm_mul_sd (_mm_load_sd(v+i-1), _mm_load_sd(w+i-1))); \
+    } \
+    S = _mm_add_sd (_mm_load_sd(s), S); \
+    _mm_store_sd (s, S); \
+  } \
+  else \
+  { for (i = 0; i<ns; i++, w+=nd) \
+    { net_value tv = v[i]; \
+      if (tv==0)  \
+      { continue; \
+      } \
+      j = 3; \
+      __m256d TV = _mm256_set1_pd(tv); \
+      while (j<nd) \
+      { _mm256_storeu_pd (s+j-3, _mm256_add_pd (_mm256_loadu_pd(s+j-3), \
+                                   _mm256_mul_pd(_mm256_loadu_pd(w+j-3),TV))); \
+        j += 4; \
+      } \
+      if (j-2<nd) \
+      { _mm_storeu_pd (s+j-3, _mm_add_pd (_mm_loadu_pd(s+j-3), \
+          _mm_mul_pd (_mm_loadu_pd(w+j-3), _mm256_castpd256_pd128(TV)))); \
+      } \
+      if (j<=nd) \
+      { _mm_store_sd (s+j-1, _mm_add_sd (_mm_load_sd(s+j-1), \
+          _mm_mul_sd (_mm_load_sd(w+j-1), _mm256_castpd256_pd128(TV)))); \
+      } \
+    } \
+  } \
+} while (0)
+
+#else
+
+#define ADD_CONNECTIONS00 ADD_CONNECTIONS(0,0)
+
+#endif
+
 
 static void add_connections
 ( net_value *s,		/* Summed input for destination units to add to */
@@ -204,7 +319,7 @@ static void add_connections
 {
   if (omit==0)
   { if (off==0)
-    { ADD_CONNECTIONS(0,0);
+    { ADD_CONNECTIONS00;
     }
     else
     { ADD_CONNECTIONS(*off++,0);

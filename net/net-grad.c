@@ -123,23 +123,40 @@ do \
   int i, j; \
   if (nd==1) \
   { double d0 = d[0]; \
-    for (i = 0; i<nv; i++) \
-    { if (!(omit)) \
-      { g[i] += (v[i] + (offset)) * d0; \
-      } \
+    i = 3; \
+    while (i<nv) \
+    { if (!(omit)) g[i-3] += (v[i-3] + (offset)) * d0; \
+      if (!(omit)) g[i-2] += (v[i-2] + (offset)) * d0; \
+      if (!(omit)) g[i-1] += (v[i-1] + (offset)) * d0; \
+      if (!(omit)) g[i-0] += (v[i-0] + (offset)) * d0; \
+      i += 4; \
+    } \
+    i -= 3; \
+    while (i<nv) \
+    { if (!(omit)) g[i] += (v[i] + (offset)) * d0; \
+      i += 1; \
     } \
   } \
   else \
   { for (i = 0; i<nv; i++) \
-    { if (!(omit)) \
-      { tv = v[i] + (offset); \
-        if (tv==0)  \
-        { g += nd; \
-          continue; \
+    { if (omit) continue; \
+      tv = v[i] + (offset); \
+      if (tv!=0)  \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-3] += tv * d[j-3]; \
+          g[j-2] += tv * d[j-2]; \
+          g[j-1] += tv * d[j-1]; \
+          g[j-0] += tv * d[j-0]; \
+          j += 4; \
         } \
-        j = 0; \
-        do { *g++ += tv * d[j]; j += 1; } while (j<nd);  \
+        j -= 3; \
+        while (j<nd) \
+        { g[j] += tv * d[j]; \
+          j += 1; \
+        } \
       } \
+      g += nd; \
     } \
   } \
 } while (0)

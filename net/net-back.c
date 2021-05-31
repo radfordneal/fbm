@@ -144,20 +144,39 @@ do \
 { net_value tv; \
   int i, j; \
   if (nd==1) \
-  { for (i = 0; i<ns; i++) \
-    { if (!(omit)) \
-      { ds[i] += *w++ * dd[0]; \
-      } \
+  { double d0 = dd[0]; \
+    i = 3; \
+    while (i<ns) \
+    { if (!(omit)) ds[i-3] += *w++ * d0; \
+      if (!(omit)) ds[i-2] += *w++ * d0; \
+      if (!(omit)) ds[i-1] += *w++ * d0; \
+      if (!(omit)) ds[i-0] += *w++ * d0; \
+      i += 4; \
+    } \
+    i -= 3; \
+    while (i<ns) \
+    { if (!(omit)) ds[i] += *w++ * d0; \
+      i += 1; \
     } \
   } \
   else \
   { for (i = 0; i<ns; i++) \
-    { if (!(omit)) \
-      { tv = *w++ * dd[0]; \
-        j = 1; \
-        do { tv += *w++ * dd[j]; j += 1; } while (j<nd); \
-        ds[i] += tv; \
+    { if (omit) continue; \
+      tv = 0; \
+      j = 3; \
+      while (j<nd) \
+      { tv += *w++ * dd[j-3]; \
+        tv += *w++ * dd[j-2]; \
+        tv += *w++ * dd[j-1]; \
+        tv += *w++ * dd[j-0]; \
+        j += 4; \
       } \
+      j -= 3; \
+      while (j<nd) \
+      { tv += *w++ * dd[j]; \
+        j += 1; \
+      } \
+      ds[i] += tv; \
     } \
   } \
 } while (0)

@@ -45,7 +45,7 @@ static void zero_derivatives (net_value *, int),
    derivatives of the "error" with respect to the output units (in g->o).
    These derivatives are backpropagated to give the derivatives of the
    error with respect to the other units in the network, and with respect
-   to the summed input into the hidden units..  This is done back to hidden 
+   to the summed input into the hidden units.  This is done back to hidden 
    layer 'start', or back all the way to the inputs if 'start' is -1. */
 
 void net_back
@@ -139,6 +139,34 @@ static void zero_derivatives
    the weighted sum of derivatives due to connections from source units to 
    a given destination layer to the totals for the source layer. */
 
+#define SUM_DERIVATIVES(omit) \
+do \
+{ net_value tv; \
+  int i, j, k; \
+  if (nd==1) \
+  { k = 0; \
+    for (i = 0; i<ns; i++) \
+    { if (!(omit)) \
+      { ds[k] += *w++ * dd[0]; \
+        k += 1; \
+      } \
+    } \
+  } \
+  else \
+  { \
+    k = 0; \
+    for (i = 0; i<ns; i++) \
+    { if (!(omit)) \
+      { tv = *w++ * dd[0]; \
+        j = 1; \
+        do { tv += *w++ * dd[j]; j += 1; } while (j<nd); \
+        ds[k] += tv; \
+        k += 1; \
+      } \
+    } \
+  } \
+} while (0)
+
 static void sum_derivatives
 ( net_value *dd,	/* Derivatives with respect to destination units */
   int nd,		/* Number of destination units */
@@ -149,51 +177,10 @@ static void sum_derivatives
   int b			/* Bit to look at in omit flags */
 )
 {
-  net_value tv;
-  int i, j, k;
-
   if (omit==0)
-  {
-    if (nd==1)
-    { 
-      for (i = 0; i<ns; i++)
-      { ds[i] += *w++ * dd[0];
-      }
-    }
-    else
-    {
-      for (i = 0; i<ns; i++)
-      { tv = *w++ * dd[0];
-        j = 1;
-        do { tv += *w++ * dd[j]; j += 1; } while (j<nd);
-        ds[i] += tv;
-      }
-    }
+  { SUM_DERIVATIVES(0);
   }
   else
-  {
-    if (nd==1)
-    { k = 0;
-      for (i = 0; i<ns; i++)
-      { if ((omit[i]&b)==0)
-        { ds[k] += *w++ * dd[0];
-          k += 1;
-        }
-      }
-    }
-    else
-    {
-      k = 0;
-      for (i = 0; i<ns; i++)
-      { if ((omit[i]&b)==0)
-        { tv = *w++ * dd[0];
-          j = 1;
-          do { tv += *w++ * dd[j]; j += 1; } while (j<nd);
-          ds[k] += tv;
-          k += 1;
-        }
-      }
-    }
+  { SUM_DERIVATIVES((*omit++)&b);
   }
-
 }

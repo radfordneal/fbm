@@ -243,7 +243,7 @@ do \
       } \
       if (j<=nd) \
       { _mm_store_sd (s+j-1, _mm_fmadd_sd (_mm256_castpd256_pd128(TV), \
-                       _mm_load_sd(w+j-3), _mm_load_sd(s+j-3))); \
+                       _mm_load_sd(w+j-1), _mm_load_sd(s+j-1))); \
       } \
     } \
   } \

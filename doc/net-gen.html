@@ -10,7 +10,7 @@ file, with the architecture specified in that log file.
 
 Usage:
 
-    net-gen log-file [ max-index ] [ "fix" [ value [ out-value ] ] ]
+    net-gen log-file [ max-index ] [ "fix" [ value [ out-value ] ] [ "-" ] ]
 
 The networks with indexes from zero up to the indicated index are
 generated (the default is max-index of zero).  If the log file already
@@ -21,12 +21,15 @@ If just max-index is specified, the networks are generated randomly
 from the prior, using the random number seed taken from the log file
 (eg, as specified by rand-seed).
 
-If the "fix" option is given, the networks are not generated at
-random, but rather the parameters are set to zero and the hyperparameters 
-are set to the value given.  If a special "out-value" is also given, it
-is used for weights on connections into the output units.  If no value 
-is given, the hyperparameters are each set to the top-level width for that 
-hyperparameter.  This option is useful for initializing iterative programs.
+The "fix" option is useful for initializing iterative programs, and
+for testing.  When "fix" is given, the networks are not generated at
+random, but rather the hyperparameters are set to 'value', except that
+hyperparameters controlling connections to outputs are set to
+'out-value', if specified.  If 'value' is not specified, the
+hyperparameters are each set to the top-level width for that
+hyperparameter (and this is also true if the prior does not allow any
+other value).  All parameters are set to zero, unless "-" is the last
+argument, in which case they are read from standard input.
 
 No data model is required to use net-gen, but if a model is specified,
 the hyperparameters with it are generated as well.

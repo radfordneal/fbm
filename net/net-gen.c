@@ -26,6 +26,12 @@
 #include "net.h"
 #include "rand.h"
 
+static void usage()
+{ fprintf(stderr,
+"Usage: net-gen log-file [ max-index ] [ \"fix\" [ value [ out-value ] ] [ \"-\" ] ]\n");
+  exit(1);
+}
+
 
 /* MAIN PROGRAM. */
 
@@ -44,7 +50,7 @@ int main
   net_sigmas  sigmas, *s = &sigmas;
   net_params  params, *w = &params;
 
-  int max_index, index, fix;
+  int max_index, index, fix, has_out_value, from_stdin;
   double value, out_value;
 
   log_file logf;
@@ -54,21 +60,34 @@ int main
 
   max_index = 0;
   value = out_value = 0;
+  from_stdin = 0;
 
-  fix = argc>2 && strcmp(argv[2],"fix")==0 ? 2
-      : argc>3 && strcmp(argv[3],"fix")==0 ? 3
-      : argc;
-
-  if (argc<2 || argc>fix+3
-   || fix>2 && (max_index = atoi(argv[2]))<=0 && strcmp(argv[2],"0")!=0
-   || fix+1<argc && (value = out_value = atof(argv[fix+1]))<=0
-   || fix+2<argc && (out_value = atof(argv[fix+2]))<=0)
-  { fprintf(stderr,
-"Usage: net-gen log-file [ max-index ] [ \"fix\" [ value [ out-value ] ] ]\n");
-    exit(1);
+  if (argc<2) 
+  { usage();
   }
 
   logf.file_name = argv[1];
+
+  if (argc>2 && strcmp(argv[2],"fix")!=0)
+  { if ((max_index = atoi(argv[2]))<=0 && strcmp(argv[2],"0")!=0)
+    { usage();
+    }
+    argv += 1;
+    argc -= 1;
+  }
+
+  fix = argc>2 && strcmp(argv[2],"fix")==0;
+  if (fix)
+  { if (strcmp(argv[argc-1],"-")==0)
+    { from_stdin = 1; 
+      argc -= 1;
+    }
+    if (argc>3 && (value = out_value = atof(argv[3]))<=0
+     || argc>4 && (out_value = atof(argv[4]))<=0
+     || argc>5)
+    { usage();
+    }
+  }
 
   /* Open log file and read network architecture and priors. */
 
@@ -102,6 +121,25 @@ int main
   net_setup_sigma_pointers (s, a, flgs, m);
   net_setup_param_pointers (w, a, flgs);
 
+  /* Read weights from standard input, if doing that. */
+
+  net_param *wts;
+  if (from_stdin)
+  { int i;
+    wts = chk_alloc (w->total_params, sizeof (net_param));
+    for (i = 0; i<w->total_params; i++)
+    { if (scanf("%lf",&wts[i]) != 1) 
+      { fprintf(stderr,"Error reading weights: %d of %d\n",i,w->total_params);
+        exit(2);
+      }
+    }
+    char junk = 0;
+    if (scanf(" %c",&junk) != 0 && junk != 0) 
+    { fprintf(stderr,"Junk present after weights: '%c'\n",junk);
+      exit(2);
+    }
+  }
+
   /* Read last records in log file to see where to start, and to get random
      number state left after last network was generated. */
 
@@ -124,7 +162,7 @@ int main
 
   for ( ; index<=max_index; index++)
   {
-    net_prior_generate (w, s, a, flgs, m, p, argv[fix]!=0, value, out_value);
+    net_prior_generate (w, s, a, flgs, m, p, fix, value, out_value);
 
     logf.header.type = 'S';
     logf.header.index = index;
@@ -134,9 +172,9 @@ int main
     logf.header.type = 'W';
     logf.header.index = index;
     logf.header.size = w->total_params * sizeof (net_param);
-    log_file_append (&logf, w->param_block);
+    log_file_append (&logf, from_stdin ? wts : w->param_block);
 
-    if (argv[fix]==0)
+    if (!fix)
     { logf.header.type = 'r';
       logf.header.index = index;
       logf.header.size = sizeof (rand_state);

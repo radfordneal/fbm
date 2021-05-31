@@ -142,7 +142,10 @@ do \
     { o = (offset); \
       if (omit) continue; \
       tv = v[i] + o; \
-      if (tv!=0)  \
+      if (tv==0)  \
+      { g += nd; \
+      } \
+      else \
       { j = 3; \
         while (j<nd) \
         { *g++ += tv * d[j-3]; \
@@ -157,7 +160,6 @@ do \
           j += 1; \
         } \
       } \
-      g += nd; \
     } \
   } \
 } while (0)

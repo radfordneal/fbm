@@ -196,7 +196,7 @@ do \
   } \
 } while (0)
 
-#if USE_AVX_INTRINSICS && __AVX__ && __FMA__ && 0 /* seems to be slower?? */
+#if USE_AVX_INTRINSICS && __AVX__ && __FMA__
 
 #define ADD_CONNECTIONS00 \
 do \

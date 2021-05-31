@@ -165,17 +165,18 @@ do \
       tv = 0; \
       j = 3; \
       while (j<nd) \
-      { tv += *w++ * dd[j-3]; \
-        tv += *w++ * dd[j-2]; \
-        tv += *w++ * dd[j-1]; \
-        tv += *w++ * dd[j-0]; \
+      { tv += w[j-3] * dd[j-3]; \
+        tv += w[j-2] * dd[j-2]; \
+        tv += w[j-1] * dd[j-1]; \
+        tv += w[j-0] * dd[j-0]; \
         j += 4; \
       } \
       j -= 3; \
       while (j<nd) \
-      { tv += *w++ * dd[j]; \
+      { tv += w[j] * dd[j]; \
         j += 1; \
       } \
+      w += nd; \
       ds[i] += tv; \
     } \
   } \

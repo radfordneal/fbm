@@ -180,18 +180,19 @@ do \
       if (tv!=0)  \
       { j = 3; \
         while (j<nd) \
-        { s[j-3] += *w++ * tv; \
-          s[j-2] += *w++ * tv; \
-          s[j-1] += *w++ * tv; \
-          s[j-0] += *w++ * tv; \
+        { s[j-3] += w[j-3] * tv; \
+          s[j-2] += w[j-2] * tv; \
+          s[j-1] += w[j-1] * tv; \
+          s[j-0] += w[j-0] * tv; \
           j += 4; \
         } \
         j -= 3; \
         while (j<nd) \
-        { s[j] += *w++ * tv; \
+        { s[j] += w[j] * tv; \
           j += 1; \
         } \
       } \
+      w += nd; \
     } \
   } \
 } while (0)

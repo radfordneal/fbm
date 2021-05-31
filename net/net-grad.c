@@ -142,24 +142,22 @@ do \
     { o = (offset); \
       if (omit) continue; \
       tv = v[i] + o; \
-      if (tv==0)  \
-      { g += nd; \
-      } \
-      else \
+      if (tv!=0)  \
       { j = 3; \
         while (j<nd) \
-        { *g++ += tv * d[j-3]; \
-          *g++ += tv * d[j-2]; \
-          *g++ += tv * d[j-1]; \
-          *g++ += tv * d[j-0]; \
+        { g[j-3] += tv * d[j-3]; \
+          g[j-2] += tv * d[j-2]; \
+          g[j-1] += tv * d[j-1]; \
+          g[j-0] += tv * d[j-0]; \
           j += 4; \
         } \
         j -= 3; \
         while (j<nd) \
-        { *g++ += tv * d[j]; \
+        { g[j] += tv * d[j]; \
           j += 1; \
         } \
       } \
+      g += nd; \
     } \
   } \
 } while (0)

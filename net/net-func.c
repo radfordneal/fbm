@@ -172,25 +172,25 @@ do \
     } \
   } \
   else \
-  { for (i = 0; i<ns; i++, w+=nd) \
+  { for (i = 0; i<ns; i++) \
     { if (omit) continue; \
       net_value tv = v[i] + (offset); \
-      if (tv==0)  \
-      { continue; \
+      if (tv!=0)  \
+      { j = 3; \
+        while (j<nd) \
+        { s[j-3] += w[j-3] * tv; \
+          s[j-2] += w[j-2] * tv; \
+          s[j-1] += w[j-1] * tv; \
+          s[j-0] += w[j-0] * tv; \
+          j += 4; \
+        } \
+        j -= 3; \
+        while (j<nd) \
+        { s[j] += w[j] * tv; \
+          j += 1; \
+        } \
       } \
-      j = 3; \
-      while (j<nd) \
-      { s[j-3] += w[j-3] * tv; \
-        s[j-2] += w[j-2] * tv; \
-        s[j-1] += w[j-1] * tv; \
-        s[j-0] += w[j-0] * tv; \
-        j += 4; \
-      } \
-      j -= 3; \
-      while (j<nd) \
-      { s[j] += w[j] * tv; \
-        j += 1; \
-      } \
+      w += nd; \
     } \
   } \
 } while (0)

@@ -117,10 +117,37 @@ static void add_grad1
 
 /* ADD TO GRADIENT FROM PRODUCT OF UNIT VALUE AND UNIT DERIVATIVE. */
 
+#define ADD_GRAD2(offset,omit) \
+do \
+{ double tv; \
+  int i, j; \
+  if (nd==1) \
+  { double d0 = d[0]; \
+    for (i = 0; i<nv; i++) \
+    { if (!(omit)) \
+      { g[i] += (v[i] + (offset)) * d0; \
+      } \
+    } \
+  } \
+  else \
+  { for (i = 0; i<nv; i++) \
+    { if (!(omit)) \
+      { tv = v[i] + (offset); \
+        if (tv==0)  \
+        { g += nd; \
+          continue; \
+        } \
+        j = 0; \
+        do { *g++ += tv * d[j]; j += 1; } while (j<nd);  \
+      } \
+    } \
+  } \
+} while (0)
+
 static void add_grad2
 ( net_param *g,		/* Array of derivatives to add to */
   net_value *v,		/* Source unit values */
-  net_param *t,		/* Offsets for source units, or zero if no offsets */
+  net_param *off,	/* Offsets for source units, or zero if no offsets */
   int nv,		/* Number of source units */
   net_value *d,		/* Derivatives with respect to destination units */
   int nd,		/* Number of destination units */
@@ -132,53 +159,19 @@ static void add_grad2
   int i, j;
 
   if (omit==0)
-  {
-    if (t!=0)
-    {
-      for (i = 0; i<nv; i++)
-      { tv = v[i] + *t++;
-        j = 0;
-        do { *g++ += tv * d[j]; j += 1; } while (j<nd); 
-      }
+  { if (off==0)
+    { ADD_GRAD2(0,0);
     }
     else
-    {
-      for (i = 0; i<nv; i++)
-      { tv = v[i];
-        if (tv==0) 
-        { g += nd;
-          continue;
-        }
-        j = 0;
-        do { *g++ += tv * d[j]; j += 1; } while (j<nd); 
-      }
+    { ADD_GRAD2(*off++,0);
     }
   }
   else
-  {
-    if (t!=0)
-    {
-      for (i = 0; i<nv; i++)
-      { if ((omit[i]&b)==0)
-        { tv = v[i] + *t++;
-          j = 0;
-          do { *g++ += tv * d[j]; j += 1; } while (j<nd); 
-        }
-      }
+  { if (off==0)
+    { ADD_GRAD2(0,(*omit++)&b);
     }
     else
-    {
-      for (i = 0; i<nv; i++)
-      { if ((omit[i]&b)==0)
-        { tv = v[i];
-          if (tv==0) 
-          { g += nd;
-            continue;
-          }
-          j = 0;
-          do { *g++ += tv * d[j]; j += 1; } while (j<nd); 
-        }
-      }
+    { ADD_GRAD2(*off++,(*omit++)&b);
     }
   }
 }

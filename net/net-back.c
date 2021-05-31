@@ -142,26 +142,21 @@ static void zero_derivatives
 #define SUM_DERIVATIVES(omit) \
 do \
 { net_value tv; \
-  int i, j, k; \
+  int i, j; \
   if (nd==1) \
-  { k = 0; \
-    for (i = 0; i<ns; i++) \
+  { for (i = 0; i<ns; i++) \
     { if (!(omit)) \
-      { ds[k] += *w++ * dd[0]; \
-        k += 1; \
+      { ds[i] += *w++ * dd[0]; \
       } \
     } \
   } \
   else \
-  { \
-    k = 0; \
-    for (i = 0; i<ns; i++) \
+  { for (i = 0; i<ns; i++) \
     { if (!(omit)) \
       { tv = *w++ * dd[0]; \
         j = 1; \
         do { tv += *w++ * dd[j]; j += 1; } while (j<nd); \
-        ds[k] += tv; \
-        k += 1; \
+        ds[i] += tv; \
       } \
     } \
   } \

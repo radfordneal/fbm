@@ -154,43 +154,44 @@ static void bias_values
 #define ADD_CONNECTIONS(offset,omit) \
 do \
 { int i, j; \
+  double o; \
   if (nd==1) \
   { double sv[4] = { 0, 0, 0, 0 }; \
     i = 3; \
     while (i<ns) \
-    { if (!(omit)) sv[0] += (v[i-3] + (offset)) * w[i-3]; \
-      if (!(omit)) sv[1] += (v[i-2] + (offset)) * w[i-2]; \
-      if (!(omit)) sv[2] += (v[i-1] + (offset)) * w[i-1]; \
-      if (!(omit)) sv[3] += (v[i-0] + (offset)) * w[i-0]; \
+    { o = (offset); if (!(omit)) sv[0] += (v[i-3] + o) * *w++; \
+      o = (offset); if (!(omit)) sv[1] += (v[i-2] + o) * *w++; \
+      o = (offset); if (!(omit)) sv[2] += (v[i-1] + o) * *w++; \
+      o = (offset); if (!(omit)) sv[3] += (v[i-0] + o) * *w++; \
       i += 4; \
     } \
     i -= 3; \
     *s += (sv[0] + sv[2]) + (sv[1] + sv[3]); \
     while (i<ns) \
-    { if (!(omit)) *s += (v[i] + (offset)) * w[i]; \
+    { o = (offset); if (!(omit)) *s += (v[i] + o) * *w++; \
       i += 1; \
     } \
   } \
   else \
   { for (i = 0; i<ns; i++) \
-    { if (omit) continue; \
-      net_value tv = v[i] + (offset); \
+    { o = (offset); \
+      if (omit) continue; \
+      net_value tv = v[i] + o; \
       if (tv!=0)  \
       { j = 3; \
         while (j<nd) \
-        { s[j-3] += w[j-3] * tv; \
-          s[j-2] += w[j-2] * tv; \
-          s[j-1] += w[j-1] * tv; \
-          s[j-0] += w[j-0] * tv; \
+        { s[j-3] += *w++ * tv; \
+          s[j-2] += *w++ * tv; \
+          s[j-1] += *w++ * tv; \
+          s[j-0] += *w++ * tv; \
           j += 4; \
         } \
         j -= 3; \
         while (j<nd) \
-        { s[j] += w[j] * tv; \
+        { s[j] += *w++ * tv; \
           j += 1; \
         } \
       } \
-      w += nd; \
     } \
   } \
 } while (0)

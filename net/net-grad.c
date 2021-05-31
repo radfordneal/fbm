@@ -119,40 +119,41 @@ static void add_grad1
 
 #define ADD_GRAD2(offset,omit) \
 do \
-{ double tv; \
+{ double tv, o; \
   int i, j; \
   if (nd==1) \
   { double d0 = d[0]; \
     i = 3; \
     while (i<nv) \
-    { if (!(omit)) g[i-3] += (v[i-3] + (offset)) * d0; \
-      if (!(omit)) g[i-2] += (v[i-2] + (offset)) * d0; \
-      if (!(omit)) g[i-1] += (v[i-1] + (offset)) * d0; \
-      if (!(omit)) g[i-0] += (v[i-0] + (offset)) * d0; \
+    { o = (offset); if (!(omit)) *g++ += (v[i-3] + o) * d0; \
+      o = (offset); if (!(omit)) *g++ += (v[i-2] + o) * d0; \
+      o = (offset); if (!(omit)) *g++ += (v[i-1] + o) * d0; \
+      o = (offset); if (!(omit)) *g++ += (v[i-0] + o) * d0; \
       i += 4; \
     } \
     i -= 3; \
     while (i<nv) \
-    { if (!(omit)) g[i] += (v[i] + (offset)) * d0; \
+    { o = (offset); if (!(omit)) *g++ += (v[i] + o) * d0; \
       i += 1; \
     } \
   } \
   else \
   { for (i = 0; i<nv; i++) \
-    { if (omit) continue; \
-      tv = v[i] + (offset); \
+    { o = (offset); \
+      if (omit) continue; \
+      tv = v[i] + o; \
       if (tv!=0)  \
       { j = 3; \
         while (j<nd) \
-        { g[j-3] += tv * d[j-3]; \
-          g[j-2] += tv * d[j-2]; \
-          g[j-1] += tv * d[j-1]; \
-          g[j-0] += tv * d[j-0]; \
+        { *g++ += tv * d[j-3]; \
+          *g++ += tv * d[j-2]; \
+          *g++ += tv * d[j-1]; \
+          *g++ += tv * d[j-0]; \
           j += 4; \
         } \
         j -= 3; \
         while (j<nd) \
-        { g[j] += tv * d[j]; \
+        { *g++ += tv * d[j]; \
           j += 1; \
         } \
       } \

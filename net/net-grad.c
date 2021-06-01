@@ -26,6 +26,11 @@
 #include "net.h"
 
 
+#if USE_AVX_INTRINSICS && __AVX__
+#include  <immintrin.h>
+#endif
+
+
 /* This module finds the derivatives of the "error" on the training set
    with respect to the network parameters, using the backpropagated 
    derivatives of the error for each training case with respect to the
@@ -162,6 +167,108 @@ do \
   } \
 } while (0)
 
+#if USE_AVX_INTRINSICS && __AVX__ && __FMA__
+
+#define ADD_GRAD2_00 \
+do \
+{ int i, j; \
+  if (nd==1) \
+  { __m256d D0 = _mm256_set1_pd(d[0]); \
+    i = 3; \
+    while (i<nv) \
+    { _mm256_storeu_pd (g+i-3, _mm256_fmadd_pd (D0, _mm256_loadu_pd(v+i-3), \
+                                                    _mm256_loadu_pd(g+i-3))); \
+      i += 4; \
+    } \
+    i -= 2; \
+    if (i<nv) \
+    { _mm_storeu_pd (g+i-1, _mm_fmadd_pd (_mm256_castpd256_pd128(D0), \
+                               _mm_loadu_pd(v+i-1), _mm_loadu_pd(g+i-1))); \
+      i += 2; \
+    } \
+    if (i<=nv) \
+    { _mm_store_sd (g+i-1, _mm_fmadd_sd (_mm256_castpd256_pd128(D0), \
+                              _mm_load_sd(v+i-1), _mm_load_sd(g+i-1))); \
+    } \
+  } \
+  else \
+  { for (i = 0; i<nv; i++) \
+    { if (v[i]!=0)  \
+      { __m256d TV = _mm256_set1_pd(v[i]); \
+        j = 3; \
+        while (j<nd) \
+        { _mm256_storeu_pd (g+j-3, _mm256_fmadd_pd (TV, \
+                _mm256_loadu_pd(d+j-3), _mm256_loadu_pd(g+j-3))); \
+          j += 4; \
+        } \
+        j -= 2; \
+        if (j<nd) \
+        { _mm_storeu_pd (g+j-1, _mm_fmadd_pd (_mm256_castpd256_pd128(TV), \
+                _mm_loadu_pd(d+j-1), _mm_loadu_pd(g+j-1))); \
+          j += 2; \
+        } \
+        if (j<=nd) \
+        { _mm_store_sd (g+j-1, _mm_fmadd_sd (_mm256_castpd256_pd128(TV), \
+                _mm_load_sd(d+j-1), _mm_load_sd(g+j-1))); \
+        } \
+      } \
+      g += nd; \
+    } \
+  } \
+} while (0)
+
+#elif USE_AVX_INTRINSICS && __AVX__
+
+#define ADD_GRAD2_00 \
+do \
+{ int i, j; \
+  if (nd==1) \
+  { __m256d D0 = _mm256_set1_pd(d[0]); \
+    i = 3; \
+    while (i<nv) \
+    { _mm256_storeu_pd (g+i-3, _mm256_add_pd (_mm256_loadu_pd(g+i-3), \
+         _mm256_mul_pd (D0, _mm256_loadu_pd(v+i-3)))); \
+      i += 4; \
+    } \
+    i -= 2; \
+    if (i<nv) \
+    { _mm_storeu_pd (g+i-1, _mm_add_pd (_mm_loadu_pd(g+i-1), \
+         _mm_mul_pd (_mm256_castpd256_pd128(D0), _mm_loadu_pd(v+i-1)))); \
+      i += 2; \
+    } \
+    if (i<=nv) \
+    { _mm_store_sd (g+i-1, _mm_add_sd (_mm_load_sd(g+i-1), \
+         _mm_mul_sd (_mm256_castpd256_pd128(D0), _mm_load_sd(v+i-1)))); \
+    } \
+  } \
+  else \
+  { for (i = 0; i<nv; i++) \
+    { if (v[i]!=0)  \
+      { __m256d TV = _mm256_set1_pd(v[i]); \
+        j = 3; \
+        while (j<nd) \
+        { _mm256_storeu_pd (g+j-3, _mm256_add_pd (_mm256_loadu_pd(g+j-3), \
+             _mm256_mul_pd (TV, _mm256_loadu_pd(d+j-3)))); \
+          j += 4; \
+        } \
+        j -= 2; \
+        if (j<nd) \
+        { _mm_storeu_pd (g+j-1, _mm_add_pd (_mm_loadu_pd(g+j-1), \
+             _mm_mul_pd (_mm256_castpd256_pd128(TV), _mm_loadu_pd(d+j-1)))); \
+          j += 2; \
+        } \
+        if (j<=nd) \
+        { _mm_store_sd (g+j-1, _mm_add_pd (_mm_load_sd(g+j-1), \
+             _mm_mul_sd (_mm256_castpd256_pd128(TV), _mm_load_sd(d+j-1)))); \
+        } \
+      } \
+      g += nd; \
+    } \
+  } \
+} while (0)
+
+#else
+
 #define ADD_GRAD2_00 \
 do \
 { double tv; \
@@ -204,6 +311,8 @@ do \
     } \
   } \
 } while (0)
+
+#endif
 
 static void add_grad2
 ( net_param *g,		/* Array of derivatives to add to */

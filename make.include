@@ -7,6 +7,6 @@ CC = gcc               # C compiler to use
 CFLAGS = -g -O3 -march=native -mtune=native -ffp-contract=on \
   -Wno-logical-op-parentheses \
   -Wno-absolute-value \
-  #-DUSE_AVX_INTRINSICS \
+  -DUSE_AVX_INTRINSICS \
 
 LFLAGS =               # Options when linking .o files

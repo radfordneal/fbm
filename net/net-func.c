@@ -213,14 +213,14 @@ do \
     __m128d S; \
     S = _mm_add_pd (_mm256_castpd256_pd128(SV), \
                     _mm256_extractf128_pd(SV,1)); \
-    if (i-2<ns) \
-    { S = _mm_fmadd_pd (_mm_loadu_pd(v+i-3), \
-                        _mm_loadu_pd(w+i-3), S); \
+    i -= 2; \
+    if (i<ns) \
+    { S = _mm_fmadd_pd (_mm_loadu_pd(v+i-1), _mm_loadu_pd(w+i-1), S); \
+      i += 2; \
     } \
     S = _mm_hadd_pd(S,S); \
     if (i<=ns) \
-    { S = _mm_fmadd_sd (_mm_load_sd(v+i-1), \
-                        _mm_load_sd(w+i-1), S); \
+    { S = _mm_fmadd_sd (_mm_load_sd(v+i-1), _mm_load_sd(w+i-1), S); \
     } \
     S = _mm_add_sd (_mm_load_sd(s), S); \
     _mm_store_sd (s, S); \
@@ -238,9 +238,11 @@ do \
                            _mm256_loadu_pd(w+j-3), _mm256_loadu_pd(s+j-3))); \
         j += 4; \
       } \
-      if (j-2<nd) \
-      { _mm_storeu_pd (s+j-3, _mm_fmadd_pd (_mm256_castpd256_pd128(TV), \
-                        _mm_loadu_pd(w+j-3), _mm_loadu_pd(s+j-3))); \
+      j -= 2; \
+      if (j<nd) \
+      { _mm_storeu_pd (s+j-1, _mm_fmadd_pd (_mm256_castpd256_pd128(TV), \
+                        _mm_loadu_pd(w+j-1), _mm_loadu_pd(s+j-1))); \
+        j += 2; \
       } \
       if (j<=nd) \
       { _mm_store_sd (s+j-1, _mm_fmadd_sd (_mm256_castpd256_pd128(TV), \
@@ -266,8 +268,10 @@ do \
     __m128d S; \
     S = _mm_add_pd (_mm256_castpd256_pd128(SV), \
                     _mm256_extractf128_pd(SV,1)); \
-    if (i-2<ns) \
-    { S = _mm_add_pd (S, _mm_mul_pd(_mm_loadu_pd(v+i-3),_mm_loadu_pd(w+i-3))); \
+    i -= 2; \
+    if (i<ns) \
+    { S = _mm_add_pd (S, _mm_mul_pd(_mm_loadu_pd(v+i-1),_mm_loadu_pd(w+i-1))); \
+      i += 2; \
     } \
     S = _mm_hadd_pd(S,S); \
     if (i<=ns) \
@@ -289,9 +293,11 @@ do \
                                    _mm256_mul_pd(_mm256_loadu_pd(w+j-3),TV))); \
         j += 4; \
       } \
-      if (j-2<nd) \
-      { _mm_storeu_pd (s+j-3, _mm_add_pd (_mm_loadu_pd(s+j-3), \
-          _mm_mul_pd (_mm_loadu_pd(w+j-3), _mm256_castpd256_pd128(TV)))); \
+      j -= 2; \
+      if (j<nd) \
+      { _mm_storeu_pd (s+j-1, _mm_add_pd (_mm_loadu_pd(s+j-1), \
+          _mm_mul_pd (_mm_loadu_pd(w+j-1), _mm256_castpd256_pd128(TV)))); \
+        j += 2; \
       } \
       if (j<=nd) \
       { _mm_store_sd (s+j-1, _mm_add_sd (_mm_load_sd(s+j-1), \
@@ -306,7 +312,6 @@ do \
 #define ADD_CONNECTIONS00 ADD_CONNECTIONS(0,0)
 
 #endif
-
 
 static void add_connections
 ( net_value *s,		/* Summed input for destination units to add to */

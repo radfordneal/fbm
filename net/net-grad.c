@@ -162,6 +162,49 @@ do \
   } \
 } while (0)
 
+#define ADD_GRAD2_00 \
+do \
+{ double tv; \
+  int i, j; \
+  if (nd==1) \
+  { double d0 = d[0]; \
+    i = 3; \
+    while (i<nv) \
+    { g[i-3] += v[i-3] * d0; \
+      g[i-2] += v[i-2] * d0; \
+      g[i-1] += v[i-1] * d0; \
+      g[i-0] += v[i-0] * d0; \
+      i += 4; \
+    } \
+    i -= 3; \
+    while (i<nv) \
+    { g[i] += v[i] * d0; \
+      i += 1; \
+    } \
+  } \
+  else \
+  { for (i = 0; i<nv; i++) \
+    { tv = v[i]; \
+      if (tv!=0)  \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-3] += tv * d[j-3]; \
+          g[j-2] += tv * d[j-2]; \
+          g[j-1] += tv * d[j-1]; \
+          g[j-0] += tv * d[j-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        while (j<nd) \
+        { g[j] += tv * d[j]; \
+          j += 1; \
+        } \
+      } \
+      g += nd; \
+    } \
+  } \
+} while (0)
+
 static void add_grad2
 ( net_param *g,		/* Array of derivatives to add to */
   net_value *v,		/* Source unit values */
@@ -170,7 +213,7 @@ static void add_grad2
   net_value *d,		/* Derivatives with respect to destination units */
   int nd,		/* Number of destination units */
   char *omit,		/* Omit flags, null if not present */
-  int b			/* Bit to look at in omit flags */
+  int ob		/* Bit to look at in omit flags */
 )
 { 
   double tv;
@@ -178,7 +221,7 @@ static void add_grad2
 
   if (omit==0)
   { if (off==0)
-    { ADD_GRAD2(0,0);
+    { ADD_GRAD2_00;
     }
     else
     { ADD_GRAD2(*off++,0);
@@ -186,10 +229,10 @@ static void add_grad2
   }
   else
   { if (off==0)
-    { ADD_GRAD2(0,(*omit++)&b);
+    { ADD_GRAD2(0,(*omit++)&ob);
     }
     else
-    { ADD_GRAD2(*off++,(*omit++)&b);
+    { ADD_GRAD2(*off++,(*omit++)&ob);
     }
   }
 }

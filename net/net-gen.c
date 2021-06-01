@@ -129,7 +129,7 @@ int main
     wts = chk_alloc (w->total_params, sizeof (net_param));
     for (i = 0; i<w->total_params; i++)
     { if (scanf("%lf",&wts[i]) != 1) 
-      { fprintf(stderr,"Error reading weights: %d of %d\n",i,w->total_params);
+      { fprintf(stderr,"Error reading weights: %d of %d\n",i+1,w->total_params);
         exit(2);
       }
     }

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo " "; echo "--- A"
+echo " "; echo "--- A"; echo " "
 
 net-spec log 3 2 / io=3 bo=4
 data-spec log 3 2 / "%echo 100 200 300 17 18" .
@@ -9,11 +9,11 @@ net-gen log fix - <<end
 2 3 4 5 6 7 40 50
 end
 net-display log 0
-net-tbl -h x0@x1@x2@x3@x4@ log 0
+net-tbl -h x0@x1@x2@ log 0
 net-tbl -h o0@o1@ log 0
 net-grad-test log 0 0.001
 
-echo " "; echo "--- B"
+echo " "; echo "--- B"; echo " "
 
 net-spec log 5 2 / io=3 bo=4
 data-spec log 5 2 / "%echo 100 0 200 0 300 17 18" .
@@ -26,7 +26,7 @@ net-tbl -h x0@x1@x2@x3@x4@ log 0
 net-tbl -h o0@o1@ log 0
 net-grad-test log 0 0.001
 
-echo " "; echo "--- C"
+echo " "; echo "--- C"; echo " "
 
 net-spec log 5 1 / io=3 bo=4
 data-spec log 5 1 / "%echo 100 7 200 8 300 17 18" .

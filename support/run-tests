@@ -1,0 +1,10 @@
+#!/bin/bash
+
+test-ti >test-ti.out
+diff test-ti.out test-ti.save
+
+test-func >test-func.out
+diff test-func.out test-func.save
+
+test-func2 >test-func2.out
+diff test-func2.out test-func2.save

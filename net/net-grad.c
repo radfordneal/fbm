@@ -69,27 +69,29 @@ void net_grad
 
   for (l = 0; l<a->N_layers; l++)
   { 
+    int N_hidden = a->N_hidden[l];
+
     if (a->has_bh[l]) 
-    { add_grad1 (g->bh[l], d->s[l], a->N_hidden[l]);
+    { add_grad1 (g->bh[l], d->s[l], N_hidden);
     }
 
     if (a->has_ih[l])
     { add_grad2 (g->ih[l], v->i, a->has_ti ? w->ti : 0, a->N_inputs, 
-                 d->s[l], a->N_hidden[l], flgs?flgs->omit:0, 1<<(l+1));
+                 d->s[l], N_hidden, flgs?flgs->omit:0, 1<<(l+1));
     }
 
     if (l>0 && a->has_hh[l-1])
     { add_grad2 (g->hh[l-1], v->h[l-1], a->has_th[l-1] ? w->th[l-1] : 0,
-                 a->N_hidden[l-1], d->s[l], a->N_hidden[l], (char *) 0, 0);
+                 a->N_hidden[l-1], d->s[l], N_hidden, (char *) 0, 0);
     }
 
     if (a->has_th[l]) 
-    { add_grad1 (g->th[l], d->h[l], a->N_hidden[l]);
+    { add_grad1 (g->th[l], d->h[l], N_hidden);
     }
 
     if (a->has_ho[l])
     { add_grad2 (g->ho[l], v->h[l], a->has_th[l] ? w->th[l] : 0,
-                 a->N_hidden[l], d->o, a->N_outputs, (char *) 0, 0);
+                 N_hidden, d->o, a->N_outputs, (char *) 0, 0);
     }
   }
 
@@ -107,13 +109,12 @@ void net_grad
 /* ADD TO GRADIENT FROM UNIT DERIVATIVE. */
 
 static void add_grad1
-( net_param *g,		/* Array of derivatives to add to */
-  net_value *v,		/* Derivatives with respect to unit values */
-  int n			/* Number of units */
+( net_param *restrict g,  /* Array of derivatives to add to */
+  net_value *restrict v,  /* Derivatives with respect to unit values */
+  int n			  /* Number of units */
 )
 { 
   int i;
-
   for (i = 0; i<n; i++)
   { g[i] += v[i];
   }
@@ -315,14 +316,14 @@ do \
 #endif
 
 static void add_grad2
-( net_param *g,		/* Array of derivatives to add to */
-  net_value *v,		/* Source unit values */
-  net_param *off,	/* Offsets for source units, or zero if no offsets */
-  int nv,		/* Number of source units */
-  net_value *d,		/* Derivatives with respect to destination units */
-  int nd,		/* Number of destination units */
-  char *omit,		/* Omit flags, null if not present */
-  int ob		/* Bit to look at in omit flags */
+( net_param *restrict g,  /* Array of derivatives to add to */
+  net_value *restrict v,  /* Source unit values */
+  net_param *restrict off,/* Offsets for source units, or zero if no offsets */
+  int nv,		  /* Number of source units */
+  net_value *restrict d,  /* Derivatives with respect to destination units */
+  int nd,		  /* Number of destination units */
+  char *restrict omit,	  /* Omit flags, null if not present */
+  int ob		  /* Bit to look at in omit flags */
 )
 { 
   double tv;

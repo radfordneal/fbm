@@ -68,38 +68,41 @@ void net_back
 
   for (l = a->N_layers-1; l>=0 && l>=start; l--)
   { 
-    zero_derivatives (d->h[l], a->N_hidden[l]);
+    int N_hidden = a->N_hidden[l];
+    net_value *dh = d->h[l];
+
+    memset (dh, 0, N_hidden * sizeof *dh);
     
     if (a->has_ho[l])
-    { sum_derivatives (d->o, a->N_outputs, d->h[l], a->N_hidden[l], 
+    { sum_derivatives (d->o, a->N_outputs, dh, N_hidden, 
                        w->ho[l], (char *) 0, 0);
     }
 
     if (l<a->N_layers-1 && a->has_hh[l])
-    { sum_derivatives (d->s[l+1], a->N_hidden[l+1], d->h[l], a->N_hidden[l], 
+    { sum_derivatives (d->s[l+1], a->N_hidden[l+1], dh, N_hidden, 
                        w->hh[l], (char *) 0, 0);
     }
 
-    switch (flgs==0 ? Tanh_type : flgs->layer_type[l])
-    { case Tanh_type:
-      { for (i = 0; i<a->N_hidden[l]; i++)
-        { d->s[l][i] = (1 - v->h[l][i]*v->h[l][i]) * d->h[l][i];
-        }
-        break;
+    net_value *vh = v->h[l];
+    net_value *ds = d->s[l];
+
+    if (flgs==0 || flgs->layer_type[l]==Tanh_type)
+    { for (i = 0; i<N_hidden; i++)
+      { ds[i] = (1 - vh[i]*vh[i]) * dh[i];
       }
-      case Sin_type:
-      { for (i = 0; i<a->N_hidden[l]; i++)
-        { d->s[l][i] = 2 * cos(v->s[l][i]*sqrt_2) * d->h[l][i];
-        }
-        break;
+    }
+    else if (flgs->layer_type[l]==Sin_type)
+    { for (i = 0; i<N_hidden; i++)
+      { ds[i] = 2 * cos(v->s[l][i]*sqrt_2) * dh[i];
       }
-      case Identity_type: 
-      { for (i = 0; i<a->N_hidden[l]; i++)
-        { d->s[l][i] = d->h[l][i];
-        }
-        break;
+    }
+    else if (flgs->layer_type[l]==Identity_type)
+    { for (i = 0; i<N_hidden; i++)
+      { ds[i] = dh[i];
       }
-      default: abort();
+    }
+    else
+    { abort();
     }
   }
 
@@ -107,7 +110,7 @@ void net_back
 
   if (start<0)
   {
-    zero_derivatives (d->i, a->N_inputs);
+    memset (d->i, 0, a->N_inputs * sizeof *d->i);
 
     if (a->has_io)
     { sum_derivatives (d->o, a->N_outputs, d->i, a->N_inputs, w->io,
@@ -120,22 +123,6 @@ void net_back
                          flgs ? flgs->omit : 0, 1<<(l+1));
       }
     }
-  }
-}
-
-
-/* ZERO DERIVATIVES.  Sets the derivatives with respect to a set of source
-   units to zero. */
-
-static void zero_derivatives
-( net_value *d,		/* Derivatives with respect to units to zero */
-  int n			/* Number of units */
-)
-{
-  int i;
-  
-  for (i = 0; i<n; i++)
-  { d[i] = 0;
   }
 }
 
@@ -342,13 +329,13 @@ do \
 #endif
 
 static void sum_derivatives
-( net_value *dd,	/* Derivatives with respect to destination units */
-  int nd,		/* Number of destination units */
-  net_value *ds,	/* Derivatives w.r.t. source units to add to */
-  int ns,		/* Number of source units */
-  net_param *w,		/* Connection weights */
-  char *omit,		/* Omit flags, null if not present */
-  int b			/* Bit to look at in omit flags */
+( net_value *restrict dd, /* Derivatives with respect to destination units */
+  int nd,		  /* Number of destination units */
+  net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
+  int ns,		  /* Number of source units */
+  net_param *restrict w,  /* Connection weights */
+  char *restrict omit,	  /* Omit flags, null if not present */
+  int b			  /* Bit to look at in omit flags */
 )
 {
   if (omit==0)

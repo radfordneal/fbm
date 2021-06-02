@@ -60,56 +60,65 @@ void net_func
   net_params *w		/* Network parameters */
 )
 {
-  net_value *vh, *sh;
   int l, j;
 
   /* Compute values for successive hidden layers. */
 
   for (l = start; l<a->N_layers; l++)
   {
-    sh = v->s[l];
-    vh = v->h[l];
+    int N_hidden = a->N_hidden[l];
 
-    bias_values (sh, a->N_hidden[l], a->has_bh[l] ? w->bh[l] : 0);
+    net_value *sh = v->s[l];
+
+    if (a->has_bh[l])
+    { bias_values (sh, N_hidden, w->bh[l]);
+    }
+    else
+    { memset (sh, 0, N_hidden * sizeof *sh);
+    }
 
     if (a->has_ih[l])
-    { add_connections (sh, a->N_hidden[l], v->i, a->N_inputs, 
+    { add_connections (sh, N_hidden, v->i, a->N_inputs, 
           w->ih[l], a->has_ti ? w->ti : 0, flgs ? flgs->omit : 0, 1<<(l+1));
     }
 
     if (l>0 && a->has_hh[l-1])
-    { add_connections (sh, a->N_hidden[l], v->h[l-1], a->N_hidden[l-1],
+    { add_connections (sh, N_hidden, v->h[l-1], a->N_hidden[l-1],
           w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0, (char *) 0, 0);
     }
 
     /* Put values through hidden unit activation function. */
 
-    switch (flgs==0 ? Tanh_type : flgs->layer_type[l])
-    { case Tanh_type:
-      { for (j = 0; j<a->N_hidden[l]; j++)
-        { vh[j] = tanh(sh[j]);
-        }
-        break;
+    net_value *vh = v->h[l];
+
+    if (flgs==0 || flgs->layer_type[l]==Tanh_type)
+    { for (j = 0; j<N_hidden; j++)
+      { vh[j] = tanh(sh[j]);
       }
-      case Sin_type:
-      { for (j = 0; j<a->N_hidden[l]; j++)
-        { vh[j] = sqrt_2*sin(sh[j]*sqrt_2);
-        }
-        break;
+    }
+    else if (flgs->layer_type[l]==Sin_type)
+    { for (j = 0; j<N_hidden; j++)
+      { vh[j] = sqrt_2*sin(sh[j]*sqrt_2);
       }
-      case Identity_type: 
-      { for (j = 0; j<a->N_hidden[l]; j++)
-        { vh[j] = sh[j];
-        }
-        break;
+    }
+    else if (flgs->layer_type[l]==Identity_type)
+    { for (j = 0; j<N_hidden; j++)
+      { vh[j] = sh[j];
       }
-      default: abort();
+    }
+    else
+    { abort();
     }
   }
 
   /* Compute values for the outputs. */
 
-  bias_values (v->o, a->N_outputs, a->has_bo ? w->bo : 0);
+  if (a->has_bo)
+  { bias_values (v->o, a->N_outputs, w->bo);
+  }
+  else
+  { memset (v->o, 0, a->N_outputs * sizeof *v->o);
+  }
 
   if (a->has_io)
   { add_connections (v->o, a->N_outputs, v->i, a->N_inputs,
@@ -117,8 +126,7 @@ void net_func
   }
 
   for (l = 0; l<a->N_layers; l++)
-  {
-    if (a->has_ho[l])
+  { if (a->has_ho[l])
     { add_connections (v->o, a->N_outputs, v->h[l], a->N_hidden[l], 
                        w->ho[l], a->has_th[l] ? w->th[l] : 0, (char *) 0, 0);
     }
@@ -126,24 +134,35 @@ void net_func
 }
 
 
-/* SET UNIT VALUES TO BIASES.  Just zeros them if there are no biases. */
+/* SET UNIT VALUES TO BIASES. */
 
 static void bias_values
-( net_value *v,		/* Array of unit values to set */
-  int n,		/* Number of units */
-  net_param *b		/* Biases, null if none */
+( net_value *restrict v,	/* Array of unit values to set */
+  int n,			/* Number of units */
+  net_param *restrict b		/* Biases */
 )
-{
-  int j;
-
-  if (b!=0)
-  {
+{ 
+# if USE_AVX_INTRINSICS && __AVX__
+  { int j;
+    j = 3;
+    while (j<n)
+    { _mm256_storeu_pd (v+j-3, _mm256_loadu_pd(b+j-3));
+      j += 4;
+    }
+    j -= 2;
+    if (j<n)
+    { _mm_storeu_pd (v+j-1, _mm_loadu_pd(b+j-1));
+      j += 2;
+    }
+    if (j<=n)
+    { _mm_store_sd (v+j-1, _mm_load_sd(b+j-1));
+    }
+  }
+# else
+  { int j;
     for (j = 0; j<n; j++) v[j] = *b++;
   }
-  else
-  {
-    for (j = 0; j<n; j++) v[j] = 0;
-  }
+# endif
 }
 
 
@@ -314,14 +333,14 @@ do \
 #endif
 
 static void add_connections
-( net_value *s,		/* Summed input for destination units to add to */
-  int nd,		/* Number of destination units */
-  net_value *v,		/* Values for source units */
-  int ns,		/* Number of source units */
-  net_param *w,		/* Connection weights */
-  net_param *off,	/* Offsets to add to source unit values */
-  char *omit,		/* Omit flags, null if not present */
-  int ob		/* Bit to look at in omit flags */
+( net_value *restrict s,  /* Summed input for destination units to add to */
+  int nd,		  /* Number of destination units */
+  net_value *restrict v,  /* Values for source units */
+  int ns,		  /* Number of source units */
+  net_param *restrict w,  /* Connection weights */
+  net_param *restrict off,/* Offsets to add to source unit values */
+  char *restrict omit,	  /* Omit flags, null if not present */
+  int ob		  /* Bit to look at in omit flags */
 )
 {
   if (omit==0)

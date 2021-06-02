@@ -26,6 +26,11 @@
 #include "net.h"
 
 
+#if USE_AVX_INTRINSICS && __AVX__
+#include  <immintrin.h>
+#endif
+
+
 /* This module finds the derivative of the "error" for a particular case
    with respect to the values of the hidden and input units, and the with
    respect to the summed input for the hidden units, given the derivative 
@@ -182,6 +187,160 @@ do \
   } \
 } while (0)
 
+#if USE_AVX_INTRINSICS && __AVX__ && __FMA__
+
+#define SUM_DERIVATIVES0 \
+do \
+{ net_value tv; \
+  int i, j; \
+  if (nd==1) \
+  { __m256d D0 = _mm256_set1_pd(dd[0]); \
+    i = 3; \
+    while (i<ns) \
+    { _mm256_storeu_pd (ds+i-3, _mm256_fmadd_pd (D0, \
+                        _mm256_loadu_pd(w+i-3), _mm256_loadu_pd(ds+i-3))); \
+      i += 4; \
+    } \
+    i -= 2; \
+    if (i<ns) \
+    { _mm_storeu_pd (ds+i-1, _mm_fmadd_pd (_mm256_castpd256_pd128(D0), \
+                     _mm_loadu_pd(w+i-1), _mm_loadu_pd(ds+i-1))); \
+      i += 2; \
+    } \
+    if (i<=ns) \
+    { _mm_store_sd (ds+i-1, _mm_fmadd_sd (_mm256_castpd256_pd128(D0), \
+                    _mm_load_sd(w+i-1), _mm_load_sd(ds+i-1))); \
+    } \
+  } \
+  else \
+  { for (i = 0; i<ns; i++) \
+    { __m256d TV = _mm256_setzero_pd(); \
+      j = 3; \
+      while (j<nd) \
+      { TV = _mm256_add_pd (TV, _mm256_mul_pd (_mm256_loadu_pd(w+j-3), \
+                                               _mm256_loadu_pd(dd+j-3))); \
+        j += 4; \
+      } \
+      __m128d T; \
+      T = _mm_add_pd (_mm256_castpd256_pd128(TV), \
+                      _mm256_extractf128_pd(TV,1)); \
+      j -= 2; \
+      if (j<nd) \
+      { T = _mm_add_pd (T, _mm_mul_pd (_mm_loadu_pd(w+j-1), \
+                                       _mm_loadu_pd(dd+j-1))); \
+        j += 2; \
+      } \
+      T = _mm_hadd_pd(T,T); \
+      if (j<=nd) \
+      { T = _mm_add_sd (T, _mm_mul_sd (_mm_load_sd(w+j-1), \
+                                       _mm_load_sd(dd+j-1))); \
+      } \
+      _mm_store_sd (ds+i, _mm_add_sd(_mm_load_sd(ds+i), T)); \
+      w += nd; \
+    } \
+  } \
+} while (0)
+
+#elif USE_AVX_INTRINSICS && __AVX__
+
+#define SUM_DERIVATIVES0 \
+do \
+{ net_value tv; \
+  int i, j; \
+  if (nd==1) \
+  { __m256d D0 = _mm256_set1_pd(dd[0]); \
+    i = 3; \
+    while (i<ns) \
+    { _mm256_storeu_pd (ds+i-3, _mm256_add_pd (_mm256_loadu_pd(ds+i-3), \
+         _mm256_mul_pd (D0, _mm256_loadu_pd(w+i-3)))); \
+      i += 4; \
+    } \
+    i -= 2; \
+    if (i<ns) \
+    { _mm_storeu_pd (ds+i-1, _mm_add_pd (_mm_loadu_pd(ds+i-1), \
+         _mm_mul_pd (_mm256_castpd256_pd128(D0), _mm_loadu_pd(w+i-1)))); \
+      i += 2; \
+    } \
+    if (i<=ns) \
+    { _mm_store_sd (ds+i-1, _mm_add_sd (_mm_load_sd(ds+i-1), \
+         _mm_mul_sd (_mm256_castpd256_pd128(D0), _mm_load_sd(w+i-1)))); \
+    } \
+  } \
+  else \
+  { for (i = 0; i<ns; i++) \
+    { __m256d TV = _mm256_setzero_pd(); \
+      j = 3; \
+      while (j<nd) \
+      { TV = _mm256_add_pd (TV, _mm256_mul_pd (_mm256_loadu_pd(w+j-3), \
+                                               _mm256_loadu_pd(dd+j-3))); \
+        j += 4; \
+      } \
+      __m128d T; \
+      T = _mm_add_pd (_mm256_castpd256_pd128(TV), \
+                      _mm256_extractf128_pd(TV,1)); \
+      j -= 2; \
+      if (j<nd) \
+      { T = _mm_add_pd (T, _mm_mul_pd (_mm_loadu_pd(w+j-1), \
+                                       _mm_loadu_pd(dd+j-1))); \
+        j += 2; \
+      } \
+      T = _mm_hadd_pd(T,T); \
+      if (j<=nd) \
+      { T = _mm_add_sd (T, _mm_mul_sd (_mm_load_sd(w+j-1), \
+                                       _mm_load_sd(dd+j-1))); \
+      } \
+      _mm_store_sd (ds+i, _mm_add_sd(_mm_load_sd(ds+i), T)); \
+      w += nd; \
+    } \
+  } \
+} while (0)
+
+#else
+
+#define SUM_DERIVATIVES0 \
+do \
+{ net_value tv; \
+  int i, j; \
+  if (nd==1) \
+  { double d0 = dd[0]; \
+    i = 3; \
+    while (i<ns) \
+    { ds[i-3] += w[i-3] * d0; \
+      ds[i-2] += w[i-2] * d0; \
+      ds[i-1] += w[i-1] * d0; \
+      ds[i-0] += w[i-0] * d0; \
+      i += 4; \
+    } \
+    i -= 3; \
+    while (i<ns) \
+    { ds[i] += w[i] * d0; \
+      i += 1; \
+    } \
+  } \
+  else \
+  { for (i = 0; i<ns; i++) \
+    { tv = 0; \
+      j = 3; \
+      while (j<nd) \
+      { tv += w[j-3] * dd[j-3]; \
+        tv += w[j-2] * dd[j-2]; \
+        tv += w[j-1] * dd[j-1]; \
+        tv += w[j-0] * dd[j-0]; \
+        j += 4; \
+      } \
+      j -= 3; \
+      while (j<nd) \
+      { tv += w[j] * dd[j]; \
+        j += 1; \
+      } \
+      w += nd; \
+      ds[i] += tv; \
+    } \
+  } \
+} while (0)
+
+#endif
+
 static void sum_derivatives
 ( net_value *dd,	/* Derivatives with respect to destination units */
   int nd,		/* Number of destination units */
@@ -193,7 +352,7 @@ static void sum_derivatives
 )
 {
   if (omit==0)
-  { SUM_DERIVATIVES(0);
+  { SUM_DERIVATIVES0;
   }
   else
   { SUM_DERIVATIVES((*omit++)&b);

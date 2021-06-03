@@ -25,28 +25,16 @@ an application (eg, "net", "gp", or "mix").  In some cases, further
 documentation is available under the specific name.
 
 The file index.html is a hypertext index to this documentation.  It
-can be accessed using a Web browser (eg, netscape), by opening
-index.html as a local file (which will probably require giving its
-full path name).  The index.html file must reside in the 'doc'
-directory for this software, so that relative references will work
-correctly.  The files accessed this way are .html files derived from
-the .doc files.  The content is identical, except that references to
-other .doc files have been converted into hypertext links that you can
-follow with the browser.
+can be accessed using a Web browser, by opening index.html as a local
+file (which will probably require giving its full path name).  The
+index.html file must reside in the 'doc' directory for this software,
+so that relative references will work correctly.  The files accessed
+this way are .html files derived from the .doc files.  The content is
+identical, except that references to other .doc files have been
+converted into hypertext links that you can follow with the browser.
 
 The 'doc' directory also contains comments on the various software
 releases, in files of the form 'Release.YYYY-MM-DD.doc'.
-
-All the introductory documentation (including this) is collected into
-the 'manual' file, as plain text.  You can print all the documentation
-by going to the main directory for this software and issuing a command
-such as
-
-  lpr doc/manual util/*.doc mc/*.doc dist/*.doc bvg/*.doc \
-      net/*.doc gp/*.doc mix/*.doc dft/*.doc doc/Rel*.doc
- 
-(or using whatever command other than 'lpr' you use to print text files).
-This will produce about 200 pages of paper.
 
 
 Generic utility programs [util]:

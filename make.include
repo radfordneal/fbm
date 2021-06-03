@@ -1,12 +1,16 @@
 # COMMANDS THAT ARE INCLUDED IN ALL MAKEFILES.  
 #
-# You may wish to modify this file to fit your local installation.
+# You may wish to modify this file to fit your local installation and
+# preferences.  The USE_SIMD_INTRINSICS and USE_FMA options will be
+# ignored if the -march specification is not for an architecture that
+# has the corresponding instructions. The USE_SLEEF option enables use
+# of the SLEEF inline vectorized math functions for some operations.
 
 CC = gcc               # C compiler to use
 
-CFLAGS = -g -O3 -march=native -mtune=native -ffp-contract=on \
-  -Wno-logical-op-parentheses \
-  -Wno-absolute-value \
-  -DUSE_AVX_INTRINSICS \
+CFLAGS = -g -O3 -march=native -mtune=native \
+         -Wno-logical-op-parentheses -Wno-absolute-value \
+         -DUSE_SIMD_INTRINSICS -DUSE_FMA \
+         -DUSE_SLEEF -ffp-contract=off   # USE_SLEEF requires -ffp-contract=off
 
 LFLAGS =               # Options when linking .o files

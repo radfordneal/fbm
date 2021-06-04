@@ -26,7 +26,7 @@
 #include "net.h"
 
 
-#if USE_AVX_INTRINSICS && __AVX__
+#if USE_SIMD_INTRINSICS && __AVX__
 #include  <immintrin.h>
 #endif
 
@@ -168,7 +168,7 @@ do \
   } \
 } while (0)
 
-#if USE_AVX_INTRINSICS && __AVX__ && __FMA__
+#if USE_SIMD_INTRINSICS && __AVX__ && USE_FMA && __FMA__
 
 #define ADD_GRAD2_00 \
 do \
@@ -218,7 +218,7 @@ do \
   } \
 } while (0)
 
-#elif USE_AVX_INTRINSICS && __AVX__
+#elif USE_SIMD_INTRINSICS && __AVX__
 
 #define ADD_GRAD2_00 \
 do \

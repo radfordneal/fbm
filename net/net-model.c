@@ -98,13 +98,7 @@ void net_model_prob
         double ep1 = exp(-abs_oi) + 1;  /* never overflows */
 
         if (pr)  /* find log probability */
-        { double log_ep1 = log(ep1);
-          if (oi>0)
-          { *pr += (t[i]-1)*oi - log_ep1;
-          }
-          else
-          { *pr += t[i]*oi - log_ep1;
-          }
+        { *pr += (t[i] - 0.5*(sign_oi+1)) * oi - log(ep1);
         }
 
         if (dp)  /* find derivative of log probability */

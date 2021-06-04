@@ -86,31 +86,29 @@ void net_model_prob
       if (pr) *pr = 0;
 
       for (i = 0; i<a->N_outputs; i++)
-      { double oi;
+      { 
         if (isnan(t[i]))
         { if (dp) dp->o[i] = 0;
           continue;
         }
-        oi = v->o[i];
-        if (t[i]==0)
-        { if (oi<0)
-          { if (pr) *pr -= log(1+exp(oi));
-            if (dp) dp->o[i] = 1 - 1/(1+exp(oi));
+
+        double oi = v->o[i];
+        double sign_oi = copysign(1.0,oi);
+        double abs_oi = fabs(oi);
+        double ep1 = exp(-abs_oi) + 1;  /* never overflows */
+
+        if (pr)  /* find log probability */
+        { double log_ep1 = log(ep1);
+          if (oi>0)
+          { *pr += (t[i]-1)*oi - log_ep1;
           }
           else
-          { if (pr) *pr -= oi + log(1+exp(-oi));
-            if (dp) dp->o[i] = 1/(1+exp(-oi));
+          { *pr += t[i]*oi - log_ep1;
           }
         }
-        else
-        { if (oi<0)
-          { if (pr) *pr -= -oi + log(1+exp(oi));
-            if (dp) dp->o[i] = -1/(1+exp(oi));
-          }
-          else
-          { if (pr) *pr -= log(1+exp(-oi));
-            if (dp) dp->o[i] = -1 + 1/(1+exp(-oi));
-          }
+
+        if (dp)  /* find derivative of log probability */
+        { dp->o[i] = sign_oi/ep1 + 0.5*(1.0-sign_oi) - t[i];
         }
       }
 

@@ -27,7 +27,19 @@
 
 
 #if USE_SIMD_INTRINSICS && __AVX__
-#include  <immintrin.h>
+# include  <immintrin.h>
+# if USE_SLEEF
+#   include <stdint.h>
+#   if USE_FMA && __FMA__
+#     include "../sleef-include/sleefinline_purecfma_scalar.h"
+#     include "../sleef-include/sleefinline_avx2128.h"
+#     include "../sleef-include/sleefinline_avx2.h"
+#   else
+#     include "../sleef-include/sleefinline_purec_scalar.h"
+#     include "../sleef-include/sleefinline_sse4.h"
+#     include "../sleef-include/sleefinline_avx.h"
+#   endif
+# endif
 #endif
 
 
@@ -92,9 +104,20 @@ void net_func
     net_value *vh = v->h[l];
 
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
-    { for (j = 0; j<N_hidden; j++)
-      { vh[j] = tanh(sh[j]);
-      }
+    { 
+#     if USE_SLEEF && __AVX__ && USE_FMA && __FMA__
+        for (j = 0; j<N_hidden; j++)
+        { vh[j] = Sleef_tanhd1_u35purecfma (sh[j]);
+        }
+#     elif USE_SLEEF && __AVX__
+        for (j = 0; j<N_hidden; j++)
+        { vh[j] = Sleef_tanhd1_u35purec (sh[j]);
+        }
+#     else
+        for (j = 0; j<N_hidden; j++)
+        { vh[j] = tanh (sh[j]);
+        }
+#     endif
     }
     else if (flgs->layer_type[l]==Sin_type)
     { for (j = 0; j<N_hidden; j++)

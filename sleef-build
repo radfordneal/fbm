@@ -2,10 +2,11 @@
 # These commands build the header files for the SLEEF inline math functions,
 # storing them in sleef-include.  The header files should already be present,
 # so it should not be necessary to run this script again.  If you do run it,
-# you can delete the sleef-3.5.1 directory after it has finished.
+# you can delete the sleef-master directory after it has finished.
 
-tar xf sleef-3.5.1.tar.gz
-cd sleef-3.5.1
+rm -r sleef-master
+unzip sleef-85440a5.zip
+cd sleef-master
 mkdir build
 cd build
 cmake -DBUILD_INLINE_HEADERS=TRUE ..

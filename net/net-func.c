@@ -26,19 +26,22 @@
 #include "net.h"
 
 
-#if USE_SIMD_INTRINSICS && __AVX__
+#if (USE_SIMD_INTRINSICS || USE_SLEEF) && __AVX__
 # include  <immintrin.h>
-# if USE_SLEEF
-#   include <stdint.h>
-#   if USE_FMA && __FMA__
-#     include "../sleef-include/sleefinline_purecfma_scalar.h"
-#     include "../sleef-include/sleefinline_avx2128.h"
-#     include "../sleef-include/sleefinline_avx2.h"
-#   else
-#     include "../sleef-include/sleefinline_purec_scalar.h"
-#     include "../sleef-include/sleefinline_sse4.h"
-#     include "../sleef-include/sleefinline_avx.h"
-#   endif
+#endif
+
+#if USE_SLEEF
+# include <stdint.h>
+# if __AVX__ && __FMA__
+#   include "../sleef-include/sleefinline_purecfma_scalar.h"
+#   include "../sleef-include/sleefinline_avx2128.h"
+#   include "../sleef-include/sleefinline_avx2.h"
+# elif __AVX__
+#   include "../sleef-include/sleefinline_purec_scalar.h"
+#   include "../sleef-include/sleefinline_sse4.h"
+#   include "../sleef-include/sleefinline_avx.h"
+# else
+#   include "../sleef-include/sleefinline_purec_scalar.h"
 # endif
 #endif
 
@@ -105,7 +108,7 @@ void net_func
 
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     { 
-#     if USE_SLEEF && __AVX__ && USE_FMA && __FMA__
+#     if USE_SLEEF && __AVX__ && __FMA__
       { j = 3;
         while (j<N_hidden)
         { _mm256_storeu_pd (vh+j-3,  
@@ -137,6 +140,11 @@ void net_func
         }
         if (j<=N_hidden)
         { vh[j-1] = Sleef_tanhd1_u35purec (sh[j-1]);
+        }
+      }
+#     elif USE_SLEEF
+      { for (j = 0; j<N_hidden; j++)
+        { vh[j] = Sleef_tanhd1_u35purec (sh[j]);
         }
       }
 #     else
@@ -192,7 +200,7 @@ static void bias_values
   net_param *restrict b		/* Biases */
 )
 { 
-# if USE_SIMD_INTRINSICS && __AVX__
+# if USE_SIMD_INTRINSICS && __AVX__ && 0
   { int j;
     j = 3;
     while (j<n)

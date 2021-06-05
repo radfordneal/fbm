@@ -4,7 +4,8 @@
 # preferences.  The USE_SIMD_INTRINSICS and USE_FMA options will be
 # ignored if the -march specification is not for an architecture that
 # has the corresponding instructions. The USE_SLEEF option enables use
-# of the SLEEF inline vectorized math functions for some operations.
+# of the SLEEF inline vectorized math functions for some operations,
+# which will use SIMD and FMA instructions if available given -march.
 
 CC = gcc               # C compiler to use
 

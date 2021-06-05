@@ -27,16 +27,17 @@
 #include "rand.h"
 
 
-#if USE_SIMD_INTRINSICS && __AVX__
+#if (USE_SIMD_INTRINSICS || USE_SLEEF) && __AVX__
 # include  <immintrin.h>
-# if USE_SLEEF
-#   include <stdint.h>
-#   define __SLEEF_REMPITAB__
-#   if USE_FMA && __FMA__
-#     include "../sleef-include/sleefinline_purecfma_scalar.h"
-#   else
-#     include "../sleef-include/sleefinline_purec_scalar.h"
-#   endif
+#endif
+
+#if USE_SLEEF
+# include <stdint.h>
+# define __SLEEF_REMPITAB__
+# if __AVX__ && __FMA__
+#   include "../sleef-include/sleefinline_purecfma_scalar.h"
+# else
+#   include "../sleef-include/sleefinline_purec_scalar.h"
 # endif
 #endif
 
@@ -112,9 +113,9 @@ void net_model_prob
 
         /* Note: The exp computation below never overflows. */
 
-#       if USE_SLEEF && __AVX__ && USE_FMA && __FMA__
+#       if USE_SLEEF && __AVX__ && __FMA__
           double ep1 = Sleef_expd1_u10purecfma (-abs_oi) + 1;
-#       elif USE_SLEEF && __AVX__
+#       elif USE_SLEEF
           double ep1 = Sleef_expd1_u10purec (-abs_oi) + 1;
 #       else
           double ep1 = exp (-abs_oi) + 1;
@@ -122,9 +123,9 @@ void net_model_prob
 
         if (pr)  /* find log probability */
         { 
-#         if USE_SLEEF && __AVX__ && USE_FMA && __FMA__
+#         if USE_SLEEF && __AVX__ && __FMA__
             double log_ep1 = Sleef_logd1_u10purecfma (ep1);
-#         elif USE_SLEEF && __AVX__
+#         elif USE_SLEEF
             double log_ep1 = Sleef_logd1_u10purec (ep1);
 #         else
             double log_ep1 = log (ep1);

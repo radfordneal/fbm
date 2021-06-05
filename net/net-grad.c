@@ -174,7 +174,7 @@ do \
 do \
 { int i, j; \
   if (nd==1) \
-  { __m256d D0 = _mm256_set1_pd(d[0]); \
+  { __m256d D0 = _mm256_broadcast_sd(d); \
     i = 3; \
     while (i<nv) \
     { _mm256_storeu_pd (g+i-3, _mm256_fmadd_pd (D0, _mm256_loadu_pd(v+i-3), \
@@ -194,9 +194,9 @@ do \
   } \
   else \
   { for (i = 0; i<nv; i++) \
-    { if (v[i]!=0)  \
-      { __m256d TV = _mm256_set1_pd(v[i]); \
-        j = 3; \
+    { __m256d TV = _mm256_broadcast_sd (v+i); \
+      if (_mm_ucomineq_sd (_mm_setzero_pd(), _mm256_castpd256_pd128(TV)))  \
+      { j = 3; \
         while (j<nd) \
         { _mm256_storeu_pd (g+j-3, _mm256_fmadd_pd (TV, \
                 _mm256_loadu_pd(d+j-3), _mm256_loadu_pd(g+j-3))); \
@@ -224,7 +224,7 @@ do \
 do \
 { int i, j; \
   if (nd==1) \
-  { __m256d D0 = _mm256_set1_pd(d[0]); \
+  { __m256d D0 = _mm256_broadcast_sd(d); \
     i = 3; \
     while (i<nv) \
     { _mm256_storeu_pd (g+i-3, _mm256_add_pd (_mm256_loadu_pd(g+i-3), \
@@ -244,9 +244,9 @@ do \
   } \
   else \
   { for (i = 0; i<nv; i++) \
-    { if (v[i]!=0)  \
-      { __m256d TV = _mm256_set1_pd(v[i]); \
-        j = 3; \
+    { __m256d TV = _mm256_broadcast_sd (v+i); \
+      if (_mm_ucomineq_sd (_mm_setzero_pd(), _mm256_castpd256_pd128(TV)))  \
+      { j = 3; \
         while (j<nd) \
         { _mm256_storeu_pd (g+j-3, _mm256_add_pd (_mm256_loadu_pd(g+j-3), \
              _mm256_mul_pd (TV, _mm256_loadu_pd(d+j-3)))); \

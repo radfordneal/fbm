@@ -207,7 +207,7 @@ do \
 { net_value tv; \
   int i, j; \
   if (nd==1) \
-  { __m256d D0 = _mm256_set1_pd(dd[0]); \
+  { __m256d D0 = _mm256_broadcast_sd(dd); \
     i = 3; \
     while (i<ns) \
     { _mm256_storeu_pd (ds+i-3, _mm256_fmadd_pd (D0, \
@@ -261,7 +261,7 @@ do \
 { net_value tv; \
   int i, j; \
   if (nd==1) \
-  { __m256d D0 = _mm256_set1_pd(dd[0]); \
+  { __m256d D0 = _mm256_broadcast_sd(dd); \
     i = 3; \
     while (i<ns) \
     { _mm256_storeu_pd (ds+i-3, _mm256_add_pd (_mm256_loadu_pd(ds+i-3), \

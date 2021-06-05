@@ -285,12 +285,11 @@ do \
   } \
   else \
   { for (i = 0; i<ns; i++, w+=nd) \
-    { net_value tv = v[i]; \
-      if (tv==0)  \
+    { __m256d TV = _mm256_broadcast_sd(v+i); \
+      if (_mm_ucomieq_sd (_mm_setzero_pd(), _mm256_castpd256_pd128(TV)))  \
       { continue; \
       } \
       j = 3; \
-      __m256d TV = _mm256_set1_pd(tv); \
       while (j<nd) \
       { _mm256_storeu_pd (s+j-3, _mm256_fmadd_pd (TV, \
                            _mm256_loadu_pd(w+j-3), _mm256_loadu_pd(s+j-3))); \
@@ -340,8 +339,8 @@ do \
   } \
   else \
   { for (i = 0; i<ns; i++, w+=nd) \
-    { net_value tv = v[i]; \
-      if (tv==0)  \
+    { __m256d TV = _mm256_broadcast_sd(v+i); \
+      if (_mm_ucomieq_sd (_mm_setzero_pd(), _mm256_castpd256_pd128(TV)))  \
       { continue; \
       } \
       j = 3; \

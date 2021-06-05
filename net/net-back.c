@@ -69,7 +69,7 @@ void net_back
   for (l = a->N_layers-1; l>=0 && l>=start; l--)
   { 
     int N_hidden = a->N_hidden[l];
-    net_value *dh = d->h[l];
+    net_value *restrict dh = d->h[l];
 
     memset (dh, 0, N_hidden * sizeof *dh);
     
@@ -83,13 +83,39 @@ void net_back
                        w->hh[l], (char *) 0, 0);
     }
 
-    net_value *vh = v->h[l];
-    net_value *ds = d->s[l];
+    net_value *restrict vh = v->h[l];
+    net_value *restrict ds = d->s[l];
 
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
-    { for (i = 0; i<N_hidden; i++)
-      { ds[i] = (1 - vh[i]*vh[i]) * dh[i];
+    {
+#     if USE_SIMD_INTRINSICS && __AVX__ && 0  /* disabled, since doesn't help */
+      { __m256d ONE = _mm256_set1_pd(1.0);
+        i = 3;
+        while (i<N_hidden)
+        { __m256d VH = _mm256_loadu_pd(vh+i-3);
+          _mm256_storeu_pd (ds+i-3, _mm256_mul_pd (_mm256_loadu_pd(dh+i-3),
+                                      _mm256_sub_pd(ONE,_mm256_mul_pd(VH,VH))));
+          i += 4;
+        }
+        i -= 2;
+        if (i<N_hidden)
+        { __m128d VH = _mm_loadu_pd(vh+i-1);
+          _mm_storeu_pd (ds+i-1, _mm_mul_pd (_mm_loadu_pd(dh+i-1),
+           _mm_sub_pd (_mm256_castpd256_pd128(ONE), _mm_mul_pd(VH,VH))));
+          i += 2;
+        }
+        if (i<=N_hidden)
+        { __m128d VH = _mm_load_sd(vh+i-1);
+          _mm_store_sd (ds+i-1, _mm_mul_sd (_mm_load_sd(dh+i-1),
+           _mm_sub_sd (_mm256_castpd256_pd128(ONE), _mm_mul_sd(VH,VH))));
+        }
       }
+#     else
+      { for (i = 0; i<N_hidden; i++)
+        { ds[i] = (1 - vh[i]*vh[i]) * dh[i];
+        }
+      }
+#     endif
     }
     else if (flgs->layer_type[l]==Sin_type)
     { for (i = 0; i<N_hidden; i++)

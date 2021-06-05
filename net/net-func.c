@@ -106,17 +106,44 @@ void net_func
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     { 
 #     if USE_SLEEF && __AVX__ && USE_FMA && __FMA__
-        for (j = 0; j<N_hidden; j++)
-        { vh[j] = Sleef_tanhd1_u35purecfma (sh[j]);
+      { j = 3;
+        while (j<N_hidden)
+        { _mm256_storeu_pd (vh+j-3,  
+                            Sleef_tanhd4_u35avx2 (_mm256_loadu_pd(sh+j-3)));
+          j += 4;
         }
+        j -= 2;
+        if (j<N_hidden)
+        { _mm_storeu_pd (vh+j-1,  
+                         Sleef_tanhd2_u35avx2128 (_mm_loadu_pd(sh+j-1)));
+          j += 2;
+        }
+        if (j<=N_hidden)
+        { vh[j-1] = Sleef_tanhd1_u35purecfma (sh[j-1]);
+        }
+      }
 #     elif USE_SLEEF && __AVX__
-        for (j = 0; j<N_hidden; j++)
-        { vh[j] = Sleef_tanhd1_u35purec (sh[j]);
+      { j = 3;
+        while (j<N_hidden)
+        { _mm256_storeu_pd (vh+j-3,  
+                            Sleef_tanhd4_u35avx (_mm256_loadu_pd(sh+j-3)));
+          j += 4;
         }
+        j -= 2;
+        if (j<N_hidden)
+        { _mm_storeu_pd (vh+j-1,  
+                         Sleef_tanhd2_u35sse4 (_mm_loadu_pd(sh+j-1)));
+          j += 2;
+        }
+        if (j<=N_hidden)
+        { vh[j-1] = Sleef_tanhd1_u35purec (sh[j-1]);
+        }
+      }
 #     else
-        for (j = 0; j<N_hidden; j++)
+      { for (j = 0; j<N_hidden; j++)
         { vh[j] = tanh (sh[j]);
         }
+      }
 #     endif
     }
     else if (flgs->layer_type[l]==Sin_type)

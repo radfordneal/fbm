@@ -193,27 +193,61 @@ do \
     } \
   } \
   else \
-  { for (i = 0; i<nv; i++) \
-    { __m256d TV = _mm256_broadcast_sd (v+i); \
-      if (_mm_ucomineq_sd (_mm_setzero_pd(), _mm256_castpd256_pd128(TV)))  \
-      { j = 3; \
-        while (j<nd) \
-        { _mm256_storeu_pd (g+j-3, _mm256_fmadd_pd (TV, \
-                _mm256_loadu_pd(d+j-3), _mm256_loadu_pd(g+j-3))); \
-          j += 4; \
-        } \
-        j -= 2; \
-        if (j<nd) \
-        { _mm_storeu_pd (g+j-1, _mm_fmadd_pd (_mm256_castpd256_pd128(TV), \
-                _mm_loadu_pd(d+j-1), _mm_loadu_pd(g+j-1))); \
-          j += 2; \
-        } \
-        if (j<=nd) \
-        { _mm_store_sd (g+j-1, _mm_fmadd_sd (_mm256_castpd256_pd128(TV), \
-                _mm_load_sd(d+j-1), _mm_load_sd(g+j-1))); \
-        } \
+  { i = 1; \
+    while (i<nv) \
+    { __m256d TV = _mm256_broadcast_sd (v+i-1); \
+      __m256d TV2 = _mm256_broadcast_sd (v+i); \
+      net_value *g2 = g+nd; \
+      j = 3; \
+      while (j<nd) \
+      { __m256d D = _mm256_loadu_pd(d+j-3); \
+        _mm256_storeu_pd (g+j-3, _mm256_fmadd_pd (TV, D, \
+                                                  _mm256_loadu_pd(g+j-3))); \
+        _mm256_storeu_pd (g2+j-3, _mm256_fmadd_pd (TV2, D, \
+                                                   _mm256_loadu_pd(g2+j-3))); \
+        j += 4; \
       } \
-      g += nd; \
+      j -= 2; \
+      if (j<nd) \
+      { __m128d D = _mm_loadu_pd(d+j-1); \
+        _mm_storeu_pd (g+j-1, _mm_fmadd_pd (_mm256_castpd256_pd128(TV), D, \
+                                             _mm_loadu_pd(g+j-1))); \
+        _mm_storeu_pd (g2+j-1, _mm_fmadd_pd (_mm256_castpd256_pd128(TV2), D, \
+                                             _mm_loadu_pd(g2+j-1))); \
+        j += 2; \
+      } \
+      if (j<=nd) \
+      { __m128d D = _mm_load_sd(d+j-1); \
+        _mm_store_sd (g+j-1, _mm_fmadd_sd (_mm256_castpd256_pd128(TV), D, \
+                                            _mm_load_sd(g+j-1))); \
+        _mm_store_sd (g2+j-1, _mm_fmadd_sd (_mm256_castpd256_pd128(TV2), D, \
+                                            _mm_load_sd(g2+j-1))); \
+      } \
+      i += 2; \
+      g = g2+nd; \
+    } \
+    if (i<=nv) \
+    { __m256d TV = _mm256_broadcast_sd (v+i-1); \
+      j = 3; \
+      while (j<nd) \
+      { __m256d D = _mm256_loadu_pd(d+j-3); \
+        _mm256_storeu_pd (g+j-3, _mm256_fmadd_pd (TV, D, \
+                                                  _mm256_loadu_pd(g+j-3))); \
+        j += 4; \
+      } \
+      j -= 2; \
+      if (j<nd) \
+      { __m128d D = _mm_loadu_pd(d+j-1); \
+        _mm_storeu_pd (g+j-1, _mm_fmadd_pd (_mm256_castpd256_pd128(TV), D, \
+                                            _mm_loadu_pd(g+j-1))); \
+        j += 2; \
+      } \
+      if (j<=nd) \
+      { __m128d D = _mm_load_sd(d+j-1); \
+        _mm_store_sd (g+j-1, _mm_fmadd_sd (_mm256_castpd256_pd128(TV), D, \
+                                           _mm_load_sd(g+j-1))); \
+      } \
+      break; \
     } \
   } \
 } while (0)
@@ -243,27 +277,61 @@ do \
     } \
   } \
   else \
-  { for (i = 0; i<nv; i++) \
-    { __m256d TV = _mm256_broadcast_sd (v+i); \
-      if (_mm_ucomineq_sd (_mm_setzero_pd(), _mm256_castpd256_pd128(TV)))  \
-      { j = 3; \
-        while (j<nd) \
-        { _mm256_storeu_pd (g+j-3, _mm256_add_pd (_mm256_loadu_pd(g+j-3), \
-             _mm256_mul_pd (TV, _mm256_loadu_pd(d+j-3)))); \
-          j += 4; \
-        } \
-        j -= 2; \
-        if (j<nd) \
-        { _mm_storeu_pd (g+j-1, _mm_add_pd (_mm_loadu_pd(g+j-1), \
-             _mm_mul_pd (_mm256_castpd256_pd128(TV), _mm_loadu_pd(d+j-1)))); \
-          j += 2; \
-        } \
-        if (j<=nd) \
-        { _mm_store_sd (g+j-1, _mm_add_pd (_mm_load_sd(g+j-1), \
-             _mm_mul_sd (_mm256_castpd256_pd128(TV), _mm_load_sd(d+j-1)))); \
-        } \
+  { i = 1; \
+    while (i<nv) \
+    { __m256d TV = _mm256_broadcast_sd (v+i-1); \
+      __m256d TV2 = _mm256_broadcast_sd (v+i); \
+      net_value *g2 = g+nd; \
+      j = 3; \
+      while (j<nd) \
+      { __m256d D = _mm256_loadu_pd(d+j-3); \
+        _mm256_storeu_pd (g+j-3, _mm256_add_pd (_mm256_loadu_pd(g+j-3), \
+                                                _mm256_mul_pd (TV, D))); \
+        _mm256_storeu_pd (g2+j-3, _mm256_add_pd (_mm256_loadu_pd(g2+j-3), \
+                                                 _mm256_mul_pd (TV2, D))); \
+        j += 4; \
       } \
-      g += nd; \
+      j -= 2; \
+      if (j<nd) \
+      { __m128d D = _mm_loadu_pd(d+j-1); \
+        _mm_storeu_pd (g+j-1, _mm_add_pd (_mm_loadu_pd(g+j-1), \
+                               _mm_mul_pd (_mm256_castpd256_pd128(TV), D))); \
+        _mm_storeu_pd (g2+j-1, _mm_add_pd (_mm_loadu_pd(g2+j-1), \
+                                _mm_mul_pd (_mm256_castpd256_pd128(TV2), D))); \
+        j += 2; \
+      } \
+      if (j<=nd) \
+      { __m128d D = _mm_load_sd(d+j-1); \
+        _mm_store_sd (g+j-1, _mm_add_sd (_mm_load_sd(g+j-1), \
+                              _mm_mul_sd (_mm256_castpd256_pd128(TV), D))); \
+        _mm_store_sd (g2+j-1, _mm_add_sd (_mm_load_sd(g2+j-1), \
+                               _mm_mul_sd (_mm256_castpd256_pd128(TV2), D))); \
+      } \
+      i += 2; \
+      g = g2+nd; \
+    } \
+    if (i<=nv) \
+    { __m256d TV = _mm256_broadcast_sd (v+i-1); \
+      j = 3; \
+      while (j<nd) \
+      { __m256d D = _mm256_loadu_pd(d+j-3); \
+        _mm256_storeu_pd (g+j-3, _mm256_add_pd (_mm256_loadu_pd(g+j-3), \
+                                                _mm256_mul_pd (TV, D))); \
+        j += 4; \
+      } \
+      j -= 2; \
+      if (j<nd) \
+      { __m128d D = _mm_loadu_pd(d+j-1); \
+        _mm_storeu_pd (g+j-1, _mm_add_pd (_mm_loadu_pd(g+j-1), \
+                               _mm_mul_pd (_mm256_castpd256_pd128(TV), D))); \
+        j += 2; \
+      } \
+      if (j<=nd) \
+      { __m128d D = _mm_load_sd(d+j-1); \
+        _mm_store_sd (g+j-1, _mm_add_sd (_mm_load_sd(g+j-1), \
+                              _mm_mul_sd (_mm256_castpd256_pd128(TV), D))); \
+      } \
+      break; \
     } \
   } \
 } while (0)

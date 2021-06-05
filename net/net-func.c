@@ -200,27 +200,8 @@ static void bias_values
   net_param *restrict b		/* Biases */
 )
 { 
-# if USE_SIMD_INTRINSICS && __AVX__ && 0
-  { int j;
-    j = 3;
-    while (j<n)
-    { _mm256_storeu_pd (v+j-3, _mm256_loadu_pd(b+j-3));
-      j += 4;
-    }
-    j -= 2;
-    if (j<n)
-    { _mm_storeu_pd (v+j-1, _mm_loadu_pd(b+j-1));
-      j += 2;
-    }
-    if (j<=n)
-    { _mm_store_sd (v+j-1, _mm_load_sd(b+j-1));
-    }
-  }
-# else
-  { int j;
-    for (j = 0; j<n; j++) v[j] = *b++;
-  }
-# endif
+  int j;
+  for (j = 0; j<n; j++) v[j] = b[j];
 }
 
 

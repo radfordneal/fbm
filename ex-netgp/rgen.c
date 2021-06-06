@@ -7,7 +7,7 @@
 
 #define N_cases 200
 
-main()
+int main(void)
 {
   double x, y;
   int i;
@@ -19,4 +19,6 @@ main()
 
     printf(" %+8.5f %+10.5f\n",x,y);
   }
+
+  return 0;
 }

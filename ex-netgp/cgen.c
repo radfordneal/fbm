@@ -7,7 +7,7 @@
 
 #define N_cases 1000
 
-main()
+int main(void)
 {
   double x1, x2, x3, x4, d;
   int i, c;
@@ -28,4 +28,6 @@ main()
       x3+0.1*rand_gaussian(), x4+0.1*rand_gaussian(), 
       c);
   }
+
+  return 0;
 }

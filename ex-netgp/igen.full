@@ -38999,4 +38999,4 @@ Case 3000, Class +(0), Centred at 5,5, PP: +0.995 X0.000 O0.000 H0.004
 
 
 Error rate on test cases with true model: 0.180
-Average negative log probability for test cases with true model: 0.437
+Average log probability for test cases with true model: -0.437

@@ -18,7 +18,7 @@ int main (int argc, char **argv)
   int i, j, k, cc, ci, cj, ck, pi, pc, pj, pk;
   double pp[4];
 
-  double nlogp = 0;
+  double logp = 0;
   int errors = 0;
 
   for (i = 0; i<N_cases; i++)
@@ -169,7 +169,7 @@ int main (int argc, char **argv)
        based on the true model for test cases. */
 
     if (i>=N_train)
-    { nlogp -= log(pp[ci]);
+    { logp += log(pp[ci]);
       for (pi = 0; pi<4; pi++)
       { if (pp[pi]>pp[ci])
         { errors += 1;
@@ -216,8 +216,8 @@ int main (int argc, char **argv)
    "Error rate on test cases with true model: %.3f\n",
    (double)errors/(N_cases-N_train));
   fprintf (stderr,
-   "Average negative log probability for test cases with true model: %.3f\n",
-   nlogp/(N_cases-N_train));
+   "Average log probability for test cases with true model: %.3f\n",
+   logp/(N_cases-N_train));
 
   return 0;
 }

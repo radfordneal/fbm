@@ -8,7 +8,7 @@
 #define N_cases 3000
 #define N_train 1000
 
-#define D 8
+#define D 6
 #define noise 0.6
 
 double image[D][D];
@@ -19,6 +19,7 @@ int main (int argc, char **argv)
   double pp[4];
 
   double logp = 0;
+  double sqerr = 0;
   int errors = 0;
 
   for (i = 0; i<N_cases; i++)
@@ -165,11 +166,14 @@ int main (int argc, char **argv)
     { pp[pi] /= spp;
     }
 
-    /* Compute the error rate and average negative log probability
-       based on the true model for test cases. */
+    /* Compute the error rate, average log probability, and average squared
+       error (for 0-1 representation) based on the true model for test cases. */
 
     if (i>=N_train)
     { logp += log(pp[ci]);
+      for (pi = 0; pi<4; pi++)
+      { sqerr += pi==ci ? (1-pp[pi])*(1-pp[pi]) : pp[pi]*pp[pi];
+      }
       for (pi = 0; pi<4; pi++)
       { if (pp[pi]>pp[ci])
         { errors += 1;
@@ -215,6 +219,9 @@ int main (int argc, char **argv)
   fprintf (stderr,
    "Error rate on test cases with true model: %.3f\n",
    (double)errors/(N_cases-N_train));
+  fprintf (stderr,
+   "Average squared error for test cases with true model: %.3f\n",
+   sqerr/(N_cases-N_train));
   fprintf (stderr,
    "Average log probability for test cases with true model: %.3f\n",
    logp/(N_cases-N_train));

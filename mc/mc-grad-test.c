@@ -1,6 +1,6 @@
 /* MC-GRAD-TEST.C - Skeleton program to test energy gradient computation. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -145,7 +145,12 @@ int main
     }
     else
     { lr = log(r);
-      printf("   %+8.4f\n", lr);
+      if (round(lr*10000)==0)  /* avoid printing -0 */
+      { printf("     0.0000\n");
+      }
+      else
+      { printf("   %+8.4f\n", lr);
+      }
       if (lr<0) lr = -lr;
       if (lr>maxlr) maxlr = lr;
     }

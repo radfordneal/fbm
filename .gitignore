@@ -1,4 +1,5 @@
 *.o
+*.out
 bvg/bvg-grad-test
 bvg/bvg-hist
 bvg/bvg-initial
@@ -121,3 +122,8 @@ util/model-spec
 util/rand-seed
 util/series
 util/zeros
+ex-netgp/rgen
+ex-netgp/ogen
+ex-netgp/bgen
+ex-netgp/cgen
+ex-netgp/igen

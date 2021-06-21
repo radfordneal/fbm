@@ -344,7 +344,6 @@ do \
       { continue; \
       } \
       j = 3; \
-      __m256d TV = _mm256_set1_pd(tv); \
       while (j<nd) \
       { _mm256_storeu_pd (s+j-3, _mm256_add_pd (_mm256_loadu_pd(s+j-3), \
                                    _mm256_mul_pd(_mm256_loadu_pd(w+j-3),TV))); \

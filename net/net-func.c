@@ -284,28 +284,77 @@ do \
     _mm_store_sd (s, S); \
   } \
   else \
-  { for (i = 0; i<ns; i++, w+=nd) \
-    { __m256d TV = _mm256_broadcast_sd(v+i); \
-      if (_mm_ucomieq_sd (_mm_setzero_pd(), _mm256_castpd256_pd128(TV)))  \
-      { continue; \
+  { __m256d TV, TV2; \
+    i = 0; \
+    for (;;) \
+    { for (;;) \
+      { if (i==ns) goto done; \
+        TV = _mm256_broadcast_sd (v+i); \
+        if (_mm_ucomineq_sd (_mm256_castpd256_pd128(TV), _mm_setzero_pd())) \
+        { break; \
+        } \
+        i += 1; \
+        w += nd; \
+      } \
+      net_param *w2 = w+nd; \
+      i += 1; \
+      for (;;) \
+      { if (i==ns) goto one_more; \
+        TV2 = _mm256_broadcast_sd (v+i); \
+        if (_mm_ucomineq_sd (_mm256_castpd256_pd128(TV2), _mm_setzero_pd())) \
+        { break; \
+        } \
+        i += 1; \
+        w2 += nd; \
       } \
       j = 3; \
       while (j<nd) \
-      { _mm256_storeu_pd (s+j-3, _mm256_fmadd_pd (TV, \
-                           _mm256_loadu_pd(w+j-3), _mm256_loadu_pd(s+j-3))); \
+      { __m256d S = _mm256_loadu_pd(s+j-3); \
+        S = _mm256_fmadd_pd (TV, _mm256_loadu_pd(w+j-3), S); \
+        S = _mm256_fmadd_pd (TV2, _mm256_loadu_pd(w2+j-3), S); \
+        _mm256_storeu_pd (s+j-3, S); \
         j += 4; \
       } \
       j -= 2; \
       if (j<nd) \
-      { _mm_storeu_pd (s+j-1, _mm_fmadd_pd (_mm256_castpd256_pd128(TV), \
-                        _mm_loadu_pd(w+j-1), _mm_loadu_pd(s+j-1))); \
+      { __m128d S = _mm_loadu_pd(s+j-1); \
+        S = _mm_fmadd_pd (_mm256_castpd256_pd128(TV), _mm_loadu_pd(w+j-1), S); \
+        S = _mm_fmadd_pd (_mm256_castpd256_pd128(TV2), _mm_loadu_pd(w2+j-1), \
+                          S); \
+        _mm_storeu_pd (s+j-1, S); \
         j += 2; \
       } \
       if (j<=nd) \
-      { _mm_store_sd (s+j-1, _mm_fmadd_sd (_mm256_castpd256_pd128(TV), \
-                       _mm_load_sd(w+j-1), _mm_load_sd(s+j-1))); \
+      { __m128d S = _mm_load_sd(s+j-1); \
+        S = _mm_fmadd_sd (_mm256_castpd256_pd128(TV), _mm_load_sd(w+j-1), S); \
+        S = _mm_fmadd_sd (_mm256_castpd256_pd128(TV2), _mm_load_sd(w2+j-1), \
+                          S); \
+        _mm_store_sd (s+j-1, S); \
       } \
+      i += 1; \
+      w = w2+nd; \
     } \
+  one_more: \
+    j = 3; \
+    while (j<nd) \
+    { __m256d S = _mm256_loadu_pd(s+j-3); \
+      S = _mm256_fmadd_pd (TV, _mm256_loadu_pd(w+j-3), S); \
+      _mm256_storeu_pd (s+j-3, S); \
+      j += 4; \
+    } \
+    j -= 2; \
+    if (j<nd) \
+    { __m128d S = _mm_loadu_pd(s+j-1); \
+      S = _mm_fmadd_pd (_mm256_castpd256_pd128(TV), _mm_loadu_pd(w+j-1), S); \
+      _mm_storeu_pd (s+j-1, S); \
+      j += 2; \
+    } \
+    if (j<=nd) \
+    { __m128d S = _mm_load_sd(s+j-1); \
+      S = _mm_fmadd_sd (_mm256_castpd256_pd128(TV), _mm_load_sd(w+j-1), S); \
+      _mm_store_sd (s+j-1, S); \
+    } \
+  done: ; \
   } \
 } while (0)
 
@@ -338,28 +387,81 @@ do \
     _mm_store_sd (s, S); \
   } \
   else \
-  { for (i = 0; i<ns; i++, w+=nd) \
-    { __m256d TV = _mm256_broadcast_sd(v+i); \
-      if (_mm_ucomieq_sd (_mm_setzero_pd(), _mm256_castpd256_pd128(TV)))  \
-      { continue; \
+  { __m256d TV, TV2; \
+    i = 0; \
+    for (;;) \
+    { for (;;) \
+      { if (i==ns) goto done; \
+        TV = _mm256_broadcast_sd (v+i); \
+        if (_mm_ucomineq_sd (_mm256_castpd256_pd128(TV), _mm_setzero_pd())) \
+        { break; \
+        } \
+        i += 1; \
+        w += nd; \
+      } \
+      net_param *w2 = w+nd; \
+      i += 1; \
+      for (;;) \
+      { if (i==ns) goto one_more; \
+        TV2 = _mm256_broadcast_sd (v+i); \
+        if (_mm_ucomineq_sd (_mm256_castpd256_pd128(TV2), _mm_setzero_pd())) \
+        { break; \
+        } \
+        i += 1; \
+        w2 += nd; \
       } \
       j = 3; \
       while (j<nd) \
-      { _mm256_storeu_pd (s+j-3, _mm256_add_pd (_mm256_loadu_pd(s+j-3), \
-                                   _mm256_mul_pd(_mm256_loadu_pd(w+j-3),TV))); \
+      { __m256d S = _mm256_loadu_pd(s+j-3); \
+        S = _mm256_add_pd (S, _mm256_mul_pd (TV, _mm256_loadu_pd(w+j-3))); \
+        S = _mm256_add_pd (S, _mm256_mul_pd (TV2, _mm256_loadu_pd(w2+j-3))); \
+        _mm256_storeu_pd (s+j-3, S); \
         j += 4; \
       } \
       j -= 2; \
       if (j<nd) \
-      { _mm_storeu_pd (s+j-1, _mm_add_pd (_mm_loadu_pd(s+j-1), \
-          _mm_mul_pd (_mm_loadu_pd(w+j-1), _mm256_castpd256_pd128(TV)))); \
+      { __m128d S = _mm_loadu_pd(s+j-1); \
+        S = _mm_add_pd (S, _mm_mul_pd (_mm256_castpd256_pd128(TV), \
+                                       _mm_loadu_pd(w+j-1))); \
+        S = _mm_add_pd (S, _mm_mul_pd (_mm256_castpd256_pd128(TV2), \
+                                       _mm_loadu_pd(w2+j-1))); \
+        _mm_storeu_pd (s+j-1, S); \
         j += 2; \
       } \
       if (j<=nd) \
-      { _mm_store_sd (s+j-1, _mm_add_sd (_mm_load_sd(s+j-1), \
-          _mm_mul_sd (_mm_load_sd(w+j-1), _mm256_castpd256_pd128(TV)))); \
+      { __m128d S = _mm_load_sd(s+j-1); \
+        S = _mm_add_sd (S, _mm_mul_sd (_mm256_castpd256_pd128(TV), \
+                                       _mm_load_sd(w+j-1))); \
+        S = _mm_add_sd (S, _mm_mul_sd (_mm256_castpd256_pd128(TV2), \
+                                       _mm_load_sd(w2+j-1))); \
+        _mm_store_sd (s+j-1, S); \
       } \
+      i += 1; \
+      w = w2+nd; \
     } \
+  one_more: \
+    j = 3; \
+    while (j<nd) \
+    { __m256d S = _mm256_loadu_pd(s+j-3); \
+      S = _mm256_add_pd (S, _mm256_mul_pd (TV, _mm256_loadu_pd(w+j-3))); \
+      _mm256_storeu_pd (s+j-3, S); \
+      j += 4; \
+    } \
+    j -= 2; \
+    if (j<nd) \
+    { __m128d S = _mm_loadu_pd(s+j-1); \
+      S = _mm_add_pd (S, _mm_mul_pd (_mm256_castpd256_pd128(TV), \
+                                     _mm_loadu_pd(w+j-1))); \
+      _mm_storeu_pd (s+j-1, S); \
+      j += 2; \
+    } \
+    if (j<=nd) \
+    { __m128d S = _mm_load_sd(s+j-1); \
+      S = _mm_add_sd (S, _mm_mul_sd (_mm256_castpd256_pd128(TV), \
+                                     _mm_load_sd(w+j-1))); \
+      _mm_store_sd (s+j-1, S); \
+    } \
+  done: ; \
   } \
 } while (0)
 

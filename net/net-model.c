@@ -31,14 +31,26 @@
 # include  <immintrin.h>
 #endif
 
+
+/* DEFINE FAST VERSIONS OF EXP AND LOG.  Just the ordinary versions if SLEEF 
+   isn't being used.  Note that since the fast versions are inlined, they
+   shouldn't be used in code that isn't time critical. */
+
 #if USE_SLEEF
 # include <stdint.h>
 # define __SLEEF_REMPITAB__
 # if __AVX__ && __FMA__
 #   include "../sleef-include/sleefinline_purecfma_scalar.h"
+#   define fast_exp Sleef_expd1_u10purecfma
+#   define fast_log Sleef_logd1_u10purecfma
 # else
 #   include "../sleef-include/sleefinline_purec_scalar.h"
+#   define fast_exp Sleef_expd1_u10purec
+#   define fast_log Sleef_logd1_u10purec
 # endif
+#else
+# define fast_exp exp
+# define fast_log log
 #endif
 
 
@@ -113,24 +125,10 @@ void net_model_prob
 
         /* Note: The exp computation below never overflows. */
 
-#       if USE_SLEEF && __AVX__ && __FMA__
-          double ep1 = Sleef_expd1_u10purecfma (-abs_oi) + 1;
-#       elif USE_SLEEF
-          double ep1 = Sleef_expd1_u10purec (-abs_oi) + 1;
-#       else
-          double ep1 = exp (-abs_oi) + 1;
-#       endif
+        double ep1 = fast_exp (-abs_oi) + 1;
 
         if (pr)  /* find log probability */
-        { 
-#         if USE_SLEEF && __AVX__ && __FMA__
-            double log_ep1 = Sleef_logd1_u10purecfma (ep1);
-#         elif USE_SLEEF
-            double log_ep1 = Sleef_logd1_u10purec (ep1);
-#         else
-            double log_ep1 = log (ep1);
-#         endif
-          
+        { double log_ep1 = fast_log (ep1);
           *pr += (t[i] - 0.5*(sign_oi+1)) * oi - log_ep1;
         }
 

@@ -103,7 +103,7 @@ void net_model_prob
   static double alpha_saved=0.0;/* Constant is already computed for this alpha*/
   static double cnst;		/* Saved value of this constant */
 
-  double d, x, alpha, z;
+  double d, x, alpha;
   int i;
 
   switch (m->type)
@@ -142,6 +142,8 @@ void net_model_prob
 
     case 'C':  /* Single class with multiple possible values */
     {
+      double m, e, s;
+
       if (isnan(*t)) 
       { if (pr) *pr = 0;
         if (dp) 
@@ -152,19 +154,25 @@ void net_model_prob
         break;
       }
 
-      z = v->o[0];
-
+      m = v->o[0];
       for (i = 1; i<a->N_outputs; i++)
-      { z = addlogs(z,v->o[i]);
+      { if (v->o[i]>m) m = v->o[i];
+      }
+
+      s = 0;
+      for (i = 0; i<a->N_outputs; i++)
+      { e = fast_exp (v->o[i] - m);
+        if (dp) dp->o[i] = e;
+        s += e;
       }
 
       if (pr) 
-      { *pr = v->o[(int)*t] - z;
+      { *pr = v->o[(int)*t] - m - log(s);
       }
 
       if (dp)
       { for (i = 0; i<a->N_outputs; i++)
-        { dp->o[i] = exp (v->o[i] - z);
+        { dp->o[i] /= s;
         }
         dp->o[(int)*t] -= 1;
       }

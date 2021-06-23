@@ -30,17 +30,6 @@ output layers.  The sizes of zero or more hidden layers are specified
 between these.  Flags pertaining to a layer may be specified after the
 argument giving the size of the layer.  
 
-The following flag is supported for hidden layers and the output
-layer:
-
-    omit:[-]<input>{,<input>}
-
-This specifies that connections from certain inputs are to be omitted
-from those feeding into this layer (assuming that any inputs at all
-are looked at, as specifed by later arguments).  If the "-" is placed
-before the list of inputs, the list gives the inputs that are NOT
-omitted.  Inputs are numbered starting with 1.
-
 For hidden layers, the activation function to use may be specified
 using one of the following flags:
 
@@ -53,6 +42,31 @@ to be h(u) = sqrt(2)*sin(sqrt(2)*u).  The multiplications by sqrt(2)
 in this activation function make a network with one hidden layer of
 this type correspond in the limit of many hidden units to a Gaussian
 process model with covariance function given by exp(-distance^2).
+
+The following flag is supported for hidden layers and the output
+layer:
+
+    omit:[-]<input>{,<input>}
+
+This specifies that connections from certain inputs are to be omitted
+from those feeding into this layer (assuming that any inputs at all
+are looked at, as specifed by later arguments).  If the "-" is placed
+before the list of inputs, the list gives the inputs that are NOT
+omitted.  Inputs are numbered starting with 1.
+
+For hidden layers and the output layer, one or both of the following
+flags may be specified:
+
+    input-config:<file>
+    hidden-config:<file>
+
+except that the "input-config" flag may not be combined with an "omit"
+flag, and the "hidden-config" flag may not be specified for the first
+hidden layer.  The file named must contain a specification of which
+connections from the input layer or previous hidden layer are present,
+and how the weight parameters are used for these connections (with
+possible sharing of weights between connections).  See config.doc for
+documentation on how the configuration is specified in such a file.
 
 Following a "/", the priors for groups of weights, biases, offsets,
 and adjustments are specified, in one of two forms.  For the syntax of
@@ -111,4 +125,4 @@ When the second form of the command is used (with just the log file as
 argument), these records are read and the information they contain is
 displayed on standard output.
 
-            Copyright (c) 1995-2004 by Radford M. Neal
+            Copyright (c) 1995-2021 by Radford M. Neal

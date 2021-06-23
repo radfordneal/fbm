@@ -128,6 +128,7 @@ Bayesian neural networks [net]:
 
   * net             Bayesian inference for neural networks using MCMC
   * net-spec        Create a new network, or display existing specifications 
+  * net-config      Specify weight configuration for a layer's connections
 
   * net-mc          Do Markov chain simulation to sample networks
   * net-gen         Generate networks from the prior, or with fixed values  

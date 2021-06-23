@@ -78,6 +78,12 @@ is specified by a single "alpha" value.  A value of "-" represents
 infinity (effectively eliminating the adjustment).  Omitting a prior
 for a set of adjustments also eliminates them.
 
+If a configuration file is specified for a group of connections, with
+an "input-config" or "hidden-config" flag, the corresponding prior
+must not specifying a value for Alpha-sub-group (see prior.doc), since
+sub-groups by source unit are not well-defined when weights may be
+shared.
+
 The first form for the prior specifications, in which groups are
 specified by position, is kept primarily for backward compatibility.
 In this form, "ti" is the prior for the offsets of input units, "hh"

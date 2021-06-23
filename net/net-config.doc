@@ -1,3 +1,36 @@
 NET-CONFIG:  Specify weight configuration for a layer's connections
 
+What connections exist into a hidden layer of a network from the
+previous hidden layer or the input layer, and any sharing of weights
+between these connections, can be specified in a configuration file,
+referenced from the "input-config" or "hidden-config" flags in the
+network specification.  (See net-spec.doc for details.)
+
+This configure file contains one or more triples of the form 
+
+    <source-unit> <destination-unit> <weight-index>
+
+These elements may be positive integers. The source unit ranges from 1
+to the number of units in the source layer (the input layer or the
+previous hidden layer).  The destimation unit ranges from 1 to the
+number of units in the hidden layer this configuration applies to.
+The weight-index ranges from 1 to the number of weights used, which
+may be less than the number of connections, since weights may be
+shared.
+
+For example, suppose the following network specification is used:
+
+    net-spec log 3 1 input-config:conf / io=2
+
+and the file "config" contains the following lines:
+
+    1 1 1
+    1 2 2
+    1 3 1
+
+Then the network will have two weight parameters, with the first
+parameter being used for the connections from the first and third
+input to the output, and the second parameters being used for the
+connection from the second input to the output.
+
             Copyright (c) 2021 by Radford M. Neal

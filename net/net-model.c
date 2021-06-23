@@ -167,7 +167,7 @@ void net_model_prob
       }
 
       if (pr) 
-      { *pr = v->o[(int)*t] - m - log(s);
+      { *pr = v->o[(int)*t] - m - fast_log(s);
       }
 
       if (dp)

@@ -192,6 +192,19 @@ typedef struct
 } net_values;
 
 
+/* WEIGHT CONFIGURATION. */
+
+#define Max_conn 1000000	/* Maximum number of connections in a group */
+
+typedef struct { unsigned short s, d; int w; } conn_group;
+
+typedef struct
+{ int N_wts;			/* Number of weights */
+  int N_conn;			/* Number of connections */
+  conn_group conn[1];		/* Connection groups */
+} net_config;
+
+
 /* PROCEDURES. */
 
 int net_setup_sigma_count (net_arch *, net_flags *, model_specification *);
@@ -241,3 +254,5 @@ void net_print_sigmas (net_sigmas *, net_arch *, net_flags *,
 void net_record_sizes        (log_gobbled *);
 void net_check_specs_present (net_arch *, net_priors *, int,
                               model_specification *, model_survival *);
+
+net_config *net_config_read (char *file, int ns, int nd);

@@ -19,11 +19,14 @@ or:
 
 or: 
 
-    net-spec log-file
+    net-spec log-file [ "config" ]
 
 The first two forms above are alternative ways of specifying network
-archictures.  The last form is for displaying the network architecture
-stored in the specified log file.
+archictures.  
+
+The last form is for displaying the network architecture stored in the
+specified log file.  The optional "config" argument causes the detailed
+configuration from input-config and hidden-config flags to be output.
 
 N-inputs and N-outputs are the numbers of units in the input and
 output layers.  The sizes of zero or more hidden layers are specified
@@ -33,7 +36,7 @@ argument giving the size of the layer.
 For hidden layers, the activation function to use may be specified
 using one of the following flags:
 
-    tanh identity sin
+    tanh  identity  sin
 
 The default is tanh, the hyperbolic tangent function.  The identity
 flag causes the output of a hidden unit in the layer to be identical
@@ -60,13 +63,16 @@ flags may be specified:
     input-config:<file>
     hidden-config:<file>
 
-except that the "input-config" flag may not be combined with an "omit"
-flag, and the "hidden-config" flag may not be specified for the first
+except that the input-config flag may not be combined with an omit
+flag, and the hidden-config flag may not be specified for the first
 hidden layer.  The file named must contain a specification of which
 connections from the input layer or previous hidden layer are present,
 and how the weight parameters are used for these connections (with
 possible sharing of weights between connections).  See config.doc for
 documentation on how the configuration is specified in such a file.
+The named configuration files do not need to exist when the
+configuration is specified; they are read (and checked for errors)
+only when needed later.
 
 Following a "/", the priors for groups of weights, biases, offsets,
 and adjustments are specified, in one of two forms.  For the syntax of
@@ -79,8 +85,8 @@ infinity (effectively eliminating the adjustment).  Omitting a prior
 for a set of adjustments also eliminates them.
 
 If a configuration file is specified for a group of connections, with
-an "input-config" or "hidden-config" flag, the corresponding prior
-must not specifying a value for Alpha-sub-group (see prior.doc), since
+an input-config or hidden-config flag, the corresponding prior must
+not specifying a value for Alpha-sub-group (see prior.doc), since
 sub-groups by source unit are not well-defined when weights may be
 shared.
 

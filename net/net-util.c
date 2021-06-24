@@ -71,3 +71,24 @@ void net_check_specs_present
     exit(1);
   }
 }
+
+
+/* READ WEIGHT CONFIGURATION.  Passed the configuration file and numbers
+   units in the source and destination layers.  Returns a newly-allocated
+   structure with the configuration. */
+
+net_config *net_config_read (char *file, int ns, int nd)
+{ 
+  net_config *p = malloc (sizeof(net_config) + Max_conn * sizeof(conn_group));
+
+  p->N_wts = 1;
+  p->N_conn = 1;
+  p->conn[0].s = 0;
+  p->conn[0].d = 0;
+  p->conn[0].w = 0;
+
+  net_config *q = malloc (sizeof(net_config) + p->N_conn * sizeof(conn_group));
+  memcpy (q, p, sizeof(net_config) + p->N_conn * sizeof(conn_group));
+  free(p);
+  return q;
+}

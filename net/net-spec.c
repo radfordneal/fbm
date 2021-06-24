@@ -27,6 +27,7 @@
 
 
 static void usage(void);
+static void print_config (net_config *);
 
 
 /* MAIN PROGRAM. */
@@ -56,8 +57,10 @@ int main
 
   /* See if we are to display specifications for existing network. */
 
-  if (argc==2)
+  if (argc==2 || argc==3 && strcmp(argv[2],"config")==0)
   {
+    int show_configs = argc==3;
+
     /* Open log file and gobble up initial records. */
   
     log_file_open(&logf,0);
@@ -180,6 +183,35 @@ int main
     }
   
     printf("\n");
+
+    if (show_configs)
+    { for (l = 0; l<a->N_layers; l++)
+      { if (flgs->input_config[l])
+        { printf("Hidden layer %d input weight configuration\n",l);
+          print_config (net_config_read 
+                         (flgs->config_files+flgs->input_config[l],
+                          a->N_inputs, a->N_hidden[l]));
+        }
+        if (flgs->hidden_config[l])
+        { printf("Hidden layer %d hidden weight configuration\n",l);
+          print_config (net_config_read 
+                         (flgs->config_files+flgs->hidden_config[l],
+                          a->N_hidden[l-1], a->N_hidden[l]));
+        }
+      }
+      if (flgs->input_config[a->N_layers])
+      { printf("Output layer input weight configuration\n");
+        print_config (net_config_read 
+                       (flgs->config_files+flgs->input_config[a->N_layers],
+                        a->N_inputs, a->N_outputs));
+      }
+      if (flgs->hidden_config[a->N_layers])
+      { printf("Output layer hidden weight configuration\n");
+        print_config (net_config_read 
+                       (flgs->config_files+flgs->hidden_config[a->N_layers],
+                        a->N_hidden[a->N_layers-1], a->N_outputs));
+      }
+    }
   
     log_file_close(&logf);
   
@@ -503,6 +535,18 @@ int main
   log_file_close(&logf);
 
   exit(0);
+}
+
+
+/* PRINT WEIGHT CONFIGURATION. */
+
+void print_config (net_config *cf)
+{ int k;
+  printf("\n%d connections, %d weights\n\n",cf->N_conn,cf->N_wts);
+  for (k = 0; k<cf->N_conn; k++)
+  { printf("%6d %6d %6d\n",cf->conn[k].s,cf->conn[k].d,cf->conn[k].w);
+  }
+  printf("\n");
 }
 
 

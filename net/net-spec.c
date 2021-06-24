@@ -1,6 +1,6 @@
 /* NET-SPEC.C - Program to specify a new network (and create log file). */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -44,7 +44,7 @@ int main
   log_file logf;
   log_gobbled logg;
 
-  char ps[1000];
+  char ps[2000];
   char **ap;
   int i, j, l;
 
@@ -90,15 +90,21 @@ int main
       else if (flgs->layer_type[l]==Identity_type)   printf("  identity");
       else if (flgs->layer_type[l]==Sin_type)        printf("  sin");
       else                                           printf("  UNKNOWN TYPE!");
-      if (flgs!=0 && l<7 
+      if (flgs!=0 && l<15
        && list_flags (flgs->omit, a->N_inputs, 1<<(l+1), ps) > 0)
       { printf("  omit%s",ps);
+      }
+      if (flgs->input_config[l])
+      { printf("  input-config:%s",flgs->config_files+flgs->input_config[l]);
+      }
+      if (flgs->hidden_config[l])
+      { printf("  hidden-config:%s",flgs->config_files+flgs->hidden_config[l]);
       }
       printf("\n");
     }
 
     printf ("  Output layer:    size %d", a->N_outputs);
-    if (flgs!=0 && l<7 
+    if (flgs!=0 && l<15
      && list_flags (flgs->omit, a->N_inputs, 1, ps) > 0)
     { printf("  omit%s",ps);
     }
@@ -193,7 +199,7 @@ int main
   while (*ap!=0 && strcmp(*ap,"/")!=0)
   { 
     double size;
-    int omit, type;
+    int omit, iconfig, hconfig, type, fileix;
     int i;
 
     if ((size = atoi(*ap++))<=0) usage();
@@ -201,14 +207,34 @@ int main
     if (*ap==0) usage();
 
     omit = 0;
+    iconfig = 0;
+    hconfig = 0;
     type = -1;
+    fileix = 1;  /* don't start at 0 since 0 is used for "none" */
 
     while ((*ap)[0]>='a' && (*ap)[0]<='z')
-    { if ((*ap)[0]=='o' && (*ap)[1]=='m' && (*ap)[2]=='i' && (*ap)[3]=='t' 
-       && (*ap)[4]==':')
+    { if (strncmp(*ap,"omit:",5)==0)
       { if (omit) usage();
         omit = 1;
         parse_flags (*ap+4, flgs->omit, a->N_inputs, 1);
+      }
+      else if (strncmp(*ap,"input-config:",13)==0)
+      { if (iconfig) usage();
+        iconfig = 1;
+        strcpy(flgs->config_files+fileix,*ap+13);
+        flgs->input_config[a->N_layers] = fileix;
+        fileix += strlen(flgs->config_files+fileix);
+      }
+      else if (strncmp(*ap,"hidden-config:",14)==0)
+      { if (hconfig) usage();
+        if (a->N_layers==0)
+        { fprintf(stderr,"hidden-config not allowed for first hidden layer\n");
+          exit(2);
+        }
+        hconfig = 1;
+        strcpy(flgs->config_files+fileix,*ap+13);
+        flgs->hidden_config[a->N_layers] = fileix;
+        fileix += strlen(flgs->config_files+fileix);
       }
       else if (strcmp(*ap,"tanh")==0)
       { if (type>=0) usage();
@@ -229,10 +255,16 @@ int main
       ap += 1;
     }
 
+    if (omit && (iconfig || hconfig))
+    { fprintf(stderr,
+        "omit flag may not be combined with input-config or hidden-config\n");
+      exit(2);
+    }
+
     if (*ap!=0 && strcmp(*ap,"/")!=0)
-    { if (a->N_layers == (Max_layers>7 ? 7 : Max_layers))
+    { if (a->N_layers == (Max_layers>15 ? 15: Max_layers))
       { fprintf(stderr,"Too many layers specified (maximum is %d)\n",
-                        Max_layers>7 ? 7 : Max_layers);
+                        Max_layers>15 ? 15 : Max_layers);
         exit(1);
       }
       a->N_hidden[a->N_layers] = size;

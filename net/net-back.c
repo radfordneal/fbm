@@ -42,7 +42,7 @@
 
 static void zero_derivatives (net_value *, int),
             sum_derivatives  (net_value *, int, net_value *, int, net_param *, 
-                              char *, int);
+                              unsigned short *, int);
 
 
 /* BACKPROPAGATE ERROR DERIVATIVES.  The first argument must contain the 
@@ -75,12 +75,12 @@ void net_back
     
     if (a->has_ho[l])
     { sum_derivatives (d->o, a->N_outputs, dh, N_hidden, 
-                       w->ho[l], (char *) 0, 0);
+                       w->ho[l], (unsigned short *) 0, 0);
     }
 
     if (l<a->N_layers-1 && a->has_hh[l])
     { sum_derivatives (d->s[l+1], a->N_hidden[l+1], dh, N_hidden, 
-                       w->hh[l], (char *) 0, 0);
+                       w->hh[l], (unsigned short *) 0, 0);
     }
 
     net_value *restrict vh = v->h[l];
@@ -422,7 +422,7 @@ static void sum_derivatives
   net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
   int ns,		  /* Number of source units */
   net_param *restrict w,  /* Connection weights */
-  char *restrict omit,	  /* Omit flags, null if not present */
+  unsigned short *restrict omit,  /* Omit flags, null if not present */
   int b			  /* Bit to look at in omit flags */
 )
 {

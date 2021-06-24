@@ -1,6 +1,6 @@
 /* NET.H - Interface to neural network modules. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -21,9 +21,8 @@
 
    Stored in log files under type 'A'.  Changes may invalidate old log files. */
 
-#define Max_layers 10 /* Maximum number of hidden layers in a network */
-                      /* Note:  The actual maximum can be no more than 7, but
-                         Max_layers can be larger so old log files can be read*/
+#define Max_layers 15  /* Maximum number of hidden layers in a network
+                           - no more than 1, due to keeping flags in 'short' */
 
 typedef struct
 { 
@@ -65,12 +64,14 @@ typedef struct
 
 typedef struct
 {
-  char omit[Max_inputs];	/* Whether inputs are omitted for each layer */
+  unsigned short omit[Max_inputs]; /* Whether inputs omitted, for each layer */
 
-  char layer_type[Max_layers];	/* Type of hidden units in layer */
-  char layer_flags[Max_layers];	/* Flags pertaining to each layer */
+  char layer_type[Max_layers];     /* Type of hidden units in layer */
 
-  int reserved[4];		/* Reserved for future use */
+  short input_config[Max_layers+1]; /* Index of input config file, 0 if none */
+  short hidden_config[Max_layers+1];/* Index of hidden config file, 0 if none */
+
+  char config_files[2000];         /* Names of files for input/hidden configs */
 
 } net_flags;
 

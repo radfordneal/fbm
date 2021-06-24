@@ -1,6 +1,6 @@
 /* MISC.C - Miscellaneous utility procedures. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -431,9 +431,9 @@ int parse_real_range
 
 void parse_flags
 ( char *s,		/* String to parse */
-  char *a,		/* Char array in which to set bits */
-  int  n,		/* Length of a, maximum value of an item */
-  int  flag		/* Bit to set in a to indicate flag applies */
+  unsigned short *a,	/* Array in which to set bits */
+  int n,		/* Length of a, maximum value of an item */
+  int flag		/* Bit to set in a to indicate flag applies */
 )
 { 
   int i, r;
@@ -491,7 +491,7 @@ void parse_flags
    Returns the number of items that the flag applies to. */
 
 int list_flags
-( char *a,		/* Char array holding flag bits */
+( unsigned short *a,	/* Array holding flag bits */
   int  n,		/* Length of a */
   int  flag,		/* Bit set in a to indicate flag applies */
   char *s		/* Place to store list - must be big enough! */
@@ -545,7 +545,7 @@ int list_flags
 /* COUNT INPUTS NOT OMITTED. */
 
 int not_omitted
-( char *a,		/* Char array holding omit flag bits, null if none */
+( unsigned short *a,	/* Array holding omit flag bits, null if none */
   int  n,		/* Length of a (ie, total number of inputs) */
   int  flag		/* Bit set in a to indicate input omitted */
 )

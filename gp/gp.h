@@ -1,6 +1,6 @@
 /* GP.H - Interface to Gaussian Process modules. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -55,7 +55,7 @@ typedef struct
     prior_spec scale;		  /* Prior for scale of this contribution */
     prior_spec relevance;	  /* Prior for relevancies of inputs */
 
-    char flags[Max_in_out];	  /* Flags pertaining to inputs/outputs */
+    unsigned short flags[Max_in_out];  /* Flags pertaining to inputs/outputs */
 
     int spread;			  /* Amount to spread relevance - not used now*/
 
@@ -65,7 +65,7 @@ typedef struct
 
   struct 			/* Linear term in covariance function */
   {
-    char flags[Max_in_out];	  /* Flags for linear part */
+    unsigned short flags[Max_in_out];  /* Flags for linear part */
     int spread;			  /* Amount of relevance spread */
 
   } lin;

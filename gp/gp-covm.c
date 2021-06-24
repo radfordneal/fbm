@@ -1,6 +1,6 @@
 /* GP-COVM.C - Procedures to compute covariances and their derivatives. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -73,7 +73,7 @@ void gp_cov
   double d, s, pw, c, v;
   int l, i, j, k1, k2, ni;
   double *p1, *p2, *pc, *ec;
-  char *flags;
+  unsigned short *flags;
   int spread;
 
   ni = gp->N_inputs;
@@ -244,7 +244,7 @@ int gp_cov_deriv
   int l, i, j, k, k1, k2, ni;
   double *p1, *p2, *pd, *ec;
   int spread, found;
-  char *flags;
+  unsigned short *flags;
 
   ni = gp->N_inputs;
 

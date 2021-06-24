@@ -59,7 +59,7 @@
 static void bias_values (net_value *, int, net_param *);
 
 static void add_connections (net_value *, int, net_value *, int, 
-                             net_param *, net_param *, char *, int);
+                             net_param *, net_param *, unsigned short *, int);
 
 
 /* EVALUATE NETWORK FUNCTION FOR GIVEN INPUTS.  The inputs are taken from
@@ -99,7 +99,7 @@ void net_func
 
     if (l>0 && a->has_hh[l-1])
     { add_connections (sh, N_hidden, v->h[l-1], a->N_hidden[l-1],
-          w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0, (char *) 0, 0);
+          w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0, (unsigned short *) 0, 0);
     }
 
     /* Put values through hidden unit activation function. */
@@ -186,7 +186,7 @@ void net_func
   for (l = 0; l<a->N_layers; l++)
   { if (a->has_ho[l])
     { add_connections (v->o, a->N_outputs, v->h[l], a->N_hidden[l], 
-                       w->ho[l], a->has_th[l] ? w->th[l] : 0, (char *) 0, 0);
+              w->ho[l], a->has_th[l] ? w->th[l] : 0, (unsigned short *) 0, 0);
     }
   }
 }
@@ -478,7 +478,7 @@ static void add_connections
   int ns,		  /* Number of source units */
   net_param *restrict w,  /* Connection weights */
   net_param *restrict off,/* Offsets to add to source unit values */
-  char *restrict omit,	  /* Omit flags, null if not present */
+  unsigned short *restrict omit,  /* Omit flags, null if not present */
   int ob		  /* Bit to look at in omit flags */
 )
 {

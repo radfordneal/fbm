@@ -107,9 +107,15 @@ int main
     }
 
     printf ("  Output layer:    size %d", a->N_outputs);
-    if (flgs!=0 && l<15
+    if (flgs!=0
      && list_flags (flgs->omit, a->N_inputs, 1, ps) > 0)
     { printf("  omit%s",ps);
+    }
+    if (flgs->input_config[l])
+    { printf("  input-config:%s",flgs->config_files+flgs->input_config[l]);
+    }
+    if (flgs->hidden_config[l])
+    { printf("  hidden-config:%s",flgs->config_files+flgs->hidden_config[l]);
     }
     printf("\n");
   
@@ -574,6 +580,11 @@ static void usage(void)
 
   fprintf(stderr,
    "Prior: [x]Width[:[Alpha-type][:[Alpha-unit][:[Alpha-weight]]]]\n");
+
+  fprintf(stderr,
+ "Flags: omit:[-]<input>{,<input>} input-config:<file> hidden-config:<file>\n");
+  fprintf(stderr,
+ "       tanh identity sin\n");
 
   exit(1);
 }

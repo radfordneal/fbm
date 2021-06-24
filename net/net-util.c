@@ -79,15 +79,55 @@ void net_check_specs_present
 
 net_config *net_config_read (char *file, int ns, int nd)
 { 
+  FILE *fp = file[0]=='%' ? popen(file+1,"r") : fopen(file,"r");
+  if (fp==NULL)
+  { fprintf(stderr,"Can't open weight configuration file: %s\n",file);
+    exit(2);
+  }
+  
   net_config *p = malloc (sizeof(net_config) + Max_conn * sizeof(conn_group));
+  if (p==NULL)
+  { fprintf(stderr,"Can't allocate memory for weight configuration\n");
+    exit(3);
+  }
 
-  p->N_wts = 1;
-  p->N_conn = 1;
-  p->conn[0].s = 0;
-  p->conn[0].d = 0;
-  p->conn[0].w = 0;
+  p->N_wts = 0;
+  p->N_conn = 0;
+
+  for (;;)
+  { 
+    int s, d, w, n;
+
+    n = fscanf(fp,"%d%d%d\n",&s,&d,&w);
+    if (n==EOF) break;
+
+    if (n!=3 || s<1 || d<1 || w<1 || s>ns || d>nd)
+    { fprintf (stderr, "Bad weight configuration file: %s, item %d\n",
+               file, p->N_conn+1);
+      exit(2);
+    }
+
+    if (p->N_conn==Max_conn)
+    { fprintf (stderr,"Too many connections in weight configuration file: %s\n",
+               file);
+      exit(2);
+    }
+
+    p->conn[p->N_conn].s = s;
+    p->conn[p->N_conn].d = d;
+    p->conn[p->N_conn].w = w;
+
+    if (w>p->N_wts) p->N_wts = w;
+
+    p->N_conn += 1;
+  }
 
   net_config *q = malloc (sizeof(net_config) + p->N_conn * sizeof(conn_group));
+  if (q==NULL)
+  { fprintf(stderr,"Can't allocate memory for weight configuration\n");
+    exit(3);
+  }
+
   memcpy (q, p, sizeof(net_config) + p->N_conn * sizeof(conn_group));
   free(p);
   return q;

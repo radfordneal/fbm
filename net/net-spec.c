@@ -93,29 +93,21 @@ int main
       else if (flgs->layer_type[l]==Identity_type)   printf("  identity");
       else if (flgs->layer_type[l]==Sin_type)        printf("  sin");
       else                                           printf("  UNKNOWN TYPE!");
-      if (flgs!=0 && l<15
-       && list_flags (flgs->omit, a->N_inputs, 1<<(l+1), ps) > 0)
+      if (flgs && list_flags (flgs->omit, a->N_inputs, 1<<(l+1), ps) > 0)
       { printf("  omit%s",ps);
       }
-      if (flgs->input_config[l])
+      if (flgs && flgs->input_config[l])
       { printf("  input-config:%s",flgs->config_files+flgs->input_config[l]);
       }
-      if (flgs->hidden_config[l])
+      if (flgs && flgs->hidden_config[l])
       { printf("  hidden-config:%s",flgs->config_files+flgs->hidden_config[l]);
       }
       printf("\n");
     }
 
     printf ("  Output layer:    size %d", a->N_outputs);
-    if (flgs!=0
-     && list_flags (flgs->omit, a->N_inputs, 1, ps) > 0)
+    if (flgs && list_flags (flgs->omit, a->N_inputs, 1, ps) > 0)
     { printf("  omit%s",ps);
-    }
-    if (flgs->input_config[l])
-    { printf("  input-config:%s",flgs->config_files+flgs->input_config[l]);
-    }
-    if (flgs->hidden_config[l])
-    { printf("  hidden-config:%s",flgs->config_files+flgs->hidden_config[l]);
     }
     printf("\n");
   
@@ -205,18 +197,6 @@ int main
                           a->N_hidden[l-1], a->N_hidden[l]));
         }
       }
-      if (flgs->input_config[a->N_layers])
-      { printf("Output layer input weight configuration\n");
-        print_config (net_config_read 
-                       (flgs->config_files+flgs->input_config[a->N_layers],
-                        a->N_inputs, a->N_outputs));
-      }
-      if (flgs->hidden_config[a->N_layers])
-      { printf("Output layer hidden weight configuration\n");
-        print_config (net_config_read 
-                       (flgs->config_files+flgs->hidden_config[a->N_layers],
-                        a->N_hidden[a->N_layers-1], a->N_outputs));
-      }
     }
   
     log_file_close(&logf);
@@ -300,9 +280,9 @@ int main
     }
 
     if (*ap!=0 && strcmp(*ap,"/")!=0)
-    { if (a->N_layers == (Max_layers>15 ? 15: Max_layers))
+    { if (a->N_layers == Max_layers)
       { fprintf(stderr,"Too many layers specified (maximum is %d)\n",
-                        Max_layers>15 ? 15 : Max_layers);
+                        Max_layers);
         exit(1);
       }
       a->N_hidden[a->N_layers] = size;

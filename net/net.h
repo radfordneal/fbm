@@ -14,6 +14,20 @@
  */
 
 
+/* WEIGHT CONFIGURATION.  Records network weight configuration set up for a 
+   group of connections with an input-config or hidden-config flag. */
+
+#define Max_conn 1000000	/* Maximum number of connections in a group */
+
+typedef struct { unsigned short s, d; int w; } conn_group;
+
+typedef struct
+{ int N_wts;			/* Number of weights */
+  int N_conn;			/* Number of connections */
+  conn_group conn[1];		/* Connection groups */
+} net_config;
+
+
 /* NETWORK ARCHITECTURE.  Defines the dimensions of the input and output, the
    number of hidden layers, and the number of units in each hidden layer. 
    Also indicates which groups of network parameters the network contains,
@@ -22,7 +36,7 @@
    Stored in log files under type 'A'.  Changes may invalidate old log files. */
 
 #define Max_layers 15  /* Maximum number of hidden layers in a network
-                           - no more than 1, due to keeping flags in 'short' */
+                           - no more than 15, due to keeping flags in 'short' */
 
 typedef struct
 { 
@@ -42,6 +56,9 @@ typedef struct
 
   int has_ah[Max_layers];	/* Do hidden layers have adjustments? */
   int has_ao;			/* Does output layer have adjustments? */
+
+  net_config *input_config[Max_layers];   /* Pointers used during program, */
+  net_config *hidden_config[Max_layers];  /*   but set to zero in log file */
 
 } net_arch;
 
@@ -68,8 +85,8 @@ typedef struct
 
   char layer_type[Max_layers];     /* Type of hidden units in layer */
 
-  short input_config[Max_layers+1]; /* Index of input config file, 0 if none */
-  short hidden_config[Max_layers+1];/* Index of hidden config file, 0 if none */
+  short input_config[Max_layers];  /* Index of input config file, 0 if none */
+  short hidden_config[Max_layers]; /* Index of hidden config file, 0 if none */
 
   char config_files[2000];         /* Names of files for input/hidden configs */
 
@@ -147,10 +164,11 @@ typedef struct
 /* NETWORK PARAMETERS.  Network weights, biases, and offsets are stored 
    in arrays pointed to by the following structure, arranged first by source
    unit, then by destination unit. For example, the weight from input unit 
-   i to unit j of hidden layer l is ih[l][N_hidden[l]*i + j].  The array 
-   pointers are null when the corresponding parameters do not exist in the 
-   network.  Structures of the same type are also used for other data 
-   associated with parameters, such as components of the "error" gradient.
+   i to unit j of hidden layer l is ih[l][N_hidden[l]*i + j], if no weight
+   configuration file is used.  The array pointers are null when the 
+   corresponding parameters do not exist in the network.  Structures of 
+   the same type are also used for other data associated with parameters, 
+   such as components of the "error" gradient.
 
    Stored in log files under type 'W'.  Changes may invalidate old log files. */
 
@@ -190,19 +208,6 @@ typedef struct
   net_value *o;			/* Values of output units */
 
 } net_values;
-
-
-/* WEIGHT CONFIGURATION. */
-
-#define Max_conn 1000000	/* Maximum number of connections in a group */
-
-typedef struct { unsigned short s, d; int w; } conn_group;
-
-typedef struct
-{ int N_wts;			/* Number of weights */
-  int N_conn;			/* Number of connections */
-  conn_group conn[1];		/* Connection groups */
-} net_config;
 
 
 /* PROCEDURES. */

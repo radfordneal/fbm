@@ -1,6 +1,6 @@
 /* NET-SETUP.C - Procedures for setting up network data structures. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -82,7 +82,9 @@ int net_setup_sigma_count
 
 
 /* RETURN NUMBER OF NETWORK PARAMETERS.  Returns the number of weights,
-   biases, and offsets in a network with the given architecture. */
+   biases, and offsets in a network with the given architecture.  Also
+   reads any weight configuration files, and fills in the configuration
+   pointers in the net_arch structure. */
 
 int net_setup_param_count
 ( net_arch *a,		/* Network architecture */
@@ -98,11 +100,29 @@ int net_setup_param_count
 
   for (l = 0; l<a->N_layers; l++)
   {
-    if (l>0 && a->has_hh[l-1]) count += a->N_hidden[l-1]*a->N_hidden[l];
+    if (l>0 && a->has_hh[l-1])
+    { if (flgs && flgs->hidden_config[l])
+      { a->hidden_config[l] = 
+          net_config_read (flgs->config_files + flgs->hidden_config[l],
+                           a->N_hidden[l-1], a->N_hidden[l]);
+        count += a->hidden_config[l]->N_wts;
+      }
+      else
+      { count += a->N_hidden[l-1]*a->N_hidden[l];
+      }
+    }
 
     if (a->has_ih[l]) 
-    { count += not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1))
-                 * a->N_hidden[l];
+    { if (flgs && flgs->input_config[l])
+      { a->input_config[l] =
+          net_config_read (flgs->config_files + flgs->input_config[l],
+                           a->N_inputs, a->N_hidden[l]);
+        count += a->input_config[l]->N_wts;
+      }
+      else
+      { count += not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1))
+                  * a->N_hidden[l];
+      }
     }
 
     if (a->has_bh[l]) count += a->N_hidden[l];

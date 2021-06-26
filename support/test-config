@@ -1,0 +1,10 @@
+#!/bin/bash
+
+net-spec log 5 \
+             4 input-config:"%echo  3 1 1  4 2 1  1 1 2" \
+             3 hidden-config:"%echo 1 2 1  2 1 1" \
+             2 / ih=7 hh=8 ho=9 bo=10
+net-spec log config
+net-gen log 3
+net-display log
+net-tbl q0q1q2q3q4 log

@@ -1,6 +1,6 @@
 /* NET-PRINT.C - Procedures to print network parameters and hyperprameters. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -61,11 +61,17 @@ void net_print_params
     if (l>0 && a->has_hh[l-1])
     { printf("\nHidden Layer %d to Hidden Layer %d Weights [%d]\n\n",l-1,l,g++);
       if (s!=0) printf("%5.2f",*s->hh_cm[l-1]);
-      for (i = 0; i<a->N_hidden[l-1]; i++)
-      { if (i>0) printf("\n");
-        if (s!=0 && i>0) printf("     ");
-        if (s!=0) printf(" %4.2f:",s->hh[l-1][i]);
-        print_param_array(w->hh[l-1]+a->N_hidden[l]*i, a->N_hidden[l], s!=0);
+      if (a->hidden_config[l])
+      { if (s!=0) printf(":     ");
+        print_param_array(w->hh[l-1], a->hidden_config[l]->N_wts, s!=0);
+      }
+      else
+      { for (i = 0; i<a->N_hidden[l-1]; i++)
+        { if (i>0) printf("\n");
+          if (s!=0 && i>0) printf("     ");
+          if (s!=0) printf(" %4.2f:",s->hh[l-1][i]);
+          print_param_array(w->hh[l-1]+a->N_hidden[l]*i, a->N_hidden[l], s!=0);
+        }
       }
     }
   
@@ -76,17 +82,23 @@ void net_print_params
       }
       printf("\n\n");
       if (s!=0) printf("%5.2f",*s->ih_cm[l]);
-      j = 0;
-      for (i = 0; i<a->N_inputs; i++)
-      { if (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
-        { if (j>0) printf("\n");
-          if (s!=0 && j>0) printf("     ");
-          if (s!=0) printf(" %4.2f:",s->ih[l][j]);
-          print_param_array(w->ih[l]+a->N_hidden[l]*j, a->N_hidden[l], s!=0);
-          j += 1;
-        }
+      if (a->input_config[l])
+      { if (s!=0) printf(":     ");
+        print_param_array(w->ih[l], a->input_config[l]->N_wts, s!=0);
       }
-      if (j==0) printf("\n");
+      else
+      { j = 0;
+        for (i = 0; i<a->N_inputs; i++)
+        { if (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
+          { if (j>0) printf("\n");
+            if (s!=0 && j>0) printf("     ");
+            if (s!=0) printf(" %4.2f:",s->ih[l][j]);
+            print_param_array(w->ih[l]+a->N_hidden[l]*j, a->N_hidden[l], s!=0);
+            j += 1;
+          }
+        }
+        if (j==0) printf("\n");
+      }
     }
 
     if (a->has_bh[l])

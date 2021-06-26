@@ -1,6 +1,6 @@
 /* NET-PRIOR.C - Routines dealing with priors for networks. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -41,6 +41,9 @@ static void pick_unit_params (net_param *, net_sigma *, int, net_sigma *,
 
 static void pick_weights (net_param *, net_sigma *, net_sigma *, 
                           int, int, net_sigma *, prior_spec, int, double);
+
+static void pick_weights_in_group (net_param *, net_sigma *, net_sigma *, 
+                                   int, int, prior_spec, int, double);
 
 static void compute_prior (net_param *, int, double *, net_param *, 
                            net_sigma, double, net_sigma *, int);
@@ -97,14 +100,32 @@ void net_prior_generate
     }
 
     if (l>0)
-    { if (a->has_hh[l-1]) pick_weights (w->hh[l-1], s->hh_cm[l-1], s->hh[l-1], 
-                                        a->N_hidden[l-1], a->N_hidden[l], 
-                                        s->ah[l], p->hh[l-1], centre, value);
+    { if (a->has_hh[l-1]) 
+      { if (a->hidden_config[l])
+        { pick_weights_in_group (w->hh[l-1], s->hh_cm[l-1], s->hh[l-1],
+                                 a->N_hidden[l-1], a->hidden_config[l]->N_wts,
+                                 p->hh[l-1], centre, value);
+        }
+        else
+        { pick_weights (w->hh[l-1], s->hh_cm[l-1], s->hh[l-1], 
+                        a->N_hidden[l-1], a->N_hidden[l], 
+                        s->ah[l], p->hh[l-1], centre, value);
+        }
+      }
     }
 
-    if (a->has_ih[l]) pick_weights (w->ih[l], s->ih_cm[l], s->ih[l], 
+    if (a->has_ih[l]) 
+    { if (a->input_config[l])
+      { pick_weights_in_group (w->ih[l], s->ih_cm[l], s->ih[l],
+                               a->N_inputs, a->input_config[l]->N_wts,
+                               p->ih[l], centre, value);
+      }
+      else
+      { pick_weights (w->ih[l], s->ih_cm[l], s->ih[l], 
          not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1)), a->N_hidden[l], 
          s->ah[l], p->ih[l], centre, value);
+      }
+    }
 
     if (a->has_bh[l]) pick_unit_params (w->bh[l], s->bh_cm[l], a->N_hidden[l], 
                                         s->ah[l], p->bh[l], centre, value);
@@ -213,6 +234,46 @@ static void pick_weights
       }
       wt += 1;
     }
+  }
+}
+
+
+/* GENERATE VALUES AND SIGMAS FOR WEIGHTS WITH A SPECIFIED CONFIGURATION. */
+
+static void pick_weights_in_group
+( net_param *wt,	/* Array to store weights */
+  net_sigma *sd_cm,	/* Place to store common sigma */
+  net_sigma *sd,	/* Array to store sigmas for each unit (all sd_cm) */
+  int n,		/* Number of source units */
+  int nw,		/* Number of weights, possibly sparse and/or shared */
+  prior_spec pr,	/* Prior to use */
+  int centre,		/* Choose "centre" rather than random value? */
+  double value		/* Use specific value for sigma? */
+)
+{ 
+  net_sigma width, weight_sigma;
+  int i, j;
+
+  width = pr.width;
+
+  *sd_cm = centre ? (value==0 || pr.alpha[0]==0 ? width : value)
+         : prior_pick_sigma (width, pr.alpha[0]);
+
+  for (i = 0; i<n; i++)
+  { sd[i] = *sd_cm;
+  }
+
+  for (j = 0; j<nw; j++)
+  { 
+    if (centre)
+    { *wt = 0;
+    }
+    else
+    { weight_sigma = prior_pick_sigma (*sd_cm, pr.alpha[2]);
+      *wt = weight_sigma * (pr.two_point ? 2*rand_int(2)-1 : rand_gaussian());
+    }
+
+    wt += 1;
   }
 }
 

@@ -15,7 +15,8 @@
 
 
 /* WEIGHT CONFIGURATION.  Records network weight configuration set up for a 
-   group of connections with an input-config or hidden-config flag. */
+   group of connections with an input-config or hidden-config flag.  Note that
+   the stored indexes start at zero, though they are 1-based in the file. */
 
 #define Max_conn 1000000	/* Maximum number of connections in a group */
 

@@ -250,7 +250,7 @@ int main
           exit(2);
         }
         hconfig = 1;
-        strcpy(flgs->config_files+fileix,*ap+13);
+        strcpy(flgs->config_files+fileix,*ap+14);
         flgs->hidden_config[a->N_layers] = fileix;
         fileix += strlen(flgs->config_files+fileix);
       }
@@ -530,7 +530,7 @@ void print_config (net_config *cf)
 { int k;
   printf("\n%d connections, %d weights\n\n",cf->N_conn,cf->N_wts);
   for (k = 0; k<cf->N_conn; k++)
-  { printf("%6d %6d %6d\n",cf->conn[k].s,cf->conn[k].d,cf->conn[k].w);
+  { printf ("%6d %6d %6d\n", cf->conn[k].s+1, cf->conn[k].d+1, cf->conn[k].w+1);
   }
   printf("\n");
 }

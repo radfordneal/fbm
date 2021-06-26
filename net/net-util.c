@@ -114,9 +114,9 @@ net_config *net_config_read (char *file, int ns, int nd)
       exit(2);
     }
 
-    p->conn[p->N_conn].s = s;
-    p->conn[p->N_conn].d = d;
-    p->conn[p->N_conn].w = w;
+    p->conn[p->N_conn].s = s-1;  /* stored indexes a 0-based */
+    p->conn[p->N_conn].d = d-1;
+    p->conn[p->N_conn].w = w-1;
 
     if (w>p->N_wts) p->N_wts = w;
 

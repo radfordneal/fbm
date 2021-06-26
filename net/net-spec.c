@@ -214,10 +214,12 @@ int main
 
   if (*ap==0 || (a->N_inputs = atoi(*ap++))<=0) usage();
 
+  int fileix = 1;  /* don't start at 0 since 0 is used for "none" */
+
   while (*ap!=0 && strcmp(*ap,"/")!=0)
   { 
     double size;
-    int omit, iconfig, hconfig, type, fileix;
+    int omit, iconfig, hconfig, type;
     int i;
 
     if ((size = atoi(*ap++))<=0) usage();
@@ -228,7 +230,6 @@ int main
     iconfig = 0;
     hconfig = 0;
     type = -1;
-    fileix = 1;  /* don't start at 0 since 0 is used for "none" */
 
     while ((*ap)[0]>='a' && (*ap)[0]<='z')
     { if (strncmp(*ap,"omit:",5)==0)
@@ -241,7 +242,7 @@ int main
         iconfig = 1;
         strcpy(flgs->config_files+fileix,*ap+13);
         flgs->input_config[a->N_layers] = fileix;
-        fileix += strlen(flgs->config_files+fileix);
+        fileix += strlen(flgs->config_files+fileix) + 1;
       }
       else if (strncmp(*ap,"hidden-config:",14)==0)
       { if (hconfig) usage();
@@ -252,7 +253,7 @@ int main
         hconfig = 1;
         strcpy(flgs->config_files+fileix,*ap+14);
         flgs->hidden_config[a->N_layers] = fileix;
-        fileix += strlen(flgs->config_files+fileix);
+        fileix += strlen(flgs->config_files+fileix) + 1;
       }
       else if (strcmp(*ap,"tanh")==0)
       { if (type>=0) usage();

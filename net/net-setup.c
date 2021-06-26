@@ -280,15 +280,16 @@ void net_setup_param_pointers
     { w->hh[l-1] = 0;
       if (a->has_hh[l-1]) 
       { w->hh[l-1] = b;
-        b += a->N_hidden[l-1]*a->N_hidden[l];
+        b += a->hidden_config[l] ? a->hidden_config[l]->N_wts
+              : a->N_hidden[l-1]*a->N_hidden[l];
       }
     }
 
     w->ih[l] = 0;
     if (a->has_ih[l]) 
     { w->ih[l] = b;
-      b += not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1))
-            * a->N_hidden[l];
+      b += a->input_config[l] ? a->input_config[l]->N_wts
+         : not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1)) * a->N_hidden[l];
     }
   
     w->bh[l] = 0;
@@ -488,7 +489,8 @@ int net_setup_param_group
     { if (a->has_hh[l-1]) 
       { *offset = i; 
         *source = a->N_hidden[l-1];
-        i += a->N_hidden[l-1]*a->N_hidden[l]; 
+        i += a->hidden_config[l] ? a->hidden_config[l]->N_wts
+              : a->N_hidden[l-1]*a->N_hidden[l]; 
         if (--grp==0) goto done;
       }
     }
@@ -496,7 +498,8 @@ int net_setup_param_group
     if (a->has_ih[l]) 
     { *offset = i; 
       *source = not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1));
-      i += *source * a->N_hidden[l]; 
+      i += a->input_config[l] ? a->input_config[l]->N_wts
+            : *source * a->N_hidden[l]; 
       if (--grp==0) goto done;
     }
 

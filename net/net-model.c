@@ -26,10 +26,7 @@
 #include "net.h"
 #include "rand.h"
 
-
-#if (USE_SIMD_INTRINSICS || USE_SLEEF) && __AVX__
-# include  <immintrin.h>
-#endif
+#include "intrinsics-use.h"
 
 
 /* DEFINE FAST VERSIONS OF EXP AND LOG.  Just the ordinary versions if SLEEF 

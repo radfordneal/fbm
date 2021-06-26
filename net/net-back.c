@@ -25,10 +25,7 @@
 #include "model.h"
 #include "net.h"
 
-
-#if USE_SIMD_INTRINSICS && __AVX__
-#include  <immintrin.h>
-#endif
+#include "intrinsics-use.h"
 
 
 /* This module finds the derivative of the "error" for a particular case

@@ -29,13 +29,17 @@ include ../util/util.make
 include ../mc/mc.make
 
 
-net-func.o:	net-func.c	misc.h prior.h model.h net.h data.h 
-net-back.o:	net-back.c	misc.h prior.h model.h net.h data.h 
-net-grad.o:	net-grad.c	misc.h prior.h model.h net.h data.h  
+net-func.o:	net-func.c	misc.h prior.h model.h net.h data.h \
+				intrinsics-use.h sleef-use.h
+net-back.o:	net-back.c	misc.h prior.h model.h net.h data.h \
+				intrinsics-use.h
+net-grad.o:	net-grad.c	misc.h prior.h model.h net.h data.h \
+				intrinsics-use.h
 net-util.o:	net-util.c	misc.h prior.h model.h net.h data.h
 net-setup.o:	net-setup.c	misc.h prior.h model.h net.h data.h  
 net-prior.o:	net-prior.c	misc.h prior.h model.h net.h data.h rand.h
-net-model.o:	net-model.c	misc.h prior.h model.h net.h data.h rand.h
+net-model.o:	net-model.c	misc.h prior.h model.h net.h data.h rand.h \
+				intrinsics-use.h sleef-use.h
 net-data.o:	net-data.c	misc.h prior.h model.h net.h data.h net-data.h \
 				numin.h
 net-print.o:	net-print.c	misc.h prior.h model.h net.h data.h 

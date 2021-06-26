@@ -85,8 +85,9 @@ net_config *net_config_read (char *file, int ns, int nd)
     exit(2);
   }
   
-  net_config *p = malloc (sizeof(net_config) + Max_conn * sizeof(conn_group));
-  if (p==NULL)
+  net_config *p;
+  p = calloc (1, sizeof *p);
+  if (p==NULL || (p->conn = calloc (Max_conn, sizeof *p->conn))==NULL)
   { fprintf(stderr,"Can't allocate memory for weight configuration\n");
     exit(3);
   }
@@ -122,13 +123,16 @@ net_config *net_config_read (char *file, int ns, int nd)
     p->N_conn += 1;
   }
 
-  net_config *q = malloc (sizeof(net_config) + p->N_conn * sizeof(conn_group));
+  net_connection *q;
+  q = calloc (p->N_conn, sizeof *q);
   if (q==NULL)
   { fprintf(stderr,"Can't allocate memory for weight configuration\n");
     exit(3);
   }
+ 
+  memcpy (q, p->conn, p->N_conn * sizeof *q);
+  free(p->conn);
+  p->conn = q;
 
-  memcpy (q, p, sizeof(net_config) + p->N_conn * sizeof(conn_group));
-  free(p);
-  return q;
+  return p;
 }

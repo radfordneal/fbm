@@ -19,12 +19,12 @@
 
 #define Max_conn 1000000	/* Maximum number of connections in a group */
 
-typedef struct { unsigned short s, d; int w; } conn_group;
+typedef struct { unsigned short s, d; int w; } net_connection;
 
 typedef struct
 { int N_wts;			/* Number of weights */
   int N_conn;			/* Number of connections */
-  conn_group conn[1];		/* Connection groups */
+  net_connection *conn;		/* Array of connections in group */
 } net_config;
 
 

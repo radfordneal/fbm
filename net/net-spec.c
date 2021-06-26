@@ -241,7 +241,7 @@ int main
       { if (iconfig) usage();
         iconfig = 1;
         strcpy(flgs->config_files+fileix,*ap+13);
-        flgs->input_config[a->N_layers] = fileix;
+        if (a->N_layers<=Max_layers) flgs->input_config[a->N_layers] = fileix;
         fileix += strlen(flgs->config_files+fileix) + 1;
       }
       else if (strncmp(*ap,"hidden-config:",14)==0)
@@ -252,7 +252,7 @@ int main
         }
         hconfig = 1;
         strcpy(flgs->config_files+fileix,*ap+14);
-        flgs->hidden_config[a->N_layers] = fileix;
+        if (a->N_layers<=Max_layers) flgs->hidden_config[a->N_layers] = fileix;
         fileix += strlen(flgs->config_files+fileix) + 1;
       }
       else if (strcmp(*ap,"tanh")==0)
@@ -297,6 +297,10 @@ int main
     else
     { a->N_outputs = size;
       if (type!=-1) usage();
+      if (iconfig || hconfig)
+      { fprintf(stderr,
+         "input-config and hidden-config flags are for hidden layers only\n");
+      }
     }
   }
 
@@ -494,6 +498,11 @@ int main
   { if (p->bh[l].scale || p->bh[l].alpha[2]!=0
      || p->th[l].scale || p->th[l].alpha[2]!=0)
     { fprintf(stderr,"Illegal prior for biases or offsets\n");
+      exit(1); 
+    }
+    if (flgs->input_config[l] && (p->ih[l].scale || p->ih[l].alpha[1]!=0)
+     || flgs->hidden_config[l] && (p->hh[l].scale || p->hh[l].alpha[1]!=0))
+    { fprintf(stderr,"Illegal prior for weights with configuration file\n");
       exit(1); 
     }
   }

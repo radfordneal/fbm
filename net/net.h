@@ -86,8 +86,9 @@ typedef struct
 
   char layer_type[Max_layers];     /* Type of hidden units in layer */
 
-  short input_config[Max_layers];  /* Index of input config file, 0 if none */
-  short hidden_config[Max_layers]; /* Index of hidden config file, 0 if none */
+                                   /* Below with +1 for tmp use w input layer */
+  short input_config[Max_layers+1]; /* Index of input config file, 0 if none */
+  short hidden_config[Max_layers+1];/* Index of hidden config file, 0 if none */
 
   char config_files[2000];         /* Names of files for input/hidden configs */
 

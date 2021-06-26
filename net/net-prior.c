@@ -42,8 +42,8 @@ static void pick_unit_params (net_param *, net_sigma *, int, net_sigma *,
 static void pick_weights (net_param *, net_sigma *, net_sigma *, 
                           int, int, net_sigma *, prior_spec, int, double);
 
-static void pick_weights_in_group (net_param *, net_sigma *, net_sigma *, 
-                                   int, int, prior_spec, int, double);
+static void pick_weights_config (net_param *, net_sigma *, net_sigma *, 
+                                 int, int, prior_spec, int, double);
 
 static void compute_prior (net_param *, int, double *, net_param *, 
                            net_sigma, double, net_sigma *, int);
@@ -102,9 +102,9 @@ void net_prior_generate
     if (l>0)
     { if (a->has_hh[l-1]) 
       { if (a->hidden_config[l])
-        { pick_weights_in_group (w->hh[l-1], s->hh_cm[l-1], s->hh[l-1],
-                                 a->N_hidden[l-1], a->hidden_config[l]->N_wts,
-                                 p->hh[l-1], centre, value);
+        { pick_weights_config (w->hh[l-1], s->hh_cm[l-1], s->hh[l-1],
+                               a->N_hidden[l-1], a->hidden_config[l]->N_wts,
+                               p->hh[l-1], centre, value);
         }
         else
         { pick_weights (w->hh[l-1], s->hh_cm[l-1], s->hh[l-1], 
@@ -116,9 +116,9 @@ void net_prior_generate
 
     if (a->has_ih[l]) 
     { if (a->input_config[l])
-      { pick_weights_in_group (w->ih[l], s->ih_cm[l], s->ih[l],
-                               a->N_inputs, a->input_config[l]->N_wts,
-                               p->ih[l], centre, value);
+      { pick_weights_config (w->ih[l], s->ih_cm[l], s->ih[l],
+                             a->N_inputs, a->input_config[l]->N_wts,
+                             p->ih[l], centre, value);
       }
       else
       { pick_weights (w->ih[l], s->ih_cm[l], s->ih[l], 
@@ -240,7 +240,7 @@ static void pick_weights
 
 /* GENERATE VALUES AND SIGMAS FOR WEIGHTS WITH A SPECIFIED CONFIGURATION. */
 
-static void pick_weights_in_group
+static void pick_weights_config
 ( net_param *wt,	/* Array to store weights */
   net_sigma *sd_cm,	/* Place to store common sigma */
   net_sigma *sd,	/* Array to store sigmas for each unit (all sd_cm) */

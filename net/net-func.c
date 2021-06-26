@@ -44,6 +44,9 @@ static void bias_values (net_value *, int, net_param *);
 static void add_connections (net_value *, int, net_value *, int, 
                              net_param *, net_param *, unsigned short *, int);
 
+static void add_connections_config (net_value *, net_value *, net_param *,
+                                    net_param *, net_config *);
+
 
 /* EVALUATE NETWORK FUNCTION FOR GIVEN INPUTS.  The inputs are taken from
    the net_values structure passed.  When 'start' is greater than zero, the
@@ -76,13 +79,25 @@ void net_func
     }
 
     if (a->has_ih[l])
-    { add_connections (sh, N_hidden, v->i, a->N_inputs, 
+    { if (a->input_config[l])
+      { add_connections_config (sh, v->i, w->ih[l], 
+          a->has_ti ? w->ti : 0, a->input_config[l]);
+      }
+      else
+      { add_connections (sh, N_hidden, v->i, a->N_inputs, 
           w->ih[l], a->has_ti ? w->ti : 0, flgs ? flgs->omit : 0, 1<<(l+1));
+      }
     }
 
     if (l>0 && a->has_hh[l-1])
-    { add_connections (sh, N_hidden, v->h[l-1], a->N_hidden[l-1],
+    { if (a->hidden_config[l])
+      { add_connections_config (sh, v->h[l-1], w->hh[l-1], 
+          a->has_th[l-1] ? w->th[l-1] : 0, a->hidden_config[l]);
+      }
+      else
+      { add_connections (sh, N_hidden, v->h[l-1], a->N_hidden[l-1],
           w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0, (unsigned short *) 0, 0);
+      }
     }
 
     /* Put values through hidden unit activation function. */
@@ -480,5 +495,26 @@ static void add_connections
     else
     { ADD_CONNECTIONS(*off++,(*omit++)&ob);
     }
+  }
+}
+
+/* ADD CONTRIBUTION FROM ONE GROUP OF CONNECTIONS WITH CONFIGURATION FROM FILE.
+   Adds the weighted input  due to connections from one source layer to the 
+   current unit values for the destination layer. */
+
+static void add_connections_config
+( net_value *restrict s,  /* Summed input for destination units to add to */
+  net_value *restrict v,  /* Values for source units */
+  net_param *restrict w,  /* Connection weights */
+  net_param *restrict off,/* Offsets to add to source unit values */
+  net_config *restrict cf /* Configuration for connections and weights */
+)
+{
+  int i, j, k, c;
+  for (c = 0; c<cf->N_conn; c++)
+  { i = cf->conn[c].s;
+    j = cf->conn[c].d;
+    k = cf->conn[c].w;
+    s[j] += v[i] * w[k];
   }
 }

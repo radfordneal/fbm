@@ -5,6 +5,8 @@ net-spec log 5 \
              3 hidden-config:"%echo 1 2 1  2 1 1" \
              1 / ih=7 hh=8 ho=9 
 net-spec log config
+data-spec log 5 1 / "%echo 2 3 4 5 6 7" .
+model-spec log real 5
 net-gen log fix - <<end
 0.1 0.2 0.3 5 6 7
 end
@@ -12,3 +14,4 @@ net-display log 0
 net-tbl q0q1q2q3q4 log 0
 net-eval log 0 / 1.1 1.1 0 / 1.2 1.2 0 / 1.3 1.3 0 / 1.4 1.4 0 / 1.5 1.5 0
 calc "6*Tanh(0.3*Tanh(1.3*0.1+1.1*0.2)) + 5*Tanh(0.3*Tanh(1.4*0.1))"
+net-grad-test log 0 0.002

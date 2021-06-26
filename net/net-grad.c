@@ -34,9 +34,13 @@
    unit values. */
 
 
-static void add_grad1 (net_param *, net_value *, int);
-static void add_grad2 (net_param *, net_value *, net_param *, int, 
-                       net_value *, int, unsigned short *, int);
+static void add_grad1 (net_param *restrict, net_value *restrict, int);
+static void add_grad2 (net_param *restrict, net_value *restrict, 
+                       net_param *restrict, int, net_value *restrict, int,
+                       unsigned short *restrict, int);
+static void add_grad2_config (net_param *restrict, net_value *restrict, 
+                       net_param *restrict, net_value *restrict,
+                       net_config *restrict);
 
 
 /* ADD TO GRADIENT OF ERROR WITH RESPECT TO NETWORK PARAMETERS.  Adds to 
@@ -73,13 +77,25 @@ void net_grad
     }
 
     if (a->has_ih[l])
-    { add_grad2 (g->ih[l], v->i, a->has_ti ? w->ti : 0, a->N_inputs, 
-                 d->s[l], N_hidden, flgs?flgs->omit:0, 1<<(l+1));
+    { if (a->input_config[l])
+      { add_grad2_config (g->ih[l], v->i, a->has_ti ? w->ti : 0, d->s[l], 
+                          a->input_config[l]);
+      }
+      else
+      { add_grad2 (g->ih[l], v->i, a->has_ti ? w->ti : 0, a->N_inputs, 
+                   d->s[l], N_hidden, flgs?flgs->omit:0, 1<<(l+1));
+      }
     }
 
     if (l>0 && a->has_hh[l-1])
-    { add_grad2 (g->hh[l-1], v->h[l-1], a->has_th[l-1] ? w->th[l-1] : 0,
-                 a->N_hidden[l-1], d->s[l], N_hidden, (unsigned short *) 0, 0);
+    { if (a->hidden_config[l])
+      { add_grad2_config(g->hh[l-1], v->h[l-1], a->has_th[l-1] ? w->th[l-1] : 0,
+                         d->s[l], a->hidden_config[l]);
+      }
+      else
+      { add_grad2 (g->hh[l-1], v->h[l-1], a->has_th[l-1] ? w->th[l-1] : 0,
+                   a->N_hidden[l-1], d->s[l], N_hidden, (unsigned short *)0, 0);
+      }
     }
 
     if (a->has_th[l]) 
@@ -442,6 +458,37 @@ static void add_grad2
     }
     else
     { ADD_GRAD2(*off++,(*omit++)&ob);
+    }
+  }
+}
+
+
+/* ADD TO GRADIENT FROM PRODUCT OF UNIT VALUE AND UNIT DERIVATIVE.  For
+   when the connections are specified by a configuration file. */
+
+static void add_grad2_config
+( net_param *restrict g,  /* Array of derivatives to add to */
+  net_value *restrict v,  /* Source unit values */
+  net_param *restrict off,/* Offsets for source units, or zero if no offsets */
+  net_value *restrict d,  /* Derivatives with respect to destination units */
+  net_config *restrict cf /* Configuration for connections and weights */
+)
+{
+  int i, j, k, c;
+  if (off)
+  { for (c = 0; c<cf->N_conn; c++)
+    { i = cf->conn[c].s;
+      j = cf->conn[c].d;
+      k = cf->conn[c].w;
+      g[k] += (v[i]+off[i]) * d[j];
+    }
+  }
+  else
+  { for (c = 0; c<cf->N_conn; c++)
+    { i = cf->conn[c].s;
+      j = cf->conn[c].d;
+      k = cf->conn[c].w;
+      g[k] += v[i] * d[j];
     }
   }
 }

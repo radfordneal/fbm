@@ -39,13 +39,15 @@
 
 #define sqrt_2 1.4142135623730950488
 
-static void bias_values (net_value *, int, net_param *);
+static void bias_values (net_value *restrict, int, net_param *restrict);
 
-static void add_connections (net_value *, int, net_value *, int, 
-                             net_param *, net_param *, unsigned short *, int);
+static void add_connections (net_value *restrict, int, net_value *restrict, int,
+                             net_param *restrict, net_param *restrict,
+                             unsigned short *restrict, int);
 
-static void add_connections_config (net_value *, net_value *, net_param *,
-                                    net_param *, net_config *);
+static void add_connections_config (net_value *restrict, net_value *restrict,
+                                    net_param *restrict, net_param *restrict,
+                                    net_config *restrict);
 
 
 /* EVALUATE NETWORK FUNCTION FOR GIVEN INPUTS.  The inputs are taken from
@@ -511,10 +513,20 @@ static void add_connections_config
 )
 {
   int i, j, k, c;
-  for (c = 0; c<cf->N_conn; c++)
-  { i = cf->conn[c].s;
-    j = cf->conn[c].d;
-    k = cf->conn[c].w;
-    s[j] += v[i] * w[k];
+  if (off)
+  { for (c = 0; c<cf->N_conn; c++)
+    { i = cf->conn[c].s;
+      j = cf->conn[c].d;
+      k = cf->conn[c].w;
+      s[j] += (v[i]+off[i]) * w[k];
+    }
+  }
+  else
+  { for (c = 0; c<cf->N_conn; c++)
+    { i = cf->conn[c].s;
+      j = cf->conn[c].d;
+      k = cf->conn[c].w;
+      s[j] += v[i] * w[k];
+    }
   }
 }

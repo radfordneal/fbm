@@ -37,9 +37,11 @@
 
 #define sqrt_2 1.4142135623730950488
 
-static void zero_derivatives (net_value *, int),
-            sum_derivatives  (net_value *, int, net_value *, int, net_param *, 
-                              unsigned short *, int);
+static void sum_derivatives  (net_value *restrict, int, net_value *restrict,
+                              int, net_param *restrict, 
+                              unsigned short *restrict, int);
+static void sum_derivatives_config (net_value *restrict, net_value *restrict,
+                                    net_param *restrict, net_config *restrict);
 
 
 /* BACKPROPAGATE ERROR DERIVATIVES.  The first argument must contain the 
@@ -76,8 +78,13 @@ void net_back
     }
 
     if (l<a->N_layers-1 && a->has_hh[l])
-    { sum_derivatives (d->s[l+1], a->N_hidden[l+1], dh, N_hidden, 
-                       w->hh[l], (unsigned short *) 0, 0);
+    { if (a->hidden_config[l+1])
+      { sum_derivatives_config (d->s[l+1], dh, w->hh[l], a->hidden_config[l+1]);
+      }
+      else 
+      { sum_derivatives (d->s[l+1], a->N_hidden[l+1], dh, N_hidden, 
+                         w->hh[l], (unsigned short *) 0, 0);
+      }
     }
 
     net_value *restrict vh = v->h[l];
@@ -142,8 +149,13 @@ void net_back
  
     for (l = 0; l<a->N_layers; l++)
     { if (a->has_ih[l])
-      { sum_derivatives (d->s[l], a->N_hidden[l], d->i, a->N_inputs, w->ih[l],
-                         flgs ? flgs->omit : 0, 1<<(l+1));
+      { if (a->input_config[l])
+        { sum_derivatives_config (d->s[l], d->i, w->ih[l], a->input_config[l]);
+        }
+        else 
+        { sum_derivatives (d->s[l], a->N_hidden[l], d->i, a->N_inputs, w->ih[l],
+                           flgs ? flgs->omit : 0, 1<<(l+1));
+        }
       }
     }
   }
@@ -428,5 +440,26 @@ static void sum_derivatives
   }
   else
   { SUM_DERIVATIVES((*omit++)&b);
+  }
+}
+
+
+/* SUM UP CONTRIBUTIONS TO THE DERIVATIVES FROM CONNECTIONS WITH CONFIGURATION.
+   Adds the weighted sum of derivatives due to connections from source units to
+   a given destination layer to the totals for the source layer. */
+
+static void sum_derivatives_config
+( net_value *restrict dd, /* Derivatives with respect to destination units */
+  net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
+  net_param *restrict w,  /* Connection weights */
+  net_config *restrict cf /* Configuration for connections and weights */
+)
+{
+  int i, j, k, c;
+  for (c = 0; c<cf->N_conn; c++)
+  { i = cf->conn[c].s;
+    j = cf->conn[c].d;
+    k = cf->conn[c].w;
+    ds[i] += dd[j] * w[k];
   }
 }

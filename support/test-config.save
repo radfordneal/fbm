@@ -36,6 +36,7 @@ Hidden layer 1 hidden weight configuration
      1      2      1
      2      1      1
 
+Number of training cases: 1
 
 Network in file "log" with index 0
 
@@ -55,6 +56,26 @@ Hidden Layer 1 to Output Weights [3]
 
       9.00: +7.00
 
+Noise levels
+
+   5.00 -  5.00
+
  1.00000000e-01  2.00000000e-01  3.00000000e-01  5.00000000e+00  6.00000000e+00 
   1.10000  1.20000  1.30000  1.40000  1.50000 +8.119467e-01
 0.811947
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.002000  Energy: 3.74
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   +0.10   -1.9729e-03  -1.9870e-03   -1.9800e+00  -1.9800e+00     0.0000
+     1   +0.20   -3.9242e-04  -3.9370e-04   -3.9306e-01  -3.9306e-01     0.0000
+     2   +0.30   -1.2459e-03  -1.2477e-03   -1.2468e+00  -1.2468e+00     0.0000
+     3   +5.00   +3.3459e-05  +3.3446e-05   +3.3453e-02  +3.3453e-02     0.0000
+     4   +6.00   +3.3723e-05  +3.3709e-05   +3.3716e-02  +3.3716e-02     0.0000
+     5   +7.00   +8.6426e-05  +8.6414e-05   +8.6420e-02  +8.6420e-02     0.0000
+
+Largest absolute log ratio: 0.0000
+

@@ -315,21 +315,35 @@ void net_prior_prob
   for (l = 0; l<a->N_layers; l++)
   {
     if (l>0 && a->has_hh[l-1]) 
-    { for (i = 0; i<a->N_hidden[l-1]; i++)
-      { compute_prior (w->hh[l-1] + i*a->N_hidden[l], a->N_hidden[l], lp, 
-                       dp ? dp->hh[l-1] + i*a->N_hidden[l] : 0, 
-                       s->hh[l-1][i], p->hh[l-1].alpha[2], s->ah[l], op);
+    { if (a->hidden_config[l])
+      { compute_prior (w->hh[l-1], a->hidden_config[l]->N_wts, lp,
+                       dp ? dp->hh[l-1] : 0, 
+                       *s->hh_cm[l-1], p->hh[l-1].alpha[2], 0, op);
+      }
+      else
+      { for (i = 0; i<a->N_hidden[l-1]; i++)
+        { compute_prior (w->hh[l-1] + i*a->N_hidden[l], a->N_hidden[l], lp, 
+                         dp ? dp->hh[l-1] + i*a->N_hidden[l] : 0, 
+                         s->hh[l-1][i], p->hh[l-1].alpha[2], s->ah[l], op);
+        }
       }
     }
 
     if (a->has_ih[l])
-    { k = 0;
-      for (i = 0; i<a->N_inputs; i++)
-      { if (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
-        { compute_prior (w->ih[l] + k*a->N_hidden[l], a->N_hidden[l], lp, 
-                         dp ? dp->ih[l] + k*a->N_hidden[l] : 0,
-                         s->ih[l][k], p->ih[l].alpha[2], s->ah[l], op);
-          k += 1;
+    { if (a->input_config[l])
+      { compute_prior (w->ih[l], a->input_config[l]->N_wts, lp,
+                       dp ? dp->ih[l] : 0,
+                       *s->ih_cm[l], p->ih[l].alpha[2], 0, op);
+      }
+      else
+      { k = 0;
+        for (i = 0; i<a->N_inputs; i++)
+        { if (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
+          { compute_prior (w->ih[l] + k*a->N_hidden[l], a->N_hidden[l], lp, 
+                           dp ? dp->ih[l] + k*a->N_hidden[l] : 0,
+                           s->ih[l][k], p->ih[l].alpha[2], s->ah[l], op);
+            k += 1;
+          }
         }
       }
     }

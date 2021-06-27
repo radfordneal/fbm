@@ -926,7 +926,7 @@ static void rgrid_met_conn
   net_sigma *adj,	/* Adjustments for each destination unit, or zero */
   int ns,		/* Number of source units */
   int nd,		/* Number of destination units */
-  prior_spec *pr		/* Prior for sigmas */
+  prior_spec *pr	/* Prior for sigmas */
 )
 { 
   double width, nalpha, nprec, sum, ps, d;

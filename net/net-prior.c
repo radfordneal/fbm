@@ -514,9 +514,15 @@ void net_prior_max_second
     }
 
     if (l<a->N_layers-1 && a->has_hh[l]) 
-    { for (i = 0; i<a->N_hidden[l]; i++)
-      { max_second (d->hh[l] + i*a->N_hidden[l+1], a->N_hidden[l+1], 
-                    s->hh[l][i], s->ah[l+1], p->hh[l].alpha[2]);
+    { if (a->hidden_config[l])
+      { max_second (d->hh[l], a->hidden_config[l]->N_wts, *s->hh_cm[l],
+                    0, p->hh[l].alpha[2]);
+      }
+      else
+      { for (i = 0; i<a->N_hidden[l]; i++)
+        { max_second (d->hh[l] + i*a->N_hidden[l+1], a->N_hidden[l+1], 
+                      s->hh[l][i], s->ah[l+1], p->hh[l].alpha[2]);
+        }
       }
     }
 
@@ -551,7 +557,7 @@ static void max_second
 ( net_param *d,		/* Place to store maximum second derivatives */
   int n,		/* Number of parameters in group */
   net_sigma s,		/* Width of prior */
-  net_sigma *a,		/* Pointer to adjustments for width, or zero */
+  net_sigma *adj,	/* Pointer to adjustments for width, or zero */
   double alpha		/* Alpha of prior */
 )
 { 
@@ -559,8 +565,15 @@ static void max_second
   int i;
 
   v = alpha==0 ? 1 / (s*s) : (alpha+1) / (alpha*s*s);
- 
-  for (i = 0; i<n; i++) 
-  { d[i] = a==0 ? v : v / (a[i] * a[i]);
+
+  if (adj==0)
+  { for (i = 0; i<n; i++) 
+    { d[i] = v;
+    }
+  }
+  else 
+  { for (i = 0; i<n; i++) 
+    { d[i] = v / (adj[i] * adj[i]);
+    }
   }
 }

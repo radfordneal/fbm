@@ -1340,27 +1340,41 @@ void mc_app_stepsizes
   for (l = arch->N_layers-1; l>=0; l--)
   { 
     for (i = 0; i<arch->N_hidden[l]; i++)
-    { 
-      seconds.h[l][i] = 0;
+    { seconds.h[l][i] = 0;
+    }
 
-      if (arch->has_ho[l])
+    for (i = 0; i<arch->N_hidden[l]; i++)
+    { if (arch->has_ho[l])
       { for (j = 0; j<arch->N_outputs; j++)
         { w = sigmas.ho[l][i];
           if (sigmas.ao!=0) w *= sigmas.ao[j];
           seconds.h[l][i] += (w*w) * seconds.o[j];
         }
       }
+    }
 
-      /** need update for config **/
-      if (l<arch->N_layers-1 && arch->has_hh[l])
-      { for (j = 0; j<arch->N_hidden[l+1]; j++)
-        { w = sigmas.hh[l][i];
-          if (sigmas.ah[l+1]!=0) w *= sigmas.ah[l+1][j];
-          seconds.h[l][i] += (w*w) * seconds.s[l+1][j];
+    if (arch->hidden_config[l])
+    { w = *sigmas.hh_cm[l];
+      for (k = 0; k<arch->hidden_config[l]->N_conn; k++)
+      { i = arch->hidden_config[l]->conn->s;
+        j = arch->hidden_config[l]->conn->d;
+        seconds.h[l][i] += (w*w) * seconds.s[l+1][j];
+      }
+    }
+    else
+    { for (i = 0; i<arch->N_hidden[l]; i++)
+      { if (l<arch->N_layers-1 && arch->has_hh[l])
+        { for (j = 0; j<arch->N_hidden[l+1]; j++)
+          { w = sigmas.hh[l][i];
+            if (sigmas.ah[l+1]!=0) w *= sigmas.ah[l+1][j];
+            seconds.h[l][i] += (w*w) * seconds.s[l+1][j];
+          }
         }
       }
+    }
 
-      switch (flgs==0 ? Tanh_type : flgs->layer_type[l])
+    for (i = 0; i<arch->N_hidden[l]; i++)
+    { switch (flgs==0 ? Tanh_type : flgs->layer_type[l])
       { case Tanh_type: 
         case Identity_type:
         { seconds.s[l][i] = seconds.h[l][i];
@@ -1378,24 +1392,38 @@ void mc_app_stepsizes
   if (arch->has_ti)
   { 
     for (i = 0; i<arch->N_inputs; i++)
-    { 
-      seconds.i[i] = 0;
+    { seconds.i[i] = 0;
+    }
 
-      if (arch->has_io && (flgs==0 || (flgs->omit[i]&1)==0))
-      { for (j = 0; j<arch->N_outputs; j++)
+    if (arch->has_io)
+    { for (i = 0; i<arch->N_inputs; i++)
+      { if (flgs==0 || (flgs->omit[i]&1)==0)
+        for (j = 0; j<arch->N_outputs; j++)
         { w = sigmas.io[i];
           if (sigmas.ao!=0) w *= sigmas.ao[j];
           seconds.i[i] += (w*w) * seconds.o[j];
         }
       }
+    }
 
-      for (l = 0; l<arch->N_layers; l++)
-      { if (arch->has_ih[l] && (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0))
-        { /** need update for config **/
-          for (j = 0; j<arch->N_hidden[l]; j++)
-          { w = sigmas.ih[l][i];
-            if (sigmas.ah[l]!=0) w *= sigmas.ah[l][j];
+    for (l = 0; l<arch->N_layers; l++)
+    { if (arch->has_ih[l])
+      { if (arch->input_config[l])
+        { w = *sigmas.ih_cm[l];
+          for (k = 0; k<arch->input_config[l]->N_conn; k++)
+          { i = arch->input_config[l]->conn->s;
+            j = arch->input_config[l]->conn->d;
             seconds.i[i] += (w*w) * seconds.s[l][j];
+          }
+        }
+        else
+        { for (i = 0; i<arch->N_inputs; i++)
+          { if  (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
+            for (j = 0; j<arch->N_hidden[l]; j++)
+            { w = sigmas.ih[l][i];
+              if (sigmas.ah[l]!=0) w *= sigmas.ah[l][j];
+              seconds.i[i] += (w*w) * seconds.s[l][j];
+            }
           }
         }
       }
@@ -1429,25 +1457,43 @@ void mc_app_stepsizes
     }
 
     if (arch->has_ih[l])
-    { /** need update for config **/
-      k = 0;
-      for (i = 0; i<arch->N_inputs; i++)
-      { if (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
-        { for (j = 0; j<arch->N_hidden[l]; j++)
-          { stepsizes.ih [l] [k*arch->N_hidden[l] + j] 
-              += train_sumsq[i] * seconds.s[l][j];
+    { if (arch->input_config[l])
+      { for (k = 0; k<arch->input_config[l]->N_conn; k++)
+        { i = arch->input_config[l]->conn->s;
+          j = arch->input_config[l]->conn->d;
+          stepsizes.ih [l] [arch->input_config[l]->conn->w]
+            += train_sumsq[i] * seconds.s[l][j];
+        }
+      }
+      else
+      { k = 0;
+        for (i = 0; i<arch->N_inputs; i++)
+        { if (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
+          { for (j = 0; j<arch->N_hidden[l]; j++)
+            { stepsizes.ih [l] [k*arch->N_hidden[l] + j] 
+                += train_sumsq[i] * seconds.s[l][j];
+            }
+            k += 1;
           }
-          k += 1;
         }
       }
     }
  
     if (l<arch->N_layers-1 && arch->has_hh[l])
-    { /** need update for config **/
-      for (i = 0; i<arch->N_hidden[l]; i++)
-      { for (j = 0; j<arch->N_hidden[l+1]; j++)
-        { stepsizes.hh [l] [i*arch->N_hidden[l+1] + j] 
+    { if (arch->hidden_config[l])
+      { for (k = 0; k<arch->hidden_config[l]->N_conn; k++)
+        { i = arch->hidden_config[l]->conn->s;
+          j = arch->hidden_config[l]->conn->d;
+          stepsizes.hh [l] [arch->hidden_config[l]->conn->w]
             += N_train * seconds.s[l+1][j];
+        }
+      }
+      else
+      { for (i = 0; i<arch->N_hidden[l]; i++)
+        { for (j = 0; j<arch->N_hidden[l+1]; j++)
+          { stepsizes.hh [l] [i*arch->N_hidden[l+1] + j] 
+              += N_train * seconds.s[l+1][j];
+          }
         }
       }
     }

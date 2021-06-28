@@ -1,6 +1,6 @@
 /* NET-MC.C - Interface between neural network and Markov chain modules. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -434,15 +434,15 @@ int mc_app_sample
 
   if (rgrid_hyper)
   {
-    if (arch->has_ti) rgrid_met_unit (pm, it, 
-                                  params.ti, sigmas.ti_cm, 0,
-                                  arch->N_inputs, &priors->ti);
+    if (arch->has_ti) rgrid_met_unit (pm, it, params.ti, sigmas.ti_cm, 0,
+                                      arch->N_inputs, &priors->ti);
   
     for (l = 0; l<arch->N_layers; l++)
     {
       if (l>0)
       { if (arch->has_hh[l-1]) 
-        { rgrid_met_conn (pm, it,
+        { /** need update for config **/
+          rgrid_met_conn (pm, it,
                       params.hh[l-1], sigmas.hh_cm[l-1], sigmas.hh[l-1], 
                       sigmas.ah[l], arch->N_hidden[l-1], arch->N_hidden[l], 
                       &priors->hh[l-1]);
@@ -450,39 +450,39 @@ int mc_app_sample
       }
     
       if (arch->has_ih[l]) 
-      { rgrid_met_conn (pm, it,
+      { /** need update for config **/
+        rgrid_met_conn (pm, it,
                     params.ih[l], sigmas.ih_cm[l], sigmas.ih[l], sigmas.ah[l], 
                     not_omitted(flgs?flgs->omit:0,arch->N_inputs,1<<(l+1)), 
                     arch->N_hidden[l], &priors->ih[l]); 
       }
 
       if (arch->has_bh[l]) rgrid_met_unit (pm, it,
-                                       params.bh[l], sigmas.bh_cm[l], 
-                                       sigmas.ah[l], arch->N_hidden[l], 
-                                       &priors->bh[l]);
+                                           params.bh[l], sigmas.bh_cm[l], 
+                                           sigmas.ah[l], arch->N_hidden[l], 
+                                           &priors->bh[l]);
       
       if (arch->has_th[l]) rgrid_met_unit (pm, it,
-                                       params.th[l], sigmas.th_cm[l], 0,
-                                       arch->N_hidden[l], &priors->th[l]);
+                                           params.th[l], sigmas.th_cm[l], 0,
+                                           arch->N_hidden[l], &priors->th[l]);
   
       if (arch->has_ho[l]) 
       { rgrid_met_conn (pm, it,
-                    params.ho[l], sigmas.ho_cm[l], sigmas.ho[l], sigmas.ao,
-                    arch->N_hidden[l], arch->N_outputs, &priors->ho[l]);
+                        params.ho[l], sigmas.ho_cm[l], sigmas.ho[l], sigmas.ao,
+                        arch->N_hidden[l], arch->N_outputs, &priors->ho[l]);
       }
           
     }
   
     if (arch->has_io) 
-    { rgrid_met_conn (pm, it,
-                  params.io, sigmas.io_cm, sigmas.io, sigmas.ao,
-                  not_omitted(flgs?flgs->omit:0,arch->N_inputs,1), 
-                  arch->N_outputs, &priors->io);
+    { rgrid_met_conn (pm, it, params.io, sigmas.io_cm, sigmas.io, sigmas.ao,
+                      not_omitted(flgs?flgs->omit:0,arch->N_inputs,1), 
+                      arch->N_outputs, &priors->io);
     }
   
     if (arch->has_bo) rgrid_met_unit (pm, it,
-                                  params.bo, sigmas.bo_cm, sigmas.ao,
-                                  arch->N_outputs, &priors->bo);
+                                      params.bo, sigmas.bo_cm, sigmas.ao,
+                                      arch->N_outputs, &priors->bo);
   }
 
   if (sample_noise && model->type=='R')
@@ -499,7 +499,8 @@ int mc_app_sample
     {
       if (l>0)
       { if (arch->has_hh[l-1]) 
-        { gibbs_conn (sample_hyper, 
+        { /** need update for config **/
+          gibbs_conn (sample_hyper, 
                       params.hh[l-1], sigmas.hh_cm[l-1], sigmas.hh[l-1], 
                       sigmas.ah[l], arch->N_hidden[l-1], arch->N_hidden[l], 
                       &priors->hh[l-1]);
@@ -507,7 +508,8 @@ int mc_app_sample
       }
     
       if (arch->has_ih[l]) 
-      { gibbs_conn (sample_hyper, 
+      { /** need update for config **/
+        gibbs_conn (sample_hyper, 
                     params.ih[l], sigmas.ih_cm[l], sigmas.ih[l], sigmas.ah[l], 
                     not_omitted(flgs?flgs->omit:0,arch->N_inputs,1<<(l+1)), 
                     arch->N_hidden[l], &priors->ih[l]); 
@@ -523,7 +525,8 @@ int mc_app_sample
                                        arch->N_hidden[l], &priors->th[l]);
 
       if (arch->has_ah[l])
-      { gibbs_adjustments (sigmas.ah[l], priors->ah[l], arch->N_hidden[l], 
+      { /** need update for config **/
+        gibbs_adjustments (sigmas.ah[l], priors->ah[l], arch->N_hidden[l], 
           arch->has_bh[l] ? params.bh[l] : 0, sigmas.bh_cm[l], 
             priors->bh[l].alpha[1],
           arch->has_ih[l] ? params.ih[l] : 0, sigmas.ih[l], 
@@ -553,7 +556,7 @@ int mc_app_sample
                                   arch->N_outputs, &priors->bo);
 
     if (arch->has_ao)
-    { 
+    { /** need update for config **/
       gibbs_adjustments (sigmas.ao, priors->ao, arch->N_outputs, 
         arch->has_bo ? params.bo : 0, 
           sigmas.bo_cm,
@@ -870,6 +873,7 @@ static void gibbs_conn
   {
     nalpha = pr->alpha[0] + ns*nd;
 
+    /** need update for config **/
     sum = pr->alpha[0] * (width * width);
     for (i = 0; i<ns; i++)
     { sum += sum_squares(wt+nd*i,adj,nd);
@@ -887,6 +891,7 @@ static void gibbs_conn
   {
     ps = pr->alpha[2] * (*sg_cm * *sg_cm);
 
+    /** need update for config **/
     sum = 0;        
     for (i = 0; i<ns; i++)
     { for (j = 0; j<nd; j++)
@@ -955,6 +960,7 @@ static void rgrid_met_conn
   {
     ps = pr->alpha[2] * (*sg_cm * *sg_cm);
 
+    /** need update for config **/
     sum = 0;        
     for (i = 0; i<ns; i++)
     { for (j = 0; j<nd; j++)
@@ -1345,6 +1351,7 @@ void mc_app_stepsizes
         }
       }
 
+      /** need update for config **/
       if (l<arch->N_layers-1 && arch->has_hh[l])
       { for (j = 0; j<arch->N_hidden[l+1]; j++)
         { w = sigmas.hh[l][i];
@@ -1384,7 +1391,8 @@ void mc_app_stepsizes
 
       for (l = 0; l<arch->N_layers; l++)
       { if (arch->has_ih[l] && (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0))
-        { for (j = 0; j<arch->N_hidden[l]; j++)
+        { /** need update for config **/
+          for (j = 0; j<arch->N_hidden[l]; j++)
           { w = sigmas.ih[l][i];
             if (sigmas.ah[l]!=0) w *= sigmas.ah[l][j];
             seconds.i[i] += (w*w) * seconds.s[l][j];
@@ -1421,7 +1429,8 @@ void mc_app_stepsizes
     }
 
     if (arch->has_ih[l])
-    { k = 0;
+    { /** need update for config **/
+      k = 0;
       for (i = 0; i<arch->N_inputs; i++)
       { if (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
         { for (j = 0; j<arch->N_hidden[l]; j++)
@@ -1434,7 +1443,8 @@ void mc_app_stepsizes
     }
  
     if (l<arch->N_layers-1 && arch->has_hh[l])
-    { for (i = 0; i<arch->N_hidden[l]; i++)
+    { /** need update for config **/
+      for (i = 0; i<arch->N_hidden[l]; i++)
       { for (j = 0; j<arch->N_hidden[l+1]; j++)
         { stepsizes.hh [l] [i*arch->N_hidden[l+1] + j] 
             += N_train * seconds.s[l+1][j];

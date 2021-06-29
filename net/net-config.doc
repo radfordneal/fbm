@@ -8,7 +8,9 @@ can be specified in a configuration file, referenced from the
 "input-config" or "hidden-config" flags in the network specification.
 (See net-spec.doc for details.)
 
-This configuration file contains one or more triples of the form
+This configuration file (which may be output from a command, if
+specified with "%", see net-spec.doc) contains one or more triples of
+the form
 
     <source-unit> <destination-unit> <weight-index>
 
@@ -56,5 +58,29 @@ the one above:
     = + +
     + -1 =
     1 +2 -
+
+The utility of these relative specifications is illustrated by the
+following network specification, which sets up a network that computes
+a convolution of an input sequence of length 10 with a 3-point linear
+filter, which is then used in a logistic regression model for binary
+classification:
+
+    net-spec log 10 8 identity input-config:filter 1 / ih=1 ho=1 bo=1
+    model-spec log binary
+
+where the file "filter" contains
+
+    1 1 1   + = +   + = +
+    - + 1   + = +   + = +
+    - + 1   + = +   + = +
+    - + 1   + = +   + = +
+    - + 1   + = +   + = +
+    - + 1   + = +   + = +
+    - + 1   + = +   + = +
+    - + 1   + = +   + = +
+
+Note that there are only three input-hidden weights in this model,
+although there are 24 input-hidden connections in use, and 80 possible
+input-hidden connections.
 
             Copyright (c) 2021 by Radford M. Neal

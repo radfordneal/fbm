@@ -74,7 +74,9 @@ possible sharing of weights between connections).  See <A HREF="net-config.html"
 for documentation on how the configuration is specified in such a
 file.  The named configuration files do not need to exist when the
 configuration is specified; they are read (and checked for errors)
-only when needed later.
+only when needed later.  A configuration file may be specified with an
+initial "%", in which case the remainder is a command that is run to
+output the "file" contents.
 
 Following a "/", the priors for groups of weights, biases, offsets,
 and adjustments are specified, in one of two forms.  For the syntax of

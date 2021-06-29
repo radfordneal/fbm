@@ -77,6 +77,18 @@ void net_check_specs_present
    units in the source and destination layers.  Returns a newly-allocated
    structure with the configuration. */
 
+static int scan_item (char *s, int last)
+{ if (strcmp(s,"=")==0) return last;
+  else if (strcmp(s,"+")==0) return last+1;
+  else if (strcmp(s,"-")==0) return last-1;
+  int v; char junk;
+  if (sscanf(s,"%d%c",&v,&junk)!=1) 
+  { fprintf (stderr, "Bad item in weight configuration file: %s\n", s);
+    exit(2);
+  }
+  return *s=='+' || *s=='-' ? last+v : v;
+}
+
 net_config *net_config_read (char *file, int ns, int nd)
 { 
   FILE *fp = file[0]=='%' ? popen(file+1,"r") : fopen(file,"r");
@@ -95,15 +107,30 @@ net_config *net_config_read (char *file, int ns, int nd)
   p->N_wts = 0;
   p->N_conn = 0;
 
+  int lasts = 0, lastd = 0, lastw = 0;
+
   for (;;)
   { 
+    char ss[21], sd[21], sw[21], junk;
     int s, d, w, n;
 
-    n = fscanf(fp,"%d%d%d\n",&s,&d,&w);
+    n = fscanf(fp," %20s %20s %20s",ss,sd,sw);
     if (n==EOF) break;
 
-    if (n!=3 || s<1 || d<1 || w<1 || s>ns || d>nd)
-    { fprintf (stderr, "Bad weight configuration file: %s, item %d\n",
+    if (n!=3)
+    { fprintf (stderr, 
+               "Partial triple at end of weight configuration file: %s\n",
+               file);
+      exit(2);
+    }
+
+    s = scan_item(ss,lasts);
+    d = scan_item(sd,lastd);
+    w = scan_item(sw,lastw);
+
+    if (s<1 || d<1 || w<1 || s>ns || d>nd || w<1)
+    { fprintf (stderr, 
+               "Out of range index in weight configuration file: %s, item %d\n",
                file, p->N_conn+1);
       exit(2);
     }
@@ -113,6 +140,8 @@ net_config *net_config_read (char *file, int ns, int nd)
                file);
       exit(2);
     }
+
+    lasts = s; lastd = d; lastw = w;
 
     p->conn[p->N_conn].s = s-1;  /* stored indexes a 0-based */
     p->conn[p->N_conn].d = d-1;

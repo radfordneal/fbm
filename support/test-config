@@ -58,3 +58,44 @@ net-mc log 3
 net-display log
 
 echo " "
+
+echo " "; echo "--- C"; echo " "
+
+echo "-- fully connected --"
+
+net-spec log 2 2 2 1 / ih=3:2 hh=4:2 ho=5 bo=10
+net-spec log 
+model-spec log real 1:1
+data-spec log 2 1 / "%echo 2 3 4" .
+net-gen log 0
+net-display log 0
+net-grad-test log 0 0.002
+net-stepsizes log 0 0.002
+net-eval log 0 / 1.1 1.1 0 / 1.2 1.2 0
+
+mc-spec log sample-sigmas heatbath hybrid 100 0.2
+net-mc log 3
+net-display log
+
+echo " "
+
+echo "-- fully connected the hard way --"
+
+net-spec log 2 \
+             2 input-config:"%echo  1 1 1  1 2 2  2 1 3  2 2 4" \
+             2 hidden-config:"%echo 1 1 1  1 2 2  2 1 3  2 2 4" \
+             1 / ih=3:2 hh=4:2 ho=5 bo=10
+net-spec log config
+model-spec log real 1:1
+data-spec log 2 1 / "%echo 2 3 4" .
+net-gen log 0
+net-display log 0
+net-grad-test log 0 0.002
+net-stepsizes log 0 0.002
+net-eval log 0 / 1.1 1.1 0 / 1.2 1.2 0
+
+mc-spec log sample-sigmas heatbath hybrid 100 0.2
+net-mc log 3
+net-display log
+
+echo " "

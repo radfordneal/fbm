@@ -82,6 +82,9 @@ static void gibbs_unit (int, net_param *, net_sigma *, net_sigma *,
 static void gibbs_conn (int, net_param *, net_sigma *, net_sigma *, net_sigma *,
                         int, int, prior_spec *);
 
+static void gibbs_conn_config (int, net_param *, net_sigma *, net_sigma *, 
+                        int, int, prior_spec *);
+
 static void gibbs_adjustments (net_sigma *, double, int,
                                net_param *, net_sigma *, double,
                                net_param *, net_sigma *, double, int,
@@ -499,20 +502,34 @@ int mc_app_sample
     {
       if (l>0)
       { if (arch->has_hh[l-1]) 
-        { /** need update for config **/
-          gibbs_conn (sample_hyper, 
-                      params.hh[l-1], sigmas.hh_cm[l-1], sigmas.hh[l-1], 
-                      sigmas.ah[l], arch->N_hidden[l-1], arch->N_hidden[l], 
-                      &priors->hh[l-1]);
+        { if (arch->hidden_config[l])
+          { gibbs_conn_config (sample_hyper, 
+                            params.hh[l-1], sigmas.hh_cm[l-1], sigmas.hh[l-1],
+                            arch->N_hidden[l-1], arch->hidden_config[l]->N_wts,
+                            &priors->hh[l-1]);
+          }
+          else
+          { gibbs_conn (sample_hyper, 
+                        params.hh[l-1], sigmas.hh_cm[l-1], sigmas.hh[l-1], 
+                        sigmas.ah[l], arch->N_hidden[l-1], arch->N_hidden[l], 
+                        &priors->hh[l-1]);
+          }
         }
       }
     
       if (arch->has_ih[l]) 
-      { /** need update for config **/
-        gibbs_conn (sample_hyper, 
-                    params.ih[l], sigmas.ih_cm[l], sigmas.ih[l], sigmas.ah[l], 
-                    not_omitted(flgs?flgs->omit:0,arch->N_inputs,1<<(l+1)), 
-                    arch->N_hidden[l], &priors->ih[l]); 
+      { if (arch->input_config[l])
+        { gibbs_conn_config (sample_hyper, 
+                             params.ih[l], sigmas.ih_cm[l], sigmas.ih[l],
+                             arch->N_inputs, arch->input_config[l]->N_wts,
+                             &priors->ih[l]); 
+        }
+        else
+        { gibbs_conn (sample_hyper, 
+                      params.ih[l], sigmas.ih_cm[l], sigmas.ih[l], sigmas.ah[l],
+                      not_omitted(flgs?flgs->omit:0,arch->N_inputs,1<<(l+1)), 
+                      arch->N_hidden[l], &priors->ih[l]); 
+        }
       }
 
       if (arch->has_bh[l]) gibbs_unit (sample_hyper, 
@@ -525,15 +542,20 @@ int mc_app_sample
                                        arch->N_hidden[l], &priors->th[l]);
 
       if (arch->has_ah[l])
-      { /** need update for config **/
-        gibbs_adjustments (sigmas.ah[l], priors->ah[l], arch->N_hidden[l], 
-          arch->has_bh[l] ? params.bh[l] : 0, sigmas.bh_cm[l], 
+      { gibbs_adjustments (sigmas.ah[l], priors->ah[l], arch->N_hidden[l], 
+          arch->has_bh[l] ? params.bh[l] : 0,
+            sigmas.bh_cm[l], 
             priors->bh[l].alpha[1],
-          arch->has_ih[l] ? params.ih[l] : 0, sigmas.ih[l], 
+          arch->has_ih[l] && !arch->input_config ? params.ih[l] : 0, 
+            sigmas.ih[l],
             priors->ih[l].alpha[2], 
             not_omitted(flgs?flgs->omit:0,arch->N_inputs,1<<(l+1)), 
-          l>0, &arch->has_hh[l-1], &params.hh[l-1], &sigmas.hh[l-1], 
-            &priors->hh[l-1], &arch->N_hidden[l-1]);
+          l>0 && !arch->hidden_config[l], 
+            l>0 ? &arch->has_hh[l-1] : 0, 
+            l>0 ? &params.hh[l-1] : 0,
+            l>0 ? &sigmas.hh[l-1] : 0, 
+            l>0 ? &priors->hh[l-1] : 0,
+            l>0 ? &arch->N_hidden[l-1] : 0);
       }
   
       if (arch->has_ho[l]) 
@@ -556,8 +578,7 @@ int mc_app_sample
                                   arch->N_outputs, &priors->bo);
 
     if (arch->has_ao)
-    { /** need update for config **/
-      gibbs_adjustments (sigmas.ao, priors->ao, arch->N_outputs, 
+    { gibbs_adjustments (sigmas.ao, priors->ao, arch->N_outputs, 
         arch->has_bo ? params.bo : 0, 
           sigmas.bo_cm,
           priors->bo.alpha[1],
@@ -565,8 +586,12 @@ int mc_app_sample
           sigmas.io, 
           priors->io.alpha[2], 
           not_omitted(flgs?flgs->omit:0,arch->N_inputs,1), 
-        arch->N_layers, arch->has_ho, params.ho, sigmas.ho,
-          priors->ho, arch->N_hidden);
+        arch->N_layers,
+          arch->has_ho,
+          params.ho,
+          sigmas.ho,
+          priors->ho,
+          arch->N_hidden);
     }
   }
   
@@ -833,7 +858,7 @@ static void gibbs_conn
   net_sigma *adj,	/* Adjustments for each destination unit, or zero */
   int ns,		/* Number of source units */
   int nd,		/* Number of destination units */
-  prior_spec *pr		/* Prior for sigmas */
+  prior_spec *pr	/* Prior for sigmas */
 )
 { 
   double width, nalpha, nprec, sum, ps, d;
@@ -873,7 +898,6 @@ static void gibbs_conn
   {
     nalpha = pr->alpha[0] + ns*nd;
 
-    /** need update for config **/
     sum = pr->alpha[0] * (width * width);
     for (i = 0; i<ns; i++)
     { sum += sum_squares(wt+nd*i,adj,nd);
@@ -891,7 +915,6 @@ static void gibbs_conn
   {
     ps = pr->alpha[2] * (*sg_cm * *sg_cm);
 
-    /** need update for config **/
     sum = 0;        
     for (i = 0; i<ns; i++)
     { for (j = 0; j<nd; j++)
@@ -915,6 +938,59 @@ static void gibbs_conn
     }
 
     *sg_cm = cond_sigma (width, pr->alpha[0], pr->alpha[1], sum, ns);
+  }
+
+}
+
+
+/* DO GIBBS SAMPLING FOR SIGMA ASSOCIATED WITH CONNECTIONS WITH CONFIG. 
+   Note that pr->alpha[1] must be zero, and the prior must not be scaled. */
+
+static void gibbs_conn_config
+( int sample_hyper,	/* +1 for all, -1 for lower only */
+  net_param *wt,	/* Weights on connections */
+  net_sigma *sg_cm,	/* Common sigma controlling weights */
+  net_sigma *sg,	/* Individual sigmas for source units (all = common) */
+  int ns,		/* NUmber of source units */
+  int nw,		/* Number of weights */
+  prior_spec *pr	/* Prior for sigmas */
+)
+{ 
+  double width, nalpha, nprec, sum, ps;
+  int i, j;
+
+  width = pr->width;
+
+  if (pr->alpha[0]!=0 && pr->alpha[2]==0)
+  {
+    nalpha = pr->alpha[0] + nw;
+
+    sum = pr->alpha[0] * (width * width);
+    sum += sum_squares(wt,0,nw);
+    nprec = nalpha / sum;
+
+    *sg_cm = prior_pick_sigma (1/sqrt(nprec), nalpha);
+
+    for (i = 0; i<ns; i++)
+    { sg[i] = *sg_cm;
+    }
+  }
+
+  if (pr->alpha[0]!=0 && pr->alpha[2]!=0 && sample_hyper>0)
+  {
+    ps = pr->alpha[2] * (*sg_cm * *sg_cm);
+
+    sum = 0;        
+    for (i = 0; i<nw; i++)
+    { double d = wt[i];
+      sum += rand_gamma((pr->alpha[2]+1)/2) / ((ps+d*d)/2);
+    }
+
+    *sg_cm = cond_sigma (width, pr->alpha[0], pr->alpha[2], sum, nw);
+
+    for (i = 0; i<ns; i++)
+    { sg[i] = *sg_cm;
+    }
   }
 }
 

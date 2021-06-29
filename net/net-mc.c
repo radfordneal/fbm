@@ -1353,17 +1353,17 @@ void mc_app_stepsizes
       }
     }
 
-    if (arch->hidden_config[l])
-    { w = *sigmas.hh_cm[l];
-      for (k = 0; k<arch->hidden_config[l]->N_conn; k++)
-      { i = arch->hidden_config[l]->conn->s;
-        j = arch->hidden_config[l]->conn->d;
-        seconds.h[l][i] += (w*w) * seconds.s[l+1][j];
+    if (l<arch->N_layers-1 && arch->has_hh[l])
+    { if (arch->hidden_config[l+1])
+      { w = *sigmas.hh_cm[l];
+        for (k = 0; k<arch->hidden_config[l+1]->N_conn; k++)
+        { i = arch->hidden_config[l+1]->conn[k].s;
+          j = arch->hidden_config[l+1]->conn[k].d;
+          seconds.h[l][i] += (w*w) * seconds.s[l+1][j];
+        }
       }
-    }
-    else
-    { for (i = 0; i<arch->N_hidden[l]; i++)
-      { if (l<arch->N_layers-1 && arch->has_hh[l])
+      else
+      { for (i = 0; i<arch->N_hidden[l]; i++)
         { for (j = 0; j<arch->N_hidden[l+1]; j++)
           { w = sigmas.hh[l][i];
             if (sigmas.ah[l+1]!=0) w *= sigmas.ah[l+1][j];
@@ -1411,8 +1411,8 @@ void mc_app_stepsizes
       { if (arch->input_config[l])
         { w = *sigmas.ih_cm[l];
           for (k = 0; k<arch->input_config[l]->N_conn; k++)
-          { i = arch->input_config[l]->conn->s;
-            j = arch->input_config[l]->conn->d;
+          { i = arch->input_config[l]->conn[k].s;
+            j = arch->input_config[l]->conn[k].d;
             seconds.i[i] += (w*w) * seconds.s[l][j];
           }
         }
@@ -1459,9 +1459,9 @@ void mc_app_stepsizes
     if (arch->has_ih[l])
     { if (arch->input_config[l])
       { for (k = 0; k<arch->input_config[l]->N_conn; k++)
-        { i = arch->input_config[l]->conn->s;
-          j = arch->input_config[l]->conn->d;
-          stepsizes.ih [l] [arch->input_config[l]->conn->w]
+        { i = arch->input_config[l]->conn[k].s;
+          j = arch->input_config[l]->conn[k].d;
+          stepsizes.ih [l] [arch->input_config[l]->conn[k].w]
             += train_sumsq[i] * seconds.s[l][j];
         }
       }
@@ -1482,9 +1482,9 @@ void mc_app_stepsizes
     if (l<arch->N_layers-1 && arch->has_hh[l])
     { if (arch->hidden_config[l])
       { for (k = 0; k<arch->hidden_config[l]->N_conn; k++)
-        { i = arch->hidden_config[l]->conn->s;
-          j = arch->hidden_config[l]->conn->d;
-          stepsizes.hh [l] [arch->hidden_config[l]->conn->w]
+        { i = arch->hidden_config[l]->conn[k].s;
+          j = arch->hidden_config[l]->conn[k].d;
+          stepsizes.hh [l] [arch->hidden_config[l]->conn[k].w]
             += N_train * seconds.s[l+1][j];
         }
       }

@@ -58,9 +58,9 @@ typedef struct
   int has_ah[Max_layers];	/* Do hidden layers have adjustments? */
   int has_ao;			/* Does output layer have adjustments? */
 
-  net_config *input_config[Max_layers];   /* Pointers used during program, */
-  net_config *hidden_config[Max_layers];  /*   but set to zero in log file */
-
+  net_config *input_config[Max_layers];   /* Pointers used during program,  */
+  net_config *hidden_config[Max_layers];  /*   but set to zero in log file  */
+				          /*   (hidden_config[0] is unused) */
 } net_arch;
 
 

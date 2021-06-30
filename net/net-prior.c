@@ -503,12 +503,18 @@ void net_prior_max_second
     }
 
     if (a->has_ih[l])
-    { k = 0;
-      for (i = 0; i<a->N_inputs; i++)
-      { if (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
-        { max_second (d->ih[l] + k*a->N_hidden[l], a->N_hidden[l], 
-                      s->ih[l][k], s->ah[l], p->ih[l].alpha[2]);
-          k += 1;
+    { if (a->input_config[l])
+      { max_second (d->ih[l], a->input_config[l]->N_wts, *s->ih_cm[l],
+                    0, p->ih[l].alpha[2]);
+      }
+      else
+      { k = 0;
+        for (i = 0; i<a->N_inputs; i++)
+        { if (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
+          { max_second (d->ih[l] + k*a->N_hidden[l], a->N_hidden[l], 
+                        s->ih[l][k], s->ah[l], p->ih[l].alpha[2]);
+            k += 1;
+          }
         }
       }
     }

@@ -110,3 +110,26 @@ net-mc log 3
 net-display log
 
 echo " "
+
+echo " "; echo "--- E"
+
+net-spec log 10 8 identity input-config:filter1 1 / ih=1 ho=1 bo=1
+model-spec log binary
+
+net-spec log config
+net-gen log 
+net-display log 0
+
+net-spec log 10 8 identity input-config:filter2 1 / ih=1 ho=1 bo=1
+model-spec log binary
+
+net-spec log config
+net-gen log 
+net-display log 0
+
+net-spec log 10 8 identity input-config:filter3 1 / ih=1 ho=1 bo=1
+model-spec log binary
+
+net-spec log config
+net-gen log 
+net-display log 0

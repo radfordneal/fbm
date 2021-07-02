@@ -62,11 +62,15 @@ the one above:
     + -1 =
     1 +2 -
 
-The utility of these relative specifications is illustrated by the
-following network specification, which sets up a network that computes
-a convolution of an input sequence of length 10 with a 3-point linear
-filter, which is then used in a logistic regression model for binary
-classification:
+A group of triples may be repeated by enclosing it in items of the
+form "&lt;rep&gt;(" and ")", where &lt;rep&gt; is a positive integer.  Such
+repeated groups may be nested.
+
+The utility of relative specifications specifications and repetition
+is illustrated by the following network specification, which sets up a
+network that computes a convolution of an input sequence of length 10
+with a 3-point linear filter, which is then used in a logistic
+regression model for binary classification:
 
     net-spec log 10 8 identity input-config:filter 1 / ih=1 ho=1 bo=1
     model-spec log binary
@@ -85,6 +89,11 @@ where the file "filter" contains
 Note that there are only three input-hidden weights in this model,
 although there are 24 input-hidden connections in use, and 80 possible
 input-hidden connections.
+
+This configuration file can be abbreviated by using the repetition
+facility, as follows:
+
+    1 1 1   2( + = + )   7( - + 1   2( + = + ) )
 
             Copyright (c) 2021 by Radford M. Neal
 </pre>

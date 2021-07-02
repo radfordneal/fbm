@@ -73,11 +73,39 @@ void net_check_specs_present
 }
 
 
-/* READ WEIGHT CONFIGURATION.  Passed the configuration file and numbers
+/* READ WEIGHT CONFIGURATION.  Passed the configuration file and numbers of
    units in the source and destination layers.  Returns a newly-allocated
    structure with the configuration. */
 
-static int scan_item (char *s, int last)
+#define Max_items 1000000
+
+static char **read_items (char *file)
+{ FILE *fp = file[0]=='%' ? popen(file+1,"r") : fopen(file,"r");
+  if (fp==NULL)
+  { fprintf(stderr,"Can't open weight configuration file: %s\n",file);
+    exit(2);
+  }
+  char **item = (char **) chk_alloc (Max_items+1, sizeof *item);
+  int n = 0;
+  char s[101];
+  while (fscanf(fp,"%100s",s)==1)
+  { if (n==Max_items)
+    { fprintf (stderr, 
+               "Too many items in configuration file: %s\n",
+               file);
+      exit(2);
+    }
+    item[n] = (char *) chk_alloc(strlen(s)+1,1);
+    strcpy(item[n],s);
+    n += 1;
+  }
+  item[n] = NULL;
+  fclose(fp);
+  (void) fopen("/dev/null","r");  /* Kludge to bypass macOS bug */
+  return item;
+}
+
+static int convert_item (char *s, int last)
 { if (strcmp(s,"=")==0) return last;
   else if (strcmp(s,"+")==0) return last+1;
   else if (strcmp(s,"-")==0) return last-1;
@@ -89,76 +117,104 @@ static int scan_item (char *s, int last)
   return *s=='+' || *s=='-' ? last+v : v;
 }
 
-net_config *net_config_read (char *file, int ns, int nd)
-{ 
-  FILE *fp = file[0]=='%' ? popen(file+1,"r") : fopen(file,"r");
-  if (fp==NULL)
-  { fprintf(stderr,"Can't open weight configuration file: %s\n",file);
-    exit(2);
-  }
-  
-  net_config *p;
-  p = calloc (1, sizeof *p);
-  if (p==NULL || (p->conn = calloc (Max_conn, sizeof *p->conn))==NULL)
-  { fprintf(stderr,"Can't allocate memory for weight configuration\n");
-    exit(3);
-  }
+static int lasts, lastd, lastw;
 
-  p->N_wts = 0;
-  p->N_conn = 0;
-
-  int lasts = 0, lastd = 0, lastw = 0;
-
+static char **do_items (char *file, char **item, net_config *p, int ns, int nd)
+{
   for (;;)
   { 
-    char ss[21], sd[21], sw[21], junk;
-    int s, d, w, n;
+    int s, d, w, r;
+    char junk, paren;
+    char *it = item[0];
 
-    n = fscanf(fp," %20s %20s %20s",ss,sd,sw);
-    if (n==EOF) break;
+    if (it==NULL || strcmp(it,")")==0)
+    { return item;
+    }
 
-    if (n!=3)
+    if (it[0]!=0 && it[strlen(it)-1]=='(')
+    { if (sscanf(it,"%d%c%c",&r,&paren,&junk)!=2 || paren!='(' || r<1)
+      { fprintf (stderr,
+                 "Bad repeat start in weight configuration file: %s, %s\n",
+                 file, it);
+      }
+      item += 1;
+      char **start_item = item;
+      while (r>0)
+      { item = do_items (file, start_item, p, ns, nd);
+        r -= 1;
+      }
+      if (*item!=NULL) item += 1;
+      continue;
+    }
+
+    if (item[1]==NULL || strcmp(item[1],")")==0 
+     || item[2]==NULL || strcmp(item[2],")")==0)
     { fprintf (stderr, 
-               "Partial triple at end of weight configuration file: %s\n",
+               "Incomplete triple in weight configuration file: %s\n",
                file);
       exit(2);
     }
 
-    s = scan_item(ss,lasts);
-    d = scan_item(sd,lastd);
-    w = scan_item(sw,lastw);
+    s = convert_item(item[0],lasts);
+    d = convert_item(item[1],lastd);
+    w = convert_item(item[2],lastw);
 
     if (s<1 || d<1 || w<1 || s>ns || d>nd || w<1)
     { fprintf (stderr, 
-               "Out of range index in weight configuration file: %s, item %d\n",
-               file, p->N_conn+1);
+               "Out of range index in weight configuration: %s\n",
+               file);
       exit(2);
     }
 
     if (p->N_conn==Max_conn)
-    { fprintf (stderr,"Too many connections in weight configuration file: %s\n",
+    { fprintf (stderr,
+               "Too many connections in weight configuration: %s\n",
                file);
       exit(2);
     }
 
     lasts = s; lastd = d; lastw = w;
 
-    p->conn[p->N_conn].s = s-1;  /* stored indexes a 0-based */
+    p->conn[p->N_conn].s = s-1;  /* stored indexes are 0-based */
     p->conn[p->N_conn].d = d-1;
     p->conn[p->N_conn].w = w-1;
 
     if (w>p->N_wts) p->N_wts = w;
 
     p->N_conn += 1;
+
+    item += 3;
+  }
+}
+
+net_config *net_config_read (char *file, int ns, int nd)
+{ 
+  char **item = read_items (file);
+  int i;
+  
+  net_config *p;
+  p = (net_config *) chk_alloc (1, sizeof *p);
+  p->conn = (net_connection *) chk_alloc (Max_conn, sizeof *p->conn);
+
+  p->N_wts = 0;
+  p->N_conn = 0;
+
+  lasts = 0;
+  lastd = 0;
+  lastw = 0;
+
+  char **ir = do_items (file, item, p, ns, nd);
+  if (*ir!=NULL)
+  { fprintf (stderr, 
+             "Not all items read from weight configuration file: %s, have %s\n",
+             file, *ir);
+    exit(2);
   }
 
-  net_connection *q;
-  q = calloc (p->N_conn, sizeof *q);
-  if (q==NULL)
-  { fprintf(stderr,"Can't allocate memory for weight configuration\n");
-    exit(3);
-  }
- 
+  for (i = 0; item[i]!=NULL; i++) free(item[i]);
+  free (item);
+
+  net_connection *q = (net_connection *) chk_alloc (p->N_conn, sizeof *q);
   memcpy (q, p->conn, p->N_conn * sizeof *q);
   free(p->conn);
   p->conn = q;

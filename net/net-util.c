@@ -87,9 +87,17 @@ static char **read_items (char *file)
   }
   char **item = (char **) chk_alloc (Max_items+1, sizeof *item);
   int n = 0;
-  char s[101];
+  char s[101]; 
+  s[100] = 0;
   while (fscanf(fp,"%100s",s)==1)
-  { if (n==Max_items)
+  { char *h = strchr(s,'#');
+    if (h)
+    { char c;
+      *h = 0;
+      do { c = fgetc(fp); } while (c!=EOF && c!='\n');
+      if (h==s) continue;
+    }
+    if (n==Max_items)
     { fprintf (stderr, 
                "Too many items in configuration file: %s\n",
                file);

@@ -119,36 +119,54 @@ static int convert_item (char *s, int last)
 
 static int lasts, lastd, lastw;
 
-static char **do_items (char *file, char **item, net_config *p, int ns, int nd)
+static char **do_items 
+        (char *file, char **item, net_config *p, int ns, int nd, char paren)
 {
   for (;;)
   { 
     int s, d, w, r;
-    char junk, paren;
+    char junk, nparen;
     char *it = item[0];
 
-    if (it==NULL || strcmp(it,")")==0)
+    if (it==NULL || strcmp(it,")")==0 || strcmp(it,"]")==0)
     { return item;
     }
 
-    if (it[0]!=0 && it[strlen(it)-1]=='(')
-    { if (sscanf(it,"%d%c%c",&r,&paren,&junk)!=2 || paren!='(' || r<1)
+    if (it[0]!=0 && (it[strlen(it)-1]=='(' || it[strlen(it)-1]=='['))
+    { 
+      if (it[1]==0) /* default repetition factor is 1 */
+      { r = 1;
+        nparen = it[0];
+      }
+      else if (sscanf(it,"%d%c%c",&r,&nparen,&junk)!=2 || r<1)
       { fprintf (stderr,
                  "Bad repeat start in weight configuration file: %s, %s\n",
                  file, it);
       }
+
       item += 1;
       char **start_item = item;
+
       while (r>0)
-      { item = do_items (file, start_item, p, ns, nd);
+      { item = do_items (file, start_item, p, ns, nd, nparen);
         r -= 1;
       }
-      if (*item!=NULL) item += 1;
+
+      if (*item!=NULL) 
+      { if (nparen=='(' && **item!=')' || nparen=='[' && **item!=']')
+        { fprintf (stderr,
+                  "Mis-matched bracket type in weigth configuration file: %s\n",
+                   file);
+          exit(2);
+        }
+        item += 1;
+      }
+
       continue;
     }
 
-    if (item[1]==NULL || strcmp(item[1],")")==0 
-     || item[2]==NULL || strcmp(item[2],")")==0)
+    if (item[1]==NULL || strcmp(item[1],")")==0 || strcmp(item[1],"]")==0 
+     || item[2]==NULL || strcmp(item[2],")")==0 || strcmp(item[2],"]")==0)
     { fprintf (stderr, 
                "Incomplete triple in weight configuration file: %s\n",
                file);
@@ -159,29 +177,32 @@ static char **do_items (char *file, char **item, net_config *p, int ns, int nd)
     d = convert_item(item[1],lastd);
     w = convert_item(item[2],lastw);
 
-    if (s<1 || d<1 || w<1 || s>ns || d>nd || w<1)
-    { fprintf (stderr, 
-               "Out of range index in weight configuration: %s\n",
-               file);
-      exit(2);
-    }
-
-    if (p->N_conn==Max_conn)
-    { fprintf (stderr,
-               "Too many connections in weight configuration: %s\n",
-               file);
-      exit(2);
-    }
-
     lasts = s; lastd = d; lastw = w;
 
-    p->conn[p->N_conn].s = s-1;  /* stored indexes are 0-based */
-    p->conn[p->N_conn].d = d-1;
-    p->conn[p->N_conn].w = w-1;
+    if (paren=='(')
+    {
+      if (s<1 || d<1 || w<1 || s>ns || d>nd || w<1)
+      { fprintf (stderr, 
+                 "Out of range index in weight configuration: %s\n",
+                 file);
+        exit(2);
+      }
 
-    if (w>p->N_wts) p->N_wts = w;
+      if (p->N_conn==Max_conn)
+      { fprintf (stderr,
+                 "Too many connections in weight configuration: %s\n",
+                 file);
+        exit(2);
+      }
 
-    p->N_conn += 1;
+      p->conn[p->N_conn].s = s-1;  /* stored indexes are 0-based */
+      p->conn[p->N_conn].d = d-1;
+      p->conn[p->N_conn].w = w-1;
+
+      if (w>p->N_wts) p->N_wts = w;
+
+      p->N_conn += 1;
+    }
 
     item += 3;
   }
@@ -203,7 +224,7 @@ net_config *net_config_read (char *file, int ns, int nd)
   lastd = 0;
   lastw = 0;
 
-  char **ir = do_items (file, item, p, ns, nd);
+  char **ir = do_items (file, item, p, ns, nd, '(');
   if (*ir!=NULL)
   { fprintf (stderr, 
              "Not all items read from weight configuration file: %s, have %s\n",

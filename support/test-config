@@ -133,3 +133,10 @@ model-spec log binary
 net-spec log config
 net-gen log 
 net-display log 0
+
+net-spec log 10 8 identity input-config:filter4 1 / ih=1 ho=1 bo=1
+model-spec log binary
+
+net-spec log config
+net-gen log 
+net-display log 0

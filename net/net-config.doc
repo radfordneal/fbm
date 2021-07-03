@@ -60,11 +60,13 @@ the one above:
     1 +2 -
 
 A group of triples may be repeated by enclosing it in items of the
-form "<rep>(" and ")", where <rep> is a positive integer.  Such
-repeated groups may be nested.
+form "<rep>(" and ")", where <rep> is a positive integer (defaulting
+to 1 if absent).  Such repeated groups may be nested.  A group of
+triples enclosed by "<rep>[" and "]" will update the indexes used for
+relative values, but without producing any connections.
 
-The utility of relative specifications specifications and repetition
-is illustrated by the following network specification, which sets up a
+The utility of relative specifications specifications and grouping is
+illustrated by the following network specification, which sets up a
 network that computes a convolution of an input sequence of length 10
 with a 3-point linear filter, which is then used in a logistic
 regression model for binary classification:
@@ -90,6 +92,10 @@ input-hidden connections.
 This configuration file can be abbreviated by using the repetition
 facility, as follows:
 
-    1 1 1   2( + = + )   7( - + 1   2( + = + ) )
+    1 1 1   2( + = + )   7(  - + 1   2( + = + )  )
+
+Using no-connection groups, this can be further abbreviated to
+
+    [ 2 0 0 ]   8(  [ -2 + 0 ]   3( + = + )  )
 
             Copyright (c) 2021 by Radford M. Neal

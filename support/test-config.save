@@ -913,3 +913,80 @@ Output Biases [3]
 
       1.00: -0.59
 
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 8  identity  input-config:filter4
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    1.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  1.000
+  Output Biases:           1.000
+
+Hidden layer 0 input weight configuration
+
+24 connections, 3 weights
+
+     1      1      1
+     2      1      2
+     3      1      3
+     2      2      1
+     3      2      2
+     4      2      3
+     3      3      1
+     4      3      2
+     5      3      3
+     4      4      1
+     5      4      2
+     6      4      3
+     5      5      1
+     6      5      2
+     7      5      3
+     6      6      1
+     7      6      2
+     8      6      3
+     7      7      1
+     8      7      2
+     9      7      3
+     8      8      1
+     9      8      2
+    10      8      3
+
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 1.00:      -0.17  +0.10  -0.45
+
+Hidden Layer 0 to Output Weights [2]
+
+ 1.00 1.00: -1.67
+
+      1.00: +1.15
+
+      1.00: -0.78
+
+      1.00: -1.19
+
+      1.00: -0.19
+
+      1.00: -0.38
+
+      1.00: -1.20
+
+      1.00: -0.91
+
+Output Biases [3]
+
+      1.00: -0.59
+

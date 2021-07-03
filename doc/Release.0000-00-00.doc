@@ -1,8 +1,15 @@
-2
 
 NOTES ON THE VERSION UNDER DEVELOPMENT
 
 Changes in this version.
+
+*) For neural network models, the configuration of the connections and
+   their weights into a hidden layer, from the input layer or the
+   previous hidden layer, may now be set up explicitly, rather than
+   (as previously) layers always being fully-connected, without weight
+   sharing.  In particular, this allows for specification of models
+   with convolutional layers.  See net-spec.doc and net-config.doc for
+   details.
 
 *) Forward / backward / gradient computations for neural networks have
    been sped up, by rewriting the portable code to encourage the

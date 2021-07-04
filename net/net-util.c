@@ -132,17 +132,18 @@ static char **do_items
 {
   for (;;)
   { 
-    int s, d, w, r;
+    int s, d, w, r, l;
     char junk, nparen;
     char *it = item[0];
 
-    if (it==NULL || strcmp(it,")")==0 || strcmp(it,"]")==0)
+    if (it==NULL || strcmp(it,")")==0 || strcmp(it,"]")==0 || strcmp(it,"}")==0)
     { return item;
     }
 
-    if (it[0]!=0 && (it[strlen(it)-1]=='(' || it[strlen(it)-1]=='['))
+    l = strlen(it);
+    if (l>0 && (it[l-1]=='(' || it[l-1]=='[' || it[l-1]=='{'))
     { 
-      if (it[1]==0) /* default repetition factor is 1 */
+      if (l==1) /* default repetition factor is 1 */
       { r = 1;
         nparen = it[0];
       }
@@ -154,14 +155,21 @@ static char **do_items
 
       item += 1;
       char **start_item = item;
-
+      int sv_lasts = lasts, sv_lastd = lastd, sv_lastw = lastw;
+        
       while (r>0)
       { item = do_items (file, start_item, p, ns, nd, nparen);
         r -= 1;
       }
 
+      if (nparen=='{')
+      { lasts = sv_lasts; lastd = sv_lastd; lastw = sv_lastw;
+      }
+
       if (*item!=NULL) 
-      { if (nparen=='(' && **item!=')' || nparen=='[' && **item!=']')
+      { if (nparen=='(' && **item!=')' 
+         || nparen=='[' && **item!=']'
+         || nparen=='{' && **item!='}')
         { fprintf (stderr,
                   "Mis-matched bracket type in weigth configuration file: %s\n",
                    file);
@@ -174,7 +182,9 @@ static char **do_items
     }
 
     if (item[1]==NULL || strcmp(item[1],")")==0 || strcmp(item[1],"]")==0 
-     || item[2]==NULL || strcmp(item[2],")")==0 || strcmp(item[2],"]")==0)
+                      || strcmp(item[1],"}")==0 
+     || item[2]==NULL || strcmp(item[2],")")==0 || strcmp(item[2],"]")==0
+                      || strcmp(item[2],"}")==0)
     { fprintf (stderr, 
                "Incomplete triple in weight configuration file: %s\n",
                file);
@@ -187,7 +197,7 @@ static char **do_items
 
     lasts = s; lastd = d; lastw = w;
 
-    if (paren=='(')
+    if (paren=='(' || paren=='{')
     {
       if (s<1 || d<1 || w<1 || s>ns || d>nd || w<1)
       { fprintf (stderr, 

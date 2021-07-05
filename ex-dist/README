@@ -4,6 +4,8 @@ commands given in the documentation, except that the stepsize to use
 is given as an argument to the command file.  The log files include
 the stepsize as part of the name.
 
+The 'grun' command file does all the runs for the examples in Ex-dist-g.doc.
+
 Command files for sampling from the "funnel" distribution used in
 Ex-dist-f.doc and as an example in my paper on "Slice Sampling" in
 Annals of Statistics are also included.  The 'frun' command file runs

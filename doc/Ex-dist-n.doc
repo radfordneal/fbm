@@ -79,10 +79,10 @@ iterations, we use a command such as:
 
 This performs 1000 Markov chain updates, as specified by the last
 mc-spec command, and saves the state after each update in the log
-file.  This takes only a fraction of a second on our machine, but
-Markov chain sampling runs for more difficult problems can take much
-longer, so one would often wish to run the 'dist-mc' command in the
-background, by putting an "&" at the end of the command line.
+file.  This takes only a fraction of a second, but Markov chain
+sampling runs for more difficult problems can take much longer, so one
+would often wish to run the 'dist-mc' command in the background, by
+putting an "&" at the end of the command line.
 
 If we later decided that we wanted to continue Markov chain sampling
 for more iterations, we could just use another 'dist-mc' command with

@@ -9,9 +9,6 @@ For details on the various methods described, see mc-spec.doc.  A
 table comparing the performance of the methods on these examples is
 included at the end of this section.
 
-The times reported here are for an older version of the software, run
-on a 550 MHz Pentium III.
-
 
 Specifying the distribution.
 
@@ -63,16 +60,16 @@ can be obtained using an extra argument to 'dist-mc' (see xxx-mc.doc),
 but using "repeat" has the advantage that one can also easily look at
 the rejection rate over the 50 repetitions.
 
-We can now sample for 2000 Markov chain iterations (a total of 100000
+We can now sample for 10000 Markov chain iterations (a total of 500000
 metropolis updates) with the following command:
 
-    > dist-mc glog.met,1 2000
+    > dist-mc glog.met,1 10000
 
-This takes about three seconds on a 550MHz Pentium III, as will all
-the other sampling commands in this section.
+This takes about half a second on the test system (Ex-test-system.doc)
+as will all the other sampling commands in this section.
 
 We can look at what happened to the three state variables during these
-2000 iterations with a command such as
+10000 iterations with a command such as
 
     > dist-plt t xyz glog.met,1 | plot
 
@@ -204,12 +201,12 @@ could try a smaller stepsize with the following commands (following a
 'dist-spec' command):
 
     > mc-spec glog.met,0.2 repeat 50 metropolis 0.2 end
-    > dist-mc glob.met,0.2 2000
+    > dist-mc glob.met,0.2 10000
 
 Or we might try a larger stepsize:
 
     > mc-spec glog.met,5 repeat 50 metropolis 5 end
-    > dist-mc glob.met,5 2000
+    > dist-mc glob.met,5 10000
 
 If enough iterations are done, the same estimates should be obtained
 all these chains, but some stepsizes will produce a more efficient
@@ -244,9 +241,9 @@ takes about three times as long as a "metropolis" operation.  To
 facilitate comparisons, the repeat count is corresponding less in this
 specification.
 
-As before, can now sample for 2000 iterations using a 'dist-mc' command:
+As before, can now sample for 10000 iterations using a 'dist-mc' command:
 
-    > dist-mc glog.met1,1 2000
+    > dist-mc glog.met1,1 10000
 
 You can see how well this method samples in the same ways as discussed
 above.  You could also try sampling using "met-1" with a stepsize of
@@ -272,7 +269,7 @@ The method in which the slice is found by "stepping out" can be done
 as follows:
 
     > mc-spec glog.slc1,1 repeat 4 slice-1 1 end
-    > dist-mc glog.slc1,1 2000
+    > dist-mc glog.slc1,1 10000
 
 This does single-variable slice sampling using an initial interval of
 size 1, which is extended in steps of the same size until both ends
@@ -286,7 +283,7 @@ a command such as
 
     > dist-tbl e glog.slc1,1 | series m
 
-    Number of realizations: 1  Total points: 2000
+    Number of realizations: 1  Total points: 10000
 
     Mean: 5.390583
 
@@ -357,7 +354,7 @@ Markov Chain Monte Carlo Methods.
 We can try out this dynamical method as follows:
 
     > mc-spec glog.dyn,0.3 repeat 40 heatbath 0.98 dynamic 1 0.3 end
-    > dist-mc glog.dyn,0.3 2000
+    > dist-mc glog.dyn,0.3 10000
 
 The argument of "heatbath" is the factor by which to multiply the old
 momentum variables (after which noise is added).  A value of 1-d
@@ -406,7 +403,7 @@ updates are done at the beginning.
     > mc-spec glog.hmc,0.3 repeat 50 metropolis 1
     > dist-mc glog.hmc,0.3 1
     > mc-spec glog.hmc,0.3 heatbath hybrid 45 0.3
-    > dist-mc glog.hmc,0.3 2000
+    > dist-mc glog.hmc,0.3 10000
 
 The length of the trajectory should be chosen based on the number of
 steps for which we want to suppress random walks - longer for more
@@ -419,7 +416,7 @@ which consisted of Metropolis updates, to be excluded):
 
     > dist-tbl r glog.hmc,0.3 2: | series m
 
-    Number of realizations: 1  Total points: 2000
+    Number of realizations: 1  Total points: 10000
 
     Mean: 0.035518
 
@@ -474,7 +471,7 @@ appropriate commands:
     > mc-spec glog.phmc,0.18 repeat 50 metropolis 1
     > dist-mc glog.phmc,0.18 1
     > mc-spec glog.phmc,0.18 repeat 35 heatbath 0.99 hybrid 1 0.18 negate end
-    > dist-mc glog.phmc,0.18 2000
+    > dist-mc glog.phmc,0.18 10000
 
 The use of a "heatbath" operation with a non-zero "decay" causes the
 momentum to change only slowly.  Because of this, even though only a
@@ -503,7 +500,7 @@ Slice sampling with reflection from the last inside point is done as
 follows:
 
     > mc-spec glog.slci,0.3 heatbath slice-inside 35 0.3
-    > dist-mc glog.slci,0.3 2000
+    > dist-mc glog.slci,0.3 10000
 
 The "heatbath" operation picks a random momentum vector, which sets
 the speed of motion and the initial direction.  We then find the slice
@@ -520,7 +517,7 @@ small.
 Slice sampling with outside reflection is done as follows:
 
     > mc-spec glog.slco,0.3 heatbath slice-outside 45 0.3 
-    > dist-mc glog.slco,0.3 2000
+    > dist-mc glog.slco,0.3 10000
 
 This method operates as described for inside reflection, except that
 when a step ends at a point outside the slice, we stay there, but
@@ -542,7 +539,7 @@ point on the "other side" of their conditional distribution.  This can
 be done with the following commands:
 
     > mc-spec glog.slcv,0.3 slice-over 8 0.1 0.3 
-    > dist-mc glog.slcv,0.3 2000
+    > dist-mc glog.slcv,0.3 10000
 
 The first argument of "slice-over" is the number of "refinements" used
 to more accurately pin down the end-points of the slice (using
@@ -568,8 +565,8 @@ the expectation of the "x" variable using the various methods (the
 autocorrelation time), determined from estimates of the cumulative
 correlations up to when the autocorrelations are near zero.  The
 repetition counts for the methods were set so that they all required
-about 3 seconds of computation time for 2000 iterations (on a 550MHz
-Pentium III).
+about half a second of computation time for 10000 iterations (on the
+machine described in Ex-test-system.doc).
 
 
   METHOD      STEPSIZE   AUTOCORR.  NOTES

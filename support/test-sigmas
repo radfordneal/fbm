@@ -1,0 +1,37 @@
+#!/bin/bash
+
+echo " "; echo "--- A"; echo " "
+
+net-spec log 2 2 1 / ih=3:2:1
+net-spec log config
+model-spec log real 1
+net-gen log fix - <<end
+1 -2 3 -4
+end
+net-display log 0
+
+mc-spec log repeat 20 sample-hyper
+net-mc log 2100
+net-tbl h1 log 101: | series ms
+
+mc-spec log repeat 1000 sample-lower-hyper rgrid-upper-hyper 
+net-mc log 4200
+net-tbl h1 log 2201: | series ms
+
+echo " "; echo "--- B"; echo " "
+
+net-spec log 2 2 1 / ih=3:2::1
+net-spec log config
+model-spec log real 1
+net-gen log fix - <<end
+1 -2 3 -4
+end
+net-display log 0
+
+mc-spec log repeat 20 sample-hyper
+net-mc log 2100
+net-tbl h1 log 101: | series ms
+
+mc-spec log repeat 1000 sample-lower-hyper rgrid-upper-hyper 
+net-mc log 4200
+net-tbl h1 log 2201: | series ms

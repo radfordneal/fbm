@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for test in test-config test-ti test-func test-func2 test-im; do
+for test in test-config test-sigmas test-ti test-func test-func2 test-im; do
   echo RUNNING $test
   $test >& $test.out
   diff $test.save $test.out 

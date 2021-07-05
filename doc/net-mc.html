@@ -27,9 +27,11 @@ The following applications-specific sampling procedures are implemented:
 
    rgrid--upper-hyper [ stepsize ]
 
-       Does random-grid Metropolis updates (one at a time) for 
-       the logs of all upper-level hyperparameters, in "precision" 
-       form.  The default stepsize is 0.1.
+       Does random-grid Metropolis updates (one at a time) for the
+       logs of all upper-level hyperparameters, in "precision" form.
+       The default stepsize is 0.1.  (Does nothing for uppermost
+       hyperparameters that don't control hyperparameters one level
+       down.)
 
    sample-lower-noise
 
@@ -37,9 +39,11 @@ The following applications-specific sampling procedures are implemented:
 
    rgrid-upper-noise [ stepsize ]
 
-       Does random-grid Metropolis updates (one at a time) for the 
+       Does random-grid Metropolis updates (one at a time) for the
        logs of all upper-level hyperameters controlling noise
        variances, in "precison" form.  The default stepsize is 0.1.
+       (Does nothing if the uppermost noise hyperparameter doesn't
+       control noise hyperparameters one level down.)
 
    sample-sigmas  
 
@@ -50,10 +54,10 @@ The following applications-specific sampling procedures are implemented:
        Does the equivalent of both sample-lower-hyper and 
        sample-lower-noise.
 
-   sample-upper-sigmas
+   rgrid-upper-sigmas
 
-       Does the equivalent of both sample-upper-hyper and 
-       sample-upper-noise.
+       Does the equivalent of both rgrid-upper-hyper and
+       rgrid-upper-noise.
 
 An "upper-level" hyperparameter is one that controls the distribution
 of lower-level hyperparameters or noise variances (which may be either
@@ -89,7 +93,7 @@ hyperparameters and weights.  The marginal likelihood for a model can
 be found using Annealed Importance Sampling, since the log likelihood
 part of the energy has all the appropriate normalizing constants.
 
-            Copyright (c) 1995-2004 by Radford M. Neal
+            Copyright (c) 1995-2021 by Radford M. Neal
 </pre>
 </body>
 </html>

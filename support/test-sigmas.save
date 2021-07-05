@@ -88,3 +88,107 @@ Number of realizations: 1  Total points: 2000
 Sample mean: 3.086778  
 
 Standard deviation: 1.292316  
+ 
+--- C
+ 
+
+Network Architecture:
+
+  Input layer:     size 2
+  Hidden layer 0:  size 2  tanh  input-config:% echo 1 1 1  1 2 2  2 1 3  2 2 4
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    3.000:2.00::1.00
+
+         Output Layer
+
+
+Hidden layer 0 input weight configuration
+
+4 connections, 4 weights
+
+     1      1      1
+     1      2      2
+     2      1      3
+     2      2      4
+
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 3.00:      +1.00  -2.00  +3.00  -4.00
+
+Noise levels
+
+   1.00 -  1.00
+
+
+Number of realizations: 1  Total points: 2000
+
+Sample mean: 3.072568  
+
+Standard deviation: 1.270317  
+
+Number of realizations: 1  Total points: 2000
+
+Sample mean: 3.086778  
+
+Standard deviation: 1.292316  
+ 
+--- D
+ 
+
+Network Architecture:
+
+  Input layer:     size 3
+  Hidden layer 0:  size 2  tanh  input-config:% echo 1 1 1  1 2 2  3 1 3  3 2 4
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    3.000:2.00::1.00
+
+         Output Layer
+
+
+Hidden layer 0 input weight configuration
+
+4 connections, 4 weights
+
+     1      1      1
+     1      2      2
+     3      1      3
+     3      2      4
+
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 3.00:      +1.00  -2.00  +3.00  -4.00
+
+Noise levels
+
+   1.00 -  1.00
+
+
+Number of realizations: 1  Total points: 2000
+
+Sample mean: 3.072568  
+
+Standard deviation: 1.270317  
+
+Number of realizations: 1  Total points: 2000
+
+Sample mean: 3.086778  
+
+Standard deviation: 1.292316  

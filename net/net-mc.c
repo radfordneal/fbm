@@ -101,6 +101,10 @@ static void rgrid_met_conn (double, mc_iter *,
                             net_param *, net_sigma *, net_sigma *, net_sigma *,
                             int, int, prior_spec *);
 
+static void rgrid_met_conn_config (double, mc_iter *,
+                            net_param *, net_sigma *, net_sigma *,
+                            int, int, prior_spec *);
+
 static double sum_squares (net_param *, net_sigma *, int);
 
 static double rgrid_sigma (double, mc_iter *, double, 
@@ -444,20 +448,34 @@ int mc_app_sample
     {
       if (l>0)
       { if (arch->has_hh[l-1]) 
-        { /** need update for config **/
-          rgrid_met_conn (pm, it,
-                      params.hh[l-1], sigmas.hh_cm[l-1], sigmas.hh[l-1], 
-                      sigmas.ah[l], arch->N_hidden[l-1], arch->N_hidden[l], 
-                      &priors->hh[l-1]);
+        { if (arch->hidden_config[l])
+          { rgrid_met_conn_config (pm, it,
+                        params.hh[l-1], sigmas.hh_cm[l-1], sigmas.hh[l-1], 
+                        arch->N_hidden[l-1], arch->hidden_config[l]->N_wts,
+                        &priors->hh[l-1]);
+          }
+          else
+          { rgrid_met_conn (pm, it,
+                        params.hh[l-1], sigmas.hh_cm[l-1], sigmas.hh[l-1], 
+                        sigmas.ah[l], arch->N_hidden[l-1], arch->N_hidden[l], 
+                        &priors->hh[l-1]);
+          }
         }
       }
     
       if (arch->has_ih[l]) 
-      { /** need update for config **/
-        rgrid_met_conn (pm, it,
-                    params.ih[l], sigmas.ih_cm[l], sigmas.ih[l], sigmas.ah[l], 
-                    not_omitted(flgs?flgs->omit:0,arch->N_inputs,1<<(l+1)), 
-                    arch->N_hidden[l], &priors->ih[l]); 
+      { if (arch->input_config[l])
+        { rgrid_met_conn_config (pm, it,
+                      params.ih[l], sigmas.ih_cm[l], sigmas.ih[l],
+                      arch->N_inputs, arch->input_config[l]->N_wts,
+                      &priors->ih[l]); 
+        }
+        else
+        { rgrid_met_conn (pm, it,
+                      params.ih[l], sigmas.ih_cm[l], sigmas.ih[l], sigmas.ah[l],
+                      not_omitted(flgs?flgs->omit:0,arch->N_inputs,1<<(l+1)), 
+                      arch->N_hidden[l], &priors->ih[l]); 
+        }
       }
 
       if (arch->has_bh[l]) rgrid_met_unit (pm, it,
@@ -546,7 +564,7 @@ int mc_app_sample
           arch->has_bh[l] ? params.bh[l] : 0,
             sigmas.bh_cm[l], 
             priors->bh[l].alpha[1],
-          arch->has_ih[l] && !arch->input_config ? params.ih[l] : 0, 
+          arch->has_ih[l] && !arch->input_config[l] ? params.ih[l] : 0, 
             sigmas.ih[l],
             priors->ih[l].alpha[2], 
             not_omitted(flgs?flgs->omit:0,arch->N_inputs,1<<(l+1)), 
@@ -951,7 +969,7 @@ static void gibbs_conn_config
   net_param *wt,	/* Weights on connections */
   net_sigma *sg_cm,	/* Common sigma controlling weights */
   net_sigma *sg,	/* Individual sigmas for source units (all = common) */
-  int ns,		/* NUmber of source units */
+  int ns,		/* Number of source units */
   int nw,		/* Number of weights */
   prior_spec *pr	/* Prior for sigmas */
 )
@@ -1036,7 +1054,6 @@ static void rgrid_met_conn
   {
     ps = pr->alpha[2] * (*sg_cm * *sg_cm);
 
-    /** need update for config **/
     sum = 0;        
     for (i = 0; i<ns; i++)
     { for (j = 0; j<nd; j++)
@@ -1062,6 +1079,46 @@ static void rgrid_met_conn
 
     *sg_cm = rgrid_sigma (stepsize, it, *sg_cm,
                           width, pr->alpha[0], pr->alpha[1], sum, ns);
+  }
+}
+
+
+/* DO RANDOM-GRID UPDATES FOR UPPER SIGMAS ASSOCIATED WITH GROUP OF CONNECTIONS.
+   Version for group with weight configuration file. Note that pr->alpha[1] 
+   must be zero, and the prior must not be scaled. */
+
+static void rgrid_met_conn_config
+( double stepsize,	/* Stepsize for update */
+  mc_iter *it,
+  net_param *wt,	/* Weights on connections */
+  net_sigma *sg_cm,	/* Common sigma controlling weights */
+  net_sigma *sg,	/* Individual sigmas for source units */
+  int ns,		/* Number of source units */
+  int nw,		/* Number of weights */
+  prior_spec *pr	/* Prior for sigmas */
+)
+{ 
+  double width, sum, ps, d;
+  int i;
+
+  width = pr->width;
+
+  if (pr->alpha[0]!=0 && pr->alpha[1]==0 && pr->alpha[2]!=0)
+  {
+    ps = pr->alpha[2] * (*sg_cm * *sg_cm);
+
+    sum = 0;        
+    for (i = 0; i<nw; i++)
+    { d = wt[i];
+      sum += rand_gamma((pr->alpha[2]+1)/2) / ((ps+d*d)/2);
+    }
+
+    *sg_cm = rgrid_sigma (stepsize, it, *sg_cm,
+                          width, pr->alpha[0], pr->alpha[2], sum, nw);
+
+    for (i = 0; i<ns; i++)
+    { sg[i] = *sg_cm;
+    }
   }
 }
 

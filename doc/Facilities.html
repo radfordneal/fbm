@@ -32,13 +32,15 @@ The complete source code (in C) is provided, allowing researchers to
 modify the program to test new ideas.  It is not necessary to know C
 to use the programs (assuming you manage to install them correctly).
 
-This software is designed for use on a Unix or Linux system, or a 
-MS Windows system with the Cygwin Unix emulation environment, using
+This software is designed for use on a Unix or Linux system, or a MS
+Windows system with the Cygwin Unix emulation environment, using
 commands issued to the command interpreter (shell).  No particular
 window system or other GUI is required, but a plotting program will be
-very useful.  I use the xgraph plot program, written by David
-Harrison, which allows plots to be produced by just piping data from
-one of the commands; it can be obtained from my web page.
+very useful.  My version of the 'graph' program, available from
+https://github.com/radfordneal/plotutils, is suitable.  I previously
+used the xgraph plot program, written by David Harrison, which allows
+plots to be produced by just piping data from one of the commands; it
+can be obtained from my web page at www.cs.utoronto.ca/~radford.
 
 
 Markov chain Monte Carlo facilities.
@@ -54,71 +56,79 @@ To allow people to play around with the various Markov chain methods
 more easily, a facility is provided for defining distributions (on
 R^n) by giving a simple formula for the probability density.  Many
 Markov chain sampling methods, such as the Metropolis algorithm,
-hybrid Monte Carlo, slice sampling, simulated tempering, and annealed
-importance sampling may then be used to sample from this distribution.
-Bayesian posterior distributions can be defined by giving a formula
-for the prior density and for the likelihood based on each of the
-cases (which are assumed to be independent).
+hybrid (Hamiltonian) Monte Carlo, slice sampling, simulated tempering,
+and annealed importance sampling may then be used to sample from this
+distribution.  Bayesian posterior distributions can be defined by
+giving a formula for the prior density and for the likelihood based on
+each of the cases (which are assumed to be independent).
 
 A long review paper of mine on "Probabilistic Inference Using Markov
-Chain Monte Carlo Methods" can be obtained from my web page.  This
-review discusses methods based on Hamiltonian dynamics, including the
-"hybrid Monte Carlo" method.  These methods are also discussed in my
-book on "Bayesian Learning for Neural Networks".  My web page also has
-papers on slice sampling ("Markov chain Monte Carlo methods based on
-`slicing' the density function" and "Slice sampling"), Annealed
-Importance Sampling, and circularly-coupled Markov chain sampling, all
-of which are implemented in this software.
+Chain Monte Carlo Methods" can be obtained from my web page, at
+www.cs.utoronto.ca/~radford.  This review discusses methods based on
+Hamiltonian dynamics, including the hybrid Monte Carlo" method.
+Hamiltonian (hybrid) Monte Carlo is also discussed in my review on
+"MCMC using Hamiltonian dynamics", and in my book on "Bayesian
+Learning for Neural Networks" (based on my PhD thesis).  My web page
+also has papers on slice sampling ("Markov chain Monte Carlo methods
+based on `slicing' the density function" and "Slice sampling"),
+Annealed Importance Sampling, circularly-coupled Markov chain
+sampling, and non-reversible updating of the uniform variable for
+acceptance decisions, all of which are implemented in this software.
 
 
 Neural network and Gaussian process models.
 
 The neural network models are described in my thesis, "Bayesian
-Learning for Neural Networks", which has now been published by
-Springer-Verlag (ISBN 0-387-94724-8).  The neural network models
-implemented are essentially as described in the Appendix of this book.
-The Gaussian process models are in many ways analogous to the network
-models.  The Gaussian process models implemented in this software, and
-computational methods that used, are described in my technical report
-entitled "Monte Carlo implementation of Gaussian process models for
-Bayesian regression and classification", available from my web page,
-and in my Valencia conference paper on "Regression and classification
-using Gaussian process priors", in Bayesian Statistics 6.  The
-Gaussian process models for regression are similar to those evaluated
-by Carl Rasmussen in his thesis, "Evaluation of Gaussian Processes and
-other Methods for Non-Linear Regression", available from his web page,
-at the URL http://www.cs.utoronto.ca/~carl/; he also talks about
-neural network models.  To understand how to use the software
-implementing these models, it is essential for you to have read at
-least one of these references.
+Learning for Neural Networks", now published by Springer-Verlag (ISBN
+0-387-94724-8).  The neural network models implemented are essentially
+as described in the Appendix of that book.  The Gaussian process
+models are in many ways analogous to the network models.  The Gaussian
+process models implemented in this software, and computational methods
+that used, are described in my technical report entitled "Monte Carlo
+implementation of Gaussian process models for Bayesian regression and
+classification", available from my web page, and in my Valencia
+conference paper on "Regression and classification using Gaussian
+process priors", in Bayesian Statistics 6.  The Gaussian process
+regression models are similar to those evaluated in Carl Rasmussen's
+thesis, "Evaluation of Gaussian Processes and other Methods for
+Non-Linear Regression" (mlg.eng.cam.ac.uk/pub/pdf/Ras96b.pdf); he also
+talks about neural network models.  To understand how to use the
+software implementing these models, it is essential for you to have
+read at least one of these references, or similar material.
 
 The neural network software supports Bayesian learning for regression
 problems, classification problems, and survival analysis, using models
 based on networks with any number of hidden layers, with a wide
 variety of prior distributions for network parameters and
-hyperparameters.  The Gaussian process software supports regression
-and classification models that are similar to neural network models
-with an infinite number of hidden units, using Gaussian priors.
+hyperparameters.  It is possible to define convolutional models, and
+models with other custom patterns of connectins between layers, with
+or without weight sharing.
 
-The advantages of Bayesian learning for both types of model include
-the automatic determination of "regularization" hyperparameters,
-without the need for a validation set, the avoidance of overfitting
-when using large networks, and the quantification of uncertainty in
-predictions.  The software implements the Automatic Relevance
-Determination (ARD) approach to handling inputs that may turn out to
-be irrelevant (developed with David MacKay).  
+The Gaussian process software supports regression and classification
+models that are similar to neural network models with an infinite
+number of hidden units, using Gaussian priors.  However, convolutional
+models are not currently supported.
 
-For problems and networks of moderate size (eg, 200 training cases, 10
+The advantages of Bayesian learning with both neural network and
+Gaussian process models include the automatic determination of
+"regularization" hyperparameters, without the need for a validation
+set, the avoidance of overfitting when using large networks, and the
+quantification of uncertainty in predictions.  The software implements
+the Automatic Relevance Determination (ARD) approach to handling
+inputs that may turn out to be irrelevant (developed with David
+MacKay).
+
+For problems and networks of modest size (eg, 200 training cases, 10
 inputs, 20 hidden units), fully training a neural network model (to
 the point where one can be reasonably sure that the correct Bayesian
-answer has been found) typically takes up to several hours on a modern
-personal computer.  However, quite good results, competitive with
-other methods, are often obtained after training for just a few
-minutes.  The time required to train the Gaussian process models
-depends a lot on the number of training cases.  For 100 cases, these
-models may take only a few minutes to train (again, to the point where
-one can be reasonably sure that convergence to the correct answer has
-occurred).  For 1000 cases, however, training might well take a day.
+answer has been found) typically takes only a few seconds or minutes
+on a modern personal computer.  Moreover, quite good results,
+competitive with other methods, are often obtained with less training.
+The time required to train the Gaussian process models depends a lot
+on the number of training cases.  For 100 cases, these models may take
+only a few minutes to train (again, to the point where one can be
+reasonably sure that convergence to the correct answer has occurred).
+For 1000 cases, however, training might well take hours.
 
 The software also implements neural network training using early
 stopping, as described in my paper on "Assessing relevance
@@ -136,7 +146,7 @@ components.  The countably infinite mixture models are equivalent to
 Dirichlet process mixture models.  The sampling methods that I have
 implemented for these models are described in my technical report on
 "Markov chain sampling methods for Dirichlet process mixture models",
-which can be obtained from web page; see also my technical report on
+which can be obtained from web page. see also my technical report on
 "Bayesian mixture modeling by Monte Carlo simulation".
 
 The software also implements models based on Dirichlet diffusion
@@ -248,28 +258,19 @@ directory contains all the documentation.
 
 Portability of the software.
 
-The software is written in ANSI C, and is meant to be run in a UNIX
-environment.  It is known to work on various Linux systems running on
-a Pentium processor, on a Solaris system running on a SPARC processor,
-and on an SGI machine running IRIX Release 6.5.  It also runs OK on
-Compaq Alpha machines, provided that the -ieee and -std options are
-given to the Compaq C compiler (this may no longer be necessary - I
-haven't checked recently).  It also works in the Cygwin environment
-under MS Windows.  As far as I know, the software does not depend on
-any peculiarities of these environments (except for the Unix
-facilities used to start programs to evaluate "external" functions in
-the 'dist' module), but you may nevertheless have problems getting it
-to work in substantially different environments, and I can offer
-little or no assistance in this regard.
+The software is written in C, following the C99 standard.  It is meant
+to be run in a Unix/Linux environment.  The various components of the
+software are invoked as Unix/Linux shell commands, which may be run
+via shell scripts.
 
 There is no dependence on any particular graphics package or graphical
 user interface.  The 'xxx-plt' programs are designed to allow their
-output to be piped directly into the 'xgraph' plotting program, but
-other plotting programs can be used instead, or the numbers can be
-examined directly.  The 'xxx-tbl' programs output the same information
-in a different format, which is useful when plotting or analysing data
-with S-Plus or R, since this format is convenient for the S-Plus or R
-read.table command.
+output to be piped directly into the 'graph' or 'xgraph' plotting
+programs, but other suitable plotting programs can be used instead, or
+the numbers can be examined directly.  The 'xxx-tbl' programs output
+the same information in a different format, which is useful when
+plotting or analysing data with R, since this format is convenient for
+the R read.table command.
 </pre>
 </body>
 </html>

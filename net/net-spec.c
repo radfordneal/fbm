@@ -182,7 +182,7 @@ int main
   
     printf("\n");
 
-    if (show_configs)
+    if (show_configs && flgs)
     { for (l = 0; l<a->N_layers; l++)
       { if (flgs->input_config[l])
         { printf("Hidden layer %d input weight configuration\n",l);

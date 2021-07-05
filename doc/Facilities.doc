@@ -29,8 +29,8 @@ The complete source code (in C) is provided, allowing researchers to
 modify the program to test new ideas.  It is not necessary to know C
 to use the programs (assuming you manage to install them correctly).
 
-This software is designed for use on a Unix or Linux system, or a MS
-Windows system with the Cygwin Unix emulation environment, using
+This software is designed for use on a Unix/Linux/macOS system, or a
+MS Windows system with the Cygwin Unix emulation environment, using
 commands issued to the command interpreter (shell).  No particular
 window system or other GUI is required, but a plotting program will be
 very useful.  My version of the 'graph' program, available from

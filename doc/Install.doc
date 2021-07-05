@@ -3,24 +3,23 @@
 INSTALLING THE SOFTWARE
 
 This section describes how to unpack and compile the software for a
-Unix machine.  Note that getting the software to work in a non-Unix
-environment may be difficult or impossible.
+Unix/Linux/macOS machine.  Note that getting the software to work in a
+different environment may be difficult or impossible.
 
 
 Unpacking the files.
 
-The software is distributed as a Unix tar archive.  To obtain the
-files, download the tar archive for the desired version by anonymous
-ftp or via your Web browser to a file of the form 'fbm.YYYY-MM-DD.tar', 
-and then issue the Unix command
+The software is distributed as a Unix tar archive.  You should
+download the tar archive for the desired version from my web page at
+www.cs.utoronto.ca/~radford/fbm.software.html via your Web browser, or
+using 'wget', saving it in a file with a name of the form
+'fbm.YYYY-MM-DD.tar', and then issue the command
 
     tar xf fbm.YYYY-MM-DD.tar
 
-If you got the archive in compressed form, as 'fbm.YYYY-MM-DD.tar.Z',
-you must use the command "uncompress fbm.YYYY-MM-DD.tar.Z" before
-doing the above.  The following instructions cover what to do next for
-the current version; you should read the old documentation if for some
-reason you are installing an older version.
+The following instructions cover what to do next for the current
+version; you should read the old documentation if for some reason you
+are installing an older version.
 
 The tar command should create a directory called 'fbm.YYYY-MM-DD',
 where YYYY-MM-DD is the release date.  It should place numerous files
@@ -37,53 +36,66 @@ under the name it had when they were compiled.
 
 Looking at the documentation.
 
-The directory 'doc' contains links to all the documentation files.
-The file 'manual' contains all the introductory documentation
-(including this) as a simple text file; the same information is also
-contained in several .doc files.  Other .doc files contain more
-detailed information.  Files of the form 'Release.YYYY-MM-DD.doc'
-contain information on current and past releases.  These may be of
-interest if you are upgrading from an older version of the software.
+The directory 'doc' contains all the documentation files, or links to
+them.  The source for the documentation is in the various .doc files.
+Files of the form 'Release.YYYY-MM-DD.doc' contain information on
+current and past releases.  These may be of interest if you are
+upgrading from an older version of the software.
 
-If you have a Web browser, you can access all these documentation
-files via 'index.html' in the 'doc' directory, as described in
-Guide.doc.
+The documentation is most conveniently access via a web browser,
+starting with the file 'index.html' in the 'doc' directory.  The
+various .doc files have .html versions (automatically created),
+which are linked to from index.html.
 
 
 Compiling the programs.
 
-You will probably be able to compile the programs as described below
-without making having to change anything.  However, it is possible
-that you will want to use a different C compiler, or set certain
-compilation options.  You can probably set the required options by
-modifying the 'make.include' file in the main directory, which is
-included at the beginning of all Makefiles, though for some problems
-you might have to modify the 'Makefile' and 'xxx.make' files in the
-various sub-directories, or modify the source files.
+Compling the programs requires a C development environment.  On a
+Linux system, you may need to use 
+
+    sudo apt-get install build-essential
+
+On a macOS system, you may need
+
+    xcode-select --install
+
+Installing further things may also be necessary; the details will vary
+with your exact system.
+
+Once the build tools are installed, you will probably be able to
+compile the programs as described below without having to change
+anything.  However, it is possible that you will want to use a
+different C compiler, or set certain compilation options.  You can
+probably set the required options by modifying the 'make.include' file
+in the main directory, which is included at the beginning of all
+Makefiles, though for some problems you might have to modify the
+'Makefile' and 'xxx.make' files in the various sub-directories, or
+modify the source files.
 
 Here are some reasons that you might need to customize things:
 
-  1) The programs are written in ANSI standard C.  If you compiler
-     defaults to some other idea of what C is, you should try to
-     persuade it otherwise.  On DEC Alpha machines, the "-std" flag
-     does this.  It can be put in CFLAGS in 'make.include'.
+  1) The programs are written in C as defined by the C99 standard.  If
+     you compiler defaults to some other idea of what C is, you should
+     try to persuade it otherwise
 
   2) The programs were written with IEEE floating-point in mind, and
      therefore may occasionally perform operations that result in
      overflow or underflow.  If this causes program termination on
      your machine (eg, with a "floating point exception"), you will
-     need to figure out how to disable these errors.  On DEC Alpha
-     machines, for example, the problem can be fixed using a "-ieee"
-     compiler option, which can be put in CFLAGS in 'make.include'.
+     need to figure out how to disable these errors. 
 
-  3) The 'util' directory contains a file of 100,000 natural random
+  3) You might want to change the settings of the options for use of
+     vector instructions on some machines, as described in comments
+     in make.include.
+
+  4) The 'util' directory contains a file of 100,000 natural random
      bytes, which are used in combination with pseudo-random numbers
      This file is accessed by many of the programs, using a path 
      name that by default points into this 'util' directory.  If you 
      plan on moving this file elsewhere, you will need to change the 
      compilation command for rand.c at the end of 'util/util.make'.
 
-  4) If you are rather short of memory, you might want to reduce the
+  5) If you are rather short of memory, you might want to reduce the
      size of the Max_optional_memory constant defined in gp/gp-mc.c.
      This will save memory at the cost of some time.
 
@@ -111,10 +123,9 @@ Using the programs.
 Once you have successfully compiled the programs, you should put the
 'bin' directory (within the main directory for this software) in your
 search path.  How this is done depends on the shell program you are
-using; consult a local expert if you don't know how.  This directory
-contains symbolic links to all the programs making up this software.
-Subsequent instructions assume that you have this 'bin' directory in
-your search path.
+using.  This directory contains symbolic links to all the programs
+making up this software.  Subsequent instructions assume that you have
+this 'bin' directory in your search path.
 
 The above is the simple version of how to use the programs.  However,
 if you want to use the programs on more than one type of machine, you

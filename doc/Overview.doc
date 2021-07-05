@@ -18,11 +18,11 @@ the various components of the software.
 Program usage.
 
 The software is designed to be usable interactively by typing commands
-to run the various programs to the Unix shell.  These programs may
-create or modify files that hold the results.  You will usually want
-to create a directory for each project you are working on, and change
-to that directory before issuing these commands, so that the files
-pertaining to that project will be separate.
+to run the various programs to the Unix/Linux shell.  These programs
+may create or modify files that hold the results.  You will usually
+want to create a directory for each project you are working on, and
+change to that directory before issuing these commands, so that the
+files pertaining to that project will be separate.
 
 Since I've gotten e-mail from people who were quite confused by the
 simplicity of this concept, let me say it again.  YOU USE THE SOFTWARE

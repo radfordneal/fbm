@@ -10,9 +10,6 @@ showing how even a rather simple distribution can pose problems, which
 may not be obvious from simple plots.  This example also illustrates
 how the adaptive nature of slice sampling can help prevent disaster.
 
-The times reported here are for an older version of the software, run
-on a 550 MHz Pentium III.
-
 
 Specifying a "funnel" distribution.
 
@@ -87,9 +84,10 @@ for a total of 20 million Metropolis updates altogether:
 The state at the end of each iteration (ie, after each group of 10000
 Metropolis updates) is saved in the log file.
 
-Once this command has finished (which takes 16 minutes on a 550 MHz
-Pentium III), we can produce a scatterplot from the points obtained in
-order to see the relationship of x1 to v:
+Once this command has finished (which, like the other runs here, takes
+about 30 seconds on the system described in <A HREF="Ex-test-system.html">Ex-test-system.doc</A>), we
+can produce a scatterplot from the points obtained, in order to see the
+relationship of x1 to v:
 
     &gt; dist-plt x1 v flog.met,1 | plot-points
 
@@ -241,7 +239,7 @@ uniformly distributed from -3 to +3.
 After running this chain for 2000 iterations, we can look at how well
 v is being sampled:
 
-    &gt; dist-plt t v flog.met1,1 | plot-points
+    &gt; dist-plt t v flog.metv,1 | plot-points
 
 The results are better than for multivariate Metropolis with a fixed
 stepsize of one.  Values for v down to about -6 are sampled reasonably

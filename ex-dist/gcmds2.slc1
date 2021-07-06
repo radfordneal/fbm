@@ -7,5 +7,5 @@
 
 dist-spec glog.slc1,$1 \
   "x^2/2 + y^2/2 + z^2/2 + (x+y+z)^2 + 10000/(1+x^2+y^2+z^2)"
-mc-spec glog.slc1,$1 repeat 4 slice-1 $1 end
-dist-mc glog.slc1,$1 10000
+mc-spec glog.slc2,$1 repeat 4 slice-1 $1 end
+dist-mc glog.slc2,$1 10000

@@ -2,11 +2,11 @@
 # Commands to sample from the "ring" distribution using multivariate
 # slice sampling, with shrinkage in the direction where the product of
 # gradient and width is greatest in magnitude.  The stepsize to use is 
-# given as an argument.  Six slice sampling operation are done per 
-# iteration, which takes about 40 function and gradient evaluations when 
+# given as an argument.  Seven slice sampling operation are done per 
+# iteration, which takes about 45 function and gradient evaluations when 
 # the stepsize is 5.
 
 dist-spec glog.slcg,$1 \
   "x^2/2 + y^2/2 + z^2/2 + (x+y+z)^2 + 10000/(1+x^2+y^2+z^2)"
-mc-spec glog.slcg,$1 repeat 6 slice -g $1 end
+mc-spec glog.slcg,$1 repeat 7 slice -g $1 end
 dist-mc glog.slcg,$1 10000

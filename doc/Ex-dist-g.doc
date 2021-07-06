@@ -595,25 +595,25 @@ below is a good guide to their relative efficiency.
 
   slice-1        0.2        125     Computation time was 0.58 seconds
                   1          80
-                  5          65      
+                  5         100      
 
   slice           5          40
-  slice -g        5          58
-  slice -G        5          35
+  slice -g        5          30
+  slice -G        5          55
 
-  slice-gaussian  5          68
+  slice-gaussian  5          65
 
-  dynamic        0.3        2.0     This method is not exact
+  dynamic        0.3        3.0     This method is not exact
 
-  hybrid (HMC)   0.3        3.3
+  hybrid (HMC)   0.3        3.2
 
   persistent HMC 0.18       8.9
 
   slice-inside   0.3         11
   
-  slice-outside  0.3        5.6
+  slice-outside  0.3        4.6
 
-  slice-over      2          35
+  slice-over      2          30
 
 The relative performance of the different methods will of course be
 somewhat different for different distributions, but large gains from

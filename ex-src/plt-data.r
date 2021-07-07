@@ -2,9 +2,9 @@
 # Plot data generated on the four grids.  The path to the ex-src directory
 # may need to be modified (see the line below).
 
-dir = "c:/cygwin/home/radford/dnd/fbm/ex-src"
+dir = "."
 
-postscript(paste(dir,"data-plots.ps",sep="/"),horiz=F)
+pdf(paste(dir,"data-plots.pdf",sep="/"))
 
 source(paste(dir,"data-plot.r",sep="/"))
 

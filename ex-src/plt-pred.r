@@ -3,9 +3,9 @@
 # number of sources fixed at 3 or variable.  The path to the ex-src
 # directory may need to be modified (see the line below).
 
-dir = "c:/cygwin/home/radford/dnd/fbm/ex-src"
+dir = "."
 
-postscript(paste(dir,"pred-plots.ps",sep="/"),horiz=F)
+pdf(paste(dir,"pred-plots.pdf",sep="/"))
 
 source(paste(dir,"data-plot.r",sep="/"))
 

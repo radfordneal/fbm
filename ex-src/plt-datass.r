@@ -2,9 +2,9 @@
 # Plot data generated from the start-stop model.  The path to the ex-src 
 # directory may need to be modified (see the line below).
 
-dir = "c:/cygwin/home/radford/dnd/fbm/ex-src"
+dir = "."
 
-postscript(paste(dir,"data-plotsss.ps",sep="/"),horiz=F)
+pdf(paste(dir,"data-plotsss.pdf",sep="/"))
 
 source(paste(dir,"data-plot.r",sep="/"))
 

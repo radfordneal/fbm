@@ -63,13 +63,14 @@ of 1, repeated 10 times each iteration:
     > mc-spec tlog1 repeat 10 metropolis 1
     > dist-mc tlog1 5000
 
-This takes 1.6 seconds on the system used.  We can look at plots such
-as the following to assess convergence:
+This takes 0.16 seconds on the system used (see Ex-test-system.doc).
+We can look at plots such as the following to assess convergence:
 
     > dist-plt t uw tlog1 | plot
 
-Equilibrium appears to have been reached within 50 iterations.  We can
-now see a picture of the posterior distribution using a command such as
+Equilibrium appears to have been nearly reached within 50 iterations
+(or less).  We can now see a picture of the posterior distribution
+using a command such as
 
     > dist-plt u w tlog1 50:%3 | plot-points
 
@@ -93,7 +94,7 @@ be estimated as follows:
 
     Number of realizations: 1  Total points: 5000
 
-    Mean: 0.620760  
+    Sample mean: 0.623220
 
 The efficiency of this chain at estimating the mean of u can be
 assessed as follows:
@@ -102,24 +103,25 @@ assessed as follows:
 
     Number of realizations: 1  Total points: 4951
     
-    Mean: 3.963551  S.E. from correlations: 0.055950
-    
-      Lag  Autocorr.  Cum. Corr.
-    
-        1   0.625358    2.250717
-        2   0.388528    3.027772
-        3   0.254716    3.537205
-        4   0.168077    3.873358
-        5   0.106168    4.085695
-        6   0.062758    4.211211
-        7   0.031260    4.273732
-        8   0.009645    4.293023
-        9   0.001954    4.296931
-       10  -0.006025    4.284882
+    Sample mean: 3.883301  S.E. from correlations: 0.056870
 
-An inefficiency factor of 4.2 is not bad, but we still might try to
+      Lag  Autocorr.  Cum. Corr.
+
+        1   0.641608    2.283216
+        2   0.408967    3.101149
+        3   0.260927    3.623004
+        4   0.176241    3.975486
+        5   0.119894    4.215273
+        6   0.074613    4.364499
+        7   0.028414    4.421327
+        8   0.006842    4.435012
+        9  -0.018193    4.398626
+       10  -0.031221    4.336183
+
+An inefficiency factor of 4.3 is not bad, but we still might try to
 improve sampling by using a different stepsize.  We can use a stepsize
-twice as big by changing the 'mc-spec' command as follows:
+twice as big by changing the 'mc-spec' command as follows (with other
+commands the same, except for using tlog2 as the log file):
 
     > mc-spec tlog2 repeat 10 metropolis 2
 
@@ -129,28 +131,28 @@ This produces a higher rejection rate:
 
     Number of realizations: 1  Total points: 5000
 
-    Mean: 0.813800  
+    Sample mean: 0.815860
 
 Despite this, the efficiency of sampling is improved:
 
     > dist-tbl u tlog2 50: | series mac 10
     
     Number of realizations: 1  Total points: 4951
-    
-    Mean: 3.916702  S.E. from correlations: 0.048513
-    
+
+    Sample mean: 3.807873  S.E. from correlations: 0.047144
+
       Lag  Autocorr.  Cum. Corr.
-    
-        1   0.502745    2.005491
-        2   0.246632    2.498755
-        3   0.133819    2.766394
-        4   0.081335    2.929063
-        5   0.053313    3.035689
-        6   0.028491    3.092671
-        7   0.013611    3.119892
-        8   0.024985    3.169861
-        9   0.013700    3.197261
-       10   0.018007    3.233274
+
+        1   0.482591    1.965182
+        2   0.244778    2.454738
+        3   0.117978    2.690693
+        4   0.078094    2.846881
+        5   0.052391    2.951662
+        6   0.016818    2.985299
+        7   0.009607    3.004513
+        8   0.003207    3.010927
+        9  -0.002763    3.005401
+       10  -0.007795    2.989811
 
 From the scatterplot of the posterior distribution, the larger
 stepsize seems appropriate for u, but it seems too big for w.  We can
@@ -171,22 +173,22 @@ seen by looking at the autocorrelations for u:
     > dist-tbl u tlog12 50: | series mac 10
     
     Number of realizations: 1  Total points: 4951
-    
-    Mean: 3.876082  S.E. from correlations: 0.036181
-    
-      Lag  Autocorr.  Cum. Corr.
-    
-        1   0.282051    1.564102
-        2   0.061686    1.687474
-        3   0.019975    1.727424
-        4   0.010014    1.747453
-        5  -0.004439    1.738575
-        6   0.000983    1.740540
-        7   0.000207    1.740954
-        8   0.025230    1.791413
-        9   0.004726    1.800866
-       10  -0.001624    1.797619
 
+    Sample mean: 3.872209  S.E. from correlations: 0.038725
+
+      Lag  Autocorr.  Cum. Corr.
+
+        1   0.293898    1.587795
+        2   0.080062    1.747919
+        3   0.022408    1.792735
+        4   0.038690    1.870116
+        5   0.004691    1.879497
+        6  -0.007760    1.863978
+        7   0.005857    1.875691
+        8   0.029724    1.935138
+        9   0.007939    1.951016
+       10  -0.008345    1.934326
+    
 The autocorrelations have been reduced to the point where the estimate
-based on the points from this chain are a factor of only about 1.7
+based on the points from this chain are a factor of only about 1.9
 times less efficient than an estimate based on independent points.

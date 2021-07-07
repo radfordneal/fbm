@@ -120,7 +120,7 @@ Each iteration will consist of 45 Metropolis updates, done using a
 proposal distribution that adds a normally-distributed offset to each
 variable with standard deviation 0.02.  The 'dist-mc' command does 500
 such iterations (for a total of 22500 Metropolis updates).  This takes
-4.4 seconds on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
+0.32 seconds on the system used (see <A HREF="Ex-test-system.html">Ex-test-system.doc</A>).
 
 We can see what the average rejection rate was for these updates as
 follows:
@@ -129,7 +129,7 @@ follows:
 
     Number of realizations: 1  Total points: 500
 
-    Mean: 0.708978  
+    Mean: 0.708044
 
 A rejection rate of 0.7 is about right, so the stepsize of 0.02 looks
 to be about optimal.  If you had started by trying a much larger or
@@ -148,47 +148,32 @@ autocorrelation.  We can quantify the inefficiency in estimation of
 the log precision, v, that results from these autocorrelations as
 follows:
 
-    &gt; dist-tbl v rlog.met 100: | series mac 30
+    &gt; dist-tbl v rlog.met 100: | series mac 15
 
     Number of realizations: 1  Total points: 401
- 
-    Mean: 4.461414  S.E. from correlations: 0.026037
-   
+
+    Sample mean: 4.456369  S.E. from correlations: 0.025878
+    
       Lag  Autocorr.  Cum. Corr.
     
-        1   0.893653    2.787307
-        2   0.807894    4.403095
-        3   0.709395    5.821885
-        4   0.621722    7.065329
-        5   0.539335    8.143999
-        6   0.462553    9.069106
-        7   0.379245    9.827595
-        8   0.311431   10.450456
-        9   0.244173   10.938802
-       10   0.198226   11.335254
-       11   0.164614   11.664482
-       12   0.126405   11.917293
-       13   0.092779   12.102850
-       14   0.074293   12.251436
-       15   0.049729   12.350895
-       16   0.037565   12.426024
-       17   0.028010   12.482045
-       18   0.026148   12.534341
-       19   0.043167   12.620674
-       20   0.062433   12.745541
-       21   0.083616   12.912773
-       22   0.108346   13.129465
-       23   0.112400   13.354265
-       24   0.111866   13.577997
-       25   0.092298   13.762593
-       26   0.076360   13.915313
-       27   0.051526   14.018364
-       28   0.038505   14.095374
-       29   0.018084   14.131542
-       30   0.006680   14.144903
+        1   0.889664    2.779328
+        2   0.780966    4.341261
+        3   0.699370    5.740000
+        4   0.625771    6.991542
+        5   0.563729    8.119000
+        6   0.528770    9.176540
+        7   0.464563   10.105667
+        8   0.395203   10.896072
+        9   0.329091   11.554254
+       10   0.267998   12.090250
+       11   0.208399   12.507047
+       12   0.157683   12.822413
+       13   0.108200   13.038813
+       14   0.037211   13.113235
+       15  -0.027520   13.058195
 
-The cumulative correlation up to lag 30, where the autocorrelation is
-approximately zero, indicates that about 14 times as many points will
+The cumulative correlation up to lag 15, where the autocorrelation is
+approximately zero, indicates that about 13 times as many points will
 be needed to get an estimate of a given accuracy as would be needed if
 the points were independent.  This inefficiency results from the high
 dependency between w0 and w1, which can be seen in the following plot:
@@ -204,13 +189,13 @@ Estimates for various functions of state can be found using
 values of i0=1.9 and i1=2.1 as follows:
 
     &gt; dist-est "u + w0*1.9 + w1*2.1" rlog.met 100:
-    
+
     Number of sample points: 401
-    
+
     Estimates for u + w0*1.9 + w1*2.1:
 
-      Mean:    4.18959  (standard error 0.00150075)
-      Std.dev: 0.0300526
+      Mean:    4.17296  (standard error 0.00179421)
+      Std.dev: 0.0359291
 
     NOTE: The standard errors assume points are independent
 
@@ -229,8 +214,8 @@ dependency by a reparameterization, which would certainly be possible
 for this fairly simple problem, but in general this may be tedious or
 infeasible.  However, the inefficiencies caused by dependencies may be
 reduced by suppressing the random walk aspect of the sampling, which
-can be done by using hybrid Monte Carlo rather than the simple
-Metropolis updates used above.
+can be done by using hybrid (Hamiltonian) Monte Carlo rather than the
+simple Metropolis updates used above.
 
 After 'dist-spec' and 'data-spec' commands that are the same as those
 described above (apart from the name of the log file), we can sample
@@ -243,11 +228,11 @@ One hybrid Monte Carlo update is done each iteration, consisting of a
 "heatbath" operation that picks new values for the momentum variables,
 followed by a dynamical trajectory of 25 leapfrog steps, with a
 stepsize of 0.01.  This stepsize was picked by trial and error, and
-results in a rejection rate of about 0.13.  In general, the stepsize
+results in a rejection rate of about 0.10.  In general, the stepsize
 for this standard form of hybrid Monte Carlo should chosen so that the
 rejection rate is somewhere between about 0.05 and 0.25.  The 500
-iterations take 4.7 seconds on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>),
-about the same as the Metropolis run above.
+iterations done take 0.37 seconds on the system used (see
+<A HREF="Ex-test-system.html">Ex-test-system.doc</A>), about the same as the Metropolis run above.
 
 From examining plots of the state variables over time, it seems that
 the hybrid Monte Carlo chain reaches equilibrium much more quickly
@@ -259,16 +244,16 @@ Metropolis chain:
     &gt; dist-tbl v rlog.hmc 20: | series mac 5
 
     Number of realizations: 1  Total points: 481
-    
-    Mean: 4.451747  S.E. from correlations: 0.005397
-    
+
+    Sample mean: 4.440102  S.E. from correlations: 0.007704
+
       Lag  Autocorr.  Cum. Corr.
-    
-        1  -0.077573    0.844854
-        2   0.048169    0.941192
-        3  -0.059657    0.821878
-        4   0.021492    0.864861
-        5  -0.071308    0.722244
+
+        1   0.079840    1.159681
+        2   0.038386    1.236452
+        3   0.051053    1.338557
+        4   0.010604    1.359765
+        5   0.099925    1.559616
 
 The estimated autocorrelations above do not differ significantly from
 zero.  It therefore appears that hybrid Monte Carlo is about ten times
@@ -299,21 +284,21 @@ trajectory should be used.  Acceptance is based on the difference in
 the total probability of all states in the window at the start and in
 the window at the end.  The next state is picked from the end window,
 if the trajectory was accepted, or from the start window, if the
-trajectory was rejected, with state selected from the appropriate
-window according to their relative probabilities.
+trajectory was rejected, with this state selected from the appropriate
+window according to the relative state probabilities.
 
 Note that when windows are used the state may change even when there
-was a "rejection", as long as one of the states in the start window is
-of comparable probability to the starting state.  This provides some
-insurance against getting stuck at a point where the rejection rate is
-very high.  The use of windows also tends to reduce the rejection
-rate.  In this problem, the rejection rate with windows is only 0.05,
-less than the rate of 0.13 seen above for the standard hybrid Monte
-Carlo algorithm, while the time is only slightly greater (due to a
-slight overhead from using windows).  The benefit is small here, since
-the standard hybrid Monte Carlo method was doing very well in any
-case, but use of windows can make a bigger difference for some other
-problems, and is almost cost-free if the window size is a small
+was a "rejection", as long as one of the other states in the start
+window is of comparable probability to the starting state.  This
+provides some insurance against getting stuck at a point where the
+rejection rate is very high.  The use of windows also tends to reduce
+the rejection rate.  In this problem, the rejection rate with windows
+is only 0.04, less than the rate of 0.10 seen above for the standard
+hybrid Monte Carlo algorithm, while the time is only slightly greater
+(due to a slight overhead from using windows).  The benefit is small
+here, since the standard hybrid Monte Carlo method was doing very well
+in any case, but use of windows can make a bigger difference for some
+other problems, and is almost cost-free if the window size is a small
 fraction of the trajectory length.
 </pre>
 </body>

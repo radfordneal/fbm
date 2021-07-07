@@ -7,5 +7,5 @@ univariate standard normal and univariate mixture of normal
 distributions, as in the tech report (though the results in the tech
 report were actually produced with other sotware).
 
-The ccmds.wrap and ccmds.circ command files are for the Cauchy example
-in the software documentation.
+The ccmds.wrap, ccmds.circ, and ccmds.circp command files are for the
+Cauchy example in the software documentation.

@@ -90,7 +90,7 @@ algorithm:
     > mc-spec plog.met repeat 10 metropolis 1
     > dist-mc plog.met 1000
 
-This takes 1.1 seconds on the system used (see Ex-system.doc).
+This takes 0.13 seconds on the system used (see Ex-test-system.doc).
 Convergence is quite rapid, and the sampling efficiency is reasonably
 good.
 
@@ -103,8 +103,8 @@ follows:
     
     Estimates for Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]:
     
-      Mean:    0.349174  (standard error 0.00342273)
-      Std.dev: 0.102739
+      Mean:    0.349956  (standard error 0.00341765)
+      Std.dev: 0.102587
     
     NOTE: The standard errors assume points are independent
     
@@ -114,8 +114,8 @@ follows:
     
     Estimates for Exp(w1)/[Exp(w0)+Exp(w1)+Exp(w2)]:
     
-      Mean:    0.450742  (standard error 0.00354029)
-      Std.dev: 0.106268
+      Mean:    0.443554  (standard error 0.00349259)
+      Std.dev: 0.104836
     
     NOTE: The standard errors assume points are independent
     
@@ -125,8 +125,8 @@ follows:
     
     Estimates for Exp(w2)/[Exp(w0)+Exp(w1)+Exp(w2)]:
     
-      Mean:    0.200084  (standard error 0.00290151)
-      Std.dev: 0.0870937
+      Mean:    0.20649  (standard error 0.00289207)
+      Std.dev: 0.0868102
     
     NOTE: The standard errors assume points are independent
 
@@ -184,37 +184,37 @@ Otherwise, you must provide a separate program to do the sampling.
 For how this is done, see the documentation on the -read-prior option
 in dist-spec.doc and also the information in dist-mc.doc.
 
-The commands above take 1.2 seconds on the system used (see
-Ex-system.doc).  Once they have finished, we can estimate functions of
-state with 'dist-est', which will automatically look at only the
-iterations that pertain to the final distribution of interest.  It
-also computes weighted estimates using the weights found during the
-annealing runs.  Here is an example:
+The commands above take 0.15 seconds on the system used (see
+Ex-test-system.doc).  Once they have finished, we can estimate
+functions of state with 'dist-est', which will automatically look at
+only the iterations that pertain to the final distribution of
+interest.  It also computes weighted estimates using the weights found
+during the annealing runs.  Here is an example:
 
     > dist-est "Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]" plog.ais
     
     Number of sample points: 250
     
-      Variance of normalized weights: 1.21148
-      Adjusted sample size: 113.0  (reduction factor 0.452)
+      Variance of normalized weights: 1.35932
+      Adjusted sample size: 106.0  (reduction factor 0.424)
     
     Estimates for importance weights:
     
-      Mean of weights: 2.85948e-09  (standard error 1.99056e-10)
-      Log of mean:    -19.6726  (standard error 0.0696127)
+      Mean of weights: 2.62925e-09  (standard error 1.93875e-10)
+      Log of mean:    -19.7566  (standard error 0.0737378)
     
     Standard estimates for Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]:
     
-      Mean:    0.342344  (standard error 0.00925806)
-      Std.dev: 0.100527
+      Mean:    0.346011  (standard error 0.00930846)
+      Std.dev: 0.0999265
     
-      Effective sample size: 117.9  (reduction factor 0.472)
+      Effective sample size: 115.2  (reduction factor 0.461)
     
     Jacknife estimates for Exp(w0)/[Exp(w0)+Exp(w1)+Exp(w2)]:
     
-      Mean:    0.342353  (standard error 0.00934127)
+      Mean:    0.346019  (standard error 0.00940643)
     
-      Effective sample size: 115.8  (reduction factor 0.463)
+      Effective sample size: 112.9  (reduction factor 0.451)
     
     NOTE: The standard errors assume points are independent
     

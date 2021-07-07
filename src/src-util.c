@@ -1,6 +1,6 @@
 /* SRC-UTIL.C - Utility routines for source location modeling programs. */
 
-/* Copyright (c) 2007 by Radford M. Neal 
+/* Copyright (c) 2007, 2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 

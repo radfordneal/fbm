@@ -85,7 +85,7 @@ initialization to a large value may be unnecessary.)
 
 Finally, we can actual run the Markov chain that samples from the
 posterior distribution.  The following command does 1000 iterations,
-taking about 12 minutes on a 3 GHz Pentium 4:
+taking about 45 seconds on the system used (see <A HREF="Ex-test-system.html">Ex-test-system.doc</A>):
 
     &gt; src-mc logc2 1000 &amp;
 
@@ -93,7 +93,7 @@ The "&amp;" runs the command in the background.
 
 We can monitor the progress of the run by displaying the state for the
 last iteration saved in the log file.  For instance, after a few
-minutes, we might see the following:
+seconds, we might see the following:
 
     &gt; src-display logc2 
 
@@ -119,22 +119,19 @@ We can also plot traces such as the following:
 
 This plots the iteration number (t) on the horizontal axis and the
 noise standard deviation (n) on the vertical axis, for all iterations
-stored so far in logc2.  The "plot" program must be able to plot data
-given as lines containing pairs of coordinates.  The "xgraph" program
-is very suitable for this.  It takes about 20 iterations for the noise
+stored so far in logc2.  It takes about 20 iterations for the noise
 standard deviation to fall to the vicinity of the 0.1, which was the
 value used to generate the data.  We can also monitor the source
 locations with a command such as
 
     &gt; src-plt t x@ logc2 | plot-points
 
-Here, "x@" represents the x coordinates of all the sources.  The
+Here, "x@" represents the x coordinates of all the sources.  (The
 "plot-points" program should plot multiple sets of data pairs as
-points.  Again, "xgraph" is suitable, if the "-P" option is used.
-After about 50 iterations, the three sources have x coordinates in the
-vicinity of the correct values of 4.5, -6, and 9.  Other quantities
-that can be plotted are described in <A HREF="src-quantities.html">src-quantities.doc</A> (see also
-<A HREF="mc-quantities.html">mc-quantities.doc</A> and <A HREF="quantities.html">quantities.doc</A>).
+points.)  After about 50 iterations, the three sources have x
+coordinates in the vicinity of the correct values of 4.5, -6, and 9.
+Other quantities that can be plotted are described in
+<A HREF="src-quantities.html">src-quantities.doc</A> (see also <A HREF="mc-quantities.html">mc-quantities.doc</A> and <A HREF="quantities.html">quantities.doc</A>).
 
 It appears that 1000 iterations are more than enough.  If more
 iterations were needed, more could be done.  For example, the command

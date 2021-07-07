@@ -8,4 +8,4 @@ dist-spec elog.circ \
   (1-Delta(i-1)) * ExpGamma2(Log(t1),i-1,Exp(v2))"
 data-spec elog.circ 1 2 / edata .
 mc-spec elog.circ repeat 2000 heatbath hybrid 1 0.05 end rgrid-met 0.01
-dist-circ elog.circ 5 100 5
+dist-circ -p elog.circ 10 200 5

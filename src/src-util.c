@@ -28,8 +28,7 @@
 int src_params_length
 ( int highN		/* Maximum number of sources */
 )
-{ src_params *junk_params;
-  return ((char*)(junk_params->src+(highN)) - (char*)junk_params);
+{ return sizeof (src_params) + (highN-1) * sizeof (struct src_desc);
 }
 
 

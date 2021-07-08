@@ -12,6 +12,8 @@ int main(void)
   double x, y;
   int i;
 
+  rand_seed(2);  /* default leads to most outliers in training set */
+
   for (i = 0; i<N_cases; i++)
   {
     x = rand_gaussian();

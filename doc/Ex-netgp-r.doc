@@ -16,7 +16,8 @@ standard deviation 0.1 and mean given by
 I generated 200 cases in total, stored in the file 'rdata'.  Each case
 consists of a line containing first the input value and then the
 target value.  The first 100 of these cases are meant for training,
-and the second 100 for testing.
+and the second 100 for testing.  The training cases are plotted in
+rdata-train.png and the test caes are plotted in rdata-test.png.
 
 
 A neural network model for the regression problem.

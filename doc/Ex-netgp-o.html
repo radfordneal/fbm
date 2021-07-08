@@ -21,6 +21,9 @@ standard deviation 0.1.  However, with probability 0.05, a case is an
 
 I generated 200 cases in total, stored in the file 'odata'.  The first
 100 of these cases are meant for training, the second 100 for testing.
+Plot of the training and test cases can be seen in <A HREF="odata-train.png">odata-train.png</A> and
+<A HREF="odata-test.png">odata-test.png</A>.  
+
 It is also possible to test on 'rdata', to see how well the function
 learned predicts data that is never corrupted by high noise.
 
@@ -57,9 +60,9 @@ of the way the noise was actually generated, but its fairly heavy
 tails are enough to prevent the model from paying undue attention to
 the outliers.
 
-The above commands take 165 seconds on the system used (see
-<A HREF="Ex-system.html">Ex-system.doc</A>).  The resulting model can be tested on data from the
-same source using net-pred:
+The above commands take 4.8 seconds on the system used (see
+<A HREF="Ex-test-system.html">Ex-test-system.doc</A>).  The resulting model can be tested on data from
+the same source using net-pred:
 
     &gt; net-pred na olog.net 101:
 
@@ -67,7 +70,7 @@ same source using net-pred:
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.01917+-0.01057
+    Average squared error guessing mean:    0.03619+-0.01828
 
 One can also see how well the model does on the uncorrupted data that
 was used originally:
@@ -78,10 +81,10 @@ was used originally:
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.00927+-0.00124
+    Average squared error guessing mean:    0.01002+-0.00138
 
 This is similar to the results obtained earlier with the model trained
-on uncorrupted data (slightly better, in fact, but that's just luck).
+on uncorrupted data.
 
 In contrast, the results are substantially worse when the data with
 outliers is used to train a standard model where the noise is
@@ -106,12 +109,12 @@ be sampled.  The following commands illustrate how this is done:
     &gt; mc-spec olog.gpt sample-variances heatbath hybrid 20:4 0.5
     &gt; gp-mc olog.gpt 200
 
-This takes 30 seconds on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).  The
-progress of the run can be monitored by examining the case-by-case
-noise standard deviations in (say) the first 8 training cases, as
+This takes 2.0 seconds on the system used (see <A HREF="Ex-test-system.html">Ex-test-system.doc</A>).
+The progress of the run can be monitored by examining the case-by-case
+noise standard deviations in (say) the first 10 training cases, as
 follows:
 
-    &gt; gp-plt t v@0:7 olog.gpt | plot
+    &gt; gp-plt t v@0:9 olog.gpt | plot
 
 Once the run has converged, a few of these standard deviations (for
 cases that are outliers) should be much bigger than the others.  The
@@ -126,7 +129,7 @@ Predictions can be made using 'gp-pred':
 
     Number of test cases: 100
 
-    Average squared error guessing mean:   0.01939+-0.01134
+    Average squared error guessing mean:    0.03571+-0.01811
 
 This performance is very similar to that of the network model.
 </pre>

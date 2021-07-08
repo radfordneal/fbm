@@ -14,8 +14,11 @@ to "2".  Note that x3 and x4 have no effect on the class.  The class
 selected by this procedure was the target value for the network; the
 inputs available for use in predicting the class were not x1, x2, x3,
 and x4 themselves, however, but rather these four values plus Gaussian
-noise of standard deviation 0.1.  I generated 1000 cases in this way,
-of which 400 were used for training and 600 for testing.
+noise of standard deviation 0.1.  
+
+I generated 1000 cases in this way, of which 400 were used for
+training and 600 for testing.  The values of x1, x2, and the class
+(red=0, green=1, blue=2) can be seen in cdata-train-x1x2.png.
 
 
 A neural network model for the three-way classification problem.
@@ -74,7 +77,7 @@ classification models like this):
                                  hybrid 100:10 0.3 negate
     > net-mc clog.net 200
 
-This takes 8.7 minutes on the system used (see Ex-system.doc).
+This takes 16 seconds on the system used (see Ex-test-system.doc).
 
 We can see the effect of the ARD model by looking at the values of
 the low-level input-hidden hyperparameters over the course of the
@@ -82,8 +85,9 @@ simulation, with the command:
 
     > net-plt t h1@ clog.net | plot
 
-The third and fourth hyperparameters are much smaller than the first
-two, indicating that ARD has done its job.
+Example output for this plot is in cplt-h1.png.  The third and fourth
+hyperparameters are much smaller than the first two, indicating that
+ARD has done its job.
 
 Predictions for test cases based on the predictive mode can now be
 done in the same way as for the binary response problem.  If we are
@@ -109,19 +113,19 @@ the "n" option, as follows:
 
     Case Targets   Means               Error^2
 
-       1    2.00    0.19   0.00   0.81  0.0726
-       2    2.00    0.23   0.01   0.76  0.1073
-       3    2.00    0.12   0.00   0.87  0.0319
-       4    0.00    0.82   0.04   0.13  0.0524
+       1    2.00    0.18   0.00   0.82  0.0651
+       2    2.00    0.22   0.01   0.77  0.0990
+       3    2.00    0.14   0.00   0.86  0.0400
+       4    0.00    0.83   0.04   0.13  0.0463
                      
                        . . .
 
-     597    2.00    0.04   0.00   0.96  0.0027
-     598    1.00    0.33   0.65   0.01  0.2346
-     599    0.00    0.23   0.00   0.77  1.1964
-     600    2.00    0.03   0.00   0.97  0.0016
+     597    2.00    0.04   0.00   0.96  0.0033
+     598    1.00    0.34   0.64   0.02  0.2440
+     599    0.00    0.21   0.00   0.79  1.2570
+     600    2.00    0.02   0.00   0.98  0.0009
 
-    Average squared error guessing mean:   0.20556+-0.01623
+    Average squared error guessing mean:    0.20551+-0.01635
 
 The "Means" columns give the predictive probabilities for the three
 classes for each case.  The "Error^2" column gives the squared error
@@ -152,8 +156,8 @@ classification problem, using "persistent" hybrid Monte Carlo:
 For the first five iterations, the persistence is fairly small (0.9),
 so that the high initial energy will be dissipated rapidly.  The
 remaining iterations use a larger persistence (0.98) to suppress
-random walks.  This run takes 19 minutes on the system used (see
-Ex-system.doc).  The cubic scaling of the computations for the
+random walks.  This run takes 74 seconds on the system used (see
+Ex-test-system.doc).  The cubic scaling of the computations for the
 Gaussian process models leads to their becoming slower relative to
 neural network models as the number of training cases increases.
 
@@ -172,23 +176,23 @@ as illustrated below:
     
     Case  Inputs                       Targets  Guesses  Wrong?
     
-       1    0.29   0.90   0.74   0.33    2.00       2       0
-       2    0.70   0.27   0.17   0.89    2.00       2       0
-       3   -0.11   0.76   0.11  -0.02    2.00       2       0
-       4    0.54   0.24   0.39   0.78    0.00       0       0
+       1    0.29   0.90   0.74   0.33    2.00      2       0 
+       2    0.70   0.27   0.17   0.89    2.00      2       0 
+       3   -0.11   0.76   0.11  -0.02    2.00      2       0 
+       4    0.54   0.24   0.39   0.78    0.00      0       0 
 
                       (middle lines omitted)
 
-     597   -0.10   0.93   0.27   0.28    2.00       2       0
-     598    0.14   0.19   0.08   0.70    1.00       1       0
-     599    0.66   0.79   0.03   0.09    0.00       2       1
-     600    0.76   0.90   0.73  -0.03    2.00       2       0
+     597   -0.10   0.93   0.27   0.28    2.00      2       0 
+     598    0.14   0.19   0.08   0.70    1.00      1       0 
+     599    0.66   0.79   0.03   0.09    0.00      2       1 
+     600    0.76   0.90   0.73  -0.03    2.00      2       0 
+
+    Fraction of guesses that were wrong:    0.1317+-0.0138
     
-    Fraction of guesses that were wrong:  0.1350+-0.0140
-    
-This takes 27 seconds on the system used (see Ex-system.doc).  The "n"
-option can be used to get the predictive probability for each class,
-as illustrated above for net-pred.
+This takes 2.1 seconds on the system used (see Ex-test-system.doc).
+The "n" option can be used to get the predictive probability for each
+class, as illustrated above for net-pred.
 
 A "logistic" style model can be obtained by decreasing the jitter,
 using a 'gp-spec' command such as the following:

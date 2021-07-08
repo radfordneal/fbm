@@ -35,8 +35,8 @@ predictions for a Bayesian model based on a sample from the posterior
 distribution.
 
 Neural network training using early stopping and ensembles is
-described by Carl Rasmussen in his thesis (available in Postscript
-from http://www.cs.utoronto.ca/~carl), and in a paper of mine on
+described by Carl Rasmussen in his thesis (available at
+mlg.eng.cam.ac.uk/pub/pdf/Ras96b.pdf), and in a paper of mine on
 ``Assessing relevance determination methods using DELVE'' (see my web
 page).
 
@@ -112,10 +112,10 @@ sometimes goes up rather than down), the stepsize will have to be
 reduced.  Net-gd does not try to determine relative stepsizes itself,
 but stepsizes for groups of parameters can be set individually.
 
-The above command takes 200 seconds on the system used (see
-Ex-system.doc).  While waiting, you can monitor progress using
-net-plt.  For example, the progress of the training error can be
-viewed with the command:
+The above command takes 4.4 seconds on the system used (see
+Ex-test-system.doc).  While waiting (if you have a slower computer),
+you can monitor progress using net-plt.  For example, the progress of
+the training error can be viewed with the command:
 
     > net-plt t l blog.gd | plot
 
@@ -140,8 +140,7 @@ target:
     Number of test cases: 200
 
     Average log probability of targets:    -0.364+-0.066
-
-    Fraction of guesses that were wrong:  0.1450+-0.0250
+    Fraction of guesses that were wrong:    0.1450+-0.0250
 
 Performance is substantially worse than that obtained using Bayesian
 training.  This is due to "overfitting".  The following command
@@ -152,8 +151,8 @@ training error and the error on the test cases:
 
 From this plot, it is clear that we would have been better off to stop
 training earlier than 100000 iterations.  Of course, we can't stop
-training based on the test error plotted above, since we don't know
-the test targets when training.
+training based on the test error plotted above, since (in a real
+application) we don't know the test targets when training.
 
 
 Gradient descent with early stopping for the binary response problem.
@@ -204,11 +203,11 @@ predictions for test cases, as below:
     Number of test cases: 200
 
     Average log probability of targets:    -0.263+-0.043
-
-    Fraction of guesses that were wrong:  0.1150+-0.0226
+    Fraction of guesses that were wrong:    0.1150+-0.0226
 
 As can be seen, performance is considerably better than that obtained
-in the previous section by training for 100000 iterations.
+in the previous section by training for 100000 iterations, though not
+quite as good as with Bayesian training (as shown in Ex-netgp-b.doc).
 
 
 Using an ensemble of networks trained by early stopping.
@@ -285,8 +284,7 @@ as follows:
     Number of test cases: 200
 
     Average log probability of targets:    -0.263+-0.040
-
-    Fraction of guesses that were wrong:  0.1050+-0.0217
+    Fraction of guesses that were wrong:    0.1050+-0.0217
 
 The resulting classification performance is slightly better than was
 found using just the first of the four networks.

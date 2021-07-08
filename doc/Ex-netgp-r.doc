@@ -177,13 +177,13 @@ zero, in which the hyperparameters have values of 0.5, and the network
 parameters are zero.  This is the initial state of the simulation run.
 The following 'mc-spec' command specifies the Markov chain operations
 to be performed in the initial phase.  Here, each iteration consists
-of ten repetitions of the following steps:  Gibbs sampling for the
+of ten repetitions of the following steps: Gibbs sampling for the
 noise level, a heatbath replacement of the momentum variables, and a
-hybrid Monte Carlo update with a trajectory 100 leapfrog steps long,
-using a window of 10, and a stepsize adjustment factor of 0.2.  Note
-that the hyperparameters are not updated, and hence will remain fixed
-at values of 0.5.  Finally, a single such iteration is done by calling
-'net-mc' with an iteration limit of 1.
+hybrid (Hamiltonian) Monte Carlo update with a trajectory 100 leapfrog
+steps long, using a window of 10, and a stepsize adjustment factor of
+0.2.  Note that the hyperparameters are not updated, and hence will
+remain fixed at values of 0.5.  Finally, a single such iteration is
+done by calling 'net-mc' with an iteration limit of 1.
 
 The stepsize adjustment factor of 0.2 used above is typical of what is
 needed, but will not be appropriate in all circumstances.  After the
@@ -203,7 +203,7 @@ somewhat to the training data.  We can now start serious sampling with
 the following commands:
 
     > mc-spec rlog.net sample-sigmas heatbath hybrid 1000:10 0.4
-    > net-mc rlog.net 400
+    > net-mc rlog.net 1000
 
 The 'mc-spec' command appends a new set of Markov chain operations to
 the log file, which will override the previous set.  These operations
@@ -218,13 +218,14 @@ experiment in order to find out how large this factor can be while
 keeping the rejection rate low.  The use of a "window" of around 10
 states costs little and is often beneficial.
 
-The 399 iterations of the sampling phase started with the command
-'net-mc rlog.net 400' take 160 seconds to complete on the the system
-used (see Ex-system.doc).  If you put the command in the background
-(or add a '&' to the end of the 'net-mc' command), you will be able to
-monitor progress while you wait.  For example, you can look at the
-last network saved in the log file (or any earlier one) using
-'net-display'.  After a few seconds, you might see the following:
+The 999 iterations of the sampling phase started with the command
+'net-mc rlog.net 400' take 9.3 seconds to complete on the the system
+used (see Ex-test-system.doc).  If your computer is slower, you might
+put the command in the background (or add a '&' to the end of the
+'net-mc' command), and then monitor progress while you wait.  For
+example, you can look at the last network saved in the log file (or
+any earlier one) using 'net-display'.  Shortly after starting the run,
+you might see the following:
 
     > net-display rlog.net
 
@@ -232,33 +233,33 @@ last network saved in the log file (or any earlier one) using
     
     Input to Hidden Layer 0 Weights [1]
     
-     1.38 1.38: -0.85  +1.51  -0.39  -0.08  -2.74  -0.92  +0.87  -0.46
+     1.39 1.39: +2.07  +1.34  +0.35  +0.27  -0.34  -0.27  -2.19  -0.50
     
     Hidden Layer 0 Biases [2]
     
-          2.49: +1.48  -1.93  -4.53  +2.42  -0.39  +2.29  -3.24  +2.46
+          2.59: +0.44  -1.50  -4.03  +4.01  +1.46  -0.51  -2.42  +0.84
     
     Hidden Layer 0 to Output Weights [3]
     
-     1.54 1.54: -2.73
+     1.70 1.70: +0.59
     
-          1.54: -2.32
+          1.70: -2.44
     
-          1.54: +0.70
+          1.70: -0.94
     
-          1.54: +1.88
+          1.70: -1.17
     
-          1.54: -0.71
+          1.70: -2.39
     
-          1.54: -0.31
+          1.70: -2.39
     
-          1.54: +0.72
+          1.70: +0.68
     
-          1.54: +1.50
+          1.70: -2.45
     
     Output Biases [4]
     
-        100.00: -0.21
+        100.00: +2.58
     
     Noise levels
     
@@ -281,22 +282,23 @@ during the simulation (so far), one can use the command
 
     > net-plt t h3 rlog.net | plot
 
-where 'plot' is some suitable plot program.  (One can also just invoke
-net-plt and look at the numbers printed on standard output.)  Here
-'h3' refers to the top-level hyperparameter for group 3, which is seen
-in the output of 'net-display' above to be the hidden-to-output group.
-Here's a command that shows how the individual weights in this group
-change during the run:
+where 'plot' is some suitable plot program, as discussed in
+Ex-intro.doc.  (One can also just invoke net-plt and look at the
+numbers printed on standard output.)  Here 'h3' refers to the
+top-level hyperparameter for group 3, which is seen in the output of
+'net-display' above to be the hidden-to-output group.  Here's a
+command that shows how the individual weights in this group change
+during the run:
 
     > net-plt t w3@ rlog.net | plot
 
-In this case, the "plot" program must be one (such as xgraph) that is
-capable of displaying more than one superimposed graph, with the data
-for each graph being separated by a blank line.  Some plot programs
-may prefer the data to come with multiple values per line, which is
-the format produced by the 'net-tbl' command:
+In this case, the "plot" program must be one that is capable of
+displaying more than one superimposed graph, with the data for each
+graph being separated by a blank line.  Some plot programs may prefer
+the data to come with multiple values per line, which is the format
+produced by the 'net-tbl' command:
 
-    > net-tbl tw3@ rlog.net | plot
+    > net-tbl tw3@ rlog.net | some-other-plot-program
 
 Note that there is no space between the "t" quantity and the others in
 this command.
@@ -313,30 +315,30 @@ may nevertheless be quite good.
 For this problem, let's assume that we have decided to discard the
 first 100 iterations as perhaps not coming from the equilibrium
 distribution.  The following command will use the networks from the
-remaining 300 iterations to produce predictions for all test cases, and
+remaining 900 iterations to produce predictions for all test cases, and
 report the average squared error:
 
     > net-pred itn rlog.net 101: 
 
-    Number of iterations used: 300
+    Number of iterations used: 900
 
     Case  Inputs Targets   Means Error^2
 
-       1    0.92    1.49    1.57  0.0059
-       2    0.71    1.83    1.78  0.0017
-       3    0.20    1.72    1.68  0.0013
+       1    0.92    1.49    1.56  0.0054
+       2    0.71    1.83    1.78  0.0019
+       3    0.20    1.72    1.69  0.0010
  
             ( middle lines omitted )
 
       98   -0.69    0.35    0.35  0.0000
-      99   -1.33    0.19    0.37  0.0303
-     100   -0.09    1.31    1.24  0.0061
+      99   -1.33    0.19    0.36  0.0296
+     100   -0.09    1.31    1.23  0.0068
 
-    Average squared error guessing mean:   0.00941+-0.00123
+    Average squared error guessing mean:    0.00932+-0.00122
 
 The options "itn" specified ask for a listing of the inputs ("i") and
 targets ("t") for each case, along with the mean ("n") output for that
-case of the 80 networks used for prediction.  The squared error when
+case of the 900 networks used for prediction.  The squared error when
 using this mean to predict the target is shown for each case, and the
 average squared error for the test cases is shown at the bottom, along
 with its standard error with respect to the random selection of test
@@ -349,7 +351,7 @@ It is also possible to get predictions for cases that are not in the
 test set that was specified with 'data-spec'.  For example:
 
     > net-pred nb rlog.net 11: / "%echo 2.3"
-      +1.36798018e+00
+      +1.37318129e+00
 
 Here, the options "nb" ask for only the predictive mean, with "bare"
 output (no headings, also higher precision, in exponential format).
@@ -360,40 +362,41 @@ just one case) should be taken from the output of the Unix command
 The 'net-pred' program can also find the median and the 10% and 90%
 quantiles of the predictive distribution.  The program limits the
 number of iterations that can be used when finding medians and
-quantiles, so the command below uses "%5" to look only at the 60
-iterations above 1100 with numbers that are multiples of five:
+quantiles, so (though it's not actually necessary here) the command
+below uses "%5" to look only at the 180 iterations above 100 with
+numbers that are multiples of five:
 
     > net-pred itdq rlog.net 101:%5
 
-    Number of iterations used: 60
-    
+    Number of iterations used: 180
+
     Case  Inputs Targets Medians |Error| 10% Qnt 90% Qnt
 
-       1    0.92    1.49    1.57  0.0791    1.45    1.68
-       2    0.71    1.83    1.79  0.0386    1.67    1.90
-       3    0.20    1.72    1.68  0.0338    1.57    1.80
-       4    0.19    1.76    1.66  0.0983    1.55    1.78
-       5    1.18    1.18    1.22  0.0437    1.11    1.34
-       6   -2.10    0.05    0.06  0.0151   -0.08    0.20
-       7   -1.34    0.30    0.37  0.0615    0.24    0.49
-       8   -1.62    0.48    0.40  0.0766    0.27    0.53
-       9   -2.29   -0.41   -0.25  0.1599   -0.46   -0.06
-      10   -0.23    0.89    0.97  0.0782    0.85    1.09
-    
+       1    0.92    1.49    1.56  0.0742    1.45    1.68
+       2    0.71    1.83    1.78  0.0432    1.66    1.90
+       3    0.20    1.72    1.69  0.0307    1.57    1.81
+       4    0.19    1.76    1.67  0.0972    1.55    1.78
+       5    1.18    1.18    1.22  0.0396    1.10    1.34
+       6   -2.10    0.05    0.05  0.0006   -0.09    0.19
+       7   -1.34    0.30    0.37  0.0616    0.25    0.49
+       8   -1.62    0.48    0.40  0.0820    0.27    0.52
+       9   -2.29   -0.41   -0.28  0.1299   -0.45   -0.11
+      10   -0.23    0.89    0.96  0.0728    0.85    1.08
+
                         (middle lines omitted)
 
-      91   -0.16    1.21    1.10  0.1079    0.98    1.22
-      92    0.79    1.70    1.72  0.0185    1.60    1.83
-      93   -1.99    0.19    0.19  0.0027    0.05    0.32
-      94    0.18    1.71    1.65  0.0613    1.53    1.77
-      95    1.56    0.84    0.83  0.0060    0.71    0.95
-      96   -0.32    0.80    0.82  0.0153    0.70    0.94
-      97   -0.12    1.23    1.18  0.0524    1.06    1.29
-      98   -0.69    0.35    0.35  0.0025    0.23    0.46
-      99   -1.33    0.19    0.36  0.1724    0.24    0.49
-     100   -0.09    1.31    1.24  0.0784    1.12    1.35
-    
-    Average abs. error guessing median:    0.07807+-0.00594
+      91   -0.16    1.21    1.09  0.1128    0.98    1.21
+      92    0.79    1.70    1.71  0.0156    1.60    1.83
+      93   -1.99    0.19    0.18  0.0137    0.05    0.31
+      94    0.18    1.71    1.66  0.0548    1.54    1.77
+      95    1.56    0.84    0.83  0.0023    0.71    0.96
+      96   -0.32    0.80    0.81  0.0106    0.69    0.93
+      97   -0.12    1.23    1.17  0.0551    1.05    1.29
+      98   -0.69    0.35    0.35  0.0045    0.23    0.47
+      99   -1.33    0.19    0.36  0.1734    0.24    0.49
+     100   -0.09    1.31    1.23  0.0814    1.11    1.35
+
+    Average abs. error guessing median:    0.07775+-0.00583
 
 We see here that all but one of the actual targets for the twenty test
 cases shown lie between the 10% and 90% quantiles.  When the median is
@@ -450,7 +453,7 @@ The specification can be viewed by invoking 'gp-spec' with just the
 name of the log file:
 
     > gp-spec rlog.gp
-    
+
     Number of inputs:    1
     Number of outputs:   1
 
@@ -458,9 +461,9 @@ name of the log file:
 
     Exponential parts of covariance:
 
-       Scale           Relevance            Power
+       Scale           Relevance            Power   Flags
 
-       0.050:0.50      0.050:0.50           2.000
+       0.050:0.50      0.050:0.50           2.000 
 
 Once the Gaussian process model for functions has been specified, we
 can specify how the function values are used to model the targets in
@@ -507,20 +510,25 @@ command:
 
     > gp-mc rlog.gp 100
 
-We can let this run in the background (eg, by adding '&' to the end of
-the command), and use 'gp-plt' or 'gp-display' to monitor progress.
-The quantities that can be plotted with 'gp-plt' are similar to those
-that can be plotted using 'net-plt', except that quantities relating
-to test cases have been omitted, since they would often take a long
-time to compute (the 'E' and 'H' quantities, defined in the "mc"
-module, may also take a long time).  See gp-quantities.doc for
-details.
+This takes 0.95 seconds on the system described in Ex-test-system.doc.
+We can use 'gp-plt' or 'gp-display' to see how things went.  The
+quantities that can be plotted with 'gp-plt' are similar to those that
+can be plotted using 'net-plt', except that quantities relating to
+test cases have been omitted, since they would often take a long time
+to compute (the 'E' and 'H' quantities, defined in the "mc" module,
+may also take a long time).  See gp-quantities.doc for details.  
 
-Once the gp-mc run has completed, which takes 13 seconds on the system
-used (see Ex-system.doc), iterations from the latter part of the run
-can be used to make predictions for test cases.  This is done using
-'gp-pred', which operates much like 'net-pred'.  The following command
-makes predictions for the test cases based on the last 80 of the 100
+The following will plot the hyperparameters being sampled in this run:
+
+    > gp-plt t nS1R1 rlog.gp | plot
+
+Using a plotting option that makes the vertical scale be logarithmic
+would be useful in this case (this is the -ly option for 'graph').
+
+Iterations from the latter part of the run can be used to make
+predictions for test cases.  This is done using 'gp-pred', which
+operates much like 'net-pred'.  The following command makes
+predictions for the test cases based on the last 80 of the 100
 iterations, and reports the average squared error:
 
     > gp-pred na rlog.gp 21:
@@ -531,13 +539,13 @@ iterations, and reports the average squared error:
 
     Average squared error guessing mean:   0.00999+-0.00139
 
-This takes less than a second on the sytem used (see Ex-system.doc).
-Predictions will take longer when the number of training cases is
-larger, or if the median or log probability are to be found (options
-"d" or "p" of 'gp-pred').  As can be seen, the performance of the
-Gaussian process model is quite similar to that of the neural network
-model for this problem.  (The difference in average performance seen
-is probably not statistically significant.)
+This takes less only 0.03 seconds on the sytem used, but predictions
+will take longer when the number of training cases is larger, or if
+the median or log probability are to be found (options "d" or "p" of
+'gp-pred').  As can be seen, the performance of the Gaussian process
+model is quite similar to that of the neural network model for this
+problem.  (The difference in average performance seen is probably not
+statistically significant.)
 
 The predictions for test cases made above are found directly from the
 covariances between the targets in the training cases and the unknown
@@ -582,7 +590,7 @@ function value is enough to determine the remaining function value to
 a precision comparable to the level of round-off error.
 
 To fix this, the conditioning of the covariance matrix must be improved.
-Changing the 'gp-spec' command as follows is sufficient on our machine:
+Changing the 'gp-spec' command as follows seems to be sufficient:
 
     > gp-spec rlog.gp2 1 1 10 - 0.01 / 0.05:0.5 0.05:0.5
 

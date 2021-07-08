@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# Display receptive fields for convolutional network for modelling images,
+# as specified with icmds2.net or icmds3.net.  Arguments are the log file
+# and iteration index.
+
+( echo "round(aperm(array(scan(),c(5,3,3)),c(3,2,1)),1)"
+  net-tbl w1@ $1 $2:$2
+  echo " "
+) | R -q --vanilla

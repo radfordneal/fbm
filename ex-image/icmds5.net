@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Commands to apply Bayesian neural network to an image classification problem,
+# with convolutional connections, and a second hidden layer.
+
+for run in 1 2 3; do
+
+  log=ilog5.net$run
+
+  net-spec $log 36 80 input-config:iconfig 32 4 \
+           / ih0=0.2:2 bh0=0.2:2 ho0=0.2:2 hh=0.1:2::4 ho1=0.02:2::4 bo=0.2:2
+
+  model-spec $log class
+  
+  data-spec $log 36 1 4 / idata@1:1000 . idata@1001:1500 .
+  
+  rand-seed $log $run
+
+  net-gen $log fix
+
+  mc-spec $log repeat 30 heatbath hybrid 100:10 0.12
+  net-mc $log 1
+  
+  mc-spec $log sample-sigmas heatbath hybrid 3000:100 0.15
+  net-mc $log 8000 &
+
+done
+
+wait
+  
+net-pred mnpa ilog5.net1 2001: ilog5.net2 2001: ilog5.net3 2001: \
+              / idata@1501:3000 .

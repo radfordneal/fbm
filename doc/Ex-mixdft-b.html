@@ -157,41 +157,41 @@ means, as specified by hyperparameter values that are also set to
 their prior means.  The 'mix-gen' program could be used to initialize
 things differently (see <A HREF="mix-gen.html">mix-gen.doc</A>).
 
-The above run takes 29 seconds on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
-It can be run in the background, in which case progress can be
-monitored with the 'mix-display' and 'mix-plt' programs.  For example,
-after a while, you might see the following:
+The above run takes 0.75 seconds on the system used (see
+<A HREF="Ex-test-system.html">Ex-test-system.doc</A>).  If it took longer, you could monitor its
+progress with the 'mix-display' and 'mix-plt' programs.  For example,
+if you're quick, you might see the following:
 
     &gt; mix-display blog.4
 
     MIXTURE MODEL IN FILE "blog.4" WITH INDEX 50
-    
+
     HYPERPARAMETERS
     
     Standard deviations for component offsets:
-    
-        0.326:     1.407    1.159    1.213    3.331    1.417
-                   1.557    3.433    2.203    4.990    0.192
-    
+
+        0.342:     1.815    4.273    3.556    3.410    1.767
+                   4.219    2.153    1.191    4.576    0.196
+
     Means for component offsets:
-    
-                  -0.370   -0.126   -0.538   +0.521   -0.620
-                  -1.642   +1.510   -1.206   -1.502   +0.941
-    
-    
+
+                  +0.924   +1.093   -0.684   +1.170   -1.183
+                  +0.949   -1.397   +0.131   -1.657   +1.074
+
+
     PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
-    
-       1: 0.286   -1.799   +0.931   +1.753   +1.481   +0.853
-                  -1.503   -1.433   -0.942   -1.245   +1.165
-    
-       2: 0.252   +1.905   +1.054   +1.749   -2.588   -1.594
-                  +1.062   +1.625   -1.532   -1.227   +1.252
-    
-       3: 0.250   -2.109   -1.505   -2.220   -0.961   -1.402
-                  +2.265   +1.635   +1.463   +2.015   +1.082
-    
-       4: 0.212   +1.743   -1.050   -1.470   +1.502   +1.553
-                  -1.593   -1.376   +1.569   +1.025   +0.864
+
+       1: 0.274   -1.693   +0.815   +1.113   +1.512   +1.024
+                  -1.555   -0.914   -0.761   -1.035   +1.163
+
+       2: 0.270   +1.995   +1.008   +1.841   -2.204   -1.222
+                  +2.118   +1.706   -1.676   -1.341   +0.990
+
+       3: 0.252   -1.307   -1.388   -2.530   -1.468   -1.207
+                  +1.603   +2.047   +1.941   +2.373   +1.032
+
+       4: 0.204   +2.098   -1.174   -1.541   +1.916   +1.663
+                  -1.531   -2.646   +1.010   +1.317   +1.349
 
 This displays the state at the last iteration computed so far (here
 iteration 50).  The hyperparameter values are shown first, with
@@ -248,7 +248,7 @@ probability for all the test cases, using the last 80 iterations:
 
     Number of test cases: 500
 
-    Average log probability of targets:    -6.097+-0.069
+    Average log probability of targets:    -6.099+-0.069
 
 For comparison, the average log probability for these test cases
 using the true mixture distribution is -6.034.
@@ -309,8 +309,9 @@ As before, we can now run the simulation with a command such as:
     &gt; mix-mc blog.inf 100
 
 We can examine the states with 'mix-display'.  For example, once the
-'mix-mc' command completes, which takes 63 seconds on the system used
-(see <A HREF="Ex-system.html">Ex-system.doc</A>), the state should be something like the following:
+'mix-mc' command completes, which takes 2.8 seconds on the system used
+(see <A HREF="Ex-test-system.html">Ex-test-system.doc</A>), the state should be something like the
+following:
 
     &gt; mix-display blog.inf
     
@@ -320,46 +321,43 @@ We can examine the states with 'mix-display'.  For example, once the
     
     Standard deviations for component offsets:
     
-        0.359:     2.747    4.294    1.280    3.530    1.353
-                   2.461    5.661    2.928    1.506    0.080
+        0.652:     3.090    1.238    1.875    1.723    2.406
+                   3.148    5.278    1.911    2.290    0.277
     
     Means for component offsets:
     
-                  +0.023   +0.452   +0.792   +0.507   -0.084
-                  -0.634   -4.794   +4.560   -0.293   +1.124
+                  +0.322   +0.008   -1.202   -0.365   +0.911
+                  -1.460   +0.081   +1.179   +0.458   +1.089
     
     
     PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
     
-       1: 0.310   -1.565   +0.617   +1.467   +1.191   +0.468
-                  -0.569   -1.192   -0.397   -0.749   +1.003
+       1: 0.292   -1.781   +0.988   +1.278   +1.351   +0.670
+                  -1.254   -1.021   -0.865   -1.030   +1.493
     
-       2: 0.254   -1.374   -1.134   -2.009   -1.008   -1.825
-                  +2.384   +2.377   +1.579   +2.553   +1.080
+       2: 0.252   -1.900   -1.600   -2.164   -1.237   -1.618
+                  +1.506   +1.906   +1.830   +1.822   +0.981
     
-       3: 0.238   +2.949   +0.979   +2.419   -2.694   -1.331
-                  +1.597   +1.590   -1.689   -1.190   +1.124
+       3: 0.248   +2.619   +0.830   +2.038   -2.486   -1.930
+                  +1.892   +2.153   -1.425   -1.929   +0.947
     
-       4: 0.168   +1.565   -1.687   -1.958   +1.762   +1.633
-                  -1.365   -6.917   +1.001   +1.180   +0.919
+       4: 0.190   +2.327   -1.354   -1.353   +1.696   +1.724
+                  -1.741   -3.573   +0.967   +1.332   +0.943
     
-       5: 0.012   +1.780   -3.038   -0.664   +5.257   -3.499
-                  -8.315   -5.443   +0.816   -0.774   +1.143
+       5: 0.014   +1.957   -2.620   +1.094   +2.526   +3.792
+                  -2.249   +5.191   +0.864   +4.884   +0.975
     
-       6: 0.012   +1.892   -0.991   +3.387   +0.513   +1.287
-                  -4.129   +1.283   +8.346   +1.452   +0.882
+       6: 0.002   -5.484   -0.456   -2.541   +0.298   +3.347
+                  +1.349   -4.903   +1.000   -0.070   +1.466
     
-       7: 0.004   +5.850   +1.412   +0.295   -5.867   +0.701
-                  -0.403   -9.392   +7.748   -2.211   +1.163
-    
-       8: 0.002   +1.028   -3.102   +2.383   -1.070   +1.691
-                  +0.497   +0.062   +0.505   -0.762   +1.226
+       7: 0.002   -1.659   -0.611   -3.036   -3.022   -0.820
+                  -3.068   -1.275   +1.828   +2.542   +0.534
     
 The output is similar to that seen for the mixture model with four
-components, except that eight components are associated with at least
+components, except that seven components are associated with at least
 one training case at iteration 100, as shown above.  (The infinite
 number of remaining components are not explicitly represented, and are
-not displayed by 'mix-display'.)  Four of these components are
+not displayed by 'mix-display'.)  Three of these components are
 associated with very few training cases, however (as seen from the
 fractions of the training set after the component number).  This is to
 be expected when the true distribution can be expressed using only
@@ -379,7 +377,7 @@ predictive probabilities:
 
     Number of test cases: 500
 
-    Average log probability of targets:    -6.105+-0.069
+    Average log probability of targets:    -6.116+-0.070
 
 This is almost the same as the average log probability for the four
 component model.
@@ -420,7 +418,7 @@ We start by specifying a Dirichlet diffusion tree model, as follows:
 
     &gt; dft-spec blog.dft 0 10 / 2 - 1
 
-As for a mixture mdoel specification, this says that there are 0
+As for a mixture model specification, this says that there are 0
 "input" variables (as there must be at present), and 10 "target"
 variables.  The argument of "2" is the standard deviation for the
 diffusion process that produces the latent variables used to model the
@@ -450,8 +448,8 @@ above:
     &gt; data-spec blog.dft 0 10 2 / bdata@1:500 . bdata@501:1000 .
 
 Finally, we need to specify how to do Markov chain sampling for the
-posterior distribution of the trees and latent values that underly the
-data.  
+posterior distribution of the trees and latent values that underlie
+the data.
 
     &gt; mc-spec blog.dft repeat 10 gibbs-latent slice-positions met-terminals
 
@@ -485,8 +483,8 @@ for the first four cases tend to be negative, whereas the latent
 values for the last two cases tend to be positive, at least once the
 Markov chain has approached convergence.
 
-The 'dft-mc' command above takes 11 minutes of time on the system used
-(see <A HREF="Ex-system.html">Ex-system.doc</A>).  Once it is done, we can see how well the model
+The 'dft-mc' command above takes 19 seconds on the system used (see
+<A HREF="Ex-test-system.html">Ex-test-system.doc</A>).  Once it is done, we can see how well the model
 predicts new data using the following command, which looks at the
 Dirichlet diffusion tree models produced by the last 60 iterations of
 the Markov chain:
@@ -497,11 +495,11 @@ the Markov chain:
 
     Number of test cases: 500
 
-    Average log probability of targets:    -6.102+-0.067
+    Average log probability of targets:    -6.110+-0.066
 
-This takes 3.5 minutes on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
-Performance is not much worse than for the four-component mixture
-model above, which is based on the true structure of the data.
+This takes 9.1 seconds on the system used.  Performance is not much
+worse than for the four-component mixture model above, which is based
+on the true structure of the data.
 </pre>
 </body>
 </html>

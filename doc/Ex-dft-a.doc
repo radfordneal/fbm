@@ -33,19 +33,20 @@ for the latent variables that fit the data reasonably, starting the
 chain off in from a reasonable state.  (Without the 'dft-gen' command,
 the latent variables start off rather small.)
 
-The above commands take 82 seconds on the system used (see
-Ex-system.doc).  We can look at the tree found using 'dft-display'
-with the "-g" option, or using the following command:
+The above commands take 2.5 seconds on the system used (see
+Ex-test-system.doc).  We can look at the tree found using
+'dft-display' with the "-g" option, or using the following command:
 
-    > dft-dendrogram alog.dft1 100 alabels | ghostview -
+    > dft-dendrogram alog.dft1 100 alabels >atree1.ps; evince atree1.ps
 
 The 'dft-dendrogram' command produces a Postscript picture of the
-tree, which is here piped into the ghostview utility (it could instead
-by printed).  This command shows the final tree, at iteration 100, and
-uses the labels for cases in the file 'alabels', which labels the four
-patterns mentioned above with A, B, C, and D .  You should be able to
-see that cases with each of the four patterns are mostly grouped
-together in subtrees.
+tree; the evince program is then used to display it.  (Your system may
+have a different program for this; on macOS, "open" should suffice).
+This command shows the final tree, at iteration 100, and uses the
+labels for cases in the file 'alabels', which labels the four patterns
+mentioned above with A, B, C, and D .  You should be able to see that
+cases with each of the four patterns are mostly grouped together in
+subtrees.
 
 To better capture the structure of this data, we can use a model with
 two trees, specified as follows:
@@ -76,8 +77,9 @@ reasonable state.  The 'create-latent' operation ensures that latent
 values exist, which is necessary when there is more than one tree when
 the model is non-Gaussian.  
 
-These commands take 56 seconds on the system used (see Ex-system.doc).
-We can look at the resulting hyperparameters as follows:
+Running these commands take 2.2 seconds on the system used (see
+Ex-test-system.doc).  We can look at the resulting hyperparameters as
+follows:
 
     > dft-display alog.dft2
     
@@ -88,8 +90,8 @@ We can look at the resulting hyperparameters as follows:
     
     Standard deviation parameters for diffusion process
     
-        0.247:     1.380    0.796    7.847    2.466    0.312
-                   0.169    0.554    0.182
+        0.775:    83.243    2.605   60.052   15.167    0.515
+                   1.097    0.780    0.828
     
     Divergence function parameters: - 1.0000 -
     
@@ -97,8 +99,8 @@ We can look at the resulting hyperparameters as follows:
     
     Standard deviation parameters for diffusion process
     
-        0.147:     0.057    0.350    0.106    0.148    4.766
-                 691.193    4.756    0.956
+        0.372:     0.448    0.301    0.227    1.396    1.628
+                  12.526   15.020    2.227
     
     Divergence function parameters: - 1.0000 -
 
@@ -112,10 +114,10 @@ reversed.)
 
 We can view the two trees as follows:
 
-    > dft-dendrogram alog.dft2 100 1 alabels | ghostview -
-    > dft-dendrogram alog.dft2 100 2 alabels | ghostview -
+    > dft-dendrogram alog.dft2 100 1 alabels >atree2a.ps; evince atree2a.ps
+    > dft-dendrogram alog.dft2 100 2 alabels >atree2b.ps; evince atree2b.ps
 
-This should show that one tree divides the A and B cases from the C
-and D cases, whereas the other tree divides the A and C cases from the
-B and D cases.  This shows that the two-tree model has discovered the
-structure of the data.
+This should show that one tree mostly divides the A or B cases from
+the C or D cases, whereas the other tree divides the A or C cases from
+the B or D cases.  This shows that the two-tree model has discovered
+the structure of the data.

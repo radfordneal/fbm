@@ -11,11 +11,14 @@ Accordingly, modeling this data well with a mixture of Gaussian
 distributions will require more than two components in the mixture.
 
 For the exact distribution used, see the source of the generation
-program, in rgen.c.  I generated 1000 cases with this program, stored
-in 'rdata', of which the first 500 are used for training, and the rest
-for testing.  The data files also contain a third number on each line,
-which indicates which underlying component was used.  These indicators
-are ignored in the examples below of bivariate density estimation.
+program, in ex-mixdft/rgen.c.  I generated 1000 cases with this
+program, stored in 'rdata', of which the first 500 are used for
+training, and the rest for testing.  A plot of the training cases can
+be seen in rdata-mix-train.png.
+
+The data files also contain a third number on each line, which
+indicates which underlying component was used.  These indicators are
+ignored in the examples below of bivariate density estimation.
 
 
 A two-component mixture model for the density estimation problem.
@@ -80,39 +83,39 @@ Finally, we run the Markov chain simulation for 100 iterations:
 
     > mix-mc rlog.2 100
 
-This takes 2.9 seconds on the system used (see Ex-system.doc) Once it
-has finished, we can look at the hyperparameters and component
-parameters at various iterations.  The last iteration should look
-something like the following:
+This takes only 0.1 seconds on the system used (Ex-test-system.doc).
+We can then look at the hyperparameters and component parameters at
+various iterations.  The last iteration should look something like the
+following:
 
     > mix-display rlog.2
 
     MIXTURE MODEL IN FILE "rlog.2" WITH INDEX 100
     
     HYPERPARAMETERS
-    
+
     Standard deviations for component offsets:
     
-        0.068:     3.259    7.159
+        0.585:     4.108   40.500
     
     Means for component offsets:
     
-                  -1.408  +17.102
+                  -0.549   -2.258
     
     Standard deviations for Gaussian target distributions:
     
-        0.173:     0.201    4.680
+        1.464:     0.959    3.693
     
     
     PARAMETERS AND FREQUENCIES FOR COMPONENTS OF THE MIXTURE
     
-       1: 0.706   -2.052  +11.597
+       1: 0.712   -2.046  +11.371
     
-                   1.034    5.355
+                   1.068    5.440
     
-       2: 0.294   +1.751  +20.920
+       2: 0.288   +1.757  +20.956
     
-                   1.115    6.476
+                   0.949    7.198
 
 We see above that the two components are associated with fractions of
 approximately 0.7 and 0.3 of the training cases, as expected from the
@@ -133,7 +136,7 @@ cases:
 
     Number of test cases: 500
 
-    Average log probability of targets:    -5.175+-0.048
+    Average log probability of targets:    -5.172+-0.048
 
 
 An infinite mixture model for the density estimation problem.
@@ -168,10 +171,11 @@ We can now run the simulation for 100 iterations:
 
     > mix-mc rlog.inf 100
 
-This takes 19 seconds on the system used (see Ex-system.doc).  If we
-now examine the state with 'mix-display', we will find that quite a
-few (eg, 20) mixture components are associated with training cases -
-though fewer components account for the bulk of the cases.
+This takes 2.1 seconds on the system used (see Ex-test-system.doc).
+If we now examine the state with 'mix-display', we will find that
+quite a few (around 20) mixture components are associated with
+training cases - though fewer components account for the bulk of the
+cases.
 
 This model appears to fit the data slightly better than the
 two-component model, as can be seen below:
@@ -182,29 +186,29 @@ two-component model, as can be seen below:
 
     Number of test cases: 500
 
-    Average log probability of targets:    -5.101+-0.048
+    Average log probability of targets:    -5.103+-0.048
 
 We can also see how well the model has captured the true distribution
 by generating a sample of cases from a distribution drawn from the
 posterior, as represented by the state at a particular iteration.  We
 do this as follows:
 
-    > mix-cases rlog.inf 100 new 1000
+    > mix-cases rlog.inf 100 new-mix 500
 
-This command generates 1000 new cases based on iteration 100, and
-stores them (one per line) in the file "new".  We can now use a plot
-program to view a scatterplot of the data in "new", and compare it
-with a scatterplot of data from the actual distribution.  Note that
-the data in "new" is taken jointly from one example of a distribution
-from the posterior distribution.  If 'mix-cases' is called for another
-iteration, it will produce data from a different distribution from the
-posterior, which in general could be quite different.  This variation
-represents the uncertainly regarding the true distribution that
-remains when only a finite amount of training data is available.  A
-representation of the predictive distribution for a single new data
-point, which is the average of distributions drawn from the posterior,
-could be obtained by combining the output of 'mix-cases' for a number
-of iterations.
+This command generates 500 new cases based on iteration 100, and
+stores them (one per line) in the file "new-mix".  We can now use a
+plot program to view a scatterplot of the data in "new", and compare
+it with a scatterplot of data from the actual distribution - as in
+new-mix.png and rdata-mix-train.png.  Note that the data in "new-mix"
+is taken jointly from one example of a distribution from the posterior
+distribution.  If 'mix-cases' is called for another iteration, it will
+produce data from a different distribution from the posterior, which
+in general could be quite different.  This variation represents the
+uncertainly regarding the true distribution that remains when only a
+finite amount of training data is available.  A representation of the
+predictive distribution for a single new data point, which is the
+average of distributions drawn from the posterior, could be obtained
+by combining the output of 'mix-cases' for a number of iterations.
 
 
 Dirichlet diffusion tree models for the density estimation problem.
@@ -263,8 +267,8 @@ given the data:
 
     > dft-mc rlog.dft1a 100
 
-This takes 2.6 minutes on the system used (see Ex-system.doc).  After
-it has finished, we can look at the result with 'dft-display':
+This takes 4.8 seconds on the system used (see Ex-test-system.doc).
+After it has finished, we can look at the result with 'dft-display':
 
     > dft-display rlog.dft1a       
 
@@ -358,8 +362,9 @@ point when convergence seems to have been reached:
     
     Average log probability of targets:    -5.088+-0.047
 
-This takes 23 seconds on the system used (see Ex-system.doc).
-Performance is a bit better than for the infinite mixture model above.
+This takes 0.73 seconds on the system used (see Ex-test-system.doc).
+Predictive performance is a bit better than for the infinite mixture
+model above.
 
 Another approach to Markov chain sampling for this model is to keep
 node locations as part of the state of the chain.  Updates to the tree
@@ -371,14 +376,14 @@ for convergence and subsequent sampling may be greater.  Here is an
                                      slice-positions met-terminals \
                                      gibbs-sigmas slice-div
 
-Performing 100 iterations with these operations takes only 38 seconds
-on the system used (see Ex-system.doc), and for this example,
+Performing 100 iterations with these operations takes only 1.6 seconds
+on the system used (see Ex-test-system.doc), and for this example,
 predictive performance is nearly identical to that above.
 
 One can also use a model with a different divergence function, as in
 the following specification:
 
-    > dft-spec  rlog.dft1b 0 2 / 0.5:0.5:0.5 0.01:0.5 - 0.01:0.5
+    > dft-spec  rlog.dft2a 0 2 / 0.5:0.5:0.5 0.01:0.5 - 0.01:0.5
 
 The last three arguments of this command give priors for the c0 and c2
 parameters of the divergence function, and specify that the c1

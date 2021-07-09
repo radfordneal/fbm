@@ -7,14 +7,14 @@ EXAMPLES OF NEURAL NETWORK SURVIVAL MODELS
 
 The neural network software can also be used to model survival data.
 In this application, the network models the "hazard function", which
-determines the instantaneous risk of "death".  The hazard may be
-depend on the values of inputs (covariates) for a particular case.  It
-may be constant through time (for each case), or it may change over
-time.  The data may be censored - ie, for some cases, it may be known
-only that the individual survived for at least a certain time.
+determines the instantaneous risk of "death".  The hazard may depend
+on the values of inputs (covariates) for a particular case.  It may be
+constant through time (for each case), or it may change over time.
+The data may be censored - ie, for some cases, it may be known only
+that the individual survived for at least a certain time.
 
 The details of these models are described in <A HREF="model-spec.html">model-spec.doc</A>.  Command
-files for the examples below are found in the ex-surv directory.  This
+files for the examples below are found in the ex-surv directory.  The
 sub-directory "pbc" contains files for the examples used in my talk on
 "Survival analysis using a Bayesian neural network" at the 2001 Joint
 Statistical Meetings in Atlanta.
@@ -52,7 +52,7 @@ other models.  Here is one set of commands that work reasonably well:
     &gt; mc-spec clog.net repeat 4 sample-sigmas heatbath hybrid 500:10 0.4
     &gt; net-mc clog.net 100
 
-This takes 7.0 minutes on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
+This takes 10.6 seconds on the system used (see <A HREF="Ex-test-system.html">Ex-test-system.doc</A>).
 
 Predictions for test cases can now be made using net-pred.  For
 example, the following command produces the 10% and 90% quantiles of
@@ -66,19 +66,19 @@ of death (the "targets"):
 
     Case  Inputs Targets 10% Qnt 90% Qnt
 
-       1   -0.01    0.29    0.05    1.05
+       1   -0.01    0.29    0.05    1.07
        2   -1.43    0.04    0.02    0.37
-       3   -0.68    0.03    0.02    0.52
-       4    0.47    0.11    0.09    1.67
-       5    0.63    0.97    0.07    1.74
+       3   -0.68    0.03    0.03    0.56
+       4    0.47    0.11    0.07    1.60
+       5    0.63    0.97    0.08    1.71
 
             ( middle lines omitted )
 
-     196    1.39    0.21    0.08    1.99
-     197    0.04    0.07    0.06    1.11
-     198    1.66    0.56    0.09    1.61
-     199    1.33    1.48    0.07    1.76
-     200   -1.41    0.08    0.01    0.39
+     196    1.39    0.21    0.08    1.84
+     197    0.04    0.07    0.05    1.12
+     198    1.66    0.56    0.08    1.72
+     199    1.33    1.48    0.08    1.80
+     200   -1.41    0.08    0.02    0.39
 
 Since there is only one input for this model, we can easily look at
 the posterior distribution of the log of the hazard function with the
@@ -171,7 +171,7 @@ The following commands sample from the posterior distribution:
     &gt; mc-spec vlog.net repeat 4 sample-sigmas heatbath hybrid 500:10 0.4
     &gt; net-mc vlog.net 100
 
-This takes 28 minutes on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
+This takes 86 seconds on the system used (see <A HREF="Ex-test-system.html">Ex-test-system.doc</A>).
 
 The net-pred command can be used to make predictions for test cases.
 Here is a command to display the median of the predictive distribution
@@ -185,25 +185,26 @@ test cases:
     
     Case  Inputs Targets Medians |Error|
 
-       1    0.00    0.07    0.84  0.7711
-       2   -0.22    0.42    0.74  0.3155
-       3   -2.24    0.04    0.39  0.3480
-       4   -0.81    0.26    0.58  0.3172
-       5    1.02    3.12    1.04  2.0784
+       1    0.00    0.07    0.83  0.7604
+       2   -0.22    0.42    0.75  0.3247
+       3   -2.24    0.04    0.39  0.3516
+       4   -0.81    0.26    0.59  0.3308
+       5    1.02    3.12    1.04  2.0787
  
              ( middle lines omitted )
 
-     296   -0.81    0.28    0.58  0.2966
-     297    1.19    1.60    1.05  0.5503
-     298   -1.53    0.57    0.48  0.0940
-     299    0.99    2.67    1.09  1.5773
-     300    0.28    1.13    0.92  0.2030
+     296   -0.81    0.28    0.59  0.3148
+     297    1.19    1.60    1.04  0.5612
+     298   -1.53    0.57    0.45  0.1171
+     299    0.99    2.67    1.05  1.6183
+     300    0.28    1.13    0.92  0.2088
 
-    Average abs. error guessing median:    0.32997+-0.01644
+    Average abs. error guessing median:    0.33012+-0.01655
 
-The predictive medians can be plotted against the inputs as follows:
+The predictive medians can be plotted against the inputs as follows
+(with editing out of the |Error| column):
 
-    &gt; net-pred idb vlog.net 25: | plot-points
+    &gt; net-pred idb vlog.net 25: | sed "s/\(.* \).*/\1/" | plot-points
 
 The fairly small amount of scatter seen in this plot is a result of
 computing the medians by Monte Carlo, which produces some random
@@ -245,18 +246,19 @@ number of leapfrog steps is increased to compensate):
     &gt; mc-spec v2log.net repeat 4 sample-sigmas heatbath hybrid 1000:10 0.25
     &gt; net-mc v2log.net 400
 
-This takes 15 hours to run on the system used (see <A HREF="Ex-system.html">Ex-system.doc</A>).
+Running this takes 19 minutes on the system used (<A HREF="Ex-test-system.html">Ex-test-system.doc</A>).
 
 The model does in fact discover that an additive form for the log
 hazard is appropriate, as can be seen by examining the hyperparameters
-with a command such as the following:
+with commands such as the following:
 
-    &gt; net-plt t h1@h3@ v2log.net | plot
+    &gt; net-plt t h1@ v2log.net | plot
+    &gt; net-plt t h3@ v2log.net | plot
 
 One can see from this that the Markov chain spends most of its time in
-regions of the hyperparameter space in which one hidden layer looks
-almost only at the time input, and the other looks almost only at the
-covariate.
+regions of the hyperparameter space in which one of the hidden layers
+looks more at the first input (time) than the second input, and the
+other hidden layer looks more at the second input than the first.
 </pre>
 </body>
 </html>

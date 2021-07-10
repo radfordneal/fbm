@@ -6,33 +6,39 @@ NOTES ON THE VERSION UNDER DEVELOPMENT
 
 Changes in this version.
 
-*) For neural network models, the configuration of the connections and
+1) The tutorial examples have been updated, with timing results now
+   given for a modern processor, with some plots now supplied as PNG 
+   files, and with other updates and minor fixes.
+
+2) For neural network models, the configuration of the connections and
    their weights into a hidden layer, from the input layer or the
    previous hidden layer, may now be set up explicitly, rather than
    (as previously) layers always being fully-connected, without weight
    sharing.  In particular, this allows for specification of models
    with convolutional layers.  See <A HREF="net-spec.html">net-spec.doc</A> and <A HREF="net-config.html">net-config.doc</A> for
-   details.
+   details, as well as the tutorial example in <A HREF="Ex-image.html">Ex-image.doc</A>.
 
-*) Forward / backward / gradient computations for neural networks have
+3) Forward / backward / gradient computations for neural networks have
    been sped up, by rewriting the portable code to encourage the
    compiler to use vector instructions, and by (optionally) using
    specially-written code to exploit AVX instructions (with or without
    FMA), when available.
 
-*) Computations for neural networks have also been sped up by using
+4) Computations for neural networks have also been sped up by using
    the SLEEF library for vectorized mathematical functions (eg, tanh).
 
-*) The maximum number of hidden layers in a neural network is now 15
+5) The maximum number of hidden layers in a neural network is now 15
    (up from 7 before).
 
-*) New C0, C1, and Cn for n&gt;1 quantities are now defined, to help assess
+6) New C0, C1, and Cn for n&gt;1 quantities are now defined, to help assess
    how well metropolis and hybrid updates are exploring the distribution.
+   (But note that these are masked for mixture models, where they have
+   another meaning.)
 
-*) The net-gen program has been extended to allow parameters to be set
+7) The net-gen program has been extended to allow parameters to be set
    from standard input, rather than being set to zero, or randomly,
 
-*) The maximum number of iterations that can be used when making predictions
+8) The maximum number of iterations that can be used when making predictions
    with the median has been increased from 200 to 1000.
 
 Bug fixes.

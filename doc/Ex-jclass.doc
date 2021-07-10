@@ -42,7 +42,7 @@ parameters of the model as follows:
                                      met-terminals gibbs-sigmas slice-div
     > dft-mc     rblog.dft 1000
 
-This takes about 45 minutes on the system used (see Ex-system.doc).
+This takes 109 seconds on the system used (see Ex-test-system.doc).
 
 We can use iterations from the end of this run to evaluate the
 predictive density for some new vector of targets.  In order to make a
@@ -81,8 +81,23 @@ as follows:
         | bash >rdata.p1
 
 The final result, in the file rdata.p1, is the predictive probability
-of class 1 for each of the 500 test cases.  If we now guess that the
-class is 1 if this probability is greater than 0.5, the resulting
-error rate is 2.6%.  This is much better than we would be likely to
+of class 1 for each of the 500 test cases.  
+
+We can now now guess that the class is 1 if this probability is
+greater than 0.5:
+
+    > sed "s/0.[56789].*/1/" <rdata.p1 | sed "s/...*/0/" >rdata.guess
+
+and compare with the true class label:
+
+    > tail -500 rdata | sed "s/.* //" >rdata.true
+    > combine rdata.true rdata.guess | fgrep "0 1" | wc
+    > combine rdata.true rdata.guess | fgrep "1 0" | wc
+
+There are 14 test cases with true class 0 where the model guessed 1,
+and none where the true class was 1 but the model guessed 0, giving an
+error rate of 2.8%.  The asymmetry in errors is probably due to 0
+being the less common class, so the model tends to guess 1 in
+ambiguous cases.  This error rate likely is much better than we could
 achieve with any method that looks only at the 10 training cases for
-which the class is known.
+which the class was provided for training.

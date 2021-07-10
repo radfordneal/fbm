@@ -218,9 +218,9 @@ classification performance:
 
     Fraction of guesses that were wrong:    0.0900+-0.0203
 
-This takes 0.35 seconds on the system used (see Ex-system.doc).  This
-is slower than prediction using a network model, since the Cholesky
-decomposition of the covariance matrix must be found for each
+This takes 0.35 seconds on the system used (see Ex-test-system.doc).
+This is slower than prediction using a network model, since the
+Cholesky decomposition of the covariance matrix must be found for each
 iteration used (saving these would take up lots of disk space).  The
 accuracy achieved is about the same as for the network model, which is
 not too surprising, given that they both use a logistic function to

@@ -147,3 +147,11 @@ model-spec log binary
 net-spec log config
 net-gen log 
 net-display log 0
+
+echo " "; echo "--- F"; echo " "
+
+net-spec log 5 \
+             4 input-config:"%echo  2+1 1 1  5-1 2 1  +102-106+1 1 2" \
+             3 hidden-config:"%echo 1 2 1  -477+478 1 1" \
+             1 / ih=7 hh=8 ho=9
+net-spec log config

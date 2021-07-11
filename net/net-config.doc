@@ -61,6 +61,15 @@ the one above:
     + -1 =
     1 +2 -
 
+A number may also be written in parts separated by "+" or "-".  For
+example, the last item above could be written as follows:
+
+    7-6 +102-100 -
+
+or as follows:
+
+    1 +20+30-48 -10+9
+
 A group of triples may be repeated by enclosing it in items of the
 form "<rep>(" and ")", where <rep> is a positive integer (defaulting
 to 1 if absent).  Such repeated groups may be nested.  A group of

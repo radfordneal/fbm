@@ -1067,3 +1067,44 @@ Output Biases [3]
 
       1.00: -0.59
 
+ 
+--- F
+ 
+
+Network Architecture:
+
+  Input layer:     size 5
+  Hidden layer 0:  size 4  tanh  input-config:%echo  2+1 1 1  5-1 2 1  +102-106+1 1 2
+  Hidden layer 1:  size 3  tanh  hidden-config:%echo 1 2 1  -477+478 1 1
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    7.000
+
+         Hidden Layer 1
+
+  Hidden-Hidden Weights:   8.000
+
+         Output Layer
+
+  Hidden1-Output Weights:  9.000
+
+Hidden layer 0 input weight configuration
+
+3 connections, 2 weights
+
+     3      1      1
+     4      2      1
+     1      1      2
+
+Hidden layer 1 hidden weight configuration
+
+2 connections, 1 weights
+
+     1      2      1
+     2      1      1
+

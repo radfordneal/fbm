@@ -26,9 +26,8 @@
 #include "net.h"
 
 
-/* READ WEIGHT CONFIGURATION.  Passed the configuration file and numbers of
-   units in the source and destination layers.  Returns a newly-allocated
-   structure with the configuration. */
+/* READ ITEMS, AS CHARACTER STRINGS.  Returns a pointer to an array of
+   pointers to null-terminated strings, with NULL after the last. */
 
 #define Max_items 1000000
 
@@ -66,22 +65,61 @@ static char **read_items (char *file)
   return item;
 }
 
+
+/* Convert an item to a number, possibly found relative to "last".  The
+   number may be n or n+m or n-m. */
+
 static int convert_item (char *s, int last)
-{ if (strcmp(s,"=")==0) return last;
-  else if (strcmp(s,"+")==0) return last+1;
-  else if (strcmp(s,"-")==0) return last-1;
-  int v; char junk;
-  if (sscanf(s,"%d%c",&v,&junk)!=1) 
-  { fprintf (stderr, "Bad item in weight configuration file: %s\n", s);
-    exit(2);
+{ 
+  if (strcmp(s,"=")==0)
+  { return last;
   }
-  return *s=='+' || *s=='-' ? last+v : v;
+  else if (strcmp(s,"+")==0)
+  { return last+1;
+  }
+  else if (strcmp(s,"-")==0)
+  { return last-1;
+  }
+
+  int v, t, n;
+  char junk;
+  char *p;
+
+  v = *s=='+' || *s=='-' ? last : 0;
+  p = s;
+
+  for (;;)
+  { n = sscanf(p,"%d%c",&t,&junk);
+    if (n<1 || n>1 && junk!='+' && junk!='-') 
+    { fprintf (stderr, "Bad item in weight configuration file: %s\n", s);
+      exit(2);
+    }
+    v += t;
+    if (n==1)
+    { break;
+    }
+    for (p++; *p!='+' && *p!='-'; p++) ;
+  }
+  
+  return v;
 }
+
+
+/* PROCESS ITEMS, RETURNING POINTER TO ITEM AFTER LAST PROCESSED.  Stores
+   results of processing in the configuration structure pointed to by p.
+   The paren argument controls the actions taken for items - '(' or '{'
+   creates connections, '[' only updates "last" values. */
 
 static int lasts, lastd, lastw;
 
 static char **do_items 
-        (char *file, char **item, net_config *p, int ns, int nd, char paren)
+( char *file,	/* File name, for error messages */
+  char **item,	/* Array of items to process */
+  net_config *p,/* Place to store connections produced */
+  int ns,	/* Number of source units, for error checking */
+  int nd,	/* Number of destination units, for error checking */
+  char paren	/* Operation to perform */
+)
 {
   for (;;)
   { 
@@ -178,6 +216,11 @@ static char **do_items
     item += 3;
   }
 }
+
+
+/* READ WEIGHT CONFIGURATION.  Passed the configuration file and numbers of
+   units in the source and destination layers.  Returns a newly-allocated
+   structure with the configuration. */
 
 net_config *net_config_read (char *file, int ns, int nd)
 { 

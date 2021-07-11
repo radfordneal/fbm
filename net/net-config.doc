@@ -8,9 +8,14 @@ can be specified in a configuration file, referenced from the
 "input-config" or "hidden-config" flags in the network specification.
 (See net-spec.doc for details.)
 
+Configuration files can be written in various ways, as given by the
+detailed syntax at the end of this document.  The simplest form, as a
+sequence of source-destination-weight triples, is presented first
+below, followed by increasingly elaborate forms.
+
 This configuration file (which may be output from a command, if
-specified with "%", see net-spec.doc) contains one or more triples of
-the form
+specified with "%", see net-spec.doc) can contain one or more triples
+of the form
 
     <source-unit> <destination-unit> <weight-index>
 
@@ -113,8 +118,57 @@ Using no-connection groups, this can be further abbreviated to
 
     [ 2 0 0 ]   8(  [ -2 + 0 ]   3( + = + )  )
 
-Finally, another way to specify the same configuration is as follows:
+Another way to specify the same configuration is as follows:
 
     8(  + + 1  2{  + = +  } )
+
+Numbers may be specified using single-letter symbols, to which values
+are assigned by items of the form <letter>=<number>.  For example, the
+above may instead be written as
+
+    R=8  s=3 
+    R(  + + 1  s-1{  + = +  } )
+
+Letters have the value zero before any assignment, and may be assigned
+more than once - for example, a=3 a=a+1 is allowed, and leaves a with
+the value 4.
+
+The complete syntax for a configuration file can be written as
+follows, with <.> for syntactic categories, | for alternatives, [.]
+for optional parts, {.} for parts repeated zero or more times, and
+double quotes for parts written literally:
+
+    <configuration> : { <part> }
+
+    <part>          : <triple> 
+                    | [<number>]"(" { <part> } ")"
+                    | [<number>]"{" { <part> } "}"
+                    | [<number>]"[" { <part> } "]"
+                    | <letter>=<number>
+
+    <triple>        : <index> <index> <index>
+
+    <index>         : <number> | <sign>[<number>]
+
+    <number>        : <term>{<sign><term>}
+
+    <term>          : <digits> | <letter>
+
+    <digits>        : <digit>{<digit>}
+
+    <digits>        : "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+
+    <letter>        : "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i"
+                    | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r"
+                    | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z"
+                    | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I"
+                    | "J" | "K" | "L" | "M" | "N" | "O" | "P" | "Q" | "R"
+                    | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z"
+
+Whitespace above corresponds to whitespace (spaces or newlines) in the
+file, and lack of whitespace above corresponds to no whitespace in the
+file.  For example, a repeated triple must be written like 4( + + + ),
+not like 4(+ + +) or 4 ( + + + ), and assignments must be written like
+a=123, not like a = 123.
 
             Copyright (c) 2021 by Radford M. Neal

@@ -26,6 +26,14 @@
 #include "net.h"
 
 
+/* STATE DURING ITEM PROCESSING. */
+
+#define letters "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+static int varval[2*26];          /* Values of variables */
+static int lasts, lastd, lastw;   /* Previous source, dest., weight indexes */
+
+
 /* READ ITEMS, AS CHARACTER STRINGS.  Returns a pointer to an array of
    pointers to null-terminated strings, with NULL after the last. */
 
@@ -66,10 +74,11 @@ static char **read_items (char *file)
 }
 
 
-/* Convert an item to a number, possibly found relative to "last".  The
-   number may be n or n+m or n-m. */
+/* CONVERT AN ITEM TO A NUMBER.  The value may be relative to "last". 
+   The number may contain variable references.  The paren argument
+   is the trailing paren for repeat factors, or zero for indexes. */
 
-static int convert_item (char *s, int last)
+static int convert_item (char *s, int last, char paren)
 { 
   if (strcmp(s,"=")==0)
   { return last;
@@ -82,20 +91,29 @@ static int convert_item (char *s, int last)
   }
 
   int v, t, n;
-  char junk;
+  char next, follow;
   char *p;
 
   v = *s=='+' || *s=='-' ? last : 0;
   p = s;
 
   for (;;)
-  { n = sscanf(p,"%d%c",&t,&junk);
-    if (n<1 || n>1 && junk!='+' && junk!='-') 
+  { int has_sign = p[0]=='+' || p[0]=='-';
+    if (strchr(letters,p[has_sign]))
+    { t = varval [strchr(letters,p[has_sign]) - letters];
+      next = p[has_sign+1];
+      n = 1 + (next!=0);
+    }
+    else
+    { n = sscanf(p,"%d%c%c",&t,&next,&follow);
+    }
+    if (n<1 || n>1 && next!='+' && next!='-' && next!=paren
+            || n>2 && next==paren) 
     { fprintf (stderr, "Bad item in weight configuration file: %s\n", s);
       exit(2);
     }
     v += t;
-    if (n==1)
+    if (n==1 || next==paren)
     { break;
     }
     for (p++; *p!='+' && *p!='-'; p++) ;
@@ -109,8 +127,6 @@ static int convert_item (char *s, int last)
    results of processing in the configuration structure pointed to by p.
    The paren argument controls the actions taken for items - '(' or '{'
    creates connections, '[' only updates "last" values. */
-
-static int lasts, lastd, lastw;
 
 static char **do_items 
 ( char *file,	/* File name, for error messages */
@@ -134,14 +150,19 @@ static char **do_items
     l = strlen(it);
     if (l>0 && (it[l-1]=='(' || it[l-1]=='[' || it[l-1]=='{'))
     { 
-      if (l==1) /* default repetition factor is 1 */
-      { r = 1;
-        nparen = it[0];
+      nparen = it[l-1];
+      if (l==1)
+      { r = 1;  /* default repetition factor is 1 */
       }
-      else if (sscanf(it,"%d%c%c",&r,&nparen,&junk)!=2 || r<1)
+      else
+      { r = convert_item(it,0,nparen);
+      }
+
+      if (r<1)
       { fprintf (stderr,
-                 "Bad repeat start in weight configuration file: %s, %s\n",
-                 file, it);
+        "Non-positive repeat factor in weight configuration file: %s, %s, %d\n",
+         file, it, r);
+        exit(2);
       }
 
       item += 1;
@@ -172,6 +193,13 @@ static char **do_items
       continue;
     }
 
+    if (l>2 && it[1]=='=' && strchr(letters,it[0]))
+    { 
+      varval [strchr(letters,it[0]) - letters] = convert_item(it+2,0,0);
+      item += 1;
+      continue;
+    }
+
     if (item[1]==NULL || strcmp(item[1],")")==0 || strcmp(item[1],"]")==0 
                       || strcmp(item[1],"}")==0 
      || item[2]==NULL || strcmp(item[2],")")==0 || strcmp(item[2],"]")==0
@@ -182,9 +210,9 @@ static char **do_items
       exit(2);
     }
 
-    s = convert_item(item[0],lasts);
-    d = convert_item(item[1],lastd);
-    w = convert_item(item[2],lastw);
+    s = convert_item(item[0],lasts,0);
+    d = convert_item(item[1],lastd,0);
+    w = convert_item(item[2],lastw,0);
 
     lasts = s; lastd = d; lastw = w;
 
@@ -238,10 +266,12 @@ net_config *net_config_read (char *file, int ns, int nd)
   lastd = 0;
   lastw = 0;
 
+  for (i = 0; i<2*26; i++) varval[i] = 0;
+
   char **ir = do_items (file, item, p, ns, nd, '(');
   if (*ir!=NULL)
   { fprintf (stderr, 
-             "Not all items read from weight configuration file: %s, have %s\n",
+             "Excess items in weight configuration file: %s, have %s\n",
              file, *ir);
     exit(2);
   }

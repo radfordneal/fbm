@@ -1,31 +1,38 @@
 #!/bin/bash
 
-# Commands to apply Bayesian neural network to an image classification problem,
-# with convolutional connections.
+# Commands to apply Bayesian neural network to an image classification problem.
+# This version uses one hidden layer with convolutional connections.
+#
+# Four runs are done, each on three quarters of the training set, with
+# the left-out quarters used to assess things like convergence.  Final
+# testing is done on the cases not in the training set.
 
-for run in 1 2 3; do
+for run in 1 2 3 4; do
 
   log=ilog2.net$run
+  end=`calc 300\*$run`
+  start=`calc $end-299`
 
   net-spec $log 36 80 input-config:iconfig 4 \
-                / ih=0.2:2 bh=0.2:2 ho=0.2:2 bo=0.2:2
+                / ih=0.2:2 bh=0.3:2 ho=0.1:3::4 bo=0.1:2
   model-spec $log class
   
-  data-spec $log 36 1 4 / idata@1:1000 . idata@1001:1500 .
+  data-spec $log 36 1 4 / idata-train@-$start:$end . idata-train@$start:$end .
 
   rand-seed $log $run
   
-  net-gen $log fix 0.$run
+  net-gen $log fix 0.1$run
 
   mc-spec $log repeat 30 heatbath hybrid 100:10 0.12
   net-mc $log 1
   
   mc-spec $log sample-sigmas heatbath hybrid 3000:100 0.15
-  net-mc $log 8000 &
+  net-mc $log 6000 &
 
 done
 
 wait
   
-net-pred mnpa ilog2.net1 2001: ilog2.net2 2001: ilog2.net3 2001: \
-              / idata@1501:3000 .
+net-pred mnpa \
+  ilog2.net1 2001: ilog2.net2 2001: ilog2.net3 2001: ilog2.net4 2001: \
+    / idata-test .

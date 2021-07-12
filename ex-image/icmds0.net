@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # Commands to apply Bayesian neural network to an image classification problem.
-# This version uses one hidden layer fully connected to the input.
+# This version uses uses a simple linear logistic model, which is not expected
+# to perform at all well (but should be better than uniform guessing).
 #
 # Four runs are done, each on three quarters of the training set, with
 # the left-out quarters used to assess things like convergence.  Final
@@ -9,24 +10,23 @@
 
 for run in 1 2 3 4; do
 
-  log=ilog1.net$run
+  log=ilog0.net$run
   end=`calc 300\*$run`
   start=`calc $end-299`
 
-  net-spec $log 36 80 4 \
-                / ih=0.05:3::1.5 bh=0.3:2 ho=0.1:3::4 bo=0.1:2
+  net-spec $log 36 4 / io=0.5:4 bo=0.1:2
   model-spec $log class
   
   data-spec $log 36 1 4 / idata-train@-$start:$end . idata-train@$start:$end .
 
   rand-seed $log $run
   
-  net-gen $log fix 0.1$run
+  net-gen $log fix 0.$run
 
   mc-spec $log repeat 15 heatbath hybrid 100:10 0.15
   net-mc $log 1
   
-  mc-spec $log sample-sigmas heatbath hybrid 2000:50 0.3
+  mc-spec $log sample-sigmas heatbath hybrid 1000:50 0.3
   net-mc $log 6000 &
   
 done
@@ -34,5 +34,5 @@ done
 wait
   
 net-pred mnpa \
-  ilog1.net1 2001: ilog1.net2 2001: ilog1.net3 2001: ilog1.net4 2001: \
+  ilog0.net1 2001: ilog0.net2 2001: ilog0.net3 2001: ilog0.net4 2001: \
     / idata-test .

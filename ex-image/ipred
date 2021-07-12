@@ -1,0 +1,5 @@
+#!/bin/bash
+
+net-pred mnpa \
+  ilog$1.net1 $2: ilog$1.net2 $2: ilog$1.net3 $2: ilog$1.net4 $2: \
+    / idata-test .

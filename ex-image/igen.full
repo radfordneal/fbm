@@ -32998,6 +32998,6 @@ Case 3000, Class O(2), Centred at 2,3, PP: +0.000 X0.000 O0.991 H0.009
 5   -1.743 -1.795 -0.240 +0.354 -1.590 -0.943    O O     O O
 
 
-Error rate on test cases with true model: 0.140
+Error rate on test cases with true model: 0.141
 Average squared error for test cases with true model: 0.194
-Average log probability for test cases with true model: -0.338
+Average log probability for test cases with true model: -0.336

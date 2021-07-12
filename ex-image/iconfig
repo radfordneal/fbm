@@ -1,18 +1,29 @@
+# Configuration for convolutional layer connections for model of test images.
+
+D=6  # image width and height
+P=3  # patch width and height
+F=5  # number of filters
+
 [ 1 1 1 ]
 
-4{  # Loop over four vertical positions of 3x3 patch
+D-P+1{  # Loop over vertical positions of patch
 
-  4{  # Loop over four horizontal positions of 3x3 patch
+  D-P+1{  # Loop over horizontal positions of patch
 
-    3{  # Loop over three positions for rows of 3x3 patch
+    P{  # Loop over rows of patch
 
-      3{  # Loop over three pixels within row of 3x3 patch
+      P{  # Loop over pixels within row of patch
 
-          = = =   4{ = + + }  [ + = +5 ]  
+          = = =   F-1{ = + + }  # Connections for all filters 
 
-      }  [ +6 = +15 ] 
+          [ + = +F ]
+      }  
 
-    }  [ + +5 1 ]
+      [ +D = = ]   P[ = = +F ]
+    }
 
-  }  [ +6 +20 1 ]
+    [ + +F 1 ]
+  }
+
+  [ +D = 1 ]   D-P+1[ = +F 1 ]
 }

@@ -32,6 +32,7 @@
 
 static int varval[2*26];          /* Values of variables */
 static int lasts, lastd, lastw;   /* Previous source, dest., weight indexes */
+static int at_index;              /* Index for output from "@" item */
 
 
 /* READ ITEMS, AS CHARACTER STRINGS.  Returns a pointer to an array of
@@ -101,6 +102,7 @@ static int convert_item (char *s, int last, char paren)
   { int has_sign = p[0]=='+' || p[0]=='-';
     if (strchr(letters,p[has_sign]))
     { t = varval [strchr(letters,p[has_sign]) - letters];
+      if (p[0]=='-') t = -t;
       next = p[has_sign+1];
       n = 1 + (next!=0);
     }
@@ -200,6 +202,13 @@ static char **do_items
       continue;
     }
 
+    if (strcmp(it,"@")==0)
+    { fprintf(stderr,"%d @ %d %d %d\n",at_index,lasts,lastd,lastw);
+      at_index += 1;
+      item += 1;
+      continue;
+    }
+
     if (item[1]==NULL || strcmp(item[1],")")==0 || strcmp(item[1],"]")==0 
                       || strcmp(item[1],"}")==0 
      || item[2]==NULL || strcmp(item[2],")")==0 || strcmp(item[2],"]")==0
@@ -220,8 +229,8 @@ static char **do_items
     {
       if (s<1 || d<1 || w<1 || s>ns || d>nd || w<1)
       { fprintf (stderr, 
-                 "Out of range index in weight configuration: %s\n",
-                 file);
+         "Out of range index in weight configuration: %s, %d, %d %d %d\n",
+          file, p->N_conn+1, s, d, w);
         exit(2);
       }
 
@@ -239,6 +248,8 @@ static char **do_items
       if (w>p->N_wts) p->N_wts = w;
 
       p->N_conn += 1;
+
+      // fprintf(stderr,"Conn %d: %d %d %d\n",p->N_conn,s,d,w);
     }
 
     item += 3;
@@ -267,6 +278,8 @@ net_config *net_config_read (char *file, int ns, int nd)
   lastw = 0;
 
   for (i = 0; i<2*26; i++) varval[i] = 0;
+
+  at_index = 1;
 
   char **ir = do_items (file, item, p, ns, nd, '(');
   if (*ir!=NULL)

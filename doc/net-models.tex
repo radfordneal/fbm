@@ -748,17 +748,18 @@ units.
 When doing this backward propagation, we need an estimate of the
 second derivative of $L$ with respect to the summed input to a $\tanh$
 hidden unit, given its second derivative with respect to the unit's
-output.  Letting the hidden unit output be $v = \tanh(u)$, we have\beq
+output.  Letting the hidden unit output be $v = a(u)$, we have\beq
   {d^2L \over du^2}
-   \ = \ {d \over du} \left[ (1-v^2) {dL \over dv} \right] 
-   \ = \ (1-v^2) {d^2L \over dv^2} - 2v {dL \over dv} \label{sechterm}
-   \ \approx \ (1-v^2) {d^2L \over dv^2} 
-   \ \approx \ {d^2L \over dv^2}\ \ \
+   \ = \ {d \over du} \left[ {dv \over du}\, {dL \over dv} \right] 
+   \ = \ a''(u) {dL \over dv} + a'(u) {d^2L \over dv^2}
+   \ \approx \ a'(u) {d^2L \over dv^2} 
+   \ \approx \ \max[a'(u)]\, {d^2L \over dv^2}\ \ \
 \eeq%
-The first approximation assumes that since $2v(dL/dv)$ may be either
+The first approximation assumes that since the first term may be either
 positive or negative, its effects will (optimistically) cancel when
-averaged over the training set.  Since $v$ is not known, the second
-approximation above takes the maximum with respect to $v$.  The end result 
+averaged over the training set.  Since $u$ is not known, the second
+approximation above takes the maximum with respect to $u$.  For the
+$\tanh$ activation function, $\max[a'(u)] = 1$, so the end result 
 is that we just ignore the fact that the hidden unit input is passed 
 through the $\tanh$ function.
 
@@ -767,28 +768,38 @@ multiple connections from a unit.  Since the stepsizes chosen are not
 allowed to depend on the actual values of the network parameters, the
 magnitude of each weight is taken to be equal to the corresponding
 sigma hyperparameter, multiplied by the destination unit adjustment,
-if present.  This gives the following generic estimate:\beq
+if present.  This gives the following generic estimate, when layers
+are fully connected:\beq
   {\partial^2 L \over \partial (v^S_i)^2} & \approx &
-     \sum_D\, \sum_j\, (\sigma^{S,D}_{w,i}\, \sigma^D_{a,j})^2 
+     \sum_D\, \sum_j\, (\sigma^{S,D}_{w,i}\, \sigma^D_{a,j})^2\, 
      {\partial^2 L \over (v^D_j)^2}
 \eeq%
 Here, $S$ is the source layer, $D$ goes through the various layers
 receiving connections from $S$, $\sigma^{S,D}_{w,i}$ is the
 hyperparameter controlling weights to layer $D$ out of unit $i$ in
 $S$, and $\sigma^D_{a,j}$ is the sigma adjustment for unit $j$ in $D$.
+When connections are configured, the formula is
+\beq
+  {\partial^2 L \over \partial (v^S_i)^2} & \approx &
+     \sum_D\, \sum_{(j,k)\,:\,(i,j,k)\in C^{S,D}}\!\!\!\!
+       (\sigma^{S,D}_w)^2\, {\partial^2 L \over (v^D_j)^2}
+\eep
      
 The second derivative of $L$ with respect to a weight, $w^{S,D}_{i,j}$,
 can be expressed as follows:\beq
   {\partial^2 L \over \partial (w^{S,D}_{i,j})^2} & = &
-    (v^S_i)^2\,{\partial^2 L \over \partial (v^D_j)^2}
+    (v^S_i)^2\,{\partial^2 L \over \partial (u^D_j)^2}
 \eeq%
 When the weight is on a connection from an input unit, $v^S_i = v^I_i$ is 
 the $i$th input for this training case, which is known.  If the weight
 is on a connection from a hidden unit, $(v^S_i)^2$ is assumed to be one,
-the maximum possible value.  
+which is the maximum possible value for $\tanh$ units.  With weights
+for configured connections, an analogous formula is used that sums over
+the connections for which the weight is used.
 
 Second derivatives with respect to biases and offsets are simply equal
-to the second derivatives with respect to the associated unit values.
+to the second derivatives with respect to the associated summed input to
+the hidden or output units.
 
 These heuristic estimates for the second derivatives of $L$ due to
 each training case with respect to the various network parameters are
@@ -809,11 +820,13 @@ estimate analogous to equation~(\ref{maxhest}):\beq
       \log P(w_{i,j}\ |\ \sigma_{w,i},\,\sigma_{a,j}) 
    & \approx & {\alpha_2 + 1 \over \alpha_2^{\ } \sigma_{w,i}^2 \sigma_{a,j}^2} 
 \eeq%
-Biases and offsets are handled similarly.
+Biases and offsets are handled similarly, as are weights for 
+configured connections.
 
-Finally, the stepsize used for a parameter is the reciprocal of the
-square root of minus the estimated second derivative of the log
-posterior with respect to that parameter.
+Finally, the stepsize used for a parameter (before the adjustment
+factor is applied) is the reciprocal of the square root of minus the
+estimated second derivative of the log posterior with respect to that
+parameter.
 
 
 \subsection*{Rejection sampling from the prior}\label{app-rej}

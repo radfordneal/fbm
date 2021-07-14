@@ -4,8 +4,7 @@ NET:  Bayesian inference for neural networks using Markov chain Monte Carlo.
 
 The 'net' programs implement Bayesian inference for models based on
 multilayer perceptron networks using Markov chain Monte Carlo methods.
-For full details, see the thesis, Bayesian Learning for Neural Networks, 
-by Radford M. Neal, Dept. of Computer Science, University of Toronto.
+For full details, see net-models.PDF.  Here is a briefer summary.
 
 The networks handled have connections from a set of real-valued input
 units to each of zero or more layers of real-valued hidden units.
@@ -53,6 +52,9 @@ layers:
 Any of the connection groups shown above may be absent, which is the
 same as their weights all being zero.
 
+Layers may be fully connected, or may have connections specified by a
+configuration file, as described in net-config.doc.
+
 The hidden units use the 'tanh' activation function.  Nominally, the
 output units are real-valued and use a linear activation function, but
 discrete outputs and non-linearities may be obtained in effect with
@@ -81,4 +83,4 @@ Targets may be missing for some cases (written as "?"), in which case
 they are ignored when computing the likelihood (as is appropriate if
 they are "missing at random").
 
-            Copyright (c) 1995-2004 by Radford M. Neal
+            Copyright (c) 1995-2021 by Radford M. Neal

@@ -772,17 +772,18 @@ if present.  This gives the following generic estimate, when layers
 are fully connected:\beq
   {\partial^2 L \over \partial (v^S_i)^2} & \approx &
      \sum_D\, \sum_j\, (\sigma^{S,D}_{w,i}\, \sigma^D_{a,j})^2\, 
-     {\partial^2 L \over (v^D_j)^2}
+     {\partial^2 L \over (u^D_j)^2}
 \eeq%
 Here, $S$ is the source layer, $D$ goes through the various layers
 receiving connections from $S$, $\sigma^{S,D}_{w,i}$ is the
 hyperparameter controlling weights to layer $D$ out of unit $i$ in
 $S$, and $\sigma^D_{a,j}$ is the sigma adjustment for unit $j$ in $D$.
+For the output layer, $u^O_j$ is the same as $v^O_j$.
 When connections are configured, the formula is
 \beq
   {\partial^2 L \over \partial (v^S_i)^2} & \approx &
      \sum_D\, \sum_{(j,k)\,:\,(i,j,k)\in C^{S,D}}\!\!\!\!
-       (\sigma^{S,D}_w)^2\, {\partial^2 L \over (v^D_j)^2}
+       (\sigma^{S,D}_w)^2\, {\partial^2 L \over (u^D_j)^2}
 \eep
      
 The second derivative of $L$ with respect to a weight, $w^{S,D}_{i,j}$,

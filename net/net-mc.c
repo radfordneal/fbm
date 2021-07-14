@@ -1460,7 +1460,8 @@ void mc_app_stepsizes
 
   inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
 
-  /* Compute second derivatives of minus log likelihood for unit values. */
+  /* Compute estimated second derivatives of minus log likelihood for
+     unit values. */
 
   net_model_max_second (seconds.o, arch, model, surv, &sigmas);
 
@@ -1514,7 +1515,7 @@ void mc_app_stepsizes
           break;
         }
         case Sin_type:
-        { seconds.s[l][i] = 4*seconds.h[l][i];
+        { seconds.s[l][i] = 2*seconds.h[l][i];
           break;
         }
         default: abort();

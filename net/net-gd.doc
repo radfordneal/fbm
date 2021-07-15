@@ -67,6 +67,9 @@ for the first iteration, but thereafter, the total gradient for the
 previous pass (plus the prior) is used, even though this sum is based
 on different parameter values for different cases.
 
+Differential stepsizes may not be used for groups of connections
+specified with a configuration file.
+
 Note that gradient descent learning with essentially no prior may be
 done by specifying the "priors" using just "+" and "-" (as described
 in net-spec.doc).  However, if no prior is used, it may be necessary

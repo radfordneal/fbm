@@ -1,6 +1,6 @@
 /* NET-GD.C - Program to train a network by gradient descent in the error. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -69,6 +69,7 @@ static int n_groups;		/* Number of groups */
 static int start_group[Max_groups+1];  /* Index of first weight in group */
 static double stepsize[Max_groups];    /* Stepsizes for each group */
 static int subdivide[Max_groups];      /* Should group be subdivided? */
+static int configured[Max_groups];     /* Is group configured? */
 
 static double submag[Max_subgroups];   /* Magnitudes of gradients in subgroups*/
 
@@ -103,7 +104,7 @@ int main
   unsigned new_clock; /* that type is inexplicably declared signed on most    */
                       /* systems, cutting the already-too-small range in half */
   int ns, np;
-  int i, j, g, o, n, s;
+  int i, j, g, o, n, s, c;
 
   /* Look at initial program arguments. */
 
@@ -276,7 +277,7 @@ int main
   /* See how many groups there are, and how divided into subgroups. */
 
   for (n_groups = 0; 
-       net_setup_param_group (arch, flgs, n_groups+1, &o, &n, &s); 
+       net_setup_param_group (arch, flgs, n_groups+1, &o, &n, &s, &c); 
        n_groups++)
   { 
     if (n_groups>=Max_groups) 
@@ -287,8 +288,13 @@ int main
     start_group[n_groups] = o;
 
     if (subdivide[n_groups]) 
-    { if (s>Max_subgroups)
-      { fprintf(stderr,"Too many parameters in a subgroup\n");
+    { if (c)
+      { fprintf(stderr,
+"Differential stepsizes with subgroups not allowed when group is configured\n");
+        exit(1);
+      }
+      if (s>Max_subgroups)
+      { fprintf(stderr,"Too many subgroups in a group\n");
         exit(1);
       }
       subdivide[n_groups] = s;

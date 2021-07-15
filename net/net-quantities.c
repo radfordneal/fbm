@@ -1,6 +1,6 @@
 /* NET-QUANTITIES.C - Module defining quantities for neural networks. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -157,7 +157,7 @@ void net_available
   char letter;
   int mod;
 
-  int v, o, n, s;
+  int v, o, n, s, c;
 
   for (v = 0; v<Max_quantities; v++)
   {
@@ -207,7 +207,7 @@ void net_available
       }
       else if (letter=='w')
       { qd[v].available = qd[v].low!=-1 && 
-           net_setup_param_group(arch,flgs,mod,&o,&n,&s) ? 1 : -1;
+           net_setup_param_group(arch,flgs,mod,&o,&n,&s,&c) ? 1 : -1;
         if (qd[v].available==1)
         { if (qd[v].high==-1) qd[v].high = n-1;
           if (qd[v].high>n-1 || qd[v].low>n-1) qd[v].available = -1;
@@ -222,10 +222,12 @@ void net_available
       }
       else if (letter=='W')
       { qd[v].available = 
-           net_setup_param_group(arch,flgs,mod,&o,&n,&s) ? 1 : -1;
+           net_setup_param_group(arch,flgs,mod,&o,&n,&s,&c) ? 1 : -1;
         if (qd[v].available==1 && qd[v].low!=-1)
         { if (qd[v].high==-1) qd[v].high = s-1;
-          if (s==0 || qd[v].high>s-1 || qd[v].low>s-1) qd[v].available = -1;
+          if (c || s==0 || qd[v].high>s-1 || qd[v].low>s-1)
+          { qd[v].available = -1;
+          }
         }
       }
       else if (letter=='M')
@@ -623,7 +625,7 @@ void net_evaluate
         case 'u':
         { 
           double u;
-          int o, n, s;
+          int o, n, s, c;
           int i, j;
 
           if (mod<1) 
@@ -631,7 +633,9 @@ void net_evaluate
             n = params.total_params;
           }
           else
-          { if (!net_setup_param_group (arch, flgs, mod, &o, &n, &s)) abort();
+          { if (!net_setup_param_group (arch, flgs, mod, &o, &n, &s, &c))
+            { abort();
+            }
           }
           
           for (j = o; j<o+n; j++) 
@@ -665,7 +669,7 @@ void net_evaluate
         case 'U':
         { 
           double u;
-          int o, n, s;
+          int o, n, s, c;
           int i, j;
 
           if (mod<1) 
@@ -673,7 +677,9 @@ void net_evaluate
             n = params.total_params;
           }
           else
-          { if (!net_setup_param_group (arch, flgs, mod, &o, &n, &s)) abort();
+          { if (!net_setup_param_group (arch, flgs, mod, &o, &n, &s, &c))
+            { abort();
+            }
           }
           
           u = 0;
@@ -728,9 +734,9 @@ void net_evaluate
 
         case 'w':
         { 
-          int o, n, s;
+          int o, n, s, c;
 
-          if (!net_setup_param_group (arch, flgs, mod, &o, &n, &s)) abort();
+          if (!net_setup_param_group (arch, flgs, mod, &o, &n, &s, &c)) abort();
 
           for (i = low; i<=high; i++)
           { qh->value[v][i-low] = params.param_block[o+i];
@@ -743,10 +749,10 @@ void net_evaluate
 
         case 'W':
         { 
-          int o, n, s, j;
+          int o, n, s, c, j;
           double t, q;
 
-          if (!net_setup_param_group (arch, flgs, mod, &o, &n, &s)) abort();
+          if (!net_setup_param_group (arch, flgs, mod, &o, &n, &s, &c)) abort();
 
           if (low==-1)
           { q = 0;

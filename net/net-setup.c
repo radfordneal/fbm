@@ -466,8 +466,9 @@ int net_setup_param_group
   int grp,		/* Index of group */
   int *offset,		/* Set to offset of group within block */
   int *number,		/* Set to number of items in group */
-  int *source		/* Set to number of source units associated with group,
+  int *source,		/* Set to number of source units associated with group,
                              or to zero if it's a one-dimensional group */
+  int *configured	/* Set to 1 if group has configured connections */
 )
 { 
   int i, l;
@@ -479,6 +480,7 @@ int net_setup_param_group
   if (a->has_ti) 
   { *offset = i; 
     *source = 0;
+    *configured = 0;
     i += a->N_inputs; 
     if (--grp==0) goto done;
   }
@@ -489,8 +491,9 @@ int net_setup_param_group
     { if (a->has_hh[l-1]) 
       { *offset = i; 
         *source = a->N_hidden[l-1];
-        i += a->hidden_config[l] ? a->hidden_config[l]->N_wts
-              : a->N_hidden[l-1]*a->N_hidden[l]; 
+        *configured = a->hidden_config[l]!=0;
+        i += *configured ? a->hidden_config[l]->N_wts 
+                         : *source * a->N_hidden[l]; 
         if (--grp==0) goto done;
       }
     }
@@ -498,14 +501,16 @@ int net_setup_param_group
     if (a->has_ih[l]) 
     { *offset = i; 
       *source = not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1));
-      i += a->input_config[l] ? a->input_config[l]->N_wts
-            : *source * a->N_hidden[l]; 
+      *configured = a->input_config[l]!=0;
+      i += *configured ? a->input_config[l]->N_wts 
+                       : *source * a->N_hidden[l]; 
       if (--grp==0) goto done;
     }
 
     if (a->has_bh[l]) 
     { *offset = i; 
       *source = 0;
+      *configured = 0;
       i += a->N_hidden[l]; 
       if (--grp==0) goto done;
     }
@@ -517,6 +522,7 @@ int net_setup_param_group
     if (a->has_th[l]) 
     { *offset = i; 
       *source = 0;
+      *configured = 0;
       i += a->N_hidden[l]; 
       if (--grp==0) goto done;
     }
@@ -526,6 +532,7 @@ int net_setup_param_group
   { if (a->has_ho[l]) 
     { *offset = i; 
       *source = a->N_hidden[l];
+      *configured = 0;
       i += a->N_hidden[l]*a->N_outputs; 
       if (--grp==0) goto done;
     }
@@ -534,6 +541,7 @@ int net_setup_param_group
   if (a->has_io) 
   { *offset = i;    
     *source = not_omitted(flgs?flgs->omit:0,a->N_inputs,1);
+    *configured = 0;
     i += *source * a->N_outputs; 
     if (--grp==0) goto done;
   }
@@ -541,6 +549,7 @@ int net_setup_param_group
   if (a->has_bo) 
   { *offset = i; 
     *source = 0;
+    *configured = 0;
     i += a->N_outputs; 
     if (--grp==0) goto done;
   }

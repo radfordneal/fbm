@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Commands to apply a neural network trained with gradient descent and early
+# stopping to an image classification problem.
+# This version uses one hidden layer with convolutional connections.
+#
+# Four runs are done, each on three quarters of the training set, with
+# the left-out quarters used to select the iterations to use.  Final
+# testing is done on the cases not in the training set.
+
+for run in 1 2 3 4; do
+
+  log=ilogg2.net$run
+  end=`calc 300\*$run`
+  start=`calc $end-299`
+
+  net-spec $log 36 80 input-config:iconfig 4 / ih=10 bh=10 ho=10 bo=10
+  model-spec $log class
+  
+  data-spec $log 36 1 4 / idata-train@-$start:$end . idata-train@$start:$end .
+
+  net-gd $log 10000 10 / 0.01 0.02 0.15 0.15 batch &
+
+done
+
+wait
+
+use=
+for run in 1 2 3 4; do
+  log=ilogg2.net$run
+  use=$use\ $log\ `net-plt t B $log | find-min`
+done
+
+echo Using: $use
+net-pred nmpa $use / idata-test .

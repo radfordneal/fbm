@@ -1,5 +1,7 @@
 *.o
 *.out
+*.aux
+*.log
 bvg/bvg-grad-test
 bvg/bvg-hist
 bvg/bvg-initial
@@ -126,4 +128,4 @@ ex-netgp/rgen
 ex-netgp/ogen
 ex-netgp/bgen
 ex-netgp/cgen
-ex-netgp/igen
+ex-image/igen

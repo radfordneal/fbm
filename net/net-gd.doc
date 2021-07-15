@@ -52,20 +52,21 @@ as the stepsize goes to zero.
 Differential stepsizes can be used for weights in specified groups
 that originate in different units - for example, in order to try to
 mimic the effect of the Bayesian "Automatic Relevance Determination"
-model.  The groups for which this should be done are listed after the
-method (which must therefore not be left to default).  Stepsizes for
-weights in these groups are found by computing or estimating the
-magnitude of the gradient for weights in this group that originate in
-each of the source units.  The stepsize for the weights out of a unit
-is the stepsize specified for the group, times the magnitude of the
-gradient for weights out of that unit raised to the fourth power,
-divided by the maximum of this fourth-power magnitude over all units
-in the group.  For batch gradient descent, the gradient magnitude for
-weights out of a unit is based on the total gradient for all training
-cases, plus the prior.  For online gradient descent, the same is used
-for the first iteration, but thereafter, the total gradient for the
-previous pass (plus the prior) is used, even though this sum is based
-on different parameter values for different cases.
+model.  The group indexes (from 1) for which this should be done are
+listed after the method (which must therefore not be left to default).
+Stepsizes for weights in these groups are found by computing or
+estimating the magnitude of the gradient for weights in this group
+that originate in each of the source units.  The stepsize for the
+weights out of a unit is the stepsize specified for the group, times
+the magnitude of the gradient for weights out of that unit raised to
+the fourth power, divided by the maximum of this fourth-power
+magnitude over all units in the group.  For batch gradient descent,
+the gradient magnitude for weights out of a unit is based on the total
+gradient for all training cases, plus the prior.  For online gradient
+descent, the same is used for the first iteration, but thereafter, the
+total gradient for the previous pass (plus the prior) is used, even
+though this sum is based on different parameter values for different
+cases.
 
 Differential stepsizes may not be used for groups of connections
 specified with a configuration file.

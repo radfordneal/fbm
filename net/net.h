@@ -20,12 +20,17 @@
 
 #define Max_conn 1000000	/* Maximum number of connections in a group */
 
-typedef struct { unsigned short s, d; int w; } net_connection;
+typedef struct 			/* List of connections, or sometimes several */
+{ unsigned short s;		  /* Index of source unit(s), from 0 */
+  unsigned short d; 		  /* Index of destination unit(s), from 0 */
+  int w; 			  /* Index of weight(s), from 0, negative may */
+} net_connection;		  /*   be used to indicate end of array */
 
 typedef struct
 { int N_wts;			/* Number of weights */
   int N_conn;			/* Number of connections */
   net_connection *conn;		/* Array of connections in group */
+  net_connection *conn_d_s_w;	/* Array of connections sorted by d, s, w */
 } net_config;
 
 
@@ -263,4 +268,5 @@ void net_record_sizes        (log_gobbled *);
 void net_check_specs_present (net_arch *, net_priors *, int,
                               model_specification *, model_survival *);
 
-net_config *net_config_read (char *file, int ns, int nd);
+net_config *net_config_read (char *, int, int);
+void net_config_sort (net_config *cf);

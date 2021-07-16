@@ -474,20 +474,19 @@ static void add_grad2_config
   net_config *restrict cf /* Configuration for connections and weights */
 )
 {
+  net_connection *cn = cf->conn_d_s_w;
   int i, j, k, c;
   if (off)
-  { for (c = 0; c<cf->N_conn; c++)
-    { i = cf->conn[c].s;
-      j = cf->conn[c].d;
-      k = cf->conn[c].w;
+  { for (c = 0; (k = cn[c].w) >= 0; c++)
+    { i = cn[c].s;
+      j = cn[c].d;
       g[k] += (v[i]+off[i]) * d[j];
     }
   }
   else
-  { for (c = 0; c<cf->N_conn; c++)
-    { i = cf->conn[c].s;
-      j = cf->conn[c].d;
-      k = cf->conn[c].w;
+  { for (c = 0; (k = cn[c].w) >= 0; c++)
+    { i = cn[c].s;
+      j = cn[c].d;
       g[k] += v[i] * d[j];
     }
   }

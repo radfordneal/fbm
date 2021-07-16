@@ -259,7 +259,8 @@ static char **do_items
 
 /* READ WEIGHT CONFIGURATION.  Passed the configuration file and numbers of
    units in the source and destination layers.  Returns a newly-allocated
-   structure with the configuration. */
+   structure with the configuration.  Also produces the sorted versions of
+   the configuration, used for more efficient processing. */
 
 net_config *net_config_read (char *file, int ns, int nd)
 { 
@@ -297,5 +298,30 @@ net_config *net_config_read (char *file, int ns, int nd)
   free(p->conn);
   p->conn = q;
 
+  net_config_sort(p);
+
   return p;
+}
+
+
+/* PRODUCE SORTED / GROUPED VERSIONS OF THE CONFIGURATION. */
+
+static int cmp_d_s_w (const void *a0, const void *b0)
+{ net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
+  int r;
+  r = a->d - b->d;
+  if (r!=0) return r;
+  r = a->s - b->s;
+  if (r!=0) return r;
+  r = a->w - b->w;
+  return r;
+}
+
+void net_config_sort (net_config *cf)
+{ 
+  cf->conn_d_s_w = 
+   (net_connection *) chk_alloc (cf->N_conn+1, sizeof *cf->conn_d_s_w);
+  memcpy (cf->conn_d_s_w, cf->conn, cf->N_conn * sizeof *cf->conn);
+  qsort (cf->conn_d_s_w, cf->N_conn, sizeof *cf->conn_d_s_w, cmp_d_s_w);
+  cf->conn_d_s_w[cf->N_conn].w = -1;
 }

@@ -23,7 +23,7 @@
 #define CONFIG_ORIGINAL 0	/* Use original weight configuration array */
 				/*     --- meant only for testing --       */
 
-#define CONFIG_SING4_D_S_W !CONFIG_ORIGINAL && 0
+#define CONFIG_SING4_D_S_W (!CONFIG_ORIGINAL && 1)
 
 typedef struct 			/* List of connections, or sometimes several */
 { unsigned short s;		  /* Index of source unit(s), from 0 */

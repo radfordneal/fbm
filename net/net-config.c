@@ -359,7 +359,7 @@ void net_config_sort (net_config *cf)
 
     cf->sing4_d_s_w = chk_alloc (j+1, sizeof *cf->sing4_d_s_w);
     memcpy (cf->sing4_d_s_w, tmp2, j * sizeof *cf->sing4_d_s_w);
-    cf->sing4_d_s_w[r].w = -1;
+    cf->sing4_d_s_w[j].w = -1;
   }
 
   cf->sing1_d_s_w = chk_alloc (r+1, sizeof *cf->sing1_d_s_w);
@@ -368,4 +368,20 @@ void net_config_sort (net_config *cf)
 
   free(tmp_d_s_w);
   free(tmp2);
+
+  if (0)  /* can enable for debugging */
+  {
+    if (CONFIG_SING4_D_S_W)
+    { printf("sing4_d_s_w:\n");
+     for (int i = 0; cf->sing4_d_s_w[i].w >= 0; i++)
+      { printf("%d %d %d\n",
+                cf->sing4_d_s_w[i].d,cf->sing4_d_s_w[i].s,cf->sing4_d_s_w[i].w);
+      }
+    }
+    printf("sing1_d_s_w:\n");
+    for (int i = 0; cf->sing1_d_s_w[i].w >= 0; i++)
+    { printf("%d %d %d\n",
+              cf->sing1_d_s_w[i].d,cf->sing1_d_s_w[i].s,cf->sing1_d_s_w[i].w);
+    }
+  }
 }

@@ -455,11 +455,10 @@ static void sum_derivatives_config
   net_config *restrict cf /* Configuration for connections and weights */
 )
 {
-  net_connection *cn = CONFIG_ORIGINAL ? cf->conn : cf->conn_d_s_w;
+  net_connection *cn = CONFIG_ORIGINAL ? cf->conn : cf->sing1_d_s_w;
   int i, j, k, c;
   for (c = 0; (k = cn[c].w) >= 0; c++)
-  { i = cn[c].s;
-    j = cn[c].d;
+  { i = cn[c].s; j = cn[c].d;
     ds[i] += dd[j] * w[k];
   }
 }

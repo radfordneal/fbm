@@ -319,9 +319,53 @@ static int cmp_d_s_w (const void *a0, const void *b0)
 
 void net_config_sort (net_config *cf)
 { 
-  cf->conn_d_s_w = 
-   (net_connection *) chk_alloc (cf->N_conn+1, sizeof *cf->conn_d_s_w);
-  memcpy (cf->conn_d_s_w, cf->conn, cf->N_conn * sizeof *cf->conn);
-  qsort (cf->conn_d_s_w, cf->N_conn, sizeof *cf->conn_d_s_w, cmp_d_s_w);
-  cf->conn_d_s_w[cf->N_conn].w = -1;
+  int n = cf->N_conn;
+
+  net_connection *tmp_d_s_w;
+  tmp_d_s_w = chk_alloc (n, sizeof *tmp_d_s_w);
+  memcpy (tmp_d_s_w, cf->conn, n * sizeof *tmp_d_s_w);
+  qsort (tmp_d_s_w, n, sizeof *tmp_d_s_w, cmp_d_s_w);
+
+  net_connection *tmp2;
+  tmp2 = chk_alloc (n, sizeof *tmp2);
+
+  int r;
+
+  if (!CONFIG_SING4_D_S_W)
+  { r = n;
+  }
+  else
+  {
+    int i, j;
+    i = j = r = 0;
+    while (i < n)
+    { int d = tmp_d_s_w[i].d;
+      if (n-i >= 4 && tmp_d_s_w[i+1].d==d
+                   && tmp_d_s_w[i+2].d==d
+                   && tmp_d_s_w[i+3].d==d)
+      { tmp2[j] = tmp_d_s_w[i];
+        tmp2[j+1] = tmp_d_s_w[i+1];
+        tmp2[j+2] = tmp_d_s_w[i+2];
+        tmp2[j+3] = tmp_d_s_w[i+3];
+        j += 4;
+        i += 4;
+      }
+      else
+      { tmp_d_s_w[r] = tmp_d_s_w[i];
+        r += 1;
+        i += 1;
+      }
+    }
+
+    cf->sing4_d_s_w = chk_alloc (j+1, sizeof *cf->sing4_d_s_w);
+    memcpy (cf->sing4_d_s_w, tmp2, j * sizeof *cf->sing4_d_s_w);
+    cf->sing4_d_s_w[r].w = -1;
+  }
+
+  cf->sing1_d_s_w = chk_alloc (r+1, sizeof *cf->sing1_d_s_w);
+  memcpy (cf->sing1_d_s_w, tmp_d_s_w, r * sizeof *cf->sing1_d_s_w);
+  cf->sing1_d_s_w[r].w = -1;
+
+  free(tmp_d_s_w);
+  free(tmp2);
 }

@@ -20,8 +20,10 @@
 
 #define Max_conn 1000000	/* Maximum number of connections in a group */
 
-#define CONFIG_ORIGINAL 1	/* Use original weight configuration array */
+#define CONFIG_ORIGINAL 0	/* Use original weight configuration array */
 				/*     --- meant only for testing --       */
+
+#define CONFIG_SING4_D_S_W !CONFIG_ORIGINAL && 0
 
 typedef struct 			/* List of connections, or sometimes several */
 { unsigned short s;		  /* Index of source unit(s), from 0 */
@@ -32,8 +34,10 @@ typedef struct 			/* List of connections, or sometimes several */
 typedef struct
 { int N_wts;			/* Number of weights */
   int N_conn;			/* Number of connections */
-  net_connection *conn;		/* Array of connections in group */
-  net_connection *conn_d_s_w;	/* Array of connections sorted by d, s, w */
+  net_connection *conn;		/* Array of connections, in original order */
+  net_connection *sing1_d_s_w;	/* Single connections, sorted by d, s, w */
+  net_connection *sing4_d_s_w;	/* Single connections, sorted by d, s, w
+				            - in groups of 4 with same d */
 } net_config;
 
 

@@ -20,6 +20,9 @@
 
 #define Max_conn 1000000	/* Maximum number of connections in a group */
 
+#define CONFIG_ORIGINAL 1	/* Use original weight configuration array */
+				/*     --- meant only for testing --       */
+
 typedef struct 			/* List of connections, or sometimes several */
 { unsigned short s;		  /* Index of source unit(s), from 0 */
   unsigned short d; 		  /* Index of destination unit(s), from 0 */

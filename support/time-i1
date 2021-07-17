@@ -1,6 +1,7 @@
 #!/bin/bash
 
-net-spec ilog1 36 80 4 / ih=0.05:4::1.2 bh=0.5:2 ho=2.0:6::4 bo=0.1:1
+net-spec ilog1 36 80 4 \
+          / ih=0.2:2 bh=0.3:2 ho=0.1:3::4 bo=0.1:2
 model-spec ilog1 class
 
 data-spec ilog1 36 1 4 / idata@1:1000 . idata@1001:3000 .
@@ -11,3 +12,6 @@ net-mc ilog1 1
 
 mc-spec ilog1 sample-sigmas heatbath hybrid 1500:20 0.3
 net-mc ilog1 2
+
+net-tbl h1h2h3h4 ilog1 2
+net-tbl w1@0:3 ilog1 2

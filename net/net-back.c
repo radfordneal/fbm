@@ -460,9 +460,16 @@ static void sum_derivatives_config
 
   if (CONFIG_SING4_D_S_W)
   { cn = cf->sing4_d_s_w;
-    for (c = 0; (k = cn[c].w) >= 0; c++)
-    { i = cn[c].s; j = cn[c].d;
-      ds[i] += dd[j] * w[k];
+    for (c = 0; (k = cn[c].w) >= 0; c+=4)
+    { double ddj = dd[cn[c].d];
+      i = cn[c].s;
+      ds[i] += ddj * w[k];
+      i = cn[c+1].s; k = cn[c+1].w; 
+      ds[i] += ddj * w[k];
+      i = cn[c+2].s; k = cn[c+2].w; 
+      ds[i] += ddj * w[k];
+      i = cn[c+3].s; k = cn[c+3].w; 
+      ds[i] += ddj * w[k];
     }
   }
 

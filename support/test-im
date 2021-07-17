@@ -26,3 +26,12 @@ data-spec log 34 1 4 / ../ex-image/idata@1:100,3 .
 net-gen log 0
 net-grad-test log 0 0.001 | tail -20
 net-pred nmp log 0 / ../ex-image/idata@1:10,3 .
+
+echo " "; echo "--- D"; echo " "
+
+net-spec log 36 80 input-config:iconfig 4 / ih=0.1 bh=0.5 ho=0.3 bo=0.7
+model-spec log class
+data-spec log 36 1 4 / ../ex-image/idata@1:100 .
+net-gen log 0
+net-grad-test log 0 0.001 | tail -20
+net-pred nmp log 0 / ../ex-image/idata@1:10 .

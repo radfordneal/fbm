@@ -518,15 +518,33 @@ static void add_connections_config
   if (CONFIG_SING4_D_S_W)
   { cn = cf->sing4_d_s_w;
     if (off)
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { i = cn[c].s; j = cn[c].d;
-        s[j] += (v[i]+off[i]) * w[k];
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { j = cn[c].d;
+        double sj = s[j];
+        i = cn[c].s; 
+        sj += (v[i]+off[i]) * w[k];
+        i = cn[c+1].s; k = cn[c+1].w; 
+        sj += (v[i]+off[i]) * w[k];
+        i = cn[c+2].s; k = cn[c+2].w; 
+        sj += (v[i]+off[i]) * w[k];
+        i = cn[c+3].s; k = cn[c+3].w;
+        sj += (v[i]+off[i]) * w[k];
+        s[j] = sj;
       }
     }
     else
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { i = cn[c].s; j = cn[c].d;
-        s[j] += v[i] * w[k];
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { j = cn[c].d;
+        double sj = s[j];
+        i = cn[c].s; 
+        sj += v[i] * w[k];
+        i = cn[c+1].s; k = cn[c+1].w; 
+        sj += v[i] * w[k];
+        i = cn[c+2].s; k = cn[c+2].w; 
+        sj += v[i] * w[k];
+        i = cn[c+3].s; k = cn[c+3].w;
+        sj += v[i] * w[k];
+        s[j] = sj;
       }
     }
   }

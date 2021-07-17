@@ -269,7 +269,7 @@ net_config *net_config_read (char *file, int ns, int nd)
   
   net_config *p;
   p = (net_config *) chk_alloc (1, sizeof *p);
-  p->conn = (net_connection *) chk_alloc (Max_conn, sizeof *p->conn);
+  p->conn = (net_connection *) chk_alloc (Max_conn+1, sizeof *p->conn);
 
   p->N_wts = 0;
   p->N_conn = 0;
@@ -293,8 +293,9 @@ net_config *net_config_read (char *file, int ns, int nd)
   for (i = 0; item[i]!=NULL; i++) free(item[i]);
   free (item);
 
-  net_connection *q = (net_connection *) chk_alloc (p->N_conn, sizeof *q);
+  net_connection *q = (net_connection *) chk_alloc (p->N_conn+1, sizeof *q);
   memcpy (q, p->conn, p->N_conn * sizeof *q);
+  q[p->N_conn].w = -1;
   free(p->conn);
   p->conn = q;
 

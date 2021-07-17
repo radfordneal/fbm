@@ -480,15 +480,29 @@ static void add_grad2_config
   if (CONFIG_SING4_D_S_W)
   { cn = cf->sing4_d_s_w;
     if (off)
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { i = cn[c].s; j = cn[c].d;
-        g[k] += (v[i]+off[i]) * d[j];
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { double dj = d[cn[c].d];
+        i = cn[c].s;
+        g[k] += (v[i]+off[i]) * dj;
+        i = cn[c+1].s; k = cn[c+1].w; 
+        g[k] += (v[i]+off[i]) * dj;
+        i = cn[c+2].s; k = cn[c+2].w; 
+        g[k] += (v[i]+off[i]) * dj;
+        i = cn[c+3].s; k = cn[c+3].w; 
+        g[k] += (v[i]+off[i]) * dj;
       }
     }
     else
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { i = cn[c].s; j = cn[c].d;
-        g[k] += v[i] * d[j];
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { double dj = d[cn[c].d];
+        i = cn[c].s;
+        g[k] += v[i] * dj;
+        i = cn[c+1].s; k = cn[c+1].w; 
+        g[k] += v[i] * dj;
+        i = cn[c+2].s; k = cn[c+2].w; 
+        g[k] += v[i] * dj;
+        i = cn[c+3].s; k = cn[c+3].w; 
+        g[k] += v[i] * dj;
       }
     }
   }

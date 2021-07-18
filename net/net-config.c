@@ -325,8 +325,8 @@ static int non_adjacency (net_connection *a, char *prefix)
       else if (b->d == a->d+2) c2 += 1;
       else if (b->d == a->d+1) c1 += 1;
       else c0 += 1;
-      n += 1;
     }
+    n += 1;
     a += 1;
   }
 
@@ -366,75 +366,143 @@ void net_config_sort (net_config *cf)
 { 
   int n = cf->N_conn;
 
-  net_connection *tmp_d_s_w, *tmp_s_d_w;
-  tmp_d_s_w = chk_alloc (n+1, sizeof *tmp_d_s_w);
-  memcpy (tmp_d_s_w, cf->conn, (n+1) * sizeof *tmp_d_s_w);
-  qsort (tmp_d_s_w, n, sizeof *tmp_d_s_w, cmp_d_s_w);
-  tmp_s_d_w = chk_alloc (n+1, sizeof *tmp_s_d_w);
-  memcpy (tmp_s_d_w, cf->conn, (n+1) * sizeof *tmp_s_d_w);
-  qsort (tmp_s_d_w, n, sizeof *tmp_s_d_w, cmp_s_d_w);
+  /* We will keep remaining connections, not otherwise handled, in 'rem'. */
+
+  net_connection *rem = chk_alloc (n+1, sizeof *rem);  /* one -1 at end */
+  memcpy (rem, cf->conn, (n+1) * sizeof *rem);
+  int r = n;
+
+  /* We will put all connections, as sorted and grouped, in successive parts 
+     of 'all', setting pointers to parts of it in cf. */
+
+  net_connection *all = chk_alloc (n+9, sizeof *all);  /* Up to nine -1's */
+  int a = 0;
+
+  /* Temporary storage. */
+
+  net_connection *tmp = chk_alloc (n+1, sizeof *rem);  /* one -1 at end */
 
   non_adjacency (cf->conn,  "original");
-  non_adjacency (tmp_s_d_w, "    by-s");
-  non_adjacency (tmp_d_s_w, "    by-d");
 
-  net_connection *tmp2;
-  tmp2 = chk_alloc (n, sizeof *tmp2);
-
-  int r;
+  /* Find groups of four single connections with the same value for d, if
+     this is enabled. */
 
   if (!CONFIG_SINGLE4)
-  { r = n;
+  { cf->single4_d = all+a;
+    all[a++].w = -1;
   }
   else
-  {
-    int i, j;
-    i = j = r = 0;
-    while (i < n)
-    { int d = tmp_d_s_w[i].d;
-      if (n-i >= 4 && tmp_d_s_w[i+1].d==d
-                   && tmp_d_s_w[i+2].d==d
-                   && tmp_d_s_w[i+3].d==d)
-      { tmp2[j] = tmp_d_s_w[i];
-        tmp2[j+1] = tmp_d_s_w[i+1];
-        tmp2[j+2] = tmp_d_s_w[i+2];
-        tmp2[j+3] = tmp_d_s_w[i+3];
+  { 
+    qsort (rem, r, sizeof *rem, cmp_d_s_w);
+
+    int i, j, k;
+    i = j = k = 0;
+    while (i < r)
+    { int d = rem[i].d;
+      if (r-i >= 4 && rem[i+1].d==d  && rem[i+2].d==d && rem[i+3].d==d)
+      { tmp[j+0] = rem[i+0];
+        tmp[j+1] = rem[i+1];
+        tmp[j+2] = rem[i+2];
+        tmp[j+3] = rem[i+3];
         j += 4;
         i += 4;
       }
       else
-      { tmp_d_s_w[r] = tmp_d_s_w[i];
-        r += 1;
+      { rem[k] = rem[i];
+        k += 1;
         i += 1;
       }
     }
 
-    cf->single4_d = chk_alloc (j+1, sizeof *cf->single4_d);
-    memcpy (cf->single4_d, tmp2, j * sizeof *cf->single4_d);
-    cf->single4_d[j].w = -1;
+    tmp[j].w = -1;
+    non_adjacency (tmp, "single4d");
+
+    r = k;
+    rem[k].w = -1;
+
+    cf->single4_d = all+a;
+    memcpy (all+a, tmp, j * sizeof *all);
+    all[a+j].w = -1;
+    a += j+1;
   }
 
-  cf->single = chk_alloc (r+1, sizeof *cf->single);
-  memcpy (cf->single, tmp_d_s_w, r * sizeof *cf->single);
-  cf->single[r].w = -1;
+  /* Find groups of four single connections with the same value for s, if
+     this is enabled. */
 
-  free(tmp_d_s_w);
-  free(tmp_s_d_w);
-  free(tmp2);
+  if (!CONFIG_SINGLE4)
+  { cf->single4_s = all+a;
+    all[a++].w = -1;
+  }
+  else
+  { 
+    qsort (rem, r, sizeof *rem, cmp_s_d_w);
+
+    int i, j, k;
+    i = j = k = 0;
+    while (i < r)
+    { int s = rem[i].s;
+      if (r-i >= 4 && rem[i+1].s==s  && rem[i+2].s==s && rem[i+3].s==s)
+      { tmp[j+0] = rem[i+0];
+        tmp[j+1] = rem[i+1];
+        tmp[j+2] = rem[i+2];
+        tmp[j+3] = rem[i+3];
+        j += 4;
+        i += 4;
+      }
+      else
+      { rem[k] = rem[i];
+        k += 1;
+        i += 1;
+      }
+    }
+
+    tmp[j].w = -1;
+    non_adjacency (tmp, "single4s");
+
+    r = k;
+    rem[k].w = -1;
+
+    cf->single4_s = all+a;
+    memcpy (all+a, tmp, j * sizeof *all);
+    all[a+j].w = -1;
+    a += j+1;
+  }
+
+  /* Copy remaining connections from 'rem' to end of 'all', sorting them
+     by s or d, whichever seems better. */
+
+  qsort (rem, r, sizeof *rem, cmp_s_d_w);
+  int nadj_s = non_adjacency (rem, "rem-by-s");
+  memcpy (all+a, rem, r * sizeof *all);
+  qsort (rem, r, sizeof *rem, cmp_d_s_w);
+  int nadj_d = non_adjacency (rem, "rem-by-d");
+  if (nadj_d < nadj_s)
+  { memcpy (all+a, rem, r * sizeof *all);
+  }
+  cf->single = all+a;
+  all[a+r].w = -1;
+
+  free(tmp);
+  free(rem);
 
   if (0)  /* can enable for debugging */
   {
     if (CONFIG_SINGLE4)
-    { printf("single4_d:\n");
+    { printf("single4_s:\n");
+      for (int i = 0; cf->single4_s[i].w >= 0; i++)
+      { printf("%d %d %d\n",
+                cf->single4_s[i].s, cf->single4_s[i].d, cf->single4_s[i].w);
+      }
+      printf("single4_d:\n");
       for (int i = 0; cf->single4_d[i].w >= 0; i++)
       { printf("%d %d %d\n",
-                cf->single4_d[i].d,cf->single4_d[i].s,cf->single4_d[i].w);
+                cf->single4_d[i].s, cf->single4_d[i].d, cf->single4_d[i].w);
       }
     }
     printf("single:\n");
     for (int i = 0; cf->single[i].w >= 0; i++)
     { printf("%d %d %d\n",
-              cf->single[i].d,cf->single[i].s,cf->single[i].w);
+              cf->single[i].s, cf->single[i].d, cf->single[i].w);
     }
   }
 }

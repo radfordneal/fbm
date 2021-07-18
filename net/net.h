@@ -35,7 +35,7 @@ typedef struct
 #define CONFIG_ORIGINAL 0	/* Use original weight configuration array */
 				/*     --- meant only for testing --       */
 
-#define CONFIG_SINGLE4 (!CONFIG_ORIGINAL && 0)
+#define CONFIG_SINGLE4 (!CONFIG_ORIGINAL && 1)
 
 /* Set of connections between layers. */
 

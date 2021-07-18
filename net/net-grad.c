@@ -468,7 +468,7 @@ static void add_grad2
 
 static void add_grad2_config
 ( net_param *restrict g,  /* Array of derivatives to add to */
-  net_value *restrict v,  /* Source unit values */
+  net_value *restrict s,  /* Source unit values */
   net_param *restrict off,/* Offsets for source units, or zero if no offsets */
   net_value *restrict d,  /* Derivatives with respect to destination units */
   net_config *restrict cf /* Configuration for connections and weights */
@@ -478,31 +478,60 @@ static void add_grad2_config
   int i, j, k, c;
 
   if (CONFIG_SINGLE4)
-  { cn = cf->single4_d;
+  { 
+    cn = cf->single4_s;
+    if (off)
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { double si = s[cn[c].s];
+        j = cn[c].d;
+        g[k] += (si+off[i]) * d[j];
+        j = cn[c+1].d; k = cn[c+1].w; 
+        g[k] += (si+off[i]) * d[j];
+        j = cn[c+2].d; k = cn[c+2].w; 
+        g[k] += (si+off[i]) * d[j];
+        j = cn[c+3].d; k = cn[c+3].w; 
+        g[k] += (si+off[i]) * d[j];
+      }
+    }
+    else
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { double si = s[cn[c].s];
+        j = cn[c].d;
+        g[k] += si * d[j];
+        j = cn[c+1].d; k = cn[c+1].w; 
+        g[k] += si * d[j];
+        j = cn[c+2].d; k = cn[c+2].w; 
+        g[k] += si * d[j];
+        j = cn[c+3].d; k = cn[c+3].w; 
+        g[k] += si * d[j];
+      }
+    }
+
+    cn = cf->single4_d;
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
       { double dj = d[cn[c].d];
         i = cn[c].s;
-        g[k] += (v[i]+off[i]) * dj;
+        g[k] += (s[i]+off[i]) * dj;
         i = cn[c+1].s; k = cn[c+1].w; 
-        g[k] += (v[i]+off[i]) * dj;
+        g[k] += (s[i]+off[i]) * dj;
         i = cn[c+2].s; k = cn[c+2].w; 
-        g[k] += (v[i]+off[i]) * dj;
+        g[k] += (s[i]+off[i]) * dj;
         i = cn[c+3].s; k = cn[c+3].w; 
-        g[k] += (v[i]+off[i]) * dj;
+        g[k] += (s[i]+off[i]) * dj;
       }
     }
     else
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
       { double dj = d[cn[c].d];
         i = cn[c].s;
-        g[k] += v[i] * dj;
+        g[k] += s[i] * dj;
         i = cn[c+1].s; k = cn[c+1].w; 
-        g[k] += v[i] * dj;
+        g[k] += s[i] * dj;
         i = cn[c+2].s; k = cn[c+2].w; 
-        g[k] += v[i] * dj;
+        g[k] += s[i] * dj;
         i = cn[c+3].s; k = cn[c+3].w; 
-        g[k] += v[i] * dj;
+        g[k] += s[i] * dj;
       }
     }
   }
@@ -511,13 +540,13 @@ static void add_grad2_config
   if (off)
   { for (c = 0; (k = cn[c].w) >= 0; c++)
     { i = cn[c].s; j = cn[c].d;
-      g[k] += (v[i]+off[i]) * d[j];
+      g[k] += (s[i]+off[i]) * d[j];
     }
   }
   else
   { for (c = 0; (k = cn[c].w) >= 0; c++)
     { i = cn[c].s; j = cn[c].d;
-      g[k] += v[i] * d[j];
+      g[k] += s[i] * d[j];
     }
   }
 }

@@ -516,7 +516,36 @@ static void add_connections_config
   int i, j, k, c;
 
   if (CONFIG_SINGLE4)
-  { cn = cf->single4_d;
+  { 
+    cn = cf->single4_s;
+    if (off)
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { double voi = v[cn[c].s] + off[cn[c].s];
+        j = cn[c].d;
+        s[j] += voi * w[k];
+        j = cn[c+1].d; k = cn[c+1].w; 
+        s[j] += voi * w[k];
+        j = cn[c+2].d; k = cn[c+2].w; 
+        s[j] += voi * w[k];
+        j = cn[c+3].d; k = cn[c+3].w;
+        s[j] += voi * w[k];
+      }
+    }
+    else
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { double vi = v[cn[c].s];
+        j = cn[c].d; 
+        s[j] += vi * w[k];
+        j = cn[c+1].d; k = cn[c+1].w; 
+        s[j] += vi * w[k];
+        j = cn[c+2].d; k = cn[c+2].w; 
+        s[j] += vi * w[k];
+        j = cn[c+3].d; k = cn[c+3].w;
+        s[j] += vi * w[k];
+      }
+    }
+
+    cn = cf->single4_d;
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
       { j = cn[c].d;

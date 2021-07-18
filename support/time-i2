@@ -14,5 +14,6 @@ net-mc ilog2 1
 mc-spec ilog2 sample-sigmas heatbath hybrid 1500:20 0.3
 net-mc ilog2 2
 
-net-tbl h1h2h3h4 ilog2 2
-net-tbl w1@0:3 ilog2 2
+net-tbl h1h2h3h4 ilog2
+net-tbl w1@0:3 ilog2
+net-tbl mD ilog2

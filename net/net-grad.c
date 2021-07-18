@@ -477,8 +477,8 @@ static void add_grad2_config
   net_connection *cn;
   int i, j, k, c;
 
-  if (CONFIG_SING4_D_S_W)
-  { cn = cf->sing4_d_s_w;
+  if (CONFIG_SINGLE4)
+  { cn = cf->single4_d;
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
       { double dj = d[cn[c].d];
@@ -507,7 +507,7 @@ static void add_grad2_config
     }
   }
 
-  cn = CONFIG_ORIGINAL ? cf->conn : cf->sing1_d_s_w;
+  cn = CONFIG_ORIGINAL ? cf->conn : cf->single1;
   if (off)
   { for (c = 0; (k = cn[c].w) >= 0; c++)
     { i = cn[c].s; j = cn[c].d;

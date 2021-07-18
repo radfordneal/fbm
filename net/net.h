@@ -20,24 +20,30 @@
 
 #define Max_conn 1000000	/* Maximum number of connections in a group */
 
-#define CONFIG_ORIGINAL 0	/* Use original weight configuration array */
-				/*     --- meant only for testing --       */
+/* A single connection, or a sequence of connections, depending on context. */
 
-#define CONFIG_SING4_D_S_W (!CONFIG_ORIGINAL && 1)
-
-typedef struct 			/* List of connections, or sometimes several */
+typedef struct
 { unsigned short s;		  /* Index of source unit(s), from 0 */
   unsigned short d; 		  /* Index of destination unit(s), from 0 */
   int w; 			  /* Index of weight(s), from 0, negative may */
 } net_connection;		  /*   be used to indicate end of array */
 
+/* Options for how connections are sorted and grouped. */
+
+#define CONFIG_ORIGINAL 0	/* Use original weight configuration array */
+				/*     --- meant only for testing --       */
+
+#define CONFIG_SINGLE4 (!CONFIG_ORIGINAL && 0)
+
+/* Set of connections between layers. */
+
 typedef struct
 { int N_wts;			/* Number of weights */
   int N_conn;			/* Number of connections */
   net_connection *conn;		/* Array of connections, in original order */
-  net_connection *sing1_d_s_w;	/* Single connections, sorted by d, s, w */
-  net_connection *sing4_d_s_w;	/* Single connections, sorted by d, s, w
-				            - in groups of 4 with same d */
+  net_connection *single1;	/* Single connections, taken one-at-a-time */
+  net_connection *single4_s;	/* Single connections, in groups of 4, same s */
+  net_connection *single4_d;	/* Single connections, in groups of 4, same d */
 } net_config;
 
 

@@ -458,8 +458,8 @@ static void sum_derivatives_config
   net_connection *cn;
   int i, j, k, c;
 
-  if (CONFIG_SING4_D_S_W)
-  { cn = cf->sing4_d_s_w;
+  if (CONFIG_SINGLE4)
+  { cn = cf->single4_d;
     for (c = 0; (k = cn[c].w) >= 0; c+=4)
     { double ddj = dd[cn[c].d];
       i = cn[c].s;
@@ -473,7 +473,7 @@ static void sum_derivatives_config
     }
   }
 
-  cn = CONFIG_ORIGINAL ? cf->conn : cf->sing1_d_s_w;
+  cn = CONFIG_ORIGINAL ? cf->conn : cf->single1;
   for (c = 0; (k = cn[c].w) >= 0; c++)
   { i = cn[c].s; j = cn[c].d;
     ds[i] += dd[j] * w[k];

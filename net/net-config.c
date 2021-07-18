@@ -307,6 +307,43 @@ net_config *net_config_read (char *file, int ns, int nd)
 
 /* PRODUCE SORTED / GROUPED VERSIONS OF THE CONFIGURATION. */
 
+static int non_adjacency (net_connection *a, char *prefix)
+{ 
+  int c0 = 0, c1 = 0, c2 = 0, cx = 0;
+  while (a->w >= 0)
+  { net_connection *b = a+1;
+    if (b->w >= 0)
+    { if (b->w < a->w || b->w > a->w+2) cx += 1;
+      else if (b->w == a->w+2) c2 += 1;
+      else if (b->w == a->w+1) c1 += 1;
+      else c0 += 1;
+      if (b->s < a->s || b->s > a->s+2) cx += 1;
+      else if (b->s == a->s+2) c2 += 1;
+      else if (b->s == a->s+1) c1 += 1;
+      else c0 += 1;
+      if (b->d < a->d || b->d > a->d+2) cx += 1;
+      else if (b->d == a->d+2) c2 += 1;
+      else if (b->d == a->d+1) c1 += 1;
+      else c0 += 1;
+    }
+    a += 1;
+  }
+  int s = c1 + 2*c2 + 5*cx;
+  if (prefix) printf("%s: s=%d c0=%d c1=%d c2=%d cx=%d\n",prefix,s,c0,c1,c2,cx);
+  return s;
+}
+
+static int cmp_s_d_w (const void *a0, const void *b0)
+{ net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
+  int r;
+  r = a->s - b->s;
+  if (r!=0) return r;
+  r = a->d - b->d;
+  if (r!=0) return r;
+  r = a->w - b->w;
+  return r;
+}
+
 static int cmp_d_s_w (const void *a0, const void *b0)
 { net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
   int r;
@@ -322,17 +359,24 @@ void net_config_sort (net_config *cf)
 { 
   int n = cf->N_conn;
 
-  net_connection *tmp_d_s_w;
-  tmp_d_s_w = chk_alloc (n, sizeof *tmp_d_s_w);
-  memcpy (tmp_d_s_w, cf->conn, n * sizeof *tmp_d_s_w);
+  net_connection *tmp_d_s_w, *tmp_s_d_w;
+  tmp_d_s_w = chk_alloc (n+1, sizeof *tmp_d_s_w);
+  memcpy (tmp_d_s_w, cf->conn, (n+1) * sizeof *tmp_d_s_w);
   qsort (tmp_d_s_w, n, sizeof *tmp_d_s_w, cmp_d_s_w);
+  tmp_s_d_w = chk_alloc (n+1, sizeof *tmp_s_d_w);
+  memcpy (tmp_s_d_w, cf->conn, (n+1) * sizeof *tmp_s_d_w);
+  qsort (tmp_s_d_w, n, sizeof *tmp_s_d_w, cmp_s_d_w);
+
+  non_adjacency (cf->conn,  ("original",NULL)); /* Remove ,NULL to get output */
+  non_adjacency (tmp_s_d_w, ("by-s",NULL));
+  non_adjacency (tmp_d_s_w, ("by-d",NULL));
 
   net_connection *tmp2;
   tmp2 = chk_alloc (n, sizeof *tmp2);
 
   int r;
 
-  if (!CONFIG_SING4_D_S_W)
+  if (!CONFIG_SINGLE4)
   { r = n;
   }
   else
@@ -358,31 +402,32 @@ void net_config_sort (net_config *cf)
       }
     }
 
-    cf->sing4_d_s_w = chk_alloc (j+1, sizeof *cf->sing4_d_s_w);
-    memcpy (cf->sing4_d_s_w, tmp2, j * sizeof *cf->sing4_d_s_w);
-    cf->sing4_d_s_w[j].w = -1;
+    cf->single4_d = chk_alloc (j+1, sizeof *cf->single4_d);
+    memcpy (cf->single4_d, tmp2, j * sizeof *cf->single4_d);
+    cf->single4_d[j].w = -1;
   }
 
-  cf->sing1_d_s_w = chk_alloc (r+1, sizeof *cf->sing1_d_s_w);
-  memcpy (cf->sing1_d_s_w, tmp_d_s_w, r * sizeof *cf->sing1_d_s_w);
-  cf->sing1_d_s_w[r].w = -1;
+  cf->single1 = chk_alloc (r+1, sizeof *cf->single1);
+  memcpy (cf->single1, tmp_d_s_w, r * sizeof *cf->single1);
+  cf->single1[r].w = -1;
 
   free(tmp_d_s_w);
+  free(tmp_s_d_w);
   free(tmp2);
 
   if (0)  /* can enable for debugging */
   {
-    if (CONFIG_SING4_D_S_W)
-    { printf("sing4_d_s_w:\n");
-     for (int i = 0; cf->sing4_d_s_w[i].w >= 0; i++)
+    if (CONFIG_SINGLE4)
+    { printf("single4_d:\n");
+      for (int i = 0; cf->single4_d[i].w >= 0; i++)
       { printf("%d %d %d\n",
-                cf->sing4_d_s_w[i].d,cf->sing4_d_s_w[i].s,cf->sing4_d_s_w[i].w);
+                cf->single4_d[i].d,cf->single4_d[i].s,cf->single4_d[i].w);
       }
     }
-    printf("sing1_d_s_w:\n");
-    for (int i = 0; cf->sing1_d_s_w[i].w >= 0; i++)
+    printf("single1:\n");
+    for (int i = 0; cf->single1[i].w >= 0; i++)
     { printf("%d %d %d\n",
-              cf->sing1_d_s_w[i].d,cf->sing1_d_s_w[i].s,cf->sing1_d_s_w[i].w);
+              cf->single1[i].d,cf->single1[i].s,cf->single1[i].w);
     }
   }
 }

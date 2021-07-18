@@ -473,7 +473,7 @@ static void sum_derivatives_config
     }
   }
 
-  cn = CONFIG_ORIGINAL ? cf->conn : cf->single1;
+  cn = CONFIG_ORIGINAL ? cf->conn : cf->single;
   for (c = 0; (k = cn[c].w) >= 0; c++)
   { i = cn[c].s; j = cn[c].d;
     ds[i] += dd[j] * w[k];

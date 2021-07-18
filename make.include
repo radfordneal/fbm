@@ -10,7 +10,7 @@
 CC = gcc               # C compiler to use
 
 CFLAGS = -g -O3 -march=native -mtune=native \
-         -Wno-logical-op-parentheses -Wno-absolute-value \
+         -Wno-logical-op-parentheses -Wno-absolute-value -Wno-unused-result \
          -DUSE_SIMD_INTRINSICS -DUSE_FMA \
          -DUSE_SLEEF -ffp-contract=off   # USE_SLEEF requires -ffp-contract=off
 

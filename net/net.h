@@ -16,7 +16,9 @@
 
 /* WEIGHT CONFIGURATION.  Records network weight configuration set up for a 
    group of connections with an input-config or hidden-config flag.  Note that
-   the stored indexes start at zero, though they are 1-based in the file. */
+   the stored indexes start at zero, though they are 1-based in the file. 
+
+   There are also derived arrays of connections for faster computation. */
 
 #define Max_conn 1000000	/* Maximum number of connections in a group */
 
@@ -28,7 +30,7 @@ typedef struct
   int w; 			  /* Index of weight(s), from 0, negative may */
 } net_connection;		  /*   be used to indicate end of array */
 
-/* Options for how connections are sorted and grouped. */
+/* Options for how connections are sorted and grouped, for performance. */
 
 #define CONFIG_ORIGINAL 0	/* Use original weight configuration array */
 				/*     --- meant only for testing --       */
@@ -41,7 +43,7 @@ typedef struct
 { int N_wts;			/* Number of weights */
   int N_conn;			/* Number of connections */
   net_connection *conn;		/* Array of connections, in original order */
-  net_connection *single1;	/* Single connections, taken one-at-a-time */
+  net_connection *single;	/* Single connections, taken one-at-a-time */
   net_connection *single4_s;	/* Single connections, in groups of 4, same s */
   net_connection *single4_d;	/* Single connections, in groups of 4, same d */
 } net_config;

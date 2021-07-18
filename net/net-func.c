@@ -549,7 +549,7 @@ static void add_connections_config
     }
   }
 
-  cn = CONFIG_ORIGINAL ? cf->conn : cf->single1;
+  cn = CONFIG_ORIGINAL ? cf->conn : cf->single;
   if (off)
   { for (c = 0; (k = cn[c].w) >= 0; c++)
     { i = cn[c].s; j = cn[c].d;

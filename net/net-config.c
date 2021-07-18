@@ -362,6 +362,17 @@ static int cmp_d_s_w (const void *a0, const void *b0)
   return r;
 }
 
+static int cmp_s_wmd_d (const void *a0, const void *b0)
+{ net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
+  int r;
+  r = (int)a->s - (int)b->s;
+  if (r!=0) return r;
+  r = (a->w-a->d) - (b->w-b->d);
+  if (r!=0) return r;
+  r = (int)a->d - (int)b->d;
+  return r;
+}
+
 void net_config_sort (net_config *cf)
 { 
   int n = cf->N_conn;
@@ -383,6 +394,48 @@ void net_config_sort (net_config *cf)
   net_connection *tmp = chk_alloc (n+1, sizeof *rem);  /* one -1 at end */
 
   non_adjacency (cf->conn,  "original");
+
+  /* Find groups of four connections with same value for s, and sequential
+     values for d and w.  Condense these to single entries. */
+
+  if (!CONFIG_QUAD_S_4D_4W)
+  { cf->quad_s_4d_4w = all+a;
+    all[a++].w = -1;
+  }
+  else
+  {
+    qsort (rem, r, sizeof *rem, cmp_s_wmd_d);
+
+    int i, j, k;
+    i = j = k = 0;
+    while (i < r)
+    { int s = rem[i].s;
+      int wmd = rem[i].w-rem[i].d;
+      if (r-i >= 4 && rem[i+1].s==s  && rem[i+2].s==s && rem[i+3].s==s
+           && rem[i+1].w-rem[i+1].d==wmd  && rem[i+2].w-rem[i+2].d==wmd 
+           && rem[i+3].w-rem[i+3].d==wmd)
+      { tmp[j] = rem[i];
+        j += 1;
+        i += 4;
+      }
+      else
+      { rem[k] = rem[i];
+        k += 1;
+        i += 1;
+      }
+    }
+
+    tmp[j].w = -1;
+    non_adjacency (tmp, "quads4d4w");
+
+    r = k;
+    rem[k].w = -1;
+
+    cf->quad_s_4d_4w = all+a;
+    memcpy (all+a, tmp, j * sizeof *all);
+    all[a+j].w = -1;
+    a += j+1;
+  }
 
   /* Find groups of four single connections with the same value for d, if
      this is enabled. */

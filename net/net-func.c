@@ -500,6 +500,7 @@ static void add_connections
   }
 }
 
+
 /* ADD CONTRIBUTION FROM ONE GROUP OF CONNECTIONS WITH CONFIGURATION FROM FILE.
    Adds the weighted input  due to connections from one source layer to the 
    current unit values for the destination layer. */
@@ -514,6 +515,31 @@ static void add_connections_config
 {
   net_connection *cn;
   int i, j, k, c;
+
+  if (CONFIG_QUAD_S_4D_4W)
+  {
+    cn = cf->quad_s_4d_4w;
+    if (off)
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { double voi = v[cn[c].s] + off[cn[c].s];
+        j = cn[c].d;
+        s[j+0] += voi * w[k+0];
+        s[j+1] += voi * w[k+1];
+        s[j+2] += voi * w[k+2];
+        s[j+3] += voi * w[k+3];
+      }
+    }
+    else
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { double vi = v[cn[c].s];
+        j = cn[c].d; 
+        s[j+0] += vi * w[k+0];
+        s[j+1] += vi * w[k+1];
+        s[j+2] += vi * w[k+2];
+        s[j+3] += vi * w[k+3];
+      }
+    }
+  }
 
   if (CONFIG_SINGLE4)
   { 

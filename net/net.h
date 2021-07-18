@@ -35,7 +35,8 @@ typedef struct
 #define CONFIG_ORIGINAL 0	/* Use original weight configuration array */
 				/*     --- meant only for testing --       */
 
-#define CONFIG_SINGLE4 (!CONFIG_ORIGINAL && 1)
+#define CONFIG_SINGLE4		(!CONFIG_ORIGINAL && 1)
+#define CONFIG_QUAD_S_4D_4W	(!CONFIG_ORIGINAL && 1)
 
 /* Set of connections between layers. */
 
@@ -46,6 +47,7 @@ typedef struct
   net_connection *single;	/* Single connections, taken one-at-a-time */
   net_connection *single4_s;	/* Single connections, in groups of 4, same s */
   net_connection *single4_d;	/* Single connections, in groups of 4, same d */
+  net_connection *quad_s_4d_4w;	/* Four connections, same s, sequential d & w */
 } net_config;
 
 

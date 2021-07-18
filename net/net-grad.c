@@ -477,20 +477,45 @@ static void add_grad2_config
   net_connection *cn;
   int i, j, k, c;
 
+  if (CONFIG_QUAD_S_4D_4W)
+  { 
+    cn = cf->quad_s_4d_4w;
+    if (off)
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { double soi = s[cn[c].s] + off[cn[c].s];
+        j = cn[c].d;
+        g[k+0] += soi * d[j+0];
+        g[k+1] += soi * d[j+1];
+        g[k+2] += soi * d[j+2];
+        g[k+3] += soi * d[j+3];
+      }
+    }
+    else
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { double si = s[cn[c].s];
+        j = cn[c].d;
+        g[k+0] += si * d[j+0];
+        g[k+1] += si * d[j+1];
+        g[k+2] += si * d[j+2];
+        g[k+3] += si * d[j+3];
+      }
+    }
+  }
+
   if (CONFIG_SINGLE4)
   { 
     cn = cf->single4_s;
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { double si = s[cn[c].s];
+      { double soi = s[cn[c].s] + off[cn[c].s];
         j = cn[c].d;
-        g[k] += (si+off[i]) * d[j];
+        g[k] += soi * d[j];
         j = cn[c+1].d; k = cn[c+1].w; 
-        g[k] += (si+off[i]) * d[j];
+        g[k] += soi * d[j];
         j = cn[c+2].d; k = cn[c+2].w; 
-        g[k] += (si+off[i]) * d[j];
+        g[k] += soi * d[j];
         j = cn[c+3].d; k = cn[c+3].w; 
-        g[k] += (si+off[i]) * d[j];
+        g[k] += soi * d[j];
       }
     }
     else

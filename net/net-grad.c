@@ -478,28 +478,66 @@ static void add_grad2_config
   int i, j, k, c;
 
   if (CONFIG_QUAD_S_4D_4W)
-  { 
-    cn = cf->quad_s_4d_4w;
-    if (off)
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { double soi = s[cn[c].s] + off[cn[c].s];
-        j = cn[c].d;
-        g[k+0] += soi * d[j+0];
-        g[k+1] += soi * d[j+1];
-        g[k+2] += soi * d[j+2];
-        g[k+3] += soi * d[j+3];
+  { cn = cf->quad_s_4d_4w;
+#   if USE_SIMD_INTRINSICS && __AVX__ && USE_FMA && __FMA__
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m256d SI = _mm256_set1_pd (s[cn[c].s] + off[cn[c].s]);
+          j = cn[c].d;
+          _mm256_storeu_pd (g+k, _mm256_fmadd_pd (SI, _mm256_loadu_pd(d+j),
+                                                      _mm256_loadu_pd(g+k)));
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m256d SI = _mm256_set1_pd (s[cn[c].s]);
+          j = cn[c].d;
+          _mm256_storeu_pd (g+k, _mm256_fmadd_pd (SI, _mm256_loadu_pd(d+j),
+                                                      _mm256_loadu_pd(g+k)));
+        }
       }
     }
-    else
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { double si = s[cn[c].s];
-        j = cn[c].d;
-        g[k+0] += si * d[j+0];
-        g[k+1] += si * d[j+1];
-        g[k+2] += si * d[j+2];
-        g[k+3] += si * d[j+3];
+#   elif USE_SIMD_INTRINSICS && __AVX__
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m256d SI = _mm256_set1_pd (s[cn[c].s] + off[cn[c].s]);
+          j = cn[c].d;
+          _mm256_storeu_pd (g+k, _mm256_add_pd (_mm256_loadu_pd(g+k),
+                                   _mm256_mul_pd (SI, _mm256_loadu_pd(d+j))));
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m256d SI = _mm256_set1_pd (s[cn[c].s]);
+          j = cn[c].d;
+          _mm256_storeu_pd (g+k, _mm256_add_pd (_mm256_loadu_pd(g+k),
+                                   _mm256_mul_pd (SI, _mm256_loadu_pd(d+j))));
+        }
       }
     }
+#   else
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { double soi = s[cn[c].s] + off[cn[c].s];
+          j = cn[c].d;
+          g[k+0] += soi * d[j+0];
+          g[k+1] += soi * d[j+1];
+          g[k+2] += soi * d[j+2];
+          g[k+3] += soi * d[j+3];
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { double si = s[cn[c].s];
+          j = cn[c].d;
+          g[k+0] += si * d[j+0];
+          g[k+1] += si * d[j+1];
+          g[k+2] += si * d[j+2];
+          g[k+3] += si * d[j+3];
+        }
+      }
+    }
+#   endif
   }
 
   if (CONFIG_SINGLE4)

@@ -517,28 +517,66 @@ static void add_connections_config
   int i, j, k, c;
 
   if (CONFIG_QUAD_S_4D_4W)
-  {
-    cn = cf->quad_s_4d_4w;
-    if (off)
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { double voi = v[cn[c].s] + off[cn[c].s];
-        j = cn[c].d;
-        s[j+0] += voi * w[k+0];
-        s[j+1] += voi * w[k+1];
-        s[j+2] += voi * w[k+2];
-        s[j+3] += voi * w[k+3];
+  { cn = cf->quad_s_4d_4w;
+#   if USE_SIMD_INTRINSICS && __AVX__ && USE_FMA && __FMA__
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m256d VOI = _mm256_set1_pd (v[cn[c].s] + off[cn[c].s]);
+          j = cn[c].d;
+          _mm256_storeu_pd (s+j, _mm256_fmadd_pd (VOI, _mm256_loadu_pd(w+k),
+                                                       _mm256_loadu_pd(s+j)));
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m256d VOI = _mm256_set1_pd (v[cn[c].s]);
+          j = cn[c].d;
+          _mm256_storeu_pd (s+j, _mm256_fmadd_pd (VOI, _mm256_loadu_pd(w+k),
+                                                       _mm256_loadu_pd(s+j)));
+        }
       }
     }
-    else
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { double vi = v[cn[c].s];
-        j = cn[c].d; 
-        s[j+0] += vi * w[k+0];
-        s[j+1] += vi * w[k+1];
-        s[j+2] += vi * w[k+2];
-        s[j+3] += vi * w[k+3];
+#   elif USE_SIMD_INTRINSICS && __AVX__
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m256d VOI = _mm256_set1_pd (v[cn[c].s] + off[cn[c].s]);
+          j = cn[c].d;
+          _mm256_storeu_pd (s+j, _mm256_add_pd (_mm256_loadu_pd(s+j),
+                                   _mm256_mul_pd (VOI, _mm256_loadu_pd(w+k))));
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m256d VOI = _mm256_set1_pd (v[cn[c].s]);
+          j = cn[c].d;
+          _mm256_storeu_pd (s+j, _mm256_add_pd (_mm256_loadu_pd(s+j),
+                                   _mm256_mul_pd (VOI, _mm256_loadu_pd(w+k))));
+        }
       }
     }
+#   else
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { double voi = v[cn[c].s] + off[cn[c].s];
+          j = cn[c].d;
+          s[j+0] += voi * w[k+0];
+          s[j+1] += voi * w[k+1];
+          s[j+2] += voi * w[k+2];
+          s[j+3] += voi * w[k+3];
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { double vi = v[cn[c].s];
+          j = cn[c].d; 
+          s[j+0] += vi * w[k+0];
+          s[j+1] += vi * w[k+1];
+          s[j+2] += vi * w[k+2];
+          s[j+3] += vi * w[k+3];
+        }
+      }
+    }
+#   endif
   }
 
   if (CONFIG_SINGLE4)

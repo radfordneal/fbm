@@ -459,18 +459,25 @@ static void sum_derivatives_config
   int i, j, k, c;
 
   if (CONFIG_QUAD_S_4D_4W)
-  {
-    cn = cf->quad_s_4d_4w;
-    for (c = 0; (k = cn[c].w) >= 0; c++)
-    { i = cn[c].s;
-      double dsi = ds[i];
-      j = cn[c].d;
-      dsi += dd[j+0] * w[k+0];
-      dsi += dd[j+1] * w[k+1];
-      dsi += dd[j+2] * w[k+2];
-      dsi += dd[j+3] * w[k+3];
-      ds[i] = dsi;
+  { cn = cf->quad_s_4d_4w;
+#   if USE_SIMD_INTRINSICS && __AVX__
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { i = cn[c].s; j = cn[c].d;
+        __m256d P = _mm256_mul_pd (_mm256_loadu_pd(dd+j),
+                                   _mm256_loadu_pd(w+k));
+        __m128d S = _mm_add_pd (_mm256_extractf128_pd(P,1),
+                                _mm256_castpd256_pd128(P));
+        _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
+      }
     }
+#   else
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { i = cn[c].s; j = cn[c].d;
+        ds[i] += (dd[j+0]*w[k+0] + dd[j+2]*w[k+2])      /* same order as AVX  */
+                   + (dd[j+1]*w[k+1] + dd[j+3]*w[k+3]); /* instructions above */
+      }
+    }
+#   endif
   }
 
   if (CONFIG_SINGLE4)

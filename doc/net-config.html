@@ -144,6 +144,14 @@ on standard error, with n being an index from 1 up, and s, d, and w
 being the current source unit, destination unit, and weight index.
 This is for use in debugging configuration files.
 
+The way in which triples defining connections are produced by the
+configuration file has no effect on the performance of network
+operations.  (There may be a negligible effect on program startup
+time.)  However, the way in which weights are associated with indexes
+can have an effect on performance.  For example, it may be beneficial
+for the indexes of weights on connections to consecutive units to be
+consecutive.
+
 The complete syntax for a configuration file can be written as
 follows, with &lt;.&gt; for syntactic categories, | for alternatives, [.]
 for optional parts, {.} for parts repeated zero or more times, and

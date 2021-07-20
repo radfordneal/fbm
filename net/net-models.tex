@@ -140,14 +140,23 @@ of the inputs, $v^I_i$:\beq
   v^O_j\!    & = & b^O_i \ +\ \sum_i w^{I,O}_{i,j} (v^I_i+t^I_i) 
              \ +\ \sum_{\ell} \sum_i w^{\ell,O}_{i,j} (v^{\ell}_i+t^{\ell}_i)
 \label{func3}\eeq% 
-Here, $a^{\ell}$ is the activation function used for layer $\ell$ (eg, $\tanh$).
-The summations are over all units in the
-appropriate layer.  (The number of units in each layer is part of the
-architecture specification, but these numbers are not given symbols
-here.)  The term in the equation for $u^{\ell}_i$ involving layer
-$\ell\!-\!1$ is omitted for the first hidden layer; terms involving 
-other pairs of layers will also be omitted when those connections are
-absent from the architecture.
+Here, $a^{\ell}$ is the activation function used for layer $\ell$.
+The summations are over all units in the appropriate layer.  (The
+number of units in each layer is part of the architecture
+specification, but these numbers are not given symbols here.)  The
+term in the equation for $u^{\ell}_i$ involving layer $\ell\!-\!1$ is
+omitted for the first hidden layer; terms involving other pairs of
+layers will also be omitted when those connections are absent from the
+architecture.
+
+The following activation functions are supported:\vspace{-26pt}
+\begin{quotation}\noindent
+\begin{tabbing}
+{\bf tanh:}\ \ \ \ \ \ \ \= $a(u)\ =\ \tanh(u)$.\\[3pt]
+{\bf sin:}\>  $a(u)\ =\ \sqrt{2}\,\sin(\sqrt{2}u)$.\\[4pt]
+{\bf identity:}\> $a(u)\ =\ u$.\vspace{-5pt}
+\end{tabbing}
+\end{quotation}
 
 Connections from an input layer to a hidden layer may not be fully
 connected, but instead be configured by specifying a set, $C^{I,\ell}$
@@ -746,7 +755,7 @@ derivatives of $L$ with respect to the values of hidden and input
 units.  
 
 When doing this backward propagation, we need an estimate of the
-second derivative of $L$ with respect to the summed input to a $\tanh$
+second derivative of $L$ with respect to the summed input to a
 hidden unit, given its second derivative with respect to the unit's
 output.  Letting the hidden unit output be $v = a(u)$, we have\beq
   {d^2L \over du^2}
@@ -758,10 +767,9 @@ output.  Letting the hidden unit output be $v = a(u)$, we have\beq
 The first approximation assumes that since the first term may be either
 positive or negative, its effects will (optimistically) cancel when
 averaged over the training set.  Since $u$ is not known, the second
-approximation above takes the maximum with respect to $u$.  For the
-$\tanh$ activation function, $\max[a'(u)] = 1$, so the end result 
-is that we just ignore the fact that the hidden unit input is passed 
-through the $\tanh$ function.
+approximation above takes the maximum with respect to $u$.  
+For the $\tanh$ activation function, $\max[a'(u)] = 1$, For
+$a(u)=\sqrt{2}\sin(\sqrt{2}u)$, we have $\max[a'(u)] = 2$.
 
 The backward propagation also ignores any interactions between
 multiple connections from a unit.  Since the stepsizes chosen are not

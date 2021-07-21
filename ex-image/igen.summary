@@ -1,3 +1,3 @@
-Error rate on test cases with true model: 0.141
-Average squared error for test cases with true model: 0.194
-Average log probability for test cases with true model: -0.336
+Error rate on test cases with true model: 0.136
+Average squared error for test cases with true model: 0.196
+Average log probability for test cases with true model: -0.353

@@ -34,8 +34,8 @@ int main (int argc, char **argv)
 
     /* Generate random location and class of object. */
 
-    cj = rand_int(D-3);
-    ck = rand_int(D-3);
+    cj = rand_int(D-3+1);
+    ck = rand_int(D-3+1);
 
     ci = rand_int(4);
     cc = "+XOH"[ci];

@@ -1,0 +1,16 @@
+This directory contains links to the .doc files documenting commands,
+and the .doc files with the tutorial examples.  The command
+
+    make-html *.doc
+
+will convert all of these into the corresponding .html files.
+
+The file index.html is the starting point for the documentation, with
+links to all the other .html files.
+
+The net-models.PDF file is created from net-models.tex as follows:
+
+    pdflatex net-models; mv net-models.pdf net-models.PDF
+
+(The upper case for .PDF helps make-html distinguish this local PDF
+file from links to .pdf files elsewhere.)

@@ -1,9 +1,7 @@
 #!/bin/bash
 
 # Commands to apply Bayesian neural network to an image classification problem.
-# This version uses one hidden layer with convolutional connections and a
-# second hidden layer fully connected to the first hidden layer.  Both
-# hidden layers connect to the outputs.
+# This version uses one hidden layer with convolutional connections.
 #
 # Four runs are done, each on three quarters of the training set, with
 # the left-out quarters used to assess things like convergence.  Final
@@ -11,12 +9,12 @@
 
 for run in 1 2 3 4; do
 
-  log=ilog4.net$run
+  log=ilog2c.net$run
   end=`calc 300\*$run`
   start=`calc $end-299`
 
-  net-spec $log 36 80 input-config:iconfig 12 4 \
-   / ih=0.2:2 bh0=0.2:2 ho0=0.1:3::4 hh=0.2:3::4 bh1=0.2:2 ho1=0.3:2::4 bo=0.1:2
+  net-spec $log 36 80 input-config:iconfig 4 \
+                / ih=0.2:2 bh=0.3:2 ho=0.1:3::4 bo=0.1:2
   model-spec $log class
   
   data-spec $log 36 1 4 / idata-train@-$start:$end . idata-train@$start:$end .
@@ -25,10 +23,12 @@ for run in 1 2 3 4; do
   
   net-gen $log fix 0.1$run
 
-  mc-spec $log repeat 30 heatbath hybrid 100:10 0.04
+  mc-spec $log repeat 30 heatbath hybrid 100:10 0.12
   net-mc $log 1
   
-  mc-spec $log sample-sigmas heatbath hybrid 3000:300 0.05
+  mc-spec $log repeat 15 \
+             slevel 0.05 sample-sigmas heatbath 0.94 hybrid 200:20 0.22 negate \
+             / leapfrog 9
   net-mc $log 6000 &
 
 done
@@ -36,5 +36,5 @@ done
 wait
   
 net-pred mnpa \
-  ilog4.net1 2001: ilog4.net2 2001: ilog4.net3 2001: ilog4.net4 2001: \
+  ilog2c.net1 2001: ilog2c.net2 2001: ilog2c.net3 2001: ilog2c.net4 2001: \
     / idata-test .

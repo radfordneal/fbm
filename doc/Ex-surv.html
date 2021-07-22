@@ -201,10 +201,13 @@ test cases:
 
     Average abs. error guessing median:    0.33012+-0.01655
 
-The predictive medians can be plotted against the inputs as follows
-(with editing out of the |Error| column):
+The predictive medians can be plotted against the inputs as follows:
 
-    &gt; net-pred idb vlog.net 25: | sed "s/\(.* \).*/\1/" | plot-points
+    &gt; net-pred idb vlog.net 25: / vdata@-1:700 | plot-points
+
+(Note that by specifying only the test inputs, without the targets,
+and using the 'b' option, the output piped to plot-points has just the
+input and median.)
 
 The fairly small amount of scatter seen in this plot is a result of
 computing the medians by Monte Carlo, which produces some random

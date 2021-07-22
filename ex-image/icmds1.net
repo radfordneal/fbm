@@ -23,10 +23,10 @@ for run in 1 2 3 4; do
   
   net-gen $log fix 0.1$run
 
-  mc-spec $log repeat 15 heatbath hybrid 100:10 0.15
+  mc-spec $log repeat 15 heatbath hybrid 100:10 0.1
   net-mc $log 1
   
-  mc-spec $log sample-sigmas heatbath hybrid 2000:50 0.3
+  mc-spec $log sample-sigmas heatbath hybrid 3000:300 0.15
   net-mc $log 6000 &
   
 done

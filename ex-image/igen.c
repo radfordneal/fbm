@@ -5,11 +5,11 @@
 
 #include "rand.h"
 
-#define N_cases 3000
+#define N_cases 4000
 #define N_train 1200
 
 #define D 6
-#define noise 0.6
+#define noise 0.5
 
 double image[D][D];
 

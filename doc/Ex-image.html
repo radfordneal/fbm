@@ -61,46 +61,46 @@ model of how these images are generated.  Here are three of the images
 generated:
   
 
-  Case 2, Class +(0), Centred at 1,3, PP: +0.992 X0.000 O0.007 H0.001
+  Case 2, Class +(0), Centred at 1,3, PP: +0.999 X0.000 O0.001 H0.000
   
         0      1      2      3      4      5       0 1 2 3 4 5
-  0   -0.749 +1.189 -0.815 +0.714 -0.373 -0.993    O # O #   O
-  1   +0.896 +0.914 +1.161 +1.048 +1.070 +0.222    # # # # #
-  2   -1.040 -2.182 -0.605 +0.966 -0.579 +0.575    O O O # O #
-  3   +0.866 -1.491 +1.786 +1.688 +0.235 -0.616    # O # #   O
-  4   +0.407 -1.901 -0.228 -0.824 -0.753 +0.208      O   O O
-  5   -0.206 +0.388 -1.709 -0.222 +1.312 +0.347        O   #
-  
-  
-  Case 11, Class X(1), Centred at 2,4, PP: +0.262 X0.738 O0.000 H0.000
-  
-        0      1      2      3      4      5       0 1 2 3 4 5
-  0   -0.989 +0.190 -0.361 +0.014 +0.325 -0.090    O
-  1   +0.405 +1.224 -0.663 -0.515 -1.107 +1.036      # O O O #
-  2   -1.397 -1.222 +0.846 -0.958 +1.457 -1.996    O O # O # O
-  3   -1.115 +1.334 +0.466 +1.615 -1.685 +0.520    O #   # O #
-  4   -0.893 +0.527 +1.885 -2.083 +0.379 -0.821    O # # O   O
-  5   -0.515 +0.866 +1.333 +3.989 -1.795 +2.070    O # # # O #
-
-
-  Case 26, Class H(3), Centred at 1,2, PP: +0.685 X0.000 O0.043 H0.272
+  0   -0.626 +1.056 -0.845 +0.762 -0.477 -0.837    O # O #   O
+  1   +0.723 +0.971 +1.134 +1.040 +1.059 +0.147    # # # # #
+  2   -1.095 -2.091 -0.671 +0.971 -0.649 +0.715    O O O # O #
+  3   +0.787 -1.511 +1.770 +1.620 +0.221 -0.582    # O # #   O
+  4   +0.535 -1.675 -0.308 -0.815 -0.786 +0.273    # O   O O
+  5   -0.215 +0.335 -1.835 -0.286 +1.338 +0.336        O   #
+    
+    
+  Case 11, Class X(1), Centred at 2,4, PP: +0.157 X0.843 O0.000 H0.000
   
         0      1      2      3      4      5       0 1 2 3 4 5
-  0   +1.124 +0.279 -1.360 +1.129 -2.594 -1.462    #   O # O O
-  1   +2.117 -0.007 +1.303 +1.715 +0.967 -2.293    #   # # # O
-  2   +1.977 +1.098 -1.507 +0.632 -0.636 +0.802    # # O # O #
-  3   +0.374 -0.035 +0.831 +0.459 -1.833 -0.452        #   O
-  4   -0.773 -0.277 +1.954 +0.913 +0.932 +0.122    O   # # #
-  5   +0.195 +1.465 +0.283 -0.521 +0.650 +2.753      #   O # #
+  0   -0.818 +0.064 -0.260 +0.159 +0.272 +0.009    O
+  1   +0.236 +1.215 -0.756 -0.263 -1.089 +1.030      # O   O #
+  2   -1.443 -1.099 +0.870 -0.965 +1.381 -1.830    O O # O # O
+  3   -1.044 +1.340 +0.445 +1.512 -1.571 +0.600    O #   # O #
+  4   -0.776 +0.444 +1.656 -1.832 +0.346 -0.823    O   # O   O
+  5   -0.431 +0.744 +1.261 +3.750 -1.659 +1.955      # # # O #
+  
+  
+  Case 60, Class O(2), Centred at 4,1, PP: +0.000 X0.000 O0.418 H0.582
+  
+        0      1      2      3      4      5       0 1 2 3 4 5
+  0   +1.576 -1.255 +1.379 +1.325 -0.615 +0.105    # O # # O
+  1   +0.734 -0.416 -1.230 -0.001 -1.100 +0.948    #   O   O #
+  2   +0.837 -1.332 +0.800 -2.698 +1.139 +0.417    # O # O #
+  3   +1.236 +0.820 +1.372 -0.339 +0.924 +0.754    # # #   # #
+  4   +0.508 -1.105 +0.611 +2.562 -1.724 -1.193    # O # # O O
+  5   +0.715 +1.017 +0.755 -0.284 -1.175 +1.185    # # #   O #
 
 
 The diagrams at the right show the pixels of the image thresholded at
 values less than -0.5 (O), greater than +0.5 (#), and between -0.5 and
 +0.5 (space).  For the second image, noise in the pixels has made the
-symbol less certain (probability 0.738 for the correct symbol) than
-for the first case (probability 0.992 for the correct symbol), and for
-the third image, the correct symbol has lower probability (0.272) than
-one of the incorrect symbols (0.685) - with all these probabilities
+symbol less certain (probability 0.843 for the correct symbol) than
+for the first case (probability 0.999 for the correct symbol), and for
+the third image, the correct symbol has lower probability (0.418) than
+one of the incorrect symbols (0.582) - with all these probabilities
 computed assuming the true generation model is known.
 
 The igen program computes the performance on test cases when using the
@@ -108,9 +108,9 @@ true model, which is an upper limit on what can be accomplished when
 learning a model from the training cases (unless one just is lucky).
 Here is the summary:
 
-  Error rate on test cases with true model: 0.136
-  Average squared error for test cases with true model: 0.196
-  Average log probability for test cases with true model: -0.353
+  Error rate on test cases with true model: 0.081
+  Average squared error for test cases with true model: 0.115
+  Average log probability for test cases with true model: -0.201
 
 
 A fully-connected Bayesian neural network model.

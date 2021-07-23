@@ -6,7 +6,7 @@
 #include "rand.h"
 
 #define N_cases 4000
-#define N_train 1200
+#define N_train 1600
 
 #define D 6
 #define noise 0.5
@@ -17,6 +17,9 @@ int main (int argc, char **argv)
 {
   int i, j, k, cc, ci, cj, ck, pi, pc, pj, pk;
   double pp[4];
+
+  fprintf (stderr, "N_cases: %d, N_train: %d, noise: %f\n\n",
+                    N_cases, N_train, noise);
 
   double logp = 0;
   double sqerr = 0;

@@ -30,7 +30,9 @@ The program in igen.c generates artificial 6x6 monochrome images in
 which one of the symbols "+", "X", "O", or "H" appears in some 3x3
 patch in the image.  The classification task is to predict from the 36
 pixels of an image which symbol appears in some patch in the image
-(whose location could be any of the sixteen possibilities).
+(whose location could be any of the sixteen possibilities).  The file
+'idata' has 4000 generated cases, the first 16000 of which are used
+for training, and the remaining 2400 for testing.
 
 Generation of an image starts by randomly generating backgroup pixel
 values from a Gaussian distribution with mean zero and standard
@@ -108,9 +110,9 @@ true model, which is an upper limit on what can be accomplished when
 learning a model from the training cases (unless one just is lucky).
 Here is the summary:
 
-  Error rate on test cases with true model: 0.081
-  Average squared error for test cases with true model: 0.115
-  Average log probability for test cases with true model: -0.201
+  Error rate on test cases with true model: 0.082
+  Average squared error for test cases with true model: 0.117
+  Average log probability for test cases with true model: -0.205
 
 
 A fully-connected Bayesian neural network model.

@@ -1,3 +1,5 @@
-Error rate on test cases with true model: 0.081
-Average squared error for test cases with true model: 0.115
-Average log probability for test cases with true model: -0.201
+N_cases: 4000, N_train: 1600, noise: 0.500000
+
+Error rate on test cases with true model: 0.082
+Average squared error for test cases with true model: 0.117
+Average log probability for test cases with true model: -0.205

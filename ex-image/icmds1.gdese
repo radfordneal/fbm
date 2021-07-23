@@ -11,8 +11,8 @@
 for run in 1 2 3 4; do
 
   log=ilogg1.net$run
-  end=`calc 300\*$run`
-  start=`calc $end-299`
+  end=`calc 400\*$run`
+  start=`calc $end-399`
 
   net-spec $log 36 80 4 / ih=10 bh=10 ho=10 bo=10
   model-spec $log class

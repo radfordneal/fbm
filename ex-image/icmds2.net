@@ -7,9 +7,11 @@
 # the left-out quarters used to assess things like convergence.  Final
 # testing is done on the cases not in the training set.
 
+logb=ilog2
+
 for run in 1 2 3 4; do
 
-  log=ilog2.net$run
+  log=$logb.net$run
   end=`calc 400\*$run`
   start=`calc $end-399`
 
@@ -33,6 +35,4 @@ done
 
 wait
   
-net-pred mnpa \
-  ilog2.net1 2001: ilog2.net2 2001: ilog2.net3 2001: ilog2.net4 2001: \
-    / idata-test .
+./iend $logb 2001:

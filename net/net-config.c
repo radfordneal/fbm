@@ -386,7 +386,8 @@ void net_config_sort (net_config *cf)
   /* We will put all connections, as sorted and grouped, in successive parts 
      of 'all', setting pointers to parts of it in cf. */
 
-  net_connection *all = chk_alloc (n+9, sizeof *all);  /* Up to nine -1's */
+  net_connection *all = chk_alloc (n+9+3, sizeof *all);  
+              /* Allow up to nine -1's, then +3 to ensure AVX loads are OK */
   int a = 0;
 
   /* Temporary storage. */

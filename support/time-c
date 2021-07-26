@@ -9,3 +9,7 @@ net-mc clog.net 1
 
 mc-spec clog.net repeat 10 sample-sigmas heatbath 0.95 hybrid 100:10 0.3 negate
 net-mc clog.net 30
+
+net-tbl h1h2h3h4 clog.net 29:
+net-tbl w1@0:3 clog.net 29:
+net-tbl mD clog.net 29:

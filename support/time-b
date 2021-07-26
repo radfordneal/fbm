@@ -12,3 +12,7 @@ net-mc blog.net 1
 
 mc-spec blog.net repeat 10 sample-sigmas heatbath 0.95 hybrid 100:10 0.3 negate
 net-mc blog.net 50
+
+net-tbl h1h2h3h4 blog.net 49:
+net-tbl w1@0:3 blog.net 49:
+net-tbl mD blog.net 49:

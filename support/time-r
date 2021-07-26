@@ -9,3 +9,7 @@ net-mc rlog.net 1
 
 mc-spec rlog.net sample-sigmas heatbath hybrid 1000:10 0.4
 net-mc rlog.net 300
+
+net-tbl h1h2h3h4 rlog.net 299:
+net-tbl w1@0:3 rlog.net 299:
+net-tbl mD rlog.net 299:

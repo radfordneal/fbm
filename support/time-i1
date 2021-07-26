@@ -15,4 +15,4 @@ net-mc ilog1 2
 
 net-tbl h1h2h3h4 ilog1
 net-tbl w1@0:3 ilog1
-net-tbl mD ilog2
+net-tbl mD ilog1

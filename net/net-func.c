@@ -626,19 +626,44 @@ static void add_connections_config
       }
     }
     else
-    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { j = cn[c].d;
-        double sj = s[j];
-        i = cn[c].s; 
-        sj += v[i] * w[k];
-        i = cn[c+1].s; k = cn[c+1].w; 
-        sj += v[i] * w[k];
-        i = cn[c+2].s; k = cn[c+2].w; 
-        sj += v[i] * w[k];
-        i = cn[c+3].s; k = cn[c+3].w;
-        sj += v[i] * w[k];
-        s[j] = sj;
+    { 
+#     if USE_SIMD_INTRINSICS && __AVX2__ && 0  /* disabled since it's slower */
+      { static int s_0_8_16_24[4] = { 0, 8, 16, 24 };
+        static int mask[4] = { 0xffff, 0xffff, 0xffff, 0xffff };
+        __m128i S_0_8_16_24 = _mm_loadu_si128 ((__m128i *) s_0_8_16_24);
+        __m128i MASK = _mm_loadu_si128 ((__m128i *) mask);
+        for (c = 0; ; c+=4)
+        { __m128i K = _mm_i32gather_epi32 (&cn[c].w, S_0_8_16_24, 1);
+          if (_mm_ucomilt_ss (_mm_castsi128_ps(K), _mm_setzero_ps())) 
+          { break; 
+          }
+          j = cn[c].d;
+          __m128i I = _mm_and_si128 (MASK,
+                         _mm_i32gather_epi32 ((int*)&cn[c].s, S_0_8_16_24, 1));
+          __m256d WK = _mm256_i32gather_pd (w, K, 8);
+          __m256d VI = _mm256_i32gather_pd (v, I, 8);
+          __m256d P = _mm256_mul_pd (VI, WK);
+          __m128d S = _mm_add_pd (_mm256_castpd256_pd128(P),
+                                  _mm256_extractf128_pd(P,1));
+          _mm_store_sd (s+j, _mm_add_sd (_mm_load_sd(s+j), _mm_hadd_pd(S,S)));
+        }
       }
+#     else
+      { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+        { j = cn[c].d;
+          double sj = s[j];
+          i = cn[c].s; 
+          sj += v[i] * w[k];
+          i = cn[c+1].s; k = cn[c+1].w; 
+          sj += v[i] * w[k];
+          i = cn[c+2].s; k = cn[c+2].w; 
+          sj += v[i] * w[k];
+          i = cn[c+3].s; k = cn[c+3].w;
+          sj += v[i] * w[k];
+          s[j] = sj;
+        }
+      }
+#     endif
     }
   }
 

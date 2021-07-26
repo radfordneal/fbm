@@ -37,4 +37,4 @@ done
 
 wait
   
-./iend $logb 2001:
+./iend.net $logb 2001:

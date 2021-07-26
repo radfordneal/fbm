@@ -28,11 +28,11 @@ for run in 1 2 3 4; do
   mc-spec $log repeat 30 heatbath hybrid 100:10 0.12
   net-mc $log 1
   
-  mc-spec $log sample-sigmas heatbath hybrid 3000:100 0.15
+  mc-spec $log sample-sigmas heatbath hybrid 3000:100 0.17
   net-mc $log 6000 &
 
 done
 
 wait
   
-./iend $logb 2001:
+./iend.net $logb 2001:

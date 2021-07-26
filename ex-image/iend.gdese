@@ -1,0 +1,10 @@
+#!/bin/bash
+
+use=
+for run in 1 2 3 4; do
+  log=$1.gdese$run
+  use=$use\ $log\ `net-plt t B $log | find-min`
+done
+
+echo PERFORMANCE USING: $use
+net-pred nmpa $use / idata-test .

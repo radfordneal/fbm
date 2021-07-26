@@ -8,9 +8,11 @@
 # the left-out quarters used to select the iterations to use.  Final
 # testing is done on the cases not in the training set.
 
+logb=ilog2
+
 for run in 1 2 3 4; do
 
-  log=ilogg2.net$run
+  log=$logb.gdese$run
   end=`calc 400\*$run`
   start=`calc $end-399`
 
@@ -19,17 +21,10 @@ for run in 1 2 3 4; do
   
   data-spec $log 36 1 4 / idata-train@-$start:$end . idata-train@$start:$end .
 
-  net-gd $log 10000 10 / 0.01 0.02 0.15 0.15 batch &
+  net-gd $log 30000 10 / 0.02 0.05 0.2 0.2 batch &
 
 done
 
 wait
 
-use=
-for run in 1 2 3 4; do
-  log=ilogg2.net$run
-  use=$use\ $log\ `net-plt t B $log | find-min`
-done
-
-echo Using: $use
-net-pred nmpa $use / idata-test .
+./iend.gdese $logb

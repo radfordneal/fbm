@@ -12,10 +12,13 @@ or from the prior distribution, if no training set is specified.  See
 
 The following applications-specific sampling procedures are implemented:
 
-   sample-hyper       
+   sample-hyper [ group ]
 
        Does Gibbs sampling for the hyperparameters controlling the 
-       distributions of parameters (weights, biases, etc.).
+       distributions of parameters (weights, biases, etc.).  If a
+       group is specified, only the hyperparameters pertaining to
+       that group of parameters are updated.  Groups are numbered
+       from 1, as in the output of net-display.
 
    sample-noise       
 

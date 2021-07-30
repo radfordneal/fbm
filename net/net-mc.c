@@ -398,8 +398,10 @@ int mc_app_sample
 )
 {
   int sample_hyper, sample_noise, rgrid_hyper, rgrid_noise;
-  int l;
+  int l, pm0, grp;
 
+  grp = 0;
+  pm0 = pm;
   if (pm==0) pm = 0.1;
 
   sample_hyper = sample_noise = rgrid_hyper = rgrid_noise = 0;
@@ -409,6 +411,7 @@ int mc_app_sample
   }
   else if (strcmp(op,"sample-hyper")==0)
   { sample_hyper = 1;
+    grp = pm0;
   }
   else if (strcmp(op,"sample-noise")==0)
   { sample_noise = 1;
@@ -513,13 +516,17 @@ int mc_app_sample
 
   if (sample_hyper)
   {
-    if (arch->has_ti) gibbs_unit (sample_hyper, params.ti, sigmas.ti_cm, 0,
-                                  arch->N_inputs, &priors->ti);
+#   define THISGRP (pm0==0 || --grp==0)
+
+    if (arch->has_ti && THISGRP) 
+    { gibbs_unit (sample_hyper, params.ti, sigmas.ti_cm, 0,
+                  arch->N_inputs, &priors->ti);
+    }
   
     for (l = 0; l<arch->N_layers; l++)
     {
       if (l>0)
-      { if (arch->has_hh[l-1]) 
+      { if (arch->has_hh[l-1] && THISGRP) 
         { if (arch->hidden_config[l])
           { gibbs_conn_config (sample_hyper, 
                             params.hh[l-1], sigmas.hh_cm[l-1], sigmas.hh[l-1],
@@ -535,7 +542,7 @@ int mc_app_sample
         }
       }
     
-      if (arch->has_ih[l]) 
+      if (arch->has_ih[l] && THISGRP) 
       { if (arch->input_config[l])
         { gibbs_conn_config (sample_hyper, 
                              params.ih[l], sigmas.ih_cm[l], sigmas.ih[l],
@@ -550,16 +557,12 @@ int mc_app_sample
         }
       }
 
-      if (arch->has_bh[l]) gibbs_unit (sample_hyper, 
-                                       params.bh[l], sigmas.bh_cm[l], 
-                                       sigmas.ah[l], arch->N_hidden[l], 
-                                       &priors->bh[l]);
-      
-      if (arch->has_th[l]) gibbs_unit (sample_hyper, 
-                                       params.th[l], sigmas.th_cm[l], 0,
-                                       arch->N_hidden[l], &priors->th[l]);
+      if (arch->has_bh[l] && THISGRP)
+      { gibbs_unit (sample_hyper, params.bh[l], sigmas.bh_cm[l], 
+                    sigmas.ah[l], arch->N_hidden[l], &priors->bh[l]);
+      }
 
-      if (arch->has_ah[l])
+      if (arch->has_ah[l] && THISGRP)
       { gibbs_adjustments (sigmas.ah[l], priors->ah[l], arch->N_hidden[l], 
           arch->has_bh[l] ? params.bh[l] : 0,
             sigmas.bh_cm[l], 
@@ -575,27 +578,34 @@ int mc_app_sample
             l>0 ? &priors->hh[l-1] : 0,
             l>0 ? &arch->N_hidden[l-1] : 0);
       }
+      
+      if (arch->has_th[l] && THISGRP) 
+      { gibbs_unit (sample_hyper, params.th[l], sigmas.th_cm[l], 0,
+                    arch->N_hidden[l], &priors->th[l]);
+      }
+    }
   
-      if (arch->has_ho[l]) 
+    for (l = arch->N_layers-1; l>=0; l--)
+    { if (arch->has_ho[l] && THISGRP)
       { gibbs_conn (sample_hyper, 
                     params.ho[l], sigmas.ho_cm[l], sigmas.ho[l], sigmas.ao,
                     arch->N_hidden[l], arch->N_outputs, &priors->ho[l]);
       }
-          
     }
   
-    if (arch->has_io) 
+    if (arch->has_io && THISGRP)
     { gibbs_conn (sample_hyper, 
                   params.io, sigmas.io_cm, sigmas.io, sigmas.ao,
                   not_omitted(flgs?flgs->omit:0,arch->N_inputs,1), 
                   arch->N_outputs, &priors->io);
     }
   
-    if (arch->has_bo) gibbs_unit (sample_hyper, 
-                                  params.bo, sigmas.bo_cm, sigmas.ao,
-                                  arch->N_outputs, &priors->bo);
+    if (arch->has_bo && THISGRP)
+    { gibbs_unit (sample_hyper, params.bo, sigmas.bo_cm, sigmas.ao,
+                                arch->N_outputs, &priors->bo);
+    }
 
-    if (arch->has_ao)
+    if (arch->has_ao && THISGRP)
     { gibbs_adjustments (sigmas.ao, priors->ao, arch->N_outputs, 
         arch->has_bo ? params.bo : 0, 
           sigmas.bo_cm,

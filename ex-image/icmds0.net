@@ -25,16 +25,16 @@ for run in 1 2 3 4; do
   
   net-gen $log fix 0.$run
 
-  mc-spec $log repeat 10 heatbath hybrid 50:5 0.15
+  mc-spec $log repeat 60 heatbath hybrid 50:5 0.15
   net-mc $log 1
-  mc-spec $log repeat 5 sample-sigmas heatbath hybrid 100:10 0.2
+  mc-spec $log repeat 30 sample-sigmas heatbath hybrid 100:10 0.2
   net-mc $log 2
   
-  mc-spec $log sample-sigmas heatbath hybrid 500:50 0.3
-  net-mc $log 6000 &
+  mc-spec $log repeat 6 sample-sigmas heatbath hybrid 500:50 0.3
+  net-mc $log 1000 &
   
 done
 
 wait
   
-./iend.net $logb 2001:
+./iend.net $logb 251:

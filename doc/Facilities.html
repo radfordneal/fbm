@@ -23,10 +23,13 @@ This software is meant to support research and education regarding:
    * Molecular simulation using the Lennard-Jones potential.  This
      is mostly for testing MCMC methods in this context.
 
-These facilities might be useful for actual problems, but you should
-note that many features that might be needed for real problems have
-not been implemented, and that the programs have not been tested to
-the extent that would be desirable for important applications.
+See <A HREF="References.html">References.doc</A> for some references on these various topics.
+
+The facilities provided by this software might be useful for actual
+problems, but you should note that many features that might be needed
+for real problems have not been implemented, and that the programs
+have not been tested to the extent that would be desirable for
+important applications.
 
 The complete source code (in C) is provided, allowing researchers to
 modify the program to test new ideas.  It is not necessary to know C
@@ -219,22 +222,26 @@ chain Monte Carlo modules for another application written in C.
 The following directories contain examples of how these programs can
 be used, many of which are discussed in the documentation:
 
+    ex-dist   Examples of Markov chain sampling on distributions
+              specified by simple formulas.
+
+    ex-circ   Examples of circularly-coupled Markov chain sampling.
+
+    ex-bayes  Examples of Markov chain sampling for Bayesian models
+              specified using formulas for the prior and likelihood.
+
     ex-netgp  Examples of Bayesian regression and classification 
               models based on neural networks and Gaussian processes.
+
+    ex-image  Examples of neural network models for image classification.
+
+    ex-surv   Examples of neural network survival models.
 
     ex-mixdft Examples of Bayesian mixture models and Dirichlet diffusion
               tree models.  Includes command files for the test in my 
               paper on "Markov chain sampling methods for Dirichlet process 
               mixture models" and for one of the tests in "Density modeling 
               and clustering using Dirichlet diffusion trees".
-
-    ex-dist   Examples of Markov chain sampling on distributions
-              specified by simple formulas.
-
-    ex-bayes  Examples of Markov chain sampling for Bayesian models
-              specified using formulas for the prior and likelihood.
-
-    ex-surv   Examples of neural network survival models.
 
     ex-gdes   Examples of neural network learning using gradient 
               descent and early stopping.
@@ -259,9 +266,9 @@ directory contains all the documentation.
 Portability of the software.
 
 The software is written in C, following the C99 standard.  It is meant
-to be run in a Unix/Linux environment.  The various components of the
-software are invoked as Unix/Linux shell commands, which may be run
-via shell scripts.
+to be run in a Unix/Linux/macOS environment.  The various components
+of the software are invoked as Unix/Linux shell commands, which may be
+run via shell scripts.
 
 There is no dependence on any particular graphics package or graphical
 user interface.  The 'xxx-plt' programs are designed to allow their

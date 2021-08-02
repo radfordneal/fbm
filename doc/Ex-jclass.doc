@@ -11,6 +11,8 @@ diffusion tree model for the joint distribution.  One advantage of
 this approach is that unlabelled data (with the class missing) can be
 used to help learn the classifier.
 
+The commands used here are in the rbcmds.dft file in ex-mixdft.
+
 The data is the same as that used for the example of modeling a
 bivariate density (see Ex-mixdft-r.doc), except that we now also look
 at the 0/1 indicator of which component each data point was generated

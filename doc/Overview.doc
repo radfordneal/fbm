@@ -291,12 +291,12 @@ with 'dft-mc'.  One can then examine the resulting trees with
 
 Source location models.
 
-See src.doc for more details on this model.
+See src.doc for more details on these models.
 
 
 Molecular simulation.
 
-See mol.doc for more details on this model.
+See mol.doc for more details on these models.
 
 
 Quantities obtainable from log files.

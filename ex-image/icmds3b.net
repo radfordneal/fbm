@@ -27,30 +27,30 @@ for run in 1 2 3 4; do (
   
   net-gen $log fix 0.08
 
-  mc-spec $log repeat 300 heatbath hybrid 100:10 0.03
+  mc-spec $log repeat 750 heatbath hybrid 100:10 0.03
   net-mc $log 1
 
-  mc-spec $log repeat 120 sample-hyper 1 sample-hyper 2 \
+  mc-spec $log repeat 300 sample-hyper 1 sample-hyper 2 \
                           sample-hyper 6 sample-hyper 7 \
                           heatbath hybrid 250:25 0.04
   net-mc $log 2
 
-  mc-spec $log repeat 60 sample-hyper 1 sample-hyper 2 \
-                         sample-hyper 6 sample-hyper 7 \
-                         heatbath hybrid 500:50 0.06
+  mc-spec $log repeat 150 sample-hyper 1 sample-hyper 2 \
+                          sample-hyper 6 sample-hyper 7 \
+                          heatbath hybrid 500:50 0.06
   net-mc $log 3
 
-  mc-spec $log repeat 30 sample-hyper 1 sample-hyper 2 \
+  mc-spec $log repeat 60 sample-hyper 1 sample-hyper 2 \
                          sample-hyper 6 sample-hyper 7 \
-                         heatbath hybrid 1000:100 0.15
+                         heatbath hybrid 1250:125 0.13
   net-mc $log 4
   
-  mc-spec $log repeat 24 sample-hyper 1 sample-hyper 2 \
+  mc-spec $log repeat 60 sample-hyper 1 sample-hyper 2 \
                          sample-hyper 6 sample-hyper 7 \
                          heatbath 0.87 hybrid 1250:125 0.19 negate
-  net-mc $log 400
+  net-mc $log 200
   
-  mc-spec $log repeat 24 sample-hyper \
+  mc-spec $log repeat 60 sample-hyper \
                          heatbath 0.93 hybrid 1250:125 0.13 negate
   net-mc $log 3000
 

@@ -158,11 +158,9 @@ int main (int argc, char **argv)
               }
             }
           }
-          // if (i==2956) fprintf(stderr,"p: %g %c %d %d\n",p,pc,pj+1,pk+1);
           pp[pi] += p;
         }
       }
-      // if (i==2956) fprintf(stderr,"pi: %g %c\n",pp[pi],pc);
     }
     double spp = pp[0]+pp[1]+pp[2]+pp[3];
     for (pi = 0; pi<4; pi++)

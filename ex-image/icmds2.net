@@ -9,7 +9,7 @@
 
 logb=ilog2
 
-for run in 1 2 3 4; do
+for run in 1 2 3 4; do (
 
   log=$logb.net$run
   end=`calc 400\*$run`
@@ -23,18 +23,19 @@ for run in 1 2 3 4; do
 
   rand-seed $log $run
   
-  net-gen $log fix 0.1$run
+  net-gen $log fix 0.1
 
-  mc-spec $log repeat 120 heatbath hybrid 100:10 0.1
+  mc-spec $log repeat 120 heatbath hybrid 200:20 0.1
   net-mc $log 1
-  mc-spec $log repeat 60 sample-sigmas heatbath hybrid 200:20 0.15
+
+  mc-spec $log repeat 60 sample-sigmas heatbath hybrid 400:40 0.15
   net-mc $log 2
   
-  mc-spec $log repeat 6 sample-sigmas heatbath hybrid 2000:200 0.25
-  net-mc $log 1000 &
+  mc-spec $log repeat 24 sample-sigmas heatbath 0.9 hybrid 1000:100 0.2 negate
+  net-mc $log 3000 
 
-done
+) & done
 
 wait
   
-./iend.net $logb 251:
+./iend.net $logb 751:

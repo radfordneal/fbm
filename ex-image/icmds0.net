@@ -10,30 +10,31 @@
 
 logb=ilog0
 
-for run in 1 2 3 4; do
+for run in 1 2 3 4; do (
 
   log=$logb.net$run
   end=`calc 400\*$run`
   start=`calc $end-399`
 
-  net-spec $log 36 4 / io=0.5:4 bo=0.1:2
+  net-spec $log 36 4 / io=0.1:2 bo=0.1:2
   model-spec $log class
   
   data-spec $log 36 1 4 / idata-train@-$start:$end . idata-train@$start:$end .
 
   rand-seed $log $run
   
-  net-gen $log fix 0.$run
+  net-gen $log fix 0.1
 
-  mc-spec $log repeat 60 heatbath hybrid 50:5 0.15
+  mc-spec $log repeat 20 heatbath hybrid 50:5 0.15
   net-mc $log 1
-  mc-spec $log repeat 30 sample-sigmas heatbath hybrid 100:10 0.2
+
+  mc-spec $log repeat 10 sample-sigmas heatbath hybrid 100:10 0.2
   net-mc $log 2
   
-  mc-spec $log repeat 6 sample-sigmas heatbath hybrid 500:50 0.3
-  net-mc $log 1000 &
+  mc-spec $log repeat 2 sample-sigmas heatbath hybrid 500:50 0.3
+  net-mc $log 1000
   
-done
+) & done
 
 wait
   

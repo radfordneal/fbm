@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Make predictions on the test data using iterations from all four
+# runs, in log files $1.net1, $1.net2, $1.net3, and $1.net4, from
+# iterations $2 to $3 (the upper limit may be omitted).
+
 net-pred mnpa \
-  ilog$1.net1 $2:$3 ilog$1.net2 $2:$3 ilog$1.net3 $2:$3 ilog$1.net4 $2:$3 \
+  $1.net1 $2:$3 $1.net2 $2:$3 $1.net3 $2:$3 $1.net4 $2:$3 \
     / idata-test .

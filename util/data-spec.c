@@ -451,7 +451,7 @@ int main
       for (i = 0; i<n; i++)
       { numin_read(&ns,iv);
         if (echo_data) printf("%5d:",i+1);
-        for (j = 0; j<ds->N_targets; j++)
+        for (j = 0; j<ds->N_inputs; j++)
         { if (isnan(iv[j])) 
           { fprintf(stderr,"Missing values not allowed for inputs\n");
             exit(1);

@@ -9,7 +9,7 @@ specifications already stored in the log file.
 
 Usage:
 
-    data-spec log-file N-inputs N-targets [ int-target ] [ -n ]
+    data-spec log-file N-inputs N-targets [ int-target ] [ -n | -e ]
                 / train-inputs train-targets [ test-inputs [ test-targets ] ]
               [ / { input-trans } [ / { target-trans } ] ]
 
@@ -39,7 +39,9 @@ test targets.
 The data files are read and checked for errors, unless the "-n" option
 was included before the file specifications.  If the data is checked,
 the number of lines of training inputs must match the number of lines
-of training targets, and similarly for test inputs and targets.
+of training targets, and similarly for test inputs and targets.  If
+the "-e" option is included, the training data and test data (if
+provided) are echoed to standard output after being read.
 
 The final optional arguments specify the transformations to be applied
 to inputs and targets.  A transformation specification has one of the
@@ -66,4 +68,4 @@ is not allowed in conjunction with the "-n" option.
 The specifications are written to the log file as a record with type
 'D' and index -1.
 
-            Copyright (c) 1995-2004 by Radford M. Neal
+            Copyright (c) 1995-2021 by Radford M. Neal

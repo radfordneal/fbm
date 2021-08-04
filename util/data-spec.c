@@ -1,6 +1,6 @@
 /* DATA-SPEC.C - Program for specifying data sets for training and testing. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -52,7 +52,7 @@ int main
 
   data_specifications *ds;
 
-  int do_not_read_data;
+  int do_not_read_data, echo_data;
   int N_inputs, N_targets;
 
   log_file logf;
@@ -205,7 +205,8 @@ int main
   ds->test_inputs[0] = 0;
   ds->test_targets[0] = 0;
 
-  if (*ap!=0 && strcmp(*ap,"/")!=0 && strcmp(*ap,"-n")!=0)
+  if (*ap!=0 && strcmp(*ap,"/")!=0 
+             && strcmp(*ap,"-n")!=0 && strcmp(*ap,"-e")!=0)
   { if (strcmp(*ap,"+")==0) 
     { ds->int_target = -1;
     }
@@ -220,8 +221,13 @@ int main
   }
 
   do_not_read_data = 0;
+  echo_data = 0;
   if (*ap!=0 && strcmp(*ap,"-n")==0)
   { do_not_read_data = 1;
+    ap += 1;
+  }
+  else if (*ap!=0 && strcmp(*ap,"-e")==0)
+  { echo_data = 1;
     ap += 1;
   }
 
@@ -335,17 +341,22 @@ int main
       ivar[j] = 0;
     }
   
+    if (echo_data) printf("Training inputs:\n\n");
+
     for (i = 0; i<n; i++)
     { numin_read(&ns,iv);
+      if (echo_data) printf("%5d:",i+1);
       for (j = 0; j<ds->N_inputs; j++)
       { if (isnan(iv[j])) 
         { fprintf(stderr,"Missing values not allowed for inputs\n");
           exit(1);
         }
+        if (echo_data) printf(" %11.3g",iv[j]);
         iv[j] = data_trans (iv[j], ds->trans[j]);
         imean[j] += iv[j];
         ivar[j] += iv[j]*iv[j];
       }
+      if (echo_data) printf("\n");
     }
   
     for (j = 0; j<ds->N_inputs; j++)
@@ -376,10 +387,14 @@ int main
       tn[j] = 0;
     }
   
+    if (echo_data) printf("\n\nTraining targets:\n\n");
+
     for (i = 0; i<n; i++)
     { numin_read(&ns,tv);
+      if (echo_data) printf("%5d:",i+1);
       for (j = 0; j<ds->N_targets; j++)
-      { if (isnan(tv[j])) continue;
+      { if (echo_data) printf(" %11.3g",tv[j]);
+        if (isnan(tv[j])) continue;
         tv[j] = data_trans (tv[j], ds->trans[ds->N_inputs+j]);
         tmean[j] += tv[j];
         tvar[j] += tv[j]*tv[j];
@@ -403,6 +418,7 @@ int main
           }
         }
       }
+      if (echo_data) printf("\n");
     }
   
     for (j = 0; j<ds->N_targets; j++)
@@ -430,15 +446,20 @@ int main
     
       n = numin_start(&ns);
     
+      if (echo_data) printf("\n\nTest inputs:\n\n");
+
       for (i = 0; i<n; i++)
       { numin_read(&ns,iv);
+        if (echo_data) printf("%5d:",i+1);
         for (j = 0; j<ds->N_targets; j++)
         { if (isnan(iv[j])) 
           { fprintf(stderr,"Missing values not allowed for inputs\n");
             exit(1);
           }
+          if (echo_data) printf(" %11.3g",iv[j]);
           iv[j] = data_trans (iv[j], ds->trans[j]);
-        } /* Above done just so errors will be reported at this time */
+        } /* Above done so errors will be reported now, and maybe for echo */
+        if (echo_data) printf("\n");
       }
   
       numin_close(&ns);
@@ -451,11 +472,15 @@ int main
         { fprintf(stderr,
             "Number of test input cases doesn't match number of targets\n");
         }
+  
+        if (echo_data) printf("\n\nTest targets:\n\n");
       
         for (i = 0; i<n; i++)
         { numin_read(&ns,tv);
+          if (echo_data) printf("%5d:",i+1);
           for (j = 0; j<ds->N_targets; j++)
-          { if (isnan(tv[j])) continue;
+          { if (echo_data) printf(" %11.3g",tv[j]);
+            if (isnan(tv[j])) continue;
             tv[j] = data_trans (tv[j], ds->trans[ds->N_inputs+j]);
             if (ds->int_target)
             { if (tv[j]!=(int)tv[j])
@@ -476,6 +501,7 @@ int main
               }
             }
           }
+          if (echo_data) printf("\n");
         }
   
         numin_close(&ns);
@@ -507,7 +533,7 @@ int main
 static void usage(void)
 { 
   fprintf(stderr,
-   "Usage: data-spec log-file N-inputs N-targets [ int-target ] [ -n ]\n");
+   "Usage: data-spec log-file N-inputs N-targets [ int-target ] [ -n | -e ]\n");
   fprintf(stderr,
    "                   / train-inputs train-targets [ test-inputs [ test-targets ] ]\n");
   fprintf(stderr,

@@ -8,9 +8,9 @@ EXAMPLES OF BAYESIAN NEURAL NETWORK IMAGE MODELS
 One prominent application of neural network models is for the
 classification of images.  Here, a fairly simple artificial example of
 such an image classification problem is presented.  Several Bayesian
-neural network models for this task are presented, including ones that
-use convolutional connections.  Fitting such a model by simple
-gradient descent is also presented.
+neural network models are applied to this task, including ones that
+use convolutional connections.  Fitting such models by simple gradient
+descent is also presented.
 
 These examples also illustrate how the training data can be divided in
 several ways into a set of cases used for fitting, and a set of
@@ -31,10 +31,10 @@ which one of the symbols "+", "X", "O", or "H" appears in some 3x3
 patch in the image.  The classification task is to predict from the 36
 pixels of an image which symbol appears in some patch in the image
 (whose location could be any of the sixteen possibilities).  The file
-'idata' has 4000 generated cases, the first 16000 of which are used
-for training, and the remaining 2400 for testing.
+'idata' has 4000 generated cases, the first 1600 of which are used for
+training, and the remaining 2400 for testing.
 
-Generation of an image starts by randomly generating backgroup pixel
+Generation of an image starts by randomly generating background pixel
 values from a Gaussian distribution with mean zero and standard
 deviation one, independently for each of the 36 pixels.  A location
 for a symbol is then randomly gnerated from the 16 possible positions.
@@ -43,8 +43,8 @@ last row, or the first or last column, leaving four possible row
 positions and four possible column positions.)  The identity of the
 symbol is also picked randomly from "+", "X", "O", and "H" (coded as
 0, 1, 2, or 3), with each symbol having probability 1/4.  The pixels
-in the 3x3 patch where the symbol is located are then replaced by
-the following patterns for each symbol:
+in the 3x3 patch where the symbol is located are then replaced by the
+following patterns for each symbol:
 
        "+"         "X"         "O"         "H"
 
@@ -116,6 +116,135 @@ Here is the summary:
 
 
 A fully-connected Bayesian neural network model.
+
+We can first try a neural network model that has no built-in knowledge
+of how the 36 pixel values are arranged in a 6x6 image, or any
+specific knowledge that the symbol to be detected is in a 3x3 patch of
+this image.  The model simply feeds the 36 inputs into a hidden layer
+with 80 tanh units, which in turn feeds into an output layer with 4
+units, which are used to define the class probabilities, as in the
+classification example in <A HREF="Ex-netgp-c.html">Ex-netgp-c.doc</A>.
+
+This model can be specified with the following commands:
+
+  net-spec $log 36 80 4 \
+            / ih=0.05:3::1.5 bh=0.3:2 ho=0.1:3::4 bo=0.1:2
+  model-spec $log class
+
+Here, $log represents the name of the log file.  This is followed by
+the specification that there are 36 input, 80 hidden units, and 4
+units used to produce class probabilities, using the "softmax" scheme.
+
+The prior specification for input-to-hidden weights, of 0.05:3::1.5,
+does not allow for different inputs to have different relevance (hence
+no numer in ::, omitting variation between input groups), since we
+will assume that it is known that the inputs are almost equally
+relevant (since the symbol to be recognized might occur anywhere in
+the image).  The final 1.5 in the prior specification gives the
+input-to-hidden weights a heavy-tailed prior (a t distribution with
+1.5 degrees-of-freedom), allowing for the possibility that the
+input-to=hidden connections are effectively sparse, with a hidden unit
+looking at only a few of the pixel values.  The hidden-to-outuput
+weights also have a (less extreme) heavy-tailed prior, allowing for
+some of the hidden units to have small weights to some of the output
+units.
+
+A scheme allowing cross-validation assessments of performance is used,
+in which four training runs are done, each on 3/4 of the training
+data, with the omitted 1/4 allowing for monitoring of performance (to
+see, for example, whether is is advisable to do further MCMC
+iterations).  Of course, making such assessments based on the test
+data would be "cheating" (since in real life, the test targets, and
+probably the test inputs as well, are not available when training).
+
+The data specification used is therefore as follows:
+
+  data-spec $log 36 1 4 / idata-train@-$start:$end . idata-train@$start:$end .
+
+Here $start and $end represent the range of training cases comprising
+the validation set (here specified as the "test" set), with the
+remainder of the 1600 training cases used for fitting the model.  In
+the four runs that are done, $start and $end will be set to 1 and 400,
+401 and 800, 801 and 1200, and 1201 and 1600.  (These runs will use
+log files of ilog1.net1, ilog1.net2, ilog1.net3, and ilog1.net4.)
+
+When final predictions for test cases are made, the "test" data
+specified in this data-spec command will be overridden by the actual
+test data, in idata-test.
+
+The numbers in the data-spec command specify that there are 36 inputs
+and 1 target, which has 4 possible values (coded as 0, 1, 2, 3).
+
+With the network model and data specified, training is done as follows:
+
+  rand-seed $log $run
+
+  net-gen $log fix 0.1
+
+  mc-spec $log repeat 120 heatbath hybrid 200:20 0.1
+  net-mc $log 1
+
+  mc-spec $log repeat 60 sample-sigmas heatbath hybrid 400:40 0.15
+  net-mc $log 2
+
+  mc-spec $log repeat 24 sample-sigmas heatbath 0.9 hybrid 1000:100 0.21 negate
+  net-mc $log 3000
+
+Here, $run is 1, 2, 3, or 4, identifying which of the four runs this
+is, which affects the random number seed used.  The hyperparameters
+are initialized to the fairly small value of 0.1, and 120 HMC updates
+are done with the hyperparameters fixed at this value, so that the
+parameters will take on reasonable values for the data before trying
+to update the hyperparameters.  After this, 60 HMC updates are done
+with hyperparmeters updated before each HMC update, using a moderate
+number (400) of leapfrog steps.  This is intended to get the
+hyperparameters to reasonable values (given how well the data has been
+fitted so far).  The main sampling iterations are then done, in which
+updates for the hyperparameters alternate with HMC iterations using a
+longer trajectory of 1000 leapfrog iterations.  Each of the 2998 saved
+states from this main sampling phase are the result of 24 such pairs
+of hyperparameter updates and HMC updates for parameters.
+
+The HMC updates all use the "windowed" method, to increase acceptance
+rate, with the windows being 1/10 of the trajectory.  Relatively small
+leapfrog stepsizes are used initially, to guard against rejection
+rates being high when starting at an atypical location.  The stepsize
+of 0.21 for the main sampling phase produces a rejection rate of 1% to
+3%.  To further reduce random walk behaviour, without reducing the
+number of hyperparameter updates, the "persistent momentum" version of
+HMC is used for the final sampling phase.
+
+Each full iteration of this sampling procedure takes about 40 seconds
+on the system used (<A HREF="Ex-test-system.html">Ex-test-system.doc</A>), for a total of about 2000
+minutes (about 33 hours) for the 3000 iterations done.  The command
+script in ex-image/icmds1.net does all four runs in parallel, so this
+will the the total wall-clock time if the system used has at least
+four processor cores.
+
+Once all runs have finished, we can assess performance on the actual
+test set as follows (with the first 1000 iterations discarded as
+"burn-in", which seems more than enough):
+
+  net-pred mnpa ilog1.net1 1001: ilog1.net2 1001: \
+                ilog1.net3 1001: ilog1.net4 1001: / idata-test .
+
+The output is as follows:
+
+  Number of iterations used: 8000
+
+  Number of test cases: 2400
+
+  Average log probability of targets:    -1.030+-0.012
+  Fraction of guesses that were wrong:    0.4517+-0.0102
+  Average squared error guessing mean:    0.57219+-0.00671
+
+Note that guessing ignoring the inputs and assigning equal
+probabilities to the four classes gives an average log probability of
+-1.386, an error rate of 0.75, and an average squared error of 0.75.
+So this model performs significantly better than random guessing.
+However, the error rate of 45% is considerably more than the 8% error
+rate that is achievable with knowledge of the true generating process,
+so there is considerable room for improvement.
 
 
 A convolutional Bayesian neural network model.

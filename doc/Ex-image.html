@@ -218,9 +218,44 @@ Each full iteration of this sampling procedure takes about 40 seconds
 on the system used (<A HREF="Ex-test-system.html">Ex-test-system.doc</A>), for a total of about 2000
 minutes (about 33 hours) for the 3000 iterations done.  The command
 script in ex-image/icmds1.net does all four runs in parallel, so this
-will the the total wall-clock time if the system used has at least
-four processor cores.
+will be the total wall-clock time if the system used has at least four
+processor cores.
 
+Various plots can be made to check whether these runs are sampling (or
+have sampled) well, or whether more iterations (or a better scheme)
+are needed.  The performance of the HMC updates can be checked by
+plotting the point on the trajectory moved to in each iteration:
+
+  net-plt t m ilog1.net? | plot-points
+
+As seen in <A HREF="ilog1-m.png">ilog1-m.png</A> (with different colours for each run), most of
+the moves (but not all) are to the accept window of the trajectory, so
+the stepsize used is reasonable.
+
+The fit (squared error) for the training data can be checked with
+
+  net-plt t b ilog1.net? | plot-points
+
+As seen in <A HREF="ilog1-b.png">ilog1-b.png</A>, all four runs see to the equilibrium value for
+this in 100 iterations or less.
+
+The squared error for each iteration on the validation cases can be
+seen with
+
+  net-plt t B ilog1.net? | plot-points
+
+As seen in <A HREF="ilog1-BB.png">ilog1-BB.png</A>, this quantity show higher long-term
+autocorrelation than the training fit, but again may have reached
+equilibrium in less than 100 iterations.  Note that although this
+quantity is useful in seeing how well the Markov chain is sampling,
+the squared error on validation cases from a single iteration does NOT
+tell one how good the predictions on these validation cases found by
+averaging many iterations would be - poor predictions from a single
+iteration may be the result of the model producing high confidence
+predictions at each iteration, that vary from iteration to iteration,
+so that the averaged prediction has much lower confidence (and perhaps
+much better performance).
+  
 Once all runs have finished, we can assess performance on the actual
 test set as follows (with the first 1000 iterations discarded as
 "burn-in", which seems more than enough):

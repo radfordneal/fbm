@@ -1,6 +1,6 @@
 /* MC.C - Skeleton of program to run Markov chain Monte Carlo simulation. */
 
-/* Copyright (c) 1995-2019 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -328,7 +328,7 @@ int main
         log_append_compare = &clogg;
       }
 
-      /* Write data other than slevel.  Will be compared to data in coupled
+      /* Write data, but not stats.  Will be compared to data in coupled
          file, if any. */
 
       mc_app_save(&ds,&logf,index);
@@ -359,15 +359,6 @@ int main
       logf.header.size = sizeof (rand_state);
       log_file_append (&logf, rand_get_state());
 
-      /* See if there's a match to data in coupling file, before writing
-         slevel and the iteration stats.  Then disable comparison. */
-
-      coalesced = log_append_compare!=0;
-
-      log_append_compare = 0;
-
-      /* Write slevel stuff, if being recorded. */
-
       if (ds.slevel.random != -1)
       { logf.header.type = 'l';
         logf.header.index = index;
@@ -375,7 +366,14 @@ int main
         log_file_append (&logf, &ds.slevel);
       }
 
-      /* Write iteration stats, and re-initialize them. */
+      /* See if there's a match to data in coupling file, before writing
+         the iteration stats.  Then disable comparison. */
+
+      coalesced = log_append_compare!=0;
+
+      log_append_compare = 0;
+
+      /* Write iteration stats, and then re-initialize them. */
 
       logf.header.type = 'i';
       logf.header.index = index;

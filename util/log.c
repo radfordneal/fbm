@@ -1,6 +1,6 @@
 /* LOG.C - Routines for handling log files. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -17,6 +17,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <unistd.h>
 
 #include "log.h"
 
@@ -29,9 +30,9 @@
    log_gobble routines.
 */
 
-
-static void read_header (log_file *, int);
+static size_t readf (void *restrict, size_t, log_file *);
 static void check_header_trailer (log_header *, log_header *);
+static void log_file_append0 (log_file *, void *, int);
 
 
 /* CREATE A NEW LOG FILE.  The name of the new file is taken from the
@@ -48,22 +49,27 @@ void log_file_create
     exit(1);
   }
 
+  logf->header.magic = 0;
   logf->at_end = 1;
   logf->at_beginning = 0;
   logf->last_index_known = 0;
+  logf->follow = 0;
 }
 
 
 /* OPEN AN EXISTING LOG FILE.  The name of the file is taken from the
-   log file state structure.  Also reads the header for the first 
-   record.  If there is no first record, at_end is set. */
+   log file state structure.  The mode is 0 for reading until EOF, -1 for
+   reading with indefinite retry at EOF, and 1 if data can be appended
+   (with no retrying on reads at EOF).  Also reads the header for the first 
+   record.  If there is no first record, at_end is set (unless the mode is -1).
+ */
 
 void log_file_open
 ( log_file *logf,	/* Log file state structure */
-  int allow_append	/* Allow data to be appended? */
+  int mode		/* 0, -1, or 1 */
 )
 {
-  logf->file_struct = fopen (logf->file_name, allow_append ? "r+b" : "rb");
+  logf->file_struct = fopen (logf->file_name, mode==1 ? "r+b" : "rb");
 
   if (logf->file_struct==NULL)
   { fprintf(stderr,"Can't open log file: %s\n",logf->file_name);
@@ -72,8 +78,9 @@ void log_file_open
 
   logf->at_end = 0;
   logf->last_index_known = 0;
+  logf->follow = mode == -1;
 
-  read_header(logf,0);
+  log_file_read_header(logf,0);
   logf->at_beginning = !logf->at_end;
 }
 
@@ -105,7 +112,7 @@ void log_file_first
    
   logf->at_end = 0;
 
-  read_header(logf,0);
+  log_file_read_header(logf,0);
   logf->at_beginning = !logf->at_end;
 }
 
@@ -137,7 +144,7 @@ void log_file_last
     exit(1);
   }
 
-  read_header(logf,1);
+  log_file_read_header(logf,1);
 
   if (logf->at_end)
   { fprintf(stderr,"Problem reading trailer at end of log file\n");
@@ -153,7 +160,7 @@ void log_file_last
 
   logf->at_beginning = ftell(logf->file_struct)==0;
 
-  read_header(logf,0);  
+  log_file_read_header(logf,0);  
 
   if (logf->at_end)
   { fprintf(stderr,"Problem reading header at end of log file\n");
@@ -171,30 +178,28 @@ void log_file_forward
 ( log_file *logf	/* Log file state structure */
 )
 {
-  log_header trailer;
-
   if (logf->at_end)
   { fprintf(stderr,"Tried to move forward when at end of log file\n");
     exit(1);
   }
 
-  trailer = logf->header;
+  log_header header = logf->header;
 
   if (fseek (logf->file_struct, logf->header.size, 1)!=0)
   { fprintf(stderr,"Error skipping forward in log file\n");
     exit(1);
   }
 
-  read_header(logf,1);
+  log_file_read_header(logf,1);
 
   if (logf->at_end)
   { fprintf(stderr,"Missing trailer in log file\n");
     exit(1);
   }
 
-  check_header_trailer(&logf->header,&trailer);
+  check_header_trailer(&header,&logf->header);
 
-  read_header(logf,0);
+  log_file_read_header(logf,0);
 
   logf->at_beginning = 0;
 }
@@ -225,7 +230,7 @@ void log_file_backward
     exit(1);
   }
 
-  read_header(logf,1);
+  log_file_read_header(logf,1);
 
   if (logf->at_end)
   { fprintf(stderr,"Problem reading trailer going backwards in log file\n");
@@ -241,7 +246,7 @@ void log_file_backward
 
   logf->at_beginning = ftell(logf->file_struct)==0;
 
-  read_header(logf,0);  
+  log_file_read_header(logf,0);  
 
   if (logf->at_end)
   { fprintf(stderr,"Problem reading header going backwards in log file\n");
@@ -264,37 +269,35 @@ void log_file_read
   int size		/* Size of record expected. */
 )
 {
-  log_header trailer;
+  log_header header = logf->header;
 
   if (logf->at_end)
   { fprintf(stderr,"Tried to read data from log file when at end\n");
     exit(1);
   }
 
-  if (logf->header.size!=size)
+  if (header.size!=size)
   { fprintf(stderr,
       "Record has wrong size: Type %c, Actual size %d, Required size %d\n",
-      logf->header.type, logf->header.size, size);
+      header.type, header.size, size);
     exit(1);
   }
 
-  trailer = logf->header;
-
-  if (fread(data, 1, logf->header.size, logf->file_struct) != logf->header.size)
+  if (readf (data, header.size, logf) != header.size)
   { fprintf(stderr,"Error reading data from log file\n");
     exit(1);
   }
 
-  read_header(logf,1);
+  log_file_read_header(logf,1);
 
   if (logf->at_end)
   { fprintf(stderr,"Missing trailer in log file\n");
     exit(1);
   }
 
-  check_header_trailer(&logf->header,&trailer);
+  check_header_trailer(&header,&logf->header);
 
-  read_header(logf,0);
+  log_file_read_header(logf,0);
 
   logf->at_beginning = 0;
 }
@@ -303,7 +306,7 @@ void log_file_read
 /* APPEND RECORD TO LOG FILE.  The type and index for the record are taken
    from the log file state structure, as is the size of the data block.  
    After the data has been appended, we will be positioned at the end of 
-   the log file. 
+   the log file.  Sets the last_of_index field in the header to zero.
 
    If the global variable log_append_compare is not zero, records written
    are compared with the record of the same type and index (if present) in the
@@ -312,11 +315,33 @@ void log_file_read
    comparisons).
 */
 
-log_gobbled *log_append_compare;
-
 void log_file_append 
 ( log_file *logf,	/* Log file state structure */
   void *data		/* Data to write */
+)
+{ log_file_append0 (logf, data, 0);
+}
+
+
+/* APPEND RECORD TO LOG FILE, KNOWN TO BE LAST OF THIS INDEX.  Like
+   log_file_append, but sets the last_of_index field to one. */
+
+void log_file_append_last_of_index
+( log_file *logf,	/* Log file state structure */
+  void *data		/* Data to write */
+)
+{ log_file_append0 (logf, data, 1);
+}
+
+
+/* INTERNAL APPEND PROCEDURE.  Called from the two procedures above. */
+
+log_gobbled *log_append_compare;
+
+static void log_file_append0
+( log_file *logf,	/* Log file state structure */
+  void *data,		/* Data to write */
+  int last_of_index	/* 1 if known to be the last of this index */
 )
 { 
   log_header trailer;
@@ -382,7 +407,7 @@ void log_file_append
   }
 
   logf->header.magic = Log_header_magic;
-  logf->header.reserved = 0;	/* So future programs see this in old files */
+  logf->header.last_of_index = last_of_index;
 
   if (fwrite (&logf->header, sizeof logf->header, 1, logf->file_struct) != 1)
   { fprintf(stderr,"Error writing header to log file\n");
@@ -424,17 +449,18 @@ void log_file_append
 
 /* READ HEADER/TRAILER FROM LOG FILE. */
 
-static void read_header
+void log_file_read_header
 ( log_file *logf,	/* Log file state structure */
   int trailer		/* Is this supposed to be a trailer? */
 )
 {
   int n;
 
-  n = fread (&logf->header, 1, sizeof logf->header, logf->file_struct);
+  n = readf (&logf->header, sizeof logf->header, logf);
 
   if (n==0)
-  { logf->at_end = 1;
+  { logf->header.magic = 0;
+    logf->at_end = 1;
   }
   else if (n == sizeof logf->header)
   { if (logf->header.size<0)
@@ -499,12 +525,14 @@ void log_gobble_init
 
 
 /* GOBBLE UP RECORDS WITH THE CURRENT INDEX.  Reads all consecutive records 
-   that have the same index as the current record.  The data from these 
-   records is stored in places pointed to by the 'data' pointers in the 
-   log_gobbled structure passed.  The 'index' field of the log_gobbled
-   structure is set to the index of the records read.  Note that data from
-   records with previous indexes may still remain in the log_gobbled
-   structure. 
+   that have the same index as the current record (or the record whose header
+   is read here, if the header for the next record has not been read yet).  
+
+   The data from these records is stored in places pointed to by the
+   'data' pointers in the log_gobbled structure passed.  The 'index'
+   field of the log_gobbled structure is set to the index of the
+   records read.  Note that data from records with previous indexes
+   may still remain in the log_gobbled structure.
 
    Data is stored by record type, with any previous record of the same type
    being discarded.  If the req_size field for the type in the log_gobbled
@@ -512,7 +540,10 @@ void log_gobble_init
    any size is allowed.  The actual size of the currently residing record
    is stored in the actual_size field.  Space to hold the data is allocated 
    by this procedure if the current data pointer is null, or if the size of
-   the current record is not the same as that of the new record. */
+   the current record is not the same as that of the new record. 
+
+   After records have been gobbled, the header for the next record may
+   or may not have been read (logf->header.magic being zero indicates not). */
 
 void log_gobble
 ( log_file *logf,	/* Log file state structure */
@@ -520,6 +551,10 @@ void log_gobble
 )
 { 
   int type;
+
+  if (!logf->at_end && logf->header.magic==0)
+  { log_file_read_header(logf,0);
+  }
 
   if (logf->at_end)
   { fprintf(stderr,"Trying to gobble records past end of log file\n");
@@ -553,7 +588,30 @@ void log_gobble
     logg->actual_size[type] = logf->header.size;
     logg->index[type] = logf->header.index;
 
-    log_file_read (logf, logg->data[type], logf->header.size);
+    log_header header = logf->header;
+
+    if (readf (logg->data[type], header.size, logf) != header.size)
+    { fprintf(stderr,"Error reading data from log file\n");
+      exit(1);
+    }
+
+    log_file_read_header(logf,1);
+
+    if (logf->at_end)
+    { fprintf(stderr,"Missing trailer in log file\n");
+      exit(1);
+    }
+
+    check_header_trailer(&header,&logf->header);
+
+    logf->at_beginning = 0;
+
+    if (header.last_of_index && logf->follow)
+    { logf->header.magic = 0;
+      break;
+    }
+
+    log_file_read_header(logf,0);
   }
 }
 
@@ -595,4 +653,21 @@ int log_gobble_last
   log_gobble(logf,logg);
 
   return index+1;
+}
+
+
+/* READ DATA FROM A LOG FILE, RETRYING WHEN EOF IS ENCOUNTERED. */
+
+static size_t readf (void *restrict ptr, size_t nbytes, log_file *logf)
+{ 
+  size_t m = 0;
+  for (;;) {
+    size_t n = fread (ptr+m, 1, nbytes-m, logf->file_struct);
+    if (m+n==nbytes || !logf->follow || !feof(logf->file_struct)) 
+    { return m+n;
+    }
+    m += n;
+    clearerr (logf->file_struct);
+    sleep(1);
+  }
 }

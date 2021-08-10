@@ -1,6 +1,6 @@
 /* TBL.C - Skeleton of program to output table of quantities from log files. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -38,7 +38,7 @@ void usage(void)
 {
   extern void plt_usage(char *);
 
-  plt_usage("tbl [ -h ] quantities { log-file [ range ] }");
+  plt_usage("tbl [ -h ] [ -f ] quantities { log-file [ range ] }");
 
   exit(1);
 }
@@ -53,7 +53,7 @@ int main
 { 
   char *quant;
   char **ap, **apa;
-  int header;
+  int header, follow;
 
   int lindex, hindex, index_mod;
 
@@ -72,11 +72,15 @@ int main
   /* Look at flag arguments. */
 
   header = 0;
+  follow = 0;
  
   while (argc>1 && argv[1][0]=='-')
   {
     if (strcmp(argv[1],"-h")==0) 
     { header = 1;
+    }
+    else if (strcmp(argv[1],"-f")==0) 
+    { follow = 1;
     }
     else 
     { usage();
@@ -136,7 +140,7 @@ int main
 
     /* Open log file and set up for gobbling. */
   
-    log_file_open(&logf,0);
+    log_file_open (&logf, follow && (*ap==0 || strcmp(*ap,"/")==0) ? -1 : 0);
 
     log_gobble_init(&logg,!very_first);
     
@@ -197,35 +201,6 @@ int main
     qh_first = 0;
     qhp = &qh_first;
 
-    /* Go through all the records in the indicated range. */
-
-    for (;;)
-    {
-      /* Gather values for this iteration. */
-
-      qh = quantities_storage(qd);
-      *qhp = qh;
-      qh->next = 0;
-      qhp = &qh->next;
- 
-      quantities_evaluate(qd,qh,&logg);
-
-      /* Skip to next desired index, or to end of range. */
-  
-      while (!logf.at_end && logf.header.index<=hindex 
-               && logf.header.index%index_mod!=0)
-      { log_file_forward(&logf);
-      }
-
-      if (logf.at_end || logf.header.index>hindex)
-      { break;
-      }
-
-      /* Gobble up records for next index. */
-
-      log_gobble(&logf,&logg);
-    }
-
     /* Print headers, if desired and this is the first file. */
 
     if (very_first && header)
@@ -242,17 +217,47 @@ int main
         }
       }
       printf("\n");
+      fflush(stdout);
     }
 
-    /* Plot data collected. */
+    /* Go through all the records in the indicated range. */
 
-    for (qh = qh_first; qh!=0; qh = qh->next)
+    for (;;)
     {
+      /* Gather values for this iteration. */
+
+      qh = quantities_storage(qd);
+      *qhp = qh;
+      qh->next = 0;
+      qhp = &qh->next;
+ 
+      quantities_evaluate(qd,qh,&logg);
+
+      /* Plot data. */
+
       for (v = 0; v<V; v++)
       { printf ("%15.8e ", *(qh->value[0]+v));
       }
 
       printf("\n");
+      if (logf.follow) fflush(stdout);
+
+      /* Skip to next desired index, or to end of range. */
+
+      if (logf.header.magic==0) log_file_read_header(&logf,0);
+  
+      while (!logf.at_end && logf.header.index<=hindex 
+               && logf.header.index%index_mod!=0)
+      { log_file_forward(&logf);
+      }
+
+      if (logf.at_end || logf.header.index>hindex)
+      { break;
+      }
+
+      /* Gobble up records for next index. */
+
+      log_gobble(&logf,&logg);
     }
 
     fflush(stdout);

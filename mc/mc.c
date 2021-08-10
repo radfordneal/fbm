@@ -378,7 +378,7 @@ int main
       logf.header.type = 'i';
       logf.header.index = index;
       logf.header.size = sizeof *it;
-      log_file_append (&logf, it);
+      log_file_append_last_of_index (&logf, it);
 
       it->proposals = 0;
       it->rejects = 0;

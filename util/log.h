@@ -1,6 +1,6 @@
 /* LOG.H - Interface to routines for reading and writing log files. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -26,7 +26,7 @@ typedef struct
   short type;		/* Type of record, a character */
   int index;		/* Index of this record */
   int size;		/* Amount of data in record (in bytes) */
-  int reserved;		/* Reserved for future extensions */
+  int last_of_index;	/* 1 if known to be last record with this index */
 } log_header;
 
 
@@ -34,16 +34,20 @@ typedef struct
    for reading and writing records, and maybe gobbling with the higher-level
    procedurs too.  The at_end flag is set when the file pointer is past
    the last record.  The at_beginning flag is set when the file pointer is
-   at the start of the first record; it is not set when the file is empty. */
+   at the start of the first record; it is not set when the file is empty.
+   If the follow flag is set (by the application, after opening), when EOF
+   is reached, the read is retried indefinitely (after sleeping for one second
+   each time), so that data being appended will be followed. */
 
 typedef struct
 { char *file_name;	/* Path name for log file */
   FILE *file_struct;	/* File structure for log file */
-  log_header header;	/* Header for next record in log file */
+  log_header header;	/* Header for next record in file (absent if magic 0) */
   int at_end;		/* Whether we've read past the last record */
   int at_beginning;	/* Whether we're sitting at the first record */
   int last_index_known;	/* Is the index of the last record known? */
   int last_index;	/* Index of last record in log file, if known */
+  int follow;		/* Persist with reading after reaching EOF? */
 } log_file;
 
 
@@ -77,8 +81,10 @@ void log_file_last     (log_file *);
 void log_file_forward  (log_file *);
 void log_file_backward (log_file *);
 
+void log_file_read_header (log_file *, int);
 void log_file_read   (log_file *, void *, int);
 void log_file_append (log_file *, void *);
+void log_file_append_last_of_index (log_file *, void *);
 
 void log_gobble_init (log_gobbled *, int);
 void log_gobble      (log_file *, log_gobbled *);

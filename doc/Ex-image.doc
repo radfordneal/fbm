@@ -2,7 +2,7 @@
 
 EXAMPLES OF BAYESIAN NEURAL NETWORK IMAGE MODELS
 
-One prominent application of neural network models is for the
+One prominent area of application for neural network models is
 classification of images.  Here, a fairly simple artificial example of
 such an image classification problem is presented.  Several Bayesian
 neural network models are applied to this task, including ones that
@@ -104,7 +104,7 @@ computed assuming the true generation model is known.
 
 The igen program computes the performance on test cases when using the
 true model, which is an upper limit on what can be accomplished when
-learning a model from the training cases (unless one just is lucky).
+learning a model from the training cases (unless one is just lucky).
 Here is the summary:
 
   Error rate on test cases with true model: 0.082
@@ -119,8 +119,8 @@ of how the 36 pixel values are arranged in a 6x6 image, or any
 specific knowledge that the symbol to be detected is in a 3x3 patch of
 this image.  The model simply feeds the 36 inputs into a hidden layer
 with 80 tanh units, which in turn feeds into an output layer with 4
-units, which are used to define the class probabilities, as in the
-classification example in Ex-netgp-c.doc.
+"softmax" units, which are used to define the class probabilities, as
+in the classification example in Ex-netgp-c.doc.
 
 This model can be specified with the following commands:
 
@@ -134,22 +134,22 @@ units used to produce class probabilities, using the "softmax" scheme.
 
 The prior specification for input-to-hidden weights, of 0.05:3::1.5,
 does not allow for different inputs to have different relevance (hence
-no numer in ::, omitting variation between input groups), since we
-will assume that it is known that the inputs are almost equally
-relevant (since the symbol to be recognized might occur anywhere in
-the image).  The final 1.5 in the prior specification gives the
-input-to-hidden weights a heavy-tailed prior (a t distribution with
-1.5 degrees-of-freedom), allowing for the possibility that the
-input-to=hidden connections are effectively sparse, with a hidden unit
-looking at only a few of the pixel values.  The hidden-to-outuput
-weights also have a (less extreme) heavy-tailed prior, allowing for
-some of the hidden units to have small weights to some of the output
-units.
+no number between the secnd and third colons, so there is no variation
+between input groups), since we will assume that it is known that the
+inputs are almost equally relevant (since the symbol to be recognized
+might occur anywhere in the image).  The final 1.5 in the prior
+specification gives the input-to-hidden weights a heavy-tailed prior
+(a t distribution with 1.5 degrees-of-freedom), allowing for the
+possibility that the input-to-hidden connections are effectively
+sparse, with a hidden unit looking mostly at only a few of the pixel
+values.  The hidden-to-outuput weights also have a (less extreme)
+heavy-tailed prior, allowing for some of the hidden units to have
+small weights to some of the output units.
 
 A scheme allowing cross-validation assessments of performance is used,
 in which four training runs are done, each on 3/4 of the training
 data, with the omitted 1/4 allowing for monitoring of performance (to
-see, for example, whether is is advisable to do further MCMC
+see, for example, whether it is advisable to do further MCMC
 iterations).  Of course, making such assessments based on the test
 data would be "cheating" (since in real life, the test targets, and
 probably the test inputs as well, are not available when training).
@@ -167,7 +167,7 @@ log files of ilog1.net1, ilog1.net2, ilog1.net3, and ilog1.net4.)
 
 When final predictions for test cases are made, the "test" data
 specified in this data-spec command will be overridden by the actual
-test data, in idata-test.
+test data, which is in idata-test.
 
 The numbers in the data-spec command specify that there are 36 inputs
 and 1 target, which has 4 possible values (coded as 0, 1, 2, 3).
@@ -233,8 +233,10 @@ The fit (squared error) for the training data can be checked with
 
   net-plt t b ilog1.net? | plot-points
 
-As seen in ilog1-b.png, all four runs see to the equilibrium value for
-this in 100 iterations or less.
+As seen in ilog1-b.png, all four runs seem to reach the equilibrium
+distribution for this value in 100 iterations or less.  (The
+equilibrium distributions differ slightly between runs because they
+have different training and validation sets.)
 
 The squared error for each iteration on the validation cases can be
 seen with
@@ -251,11 +253,21 @@ averaging many iterations would be - poor predictions from a single
 iteration may be the result of the model producing high confidence
 predictions at each iteration, that vary from iteration to iteration,
 so that the averaged prediction has much lower confidence (and perhaps
-much better performance).
+much better performance).  So there is not necessarily anything wrong
+when the error on validation cases from individual networks is high.
+
+We can look at the hyperparameters at each iteration of the first run
+as follows:
+
+  net-plt t h1h2h3 ilog1.net1 | plot-points-log-scale
+
+This data is best plotted on a log scale, because the three
+hyperparameters differ greatly in magnitude, and also vary greatly
+over iterations.  The plot is in ilog1-h1h2h3.png.
   
 Once all runs have finished, we can assess performance on the actual
 test set as follows (with the first 1000 iterations discarded as
-"burn-in", which seems more than enough):
+"burn-in", which seems sufficient given the plots above):
 
   net-pred mnpa ilog1.net1 1001: ilog1.net2 1001: \
                 ilog1.net3 1001: ilog1.net4 1001: / idata-test .
@@ -270,13 +282,13 @@ The output is as follows:
   Fraction of guesses that were wrong:    0.4517+-0.0102
   Average squared error guessing mean:    0.57219+-0.00671
 
-Note that guessing ignoring the inputs and assigning equal
+Note that guessing by ignoring the inputs and assigning equal
 probabilities to the four classes gives an average log probability of
 -1.386, an error rate of 0.75, and an average squared error of 0.75.
 So this model performs significantly better than random guessing.
 However, the error rate of 45% is considerably more than the 8% error
 rate that is achievable with knowledge of the true generating process,
-so there is considerable room for improvement.
+so there is much room for improvement.
 
 
 A convolutional Bayesian neural network model.

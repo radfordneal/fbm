@@ -296,6 +296,69 @@ so there is much room for improvement.
 
 A convolutional Bayesian neural network model.
 
+Supposing that we know that the symbol to be recognized is 3 pixels by
+3 pixels, and that it may appear at any position in the image, it
+makes sense to use a convolutional network, that uses several filters
+looking at 3x3 patches of the image.  Each such filter is defined by
+the 9 weights on connectiions from a 3x3 patch at some position in the
+image to a hidden unit, with the weights for all possible positions
+being the same.  We might expect that four filters, one for each
+class, would be sufficient, but the network defined here will allow
+for five filters, which may make it easier to find the four needed,
+since a "spare" filter may allow locally-optimal modes to be more
+easily escaped.
+
+The simplest model of this type has a single hidden layer with 80
+hidden units (5 filters, each needing 16 units for all possible symbol
+positions), which connect to the four output units used to define
+class probabilities.  Such a network model can be specified as
+follows:
+
+  net-spec $log 36 80 input-config:iconfig 4 \
+                / ih=0.2:2 bh=0.3:2 ho=0.1:3::4 bo=0.1:2
+  model-spec $log class
+
+The "input-config" flag after the specification of the size of the
+hidden layer says that the configuration of the weights for
+connections from inputs to hidden units is specified in the file
+"iconfig", whose contents are as follows:
+
+  # Configuration for convolutional layer connections for model of test images.
+  
+  D=6  # image width and height
+  P=3  # patch width and height
+  F=5  # number of filters
+  
+  [ 1 1 1 ]
+  
+  D-P+1{  # Loop over vertical positions of patch
+  
+    D-P+1{  # Loop over horizontal positions of patch
+  
+      P{  # Loop over rows of patch
+  
+        P{  # Loop over pixels within row of patch
+  
+            = = =   F-1{ = + + }  # Connections for all filters 
+  
+            [ + = +F ]
+        }  
+  
+        [ +D = = ]   P[ = = +F ]
+      }
+  
+      [ + +F 1 ]
+    }
+  
+    [ +D = 1 ]   D-P+1[ = +F 1 ]
+  }
+
+See <A HREF="net-config.html">net-config.doc</A> for an explanation of the specification language
+used above.  The effect of this specification is to set up the
+convolutional connections, with 45 weights defining 5 filters (each
+looking at 9 pixels), which are shared by 16x9x5=720 connections
+(which is less than the 36x80=2880 possible connections).
+
 
 Fitting the models with gradient descent.
 </pre>

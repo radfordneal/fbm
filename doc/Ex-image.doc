@@ -256,8 +256,9 @@ so that the averaged prediction has much lower confidence (and perhaps
 much better performance).  So there is not necessarily anything wrong
 when the error on validation cases from individual networks is high.
 
-We can look at the hyperparameters at each iteration of the first run
-as follows:
+We can look at the main hyperparameters (standard deviations for
+input-hidden weights, hidden biases, and hidden-output weights) at
+each iteration of the first run as follows:
 
   net-plt t h1h2h3 ilog1.net1 | plot-points-log-scale
 
@@ -281,6 +282,22 @@ The output is as follows:
   Average log probability of targets:    -1.030+-0.012
   Fraction of guesses that were wrong:    0.4517+-0.0102
   Average squared error guessing mean:    0.57219+-0.00671
+
+Only slightly worse results would be obtained using runs only one
+tenth as long (3.3 hours).  The command
+
+  net-pred mnpa ilog1.net1 101:300 ilog1.net2 101:300 \
+                ilog1.net3 101:300 ilog1.net4 101:300 / idata-test .
+
+produces the following output:
+
+  Number of iterations used: 800
+
+  Number of test cases: 2400
+
+  Average log probability of targets:    -1.032+-0.012
+  Fraction of guesses that were wrong:    0.4579+-0.0102
+  Average squared error guessing mean:    0.57331+-0.00672
 
 Note that guessing by ignoring the inputs and assigning equal
 probabilities to the four classes gives an average log probability of
@@ -355,6 +372,67 @@ used above.  The effect of this specification is to set up the
 convolutional connections, with 45 weights defining 5 filters (each
 looking at 9 pixels), which are shared by 16x9x5=720 connections
 (which is less than the 36x80=2880 possible connections).
+
+The other commands used are almost the same as for the fully-connected
+network model above.  The only difference is that the stepsize for the
+final sampling phase is reduced from 0.21 to 0.2 to counter the fact
+that at one stage (iterations 500 to 1000) the rejection rate with
+this model goes up a bit.
+
+Each full iteration takes about 37 seconds on the system used
+(Ex-test-system.doc), for a total of 31 hours (with the four runs done
+in parallel).  This is a bit faster then for the fully-connected
+network, since there are fewer input-to-hidden connections (an
+advantage partially offset by the overhead of processing the
+non-contiguous configuration of connections).
+
+As above, we can plot the 'm' (move point), 'b' (squared error on
+training data), and 'B' (squared error on validation data) quantities
+for the four runs using net-plt.  The results can be seen as
+ilog2-m.png, ilog2-b.png, and ilog2-BB.png.  The main hyperparameter
+values for the first run can also be plotted, as above, giving the
+result in ilog2-h1h2h3.png.
+
+Once all runs have finished, we can assess performance on the actual
+test set as follows (with the first 1000 iterations discarded as
+"burn-in", which seems more than sufficient given the plots above):
+
+  net-pred mnpa ilog2.net1 1001: ilog2.net2 1001: \
+                ilog2.net3 1001: ilog2.net4 1001: / idata-test .
+
+The output is as follows:
+
+  Number of iterations used: 8000
+
+  Number of test cases: 2400
+
+  Average log probability of targets:    -0.783+-0.019
+  Fraction of guesses that were wrong:    0.2812+-0.0092
+  Average squared error guessing mean:    0.41774+-0.00981
+
+Only slightly worse results would be obtained using runs only one
+tenth as long (3.1 hours).  The command
+
+  net-pred mnpa ilog2.net1 101:300 ilog2.net2 101:300 \
+                ilog2.net3 101:300 ilog2.net4 101:300 / idata-test .
+
+produces the following output:
+
+  Number of iterations used: 800
+
+  Number of test cases: 2400
+
+  Average log probability of targets:    -0.779+-0.018
+  Fraction of guesses that were wrong:    0.2879+-0.0092
+  Average squared error guessing mean:    0.41990+-0.00960
+
+These results are considerably better than were obtained above when
+using a fully-connected network, demonstrating the advantage of using
+a convolutional network when, as here, it is known that it fits the
+structure of the problem.
+
+
+Adding another hidden layer.
 
 
 Fitting the models with gradient descent.

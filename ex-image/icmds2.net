@@ -38,4 +38,4 @@ for run in 1 2 3 4; do (
 
 wait
   
-./iend.net $logb 751:
+./iend.net $logb 1001:

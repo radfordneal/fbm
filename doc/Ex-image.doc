@@ -264,7 +264,9 @@ each iteration of the first run as follows:
 
 This data is best plotted on a log scale, because the three
 hyperparameters differ greatly in magnitude, and also vary greatly
-over iterations.  The plot is in ilog1-h1h2h3.png.
+over iterations.  The plot is in ilog1-h1h2h3.png.  Note that h1
+(input-to-hidden) is red, h2 (hidden biases) is green, and h3
+(hidden-to-output) is blue.
   
 Once all runs have finished, we can assess performance on the actual
 test set as follows (with the first 1000 iterations discarded as
@@ -303,9 +305,9 @@ Note that guessing by ignoring the inputs and assigning equal
 probabilities to the four classes gives an average log probability of
 -1.386, an error rate of 0.75, and an average squared error of 0.75.
 So this model performs significantly better than random guessing.
-However, the error rate of 45% is considerably more than the 8% error
-rate that is achievable with knowledge of the true generating process,
-so there is much room for improvement.
+However, the error rate of 45.2% is considerably more than the 8.2%
+error rate that is achievable with knowledge of the true generating
+process, so there is much room for improvement.
 
 
 A convolutional Bayesian neural network model.
@@ -431,8 +433,151 @@ using a fully-connected network, demonstrating the advantage of using
 a convolutional network when, as here, it is known that it fits the
 structure of the problem.
 
+The role of the convolutional connections can be confirmed by looking
+at the weights for each of the five filters as 3x3 "receptive fields".
+This can be done with the "idisp" shell file (which uses R).  The
+output for the last iteration of the first run is as follows:
+
+  , , 1
+  
+       [,1] [,2] [,3]
+  [1,]  0.2 -0.4  0.5
+  [2,] -0.5  0.3 -0.5
+  [3,]  0.3 -0.4  0.5
+  
+  , , 2
+  
+       [,1] [,2] [,3]
+  [1,]  0.6 -0.6  0.4
+  [2,]  0.5  0.5  0.6
+  [3,]  0.5 -0.4  0.7
+  
+  , , 3
+  
+       [,1] [,2] [,3]
+  [1,]  1.0 -0.5  0.3
+  [2,] -0.4  0.4 -0.4
+  [3,]  0.2 -0.6  0.5
+  
+  , , 4
+  
+       [,1] [,2] [,3]
+  [1,] -0.5 -0.4 -0.5
+  [2,] -0.7  0.7 -0.6
+  [3,] -0.6 -0.5 -0.4
+  
+  , , 5
+  
+       [,1] [,2] [,3]
+  [1,] -0.6  0.6 -0.6
+  [2,]  0.6  0.8  0.5
+  [3,] -0.6  0.5 -0.5
+
+One can see that the first and third filters are sensitive to the X
+symbol, the second to the H symbol, the fourth to the O symbol, and
+the fifth to the + symbol.  (Note that the overall sign of the pattern
+does not matter, since it can be reversed by the weights out of the
+hidden units.)
+
 
 Adding another hidden layer.
 
+The 28.1% error rate for the model with one convolutional hidden layer
+is still not close to the 8.2% error rate obtained using the true
+generative model.  We can try adding a second hidden layer to allow
+more complex computations that could get closer to optimal
+performance.  (Though note that performance is also limited by the
+amount of training data, not just by the capabilities of the network
+used.)
+
+The architecture used has convolutional connections from the inputs to
+the first hidden layer, as in the model above, and this hidden layer
+is then fully connected to a second hidden layer with 12 tanh units.
+Both hidden layers connect to the output units.
+
+However, the training procedure used will be designed so that the
+outputs will initially be mostly determined by the first hidden layer,
+with the second hidden layer allowed to take over (if this is favoured
+by the data) once a good fit using the first hidden layer has
+occurred.  Allowing the second hidden layer to operate from the start
+of a run seems to push the training into a sub-optimal local mode that
+is hard for the Markov chain to escape.
+
+This network model is specified as follows:
+
+  net-spec $log 36 80 input-config:iconfig 12 4 \
+   / ih=0.2:2 bh0=0.3:2 ho0=0.1:3::4 hh=0.4:3::4 bh1=0.2:2 ho1=0.05:4 bo=0.1:2
+  model-spec $log class
+
+The prior for the weights on connections from the second hidden layer
+to the outputs is 0.05:4, favouring smaller values than the prior for
+the connections from the first hidden layer to the outputs, 0.1:3::4,
+which is the same as for the model without the second hidden layer.
+The idea is that the second hidden layer should be used only to the
+extent that using only the first hidden layer fails is deficient.
+
+Markov chain sampling for this model is done in several stages, so
+that the more complex aspects do not become prematurely adapted,
+before the simpler aspects have fit the data as well as they can.
+The commands used are as follows:
+
+  net-gen $log fix 0.08
+
+  mc-spec $log repeat 750 heatbath hybrid 100:10 0.03
+  net-mc $log 1
+
+  mc-spec $log repeat 300 sample-hyper 1 sample-hyper 2 \
+                          sample-hyper 6 sample-hyper 7 \
+                          heatbath hybrid 250:25 0.04
+  net-mc $log 2
+
+  mc-spec $log repeat 150 sample-hyper 1 sample-hyper 2 \
+                          sample-hyper 6 sample-hyper 7 \
+                          heatbath hybrid 500:50 0.06
+  net-mc $log 3
+
+  mc-spec $log repeat 60 sample-hyper 1 sample-hyper 2 \
+                         sample-hyper 6 sample-hyper 7 \
+                         heatbath hybrid 1250:125 0.13
+  net-mc $log 4
+  
+  mc-spec $log repeat 60 sample-hyper 1 sample-hyper 2 \
+                         sample-hyper 6 sample-hyper 7 \
+                         heatbath 0.87 hybrid 1250:125 0.19 negate
+  net-mc $log 200
+  
+  mc-spec $log repeat 60 sample-hyper \
+                         heatbath 0.93 hybrid 1250:125 0.13 negate
+  net-mc $log 3000
+
+In the first iteration, 750 HMC updates are done, with hyperparameters
+fixed at 0.08.  The next iteration does 300 updates combining Gibbs
+sampling for only the hyperparameters involving the first hidden layer
+with HMC updates of all the weights.  The hyperparameters involving
+the second hidden layer remain fixed at 0.08, keeping the contribution
+of the second hidden layer small.  Two more iterations of the same
+sort but with increasing stepsizes and trajectory lengths are then
+done, followed by 196 iterations using persistent momentum, with the
+hyperparameters involving the second hidden layer still fixed at 0.08.
+Finally, 2800 iterations with persistent momentum are done with all
+hyperparameters being updated.
+
+As above, we can plot the 'm' (move point), 'b' (squared error on
+training data), and 'B' (squared error on validation data) quantities
+for the four runs using net-plt.  The results can be seen as
+ilog3-m.png, ilog3-b.png, and ilog3-BB.png.
+
+We can look at the main hyperparameters at each iteration of the first
+run as follows:
+
+  net-plt t h1h2h3h5h6 ilog3.net1 | plot-points-log-scale
+
+This data is best plotted on a log scale, because the hyperparameters
+differ greatly in magnitude, and also vary greatly over iterations.
+The plot is in ilog3-h1h2h3h5h6.png.  Note that h1 (input to first
+hidden layer) is red, h2 (first hidden layer biases) is green, h3
+(hidden to hidden weights) is blue, h5 (second hidden layer to output)
+is magenta, and h6 (first hidden layer to output) is in cyan.  (The
+hyperparameter for second hidden layer biaes is not displayed.)
 
 Fitting the models with gradient descent.

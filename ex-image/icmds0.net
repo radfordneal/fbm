@@ -25,17 +25,17 @@ for run in 1 2 3 4; do (
   
   net-gen $log fix 0.1
 
-  mc-spec $log repeat 20 heatbath hybrid 50:5 0.15
+  mc-spec $log repeat 10 heatbath hybrid 10 0.15
   net-mc $log 1
 
-  mc-spec $log repeat 10 sample-sigmas heatbath hybrid 100:10 0.2
+  mc-spec $log repeat 5 sample-sigmas heatbath hybrid 20:2 0.2
   net-mc $log 2
   
-  mc-spec $log repeat 2 sample-sigmas heatbath hybrid 500:50 0.3
-  net-mc $log 1000
+  mc-spec $log sample-sigmas heatbath hybrid 100:10 0.3
+  net-mc $log 3000
   
 ) & done
 
 wait
   
-./iend.net $logb 251:
+./iend.net $logb 1001:

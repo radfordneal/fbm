@@ -21,7 +21,7 @@ for run in 1 2 3 4; do
   
   data-spec $log 36 1 4 / idata-train@-$start:$end . idata-train@$start:$end .
 
-  net-gd $log 30000 10 / 0.01 0.1 0.2 0.2 batch &
+  net-gd $log 20000 10 / 0.01 0.1 0.2 0.2 batch &
 
 done
 

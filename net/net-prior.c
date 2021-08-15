@@ -39,6 +39,9 @@
 static void pick_unit_params (net_param *, net_sigma *, int, net_sigma *,
                               prior_spec, int, double);
 
+static void pick_unit_params_config (net_param *, net_sigma *, int,
+                                     prior_spec, int, double);
+
 static void pick_weights (net_param *, net_sigma *, net_sigma *, 
                           int, int, net_sigma *, prior_spec, int, double);
 
@@ -127,8 +130,16 @@ void net_prior_generate
       }
     }
 
-    if (a->has_bh[l]) pick_unit_params (w->bh[l], s->bh_cm[l], a->N_hidden[l], 
-                                        s->ah[l], p->bh[l], centre, value);
+    if (a->has_bh[l])
+    { if (a->bias_config[l])
+      { pick_unit_params_config(w->bh[l], s->bh_cm[l], a->bias_config[l]->N_wts,
+                                p->bh[l], centre, value);
+      }
+      else
+      { pick_unit_params (w->bh[l], s->bh_cm[l], a->N_hidden[l], 
+                                    s->ah[l], p->bh[l], centre, value);
+      }
+    }
     
     if (a->has_th[l]) pick_unit_params (w->th[l], s->th_cm[l], a->N_hidden[l], 
                                         0, p->th[l], centre, value);
@@ -188,6 +199,38 @@ static void pick_unit_params
       { *wt *= adj[i];
       }
     }
+    wt += 1;
+  }
+}
+
+
+/* GENERATE VALUES AND SIGMAS FOR UNIT PARAMETERS, WITH SPECIFIED CONFIG. */
+
+static void pick_unit_params_config
+( net_param *wt,	/* Array to store parameters */
+  net_sigma *sd_cm,	/* Place to store common sigma */
+  int n,		/* Number of weights, possibly sparse and/or shared */
+  prior_spec pr,	/* Prior to use */
+  int centre,		/* Choose "centre" rather than random value? */
+  double value		/* Use specific value for sigma? */
+)
+{ 
+  net_sigma unit_sigma;
+  int i;
+
+  *sd_cm = centre ? (value==0 || pr.alpha[0]==0 ? pr.width : value)
+                  : prior_pick_sigma (pr.width, pr.alpha[0]);
+
+  for (i = 0; i<n; i++)
+  { 
+    if (centre)
+    { *wt = 0;
+    }
+    else
+    { unit_sigma = prior_pick_sigma (*sd_cm, pr.alpha[1]);
+      *wt = unit_sigma * (pr.two_point ? 2*rand_int(2)-1 : rand_gaussian());
+    }
+
     wt += 1;
   }
 }
@@ -348,9 +391,18 @@ void net_prior_prob
       }
     }
 
-    if (a->has_bh[l]) compute_prior (w->bh[l], a->N_hidden[l], lp, 
-                                     dp ? dp->bh[l] : 0, *s->bh_cm[l], 
-                                     p->bh[l].alpha[1], s->ah[l], op); 
+    if (a->has_bh[l])
+    { if (a->bias_config[l])
+      { compute_prior (w->bh[l], a->bias_config[l]->N_wts, lp, 
+                                 dp ? dp->bh[l] : 0, *s->bh_cm[l], 
+                                 p->bh[l].alpha[1], 0, op); 
+      }
+      else
+      { compute_prior (w->bh[l], a->N_hidden[l], lp, 
+                                 dp ? dp->bh[l] : 0, *s->bh_cm[l], 
+                                 p->bh[l].alpha[1], s->ah[l], op); 
+      }
+    }
     
     if (a->has_th[l]) compute_prior (w->th[l], a->N_hidden[l], lp, 
                                      dp ? dp->th[l] : 0, *s->th_cm[l], 
@@ -493,8 +545,14 @@ void net_prior_max_second
   for (l = 0; l<a->N_layers; l++)
   {
     if (a->has_bh[l])
-    { max_second (d->bh[l], a->N_hidden[l], 
-                  *s->bh_cm[l], s->ah[l], p->bh[l].alpha[1]);
+    { if (a->bias_config[l])
+      { max_second (d->bh[l], a->bias_config[l]->N_wts,
+                    *s->bh_cm[l], 0, p->bh[l].alpha[1]);
+      }
+      else
+      { max_second (d->bh[l], a->N_hidden[l], 
+                    *s->bh_cm[l], s->ah[l], p->bh[l].alpha[1]);
+      }
     }
 
     if (a->has_th[l])

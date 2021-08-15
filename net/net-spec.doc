@@ -25,8 +25,9 @@ The first two forms above are alternative ways of specifying network
 archictures.  
 
 The last form is for displaying the network architecture stored in the
-specified log file.  The optional "config" argument causes the detailed
-configuration from input-config and hidden-config flags to be output.
+specified log file.  The optional "config" argument causes the
+detailed configuration from input-config and hidden-config flags to be
+output, in its fullly-expanded form (as individual triplets or pairs).
 
 N-inputs and N-outputs are the numbers of units in the input and
 output layers.  The sizes of zero or more hidden layers are specified
@@ -57,23 +58,24 @@ are looked at, as specifed by later arguments).  If the "-" is placed
 before the list of inputs, the list gives the inputs that are NOT
 omitted.  Inputs are numbered starting with 1.
 
-Hidden layers may have one or both of the following flags:
+Hidden layers may have the following flags:
 
     input-config:<file>
     hidden-config:<file>
+    bias-config:<file>
 
 except that the input-config flag may not be combined with an omit
 flag, and the hidden-config flag may not be specified for the first
-hidden layer.  The file named must contain a specification of which
-connections from the input layer or previous hidden layer are present,
-and how the weight parameters are used for these connections (with
-possible sharing of weights between connections).  See net-config.doc
-for documentation on how the configuration is specified in such a
-file.  The named configuration files do not need to exist when the
-configuration is specified; they are read (and checked for errors)
-only when needed later.  A configuration file may be specified with an
-initial "%", in which case the remainder is a command that is run to
-output the "file" contents.
+hidden layer.  The files must contain specifications for which
+connections from the input layer or previous hidden layer, or which
+biases, are present, and how the weight/bias parameters are used for
+these connections or biases (with possible sharing of weights/biases
+between connections).  See net-config.doc for documentation on how the
+configuration is specified in such a file.  The named configuration
+files do not need to exist when the configuration is specified; they
+are read (and checked for errors) only when needed later.  A
+configuration file may be specified with an initial "%", in which case
+the remainder is a command that is run to output the "file" contents.
 
 Following a "/", the priors for groups of weights, biases, offsets,
 and adjustments are specified, in one of two forms.  For the syntax of

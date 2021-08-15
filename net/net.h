@@ -22,7 +22,8 @@
 
 #define Max_conn 1000000	/* Maximum number of connections in a group */
 
-/* A single connection, or a sequence of connections, depending on context. */
+/* A single connection, or a sequence of connections, depending on context.
+   For biases, s is always 0. */
 
 typedef struct
 { unsigned short s;		  /* Index of source unit(s), from 0 */
@@ -58,8 +59,8 @@ typedef struct
 
    Stored in log files under type 'A'.  Changes may invalidate old log files. */
 
-#define Max_layers 15  /* Maximum number of hidden layers in a network
-                           - no more than 15, due to keeping flags in 'short' */
+#define Max_layers 15  /* Maximum number of hidden layers in a network - no more
+                          than 15, due to keeping flags in an unsigned short */
 
 typedef struct
 { 
@@ -81,14 +82,13 @@ typedef struct
   int has_ao;			/* Does output layer have adjustments? */
 
   net_config *input_config[Max_layers];   /* Pointers used during program,  */
-  net_config *hidden_config[Max_layers];  /*   but set to zero in log file  */
-				          /*   (hidden_config[0] is unused) */
+  net_config *bias_config[Max_layers];    /*   but set to zero in log file  */
+  net_config *hidden_config[Max_layers];  /*   (hidden_config[0] is unused) */
 } net_arch;
 
 
 /* FLAGS MODIFYING ARCHITECTURE.  This record records extra flags modifying
-   the architecture, which are recorded here to avoid invalidating log files
-   created before these features were added, and to avoid taking up space
+   the architecture, which are recorded here to avoid taking up space
    when the flags aren't used. 
 
    The omit flags are 1 when an input is omitted for a layer.  The low-order
@@ -110,6 +110,7 @@ typedef struct
 
                                    /* Below with +1 for tmp use w input layer */
   short input_config[Max_layers+1]; /* Index of input config file, 0 if none */
+  short bias_config[Max_layers+1];  /* Index of bias config file, 0 if none */
   short hidden_config[Max_layers+1];/* Index of hidden config file, 0 if none */
 
   char config_files[2000];         /* Names of files for input/hidden configs */

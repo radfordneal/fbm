@@ -134,11 +134,19 @@ static char **do_items
 ( char *file,	/* File name, for error messages */
   char **item,	/* Array of items to process */
   net_config *p,/* Place to store connections produced */
-  int ns,	/* Number of source units, for error checking */
+  int ns0,	/* Number of source units (for error checking), -1 if biases */
   int nd,	/* Number of destination units, for error checking */
   char paren	/* Operation to perform */
 )
 {
+  int biases = 0;  /* 1 if doing biases, with doublets, not triplets */
+  int ns = ns0;    /* number of source units, 1 for biases */
+
+  if (ns0==-1)
+  { ns = 1;
+    biases = 1;
+  }
+
   for (;;)
   { 
     int s, d, w, r, l;
@@ -172,7 +180,7 @@ static char **do_items
       int sv_lasts = lasts, sv_lastd = lastd, sv_lastw = lastw;
         
       while (r>0)
-      { item = do_items (file, start_item, p, ns, nd, nparen);
+      { item = do_items (file, start_item, p, ns0, nd, nparen);
         r -= 1;
       }
 
@@ -209,19 +217,32 @@ static char **do_items
       continue;
     }
 
-    if (item[1]==NULL || strcmp(item[1],")")==0 || strcmp(item[1],"]")==0 
-                      || strcmp(item[1],"}")==0 
-     || item[2]==NULL || strcmp(item[2],")")==0 || strcmp(item[2],"]")==0
-                      || strcmp(item[2],"}")==0)
-    { fprintf (stderr, 
-               "Incomplete triple in weight configuration file: %s\n",
-               file);
-      exit(2);
+    if (biases)
+    { if (item[1]==NULL || strcmp(item[1],")")==0 || strcmp(item[1],"]")==0 
+                        || strcmp(item[1],"}")==0)
+      { fprintf (stderr, 
+                 "Incomplete doublet in bias configuration file: %s\n",
+                 file);
+        exit(2);
+      }
+    }
+    else
+    { if (item[1]==NULL || strcmp(item[1],")")==0 || strcmp(item[1],"]")==0 
+                        || strcmp(item[1],"}")==0 
+       || item[2]==NULL || strcmp(item[2],")")==0 || strcmp(item[2],"]")==0
+                        || strcmp(item[2],"}")==0)
+      { fprintf (stderr, 
+                 "Incomplete triplet in weight configuration file: %s\n",
+                 file);
+        exit(2);
+      }
     }
 
-    s = convert_item(item[0],lasts,0);
-    d = convert_item(item[1],lastd,0);
-    w = convert_item(item[2],lastw,0);
+    int j = 0;
+
+    s = biases ? 1 : convert_item(item[j++],lasts,0);
+    d = convert_item(item[j++],lastd,0);
+    w = convert_item(item[j++],lastw,0);
 
     lasts = s; lastd = d; lastw = w;
 
@@ -252,15 +273,16 @@ static char **do_items
       // fprintf(stderr,"Conn %d: %d %d %d\n",p->N_conn,s,d,w);
     }
 
-    item += 3;
+    item += j;
   }
 }
 
 
-/* READ WEIGHT CONFIGURATION.  Passed the configuration file and numbers of
-   units in the source and destination layers.  Returns a newly-allocated
-   structure with the configuration.  Also produces the sorted versions of
-   the configuration, used for more efficient processing. */
+/* READ WEIGHT CONFIGURATION.  Passed the configuration file, the
+   number of units in the source layer (-1 if for biases), and the
+   number of units in the destination layer.  Returns a newly-allocated 
+   structure with the configuration.  Also produces the sorted
+   versions of the configuration, used for more efficient processing. */
 
 net_config *net_config_read (char *file, int ns, int nd)
 { 

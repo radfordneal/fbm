@@ -104,7 +104,12 @@ void net_print_params
     if (a->has_bh[l])
     { printf("\nHidden Layer %d Biases [%d]\n\n",l,g++);
       if (s!=0) printf("%10.2f:",*s->bh_cm[l]);
-      print_param_array (w->bh[l], a->N_hidden[l], s!=0);
+      if (a->bias_config[l])
+      { print_param_array (w->bh[l], a->bias_config[l]->N_wts, s!=0);
+      }
+      else
+      { print_param_array (w->bh[l], a->N_hidden[l], s!=0);
+      }
     }
 
     if (a->has_ah[l])

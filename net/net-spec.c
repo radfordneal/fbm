@@ -27,7 +27,7 @@
 
 
 static void usage(void);
-static void print_config (net_config *);
+static void print_config (net_config *, int);
 
 
 /* MAIN PROGRAM. */
@@ -101,6 +101,9 @@ int main
       }
       if (flgs && flgs->hidden_config[l])
       { printf("  hidden-config:%s",flgs->config_files+flgs->hidden_config[l]);
+      }
+      if (flgs && flgs->bias_config[l])
+      { printf("  bias-config:%s",flgs->config_files+flgs->bias_config[l]);
       }
       printf("\n");
     }
@@ -188,13 +191,19 @@ int main
         { printf("Hidden layer %d input weight configuration\n",l);
           print_config (net_config_read 
                          (flgs->config_files+flgs->input_config[l],
-                          a->N_inputs, a->N_hidden[l]));
+                          a->N_inputs, a->N_hidden[l]), 0);
         }
         if (flgs->hidden_config[l])
         { printf("Hidden layer %d hidden weight configuration\n",l);
           print_config (net_config_read 
                          (flgs->config_files+flgs->hidden_config[l],
-                          a->N_hidden[l-1], a->N_hidden[l]));
+                          a->N_hidden[l-1], a->N_hidden[l]), 0);
+        }
+        if (flgs->bias_config[l])
+        { printf("Hidden layer %d bias configuration\n",l);
+          print_config (net_config_read 
+                         (flgs->config_files+flgs->bias_config[l],
+                          -1, a->N_hidden[l]), 1);
         }
       }
     }
@@ -219,7 +228,7 @@ int main
   while (*ap!=0 && strcmp(*ap,"/")!=0)
   { 
     double size;
-    int omit, iconfig, hconfig, type;
+    int omit, iconfig, hconfig, bconfig, type;
     int i;
 
     if ((size = atoi(*ap++))<=0) usage();
@@ -229,6 +238,7 @@ int main
     omit = 0;
     iconfig = 0;
     hconfig = 0;
+    bconfig = 0;
     type = -1;
 
     while ((*ap)[0]>='a' && (*ap)[0]<='z')
@@ -255,6 +265,13 @@ int main
         if (a->N_layers<=Max_layers) flgs->hidden_config[a->N_layers] = fileix;
         fileix += strlen(flgs->config_files+fileix) + 1;
       }
+      else if (strncmp(*ap,"bias-config:",12)==0)
+      { if (bconfig) usage();
+        bconfig = 1;
+        strcpy(flgs->config_files+fileix,*ap+12);
+        if (a->N_layers<=Max_layers) flgs->bias_config[a->N_layers] = fileix;
+        fileix += strlen(flgs->config_files+fileix) + 1;
+      }
       else if (strcmp(*ap,"tanh")==0)
       { if (type>=0) usage();
         type = Tanh_type;
@@ -274,9 +291,8 @@ int main
       ap += 1;
     }
 
-    if (omit && (iconfig || hconfig))
-    { fprintf(stderr,
-        "omit flag may not be combined with input-config or hidden-config\n");
+    if (omit && iconfig)
+    { fprintf(stderr, "omit flag may not be combined with input-config\n");
       exit(2);
     }
 
@@ -297,9 +313,9 @@ int main
     else
     { a->N_outputs = size;
       if (type!=-1) usage();
-      if (iconfig || hconfig)
+      if (iconfig || hconfig || bconfig)
       { fprintf(stderr,
-         "input-config and hidden-config flags are for hidden layers only\n");
+"input-config, hidden-config, and bias-config flags are for hidden layers only\n");
       }
     }
   }
@@ -536,11 +552,15 @@ int main
 
 /* PRINT WEIGHT CONFIGURATION. */
 
-void print_config (net_config *cf)
+void print_config (net_config *cf, int biases)
 { int k;
-  printf("\n%d connections, %d weights\n\n",cf->N_conn,cf->N_wts);
+  printf("\n%d connections, %d %s\n\n",cf->N_conn,cf->N_wts,
+                                       biases ? "biases" : "weights");
   for (k = 0; k<cf->N_conn; k++)
-  { printf ("%6d %6d %6d\n", cf->conn[k].s+1, cf->conn[k].d+1, cf->conn[k].w+1);
+  { if (!biases) 
+    { printf ("%6d ", cf->conn[k].s+1);
+    }
+    printf ("%6d %6d\n", cf->conn[k].d+1, cf->conn[k].w+1);
   }
   printf("\n");
 }
@@ -572,9 +592,9 @@ static void usage(void)
    "Prior: [x]Width[:[Alpha-type][:[Alpha-unit][:[Alpha-weight]]]]\n");
 
   fprintf(stderr,
- "Flags: omit:[-]<input>{,<input>} input-config:<file> hidden-config:<file>\n");
+   "Flags: input-config:<file> hidden-config:<file> bias-config:<file>\n");
   fprintf(stderr,
- "       tanh identity sin\n");
+   "       omit:[-]<input>{,<input>} tanh identity sin\n");
 
   exit(1);
 }

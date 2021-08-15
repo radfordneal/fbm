@@ -6,15 +6,19 @@ layers, what connections exist from the previous hidden layer or from
 the input layer, and any sharing of weights between these connections,
 can be specified in a configuration file, referenced from the
 "input-config" or "hidden-config" flags in the network specification.
-(See net-spec.doc for details.)
+Similarly, biases for hidden layers may be configured with sharing or
+sparsity.  See net-spec.doc for details.
 
 Configuration files can be written in various ways, as given by the
 detailed syntax at the end of this document.  The simplest form, as a
-sequence of source-destination-weight triples, is presented first
-below, followed by increasingly elaborate forms.
+sequence of source-destination-weight triplets, is presented first
+below, followed by increasingly elaborate forms.  Configuration files
+for biases have the same form as those for input-to-hidden or
+hidden-to-hidden connections, except the source-destination-weight
+triplets are replaced by unit-bias doublets.
 
 This configuration file (which may be output from a command, if
-specified with "%", see net-spec.doc) can contain one or more triples
+specified with "%", see net-spec.doc) can contain one or more triplets
 of the form
 
     <source-unit> <destination-unit> <weight-index>
@@ -53,7 +57,7 @@ effect.  If no weight is associated with a connection, it is
 effectivly absent from the network.
 
 Indexes for units or weights may be specified relative to the values
-in the previous triple, using the form +offset or -offset.  A "+" with
+in the previous triplet, using the form +offset or -offset.  A "+" with
 no offset is the same as "+1", and a "-" with no offset is the same as
 "-1".  An index specifed as "=" is the same as the previous index.
 The previous index is considered to be 0 at the start of the file.
@@ -75,12 +79,12 @@ or as follows:
 
     1 +20+30-48 -10+9
 
-A group of triples may be repeated by enclosing it in items of the
+A group of triplets may be repeated by enclosing it in items of the
 form "<rep>(" and ")", where <rep> is a positive integer (defaulting
 to 1 if absent).  Such repeated groups may be nested.  A group of
-triples enclosed by "<rep>[" and "]" will update the indexes used for
+triplets enclosed by "<rep>[" and "]" will update the indexes used for
 relative values, but without producing any connections.  A group of
-triples enclosed by "<rep>{" and "}" will act like one encosed by
+triplets enclosed by "<rep>{" and "}" will act like one encosed by
 "<rep>(" and ")" except that, after all repetitions, the indexes used
 for relative values will be restored to ther values before the repeat
 group.
@@ -133,7 +137,7 @@ Letters have the value zero before any assignment, and may be assigned
 more than once - for example, a=3 a=a+1 is allowed, and leaves a with
 the value 4.
 
-Finally, an item of "@" (not in the middle of a triple) will print 
+Finally, an item of "@" (not in the middle of a triplet) will print 
 
     n @ s d w
 
@@ -141,7 +145,7 @@ on standard error, with n being an index from 1 up, and s, d, and w
 being the current source unit, destination unit, and weight index.
 This is for use in debugging configuration files.
 
-The way in which triples defining connections are produced by the
+The way in which triplets defining connections are produced by the
 configuration file has no effect on the performance of network
 operations.  (There may be a negligible effect on program startup
 time.)  However, the way in which weights are associated with indexes
@@ -156,14 +160,14 @@ double quotes for parts written literally:
 
     <configuration> : { <part> }
 
-    <part>          : <triple> 
+    <part>          : <triplet> 
                     | [<number>]"(" { <part> } ")"
                     | [<number>]"{" { <part> } "}"
                     | [<number>]"[" { <part> } "]"
                     | <letter>=<number>
                     | "@"
 
-    <triple>        : <index> <index> <index>
+    <triplet>       : <index> <index> <index>
 
     <index>         : <number> | <sign>[<number>]
 
@@ -184,8 +188,13 @@ double quotes for parts written literally:
 
 Whitespace above corresponds to whitespace (spaces or newlines) in the
 file, and lack of whitespace above corresponds to no whitespace in the
-file.  For example, a repeated triple must be written like 4( + + + ),
+file.  For example, a repeated triplet must be written like 4( + + + ),
 not like 4(+ + +) or 4 ( + + + ), and assignments must be written like
 a=123, not like a = 123.
+
+Configuration files for biases have the same syntax, except <triplet>
+is replaced by <doublet>, defined as
+
+    <doublet>: <index> <index>
 
             Copyright (c) 2021 by Radford M. Neal

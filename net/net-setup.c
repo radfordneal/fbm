@@ -81,10 +81,10 @@ int net_setup_sigma_count
 }
 
 
-/* RETURN NUMBER OF NETWORK PARAMETERS.  Returns the number of weights,
-   biases, and offsets in a network with the given architecture.  Also
-   reads any weight configuration files, and fills in the configuration
-   pointers in the net_arch structure. */
+/* RETURN NUMBER OF NETWORK PARAMETERS.  Returns the number of
+   weights, biases, and offsets in a network with the given
+   architecture.  Also reads any weight/bias configuration files, and
+   fills in the configuration pointers in the net_arch structure. */
 
 int net_setup_param_count
 ( net_arch *a,		/* Network architecture */
@@ -125,7 +125,18 @@ int net_setup_param_count
       }
     }
 
-    if (a->has_bh[l]) count += a->N_hidden[l];
+    if (a->has_bh[l]) 
+    { if (flgs && flgs->bias_config[l])
+      { a->bias_config[l] =
+          net_config_read (flgs->config_files + flgs->bias_config[l],
+                           -1, a->N_hidden[l]);
+        count += a->bias_config[l]->N_wts;
+      }
+      else
+      { count += a->N_hidden[l];
+      }
+    }
+
     if (a->has_th[l]) count += a->N_hidden[l];
     if (a->has_ho[l]) count += a->N_hidden[l]*a->N_outputs;
   }
@@ -295,7 +306,7 @@ void net_setup_param_pointers
     w->bh[l] = 0;
     if (a->has_bh[l])
     { w->bh[l] = b;
-      b += a->N_hidden[l];
+      b += a->bias_config[l] ? a->bias_config[l]->N_wts : a->N_hidden[l];
     }
   
     w->th[l] = 0;
@@ -510,8 +521,9 @@ int net_setup_param_group
     if (a->has_bh[l]) 
     { *offset = i; 
       *source = 0;
-      *configured = 0;
-      i += a->N_hidden[l]; 
+      *configured = a->bias_config[l]!=0;
+      i += *configured ? a->bias_config[l]->N_wts 
+                       : a->N_hidden[l]; 
       if (--grp==0) goto done;
     }
 

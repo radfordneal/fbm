@@ -481,10 +481,16 @@ int mc_app_sample
         }
       }
 
-      if (arch->has_bh[l]) rgrid_met_unit (pm, it,
-                                           params.bh[l], sigmas.bh_cm[l], 
-                                           sigmas.ah[l], arch->N_hidden[l], 
-                                           &priors->bh[l]);
+      if (arch->has_bh[l])
+      { if (arch->bias_config[l])
+        { rgrid_met_unit (pm, it, params.bh[l], sigmas.bh_cm[l], 
+                          0, arch->bias_config[l]->N_wts, &priors->bh[l]);
+        }
+        else
+        { rgrid_met_unit (pm, it, params.bh[l], sigmas.bh_cm[l], 
+                          sigmas.ah[l], arch->N_hidden[l], &priors->bh[l]);
+        }
+      }
       
       if (arch->has_th[l]) rgrid_met_unit (pm, it,
                                            params.th[l], sigmas.th_cm[l], 0,
@@ -558,13 +564,19 @@ int mc_app_sample
       }
 
       if (arch->has_bh[l] && THISGRP)
-      { gibbs_unit (sample_hyper, params.bh[l], sigmas.bh_cm[l], 
-                    sigmas.ah[l], arch->N_hidden[l], &priors->bh[l]);
+      { if (arch->bias_config[l])
+        { gibbs_unit (sample_hyper, params.bh[l], sigmas.bh_cm[l], 
+                      0, arch->bias_config[l]->N_wts, &priors->bh[l]);
+        }
+        else
+        { gibbs_unit (sample_hyper, params.bh[l], sigmas.bh_cm[l], 
+                      sigmas.ah[l], arch->N_hidden[l], &priors->bh[l]);
+        }
       }
 
       if (arch->has_ah[l] && THISGRP)
       { gibbs_adjustments (sigmas.ah[l], priors->ah[l], arch->N_hidden[l], 
-          arch->has_bh[l] ? params.bh[l] : 0,
+          arch->has_bh[l] && !arch->bias_config[l] ? params.bh[l] : 0,
             sigmas.bh_cm[l], 
             priors->bh[l].alpha[1],
           arch->has_ih[l] && !arch->input_config[l] ? params.ih[l] : 0, 
@@ -1595,8 +1607,17 @@ void mc_app_stepsizes
     }
 
     if (arch->has_bh[l])
-    { for (j = 0; j<arch->N_hidden[l]; j++)
-      { stepsizes.bh[l][j] += N_train * seconds.s[l][j];
+    { if (arch->bias_config[l])
+      { for (k = 0; k<arch->bias_config[l]->N_conn; k++)
+        { j = arch->bias_config[l]->conn[k].d;
+          stepsizes.bh [l] [arch->bias_config[l]->conn[k].w] 
+            += N_train * seconds.s[l][j];
+        }
+      }
+      else
+      { for (j = 0; j<arch->N_hidden[l]; j++)
+        { stepsizes.bh[l][j] += N_train * seconds.s[l][j];
+        }
       }
     }
 

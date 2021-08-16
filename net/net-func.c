@@ -41,6 +41,9 @@
 
 static void bias_values (net_value *restrict, int, net_param *restrict);
 
+static void bias_values_config (net_value *restrict, int, net_param *restrict,
+                                net_config *restrict);
+
 static void add_connections (net_value *restrict, int, net_value *restrict, int,
                              net_param *restrict, net_param *restrict,
                              unsigned short *restrict, int);
@@ -74,7 +77,12 @@ void net_func
     net_value *sh = v->s[l];
 
     if (a->has_bh[l])
-    { bias_values (sh, N_hidden, w->bh[l]);
+    { if (a->bias_config[l])
+      { bias_values_config (sh, N_hidden, w->bh[l], a->bias_config[l]);
+      }
+      else
+      { bias_values (sh, N_hidden, w->bh[l]);
+      }
     }
     else
     { memset (sh, 0, N_hidden * sizeof *sh);
@@ -202,6 +210,28 @@ static void bias_values
 { 
   int j;
   for (j = 0; j<n; j++) v[j] = b[j];
+}
+
+
+/* SET UNIT VALUES TO BIASES WHEN THERE IS A CONFIGURATON.  At present,
+   just goes through the original list of connections in the configuration,
+   without trying to optimize. */
+
+static void bias_values_config
+( net_value *restrict v,	/* Array of unit values to set */
+  int n,			/* Number of units */
+  net_param *restrict b,	/* Biases */
+  net_config *restrict cf	/* Configuration for biases */
+)
+{ 
+  net_connection *cn = cf->conn;
+  int c, j, k;
+
+  memset (v, 0, n * sizeof *v);
+  for (c = 0; (k = cn[c].w) >= 0; c++)
+  { j = cn[c].d;
+    v[j] += b[k];
+  }
 }
 
 
@@ -502,7 +532,7 @@ static void add_connections
 
 
 /* ADD CONTRIBUTION FROM ONE GROUP OF CONNECTIONS WITH CONFIGURATION FROM FILE.
-   Adds the weighted input  due to connections from one source layer to the 
+   Adds the weighted input due to connections from one source layer to the 
    current unit values for the destination layer. */
 
 static void add_connections_config

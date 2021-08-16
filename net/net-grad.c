@@ -35,6 +35,8 @@
 
 
 static void add_grad1 (net_param *restrict, net_value *restrict, int);
+static void add_grad1_config (net_param *restrict, net_value *restrict, int,
+                              net_config *restrict);
 static void add_grad2 (net_param *restrict, net_value *restrict, 
                        net_param *restrict, int, net_value *restrict, int,
                        unsigned short *restrict, int);
@@ -130,6 +132,26 @@ static void add_grad1
   int i;
   for (i = 0; i<n; i++)
   { g[i] += v[i];
+  }
+}
+
+
+/* ADD TO GRADIENT FROM UNIT DERIVATIVE, WITH CONFIGURATION.  At present,
+   just goes through the original list of connections in the configuration,
+   without trying to optimize. */
+
+static void add_grad1_config
+( net_param *restrict g,  /* Array of derivatives to add to */
+  net_value *restrict v,  /* Derivatives with respect to unit values */
+  int n,		  /* Number of units */
+  net_config *restrict cf /* Configuration for biases */
+)
+{ net_connection *cn = cf->conn;
+  int c, j, k;
+
+  for (c = 0; (k = cn[c].w) >= 0; c++)
+  { j = cn[c].d;
+    g[k] += v[j];
   }
 }
 

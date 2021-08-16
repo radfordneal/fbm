@@ -28,38 +28,41 @@ Changes in this version.
    the initial stages of sampling, to avoid some hyperparameters
    taking on bad values when the data has not yet been fit well.
 
-5) Forward / backward / gradient computations for neural networks have
+5) The net-eval program can now optionally display the values of
+   hidden units in some layer, instead of the final output.
+
+6) Forward / backward / gradient computations for neural networks have
    been sped up, by rewriting the portable code to encourage the
    compiler to use vector instructions, and by (optionally) using
    specially-written code to exploit AVX instructions (with or without
    FMA), when available.
 
-6) Computations for neural networks have also been sped up by using
+7) Computations for neural networks have also been sped up by using
    the SLEEF library for vectorized mathematical functions (eg, tanh).
 
-7) The data-spec command now has an optional -e argument that causes
+8) The data-spec command now has an optional -e argument that causes
    the training and test inputs and targets read to be echoed to
    standard output.  This can be useful in checking that the data
    source is specified correctly.
 
-8) New C0, C1, and Cn for n&gt;1 quantities are now defined, to help assess
+9) New C0, C1, and Cn for n&gt;1 quantities are now defined, to help assess
    how well metropolis and hybrid updates are exploring the distribution.
    (But note that these are masked for mixture models, where they have
    another meaning.)
 
-9) The net-gen program has been extended to allow parameters to be set
-   from standard input, rather than being set to zero, or randomly,
+10) The net-gen program has been extended to allow parameters to be set
+    from standard input, rather than being set to zero, or randomly,
 
-10) The xxx-tbl commands can now take a -f argument, causes them to
+11) The xxx-tbl commands can now take a -f argument, causes them to
     continually follow iterations being added to the last log file
     specified, rather than finishing when EOF is encountered.  This is
     useful if the output is piped to a plotting program that is capable
     of following continuing input, updating the plot in real time.
 
-11) The maximum number of hidden layers in a neural network is now 15
+12) The maximum number of hidden layers in a neural network is now 15
     (up from 7 before).
 
-12) The maximum number of iterations that can be used when making
+13) The maximum number of iterations that can be used when making
     predictions with the median has been increased from 200 to 1000.
 
 Bug fixes.

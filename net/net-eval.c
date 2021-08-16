@@ -61,6 +61,7 @@ int main
 
   double targets[Max_targets];
   int gen_targets;
+  int layer;
   int N_targets;
 
   char **ap;
@@ -70,9 +71,21 @@ int main
   /* Look at arguments. */
   
   gen_targets = 0;
+  layer = -1;
 
   if (argc>1 && strcmp(argv[argc-1],"targets")==0)
   { gen_targets = 1;
+    argc -= 1;
+    argv[argc] = 0;
+  }
+  else if (argc>1 && argv[argc-1][0]=='h')
+  { if (argv[argc-1][1]==0)
+    { layer = 0;
+    }
+    else
+    { if (argv[argc-1][1]<'0' || argv[argc-1][1]>'9') usage();
+      layer = atoi(argv[argc-1]+1);
+    }
     argc -= 1;
     argv[argc] = 0;
   }
@@ -151,6 +164,11 @@ int main
     exit(1);
   }
 
+  if (layer>=a->N_layers)
+  { fprintf(stderr, "Hidden layer specified does not exist\n");
+    exit(1);
+  }
+
   s->total_sigmas = net_setup_sigma_count(a,flgs,m);
   w->total_params = net_setup_param_count(a,flgs);
 
@@ -210,7 +228,7 @@ int main
     }
   
     /* Print the value of the network function, or targets generated from it, 
-       for the grid of points. */
+       or hidden layer values, for the grid of points. */
 
     if (first)
     { first = 0;
@@ -230,7 +248,10 @@ int main
   
       for (i = 0; i<a->N_inputs; i++) printf(" %8.5f",v->i[i]);
   
-      if (gen_targets)
+      if (layer>=0)
+      { for (j = 0; j<a->N_hidden[layer]; j++) printf(" %+.6e",v->h[layer][j]);
+      }
+      else if (gen_targets)
       { net_model_guess (v, targets, a, flgs, m, sv, w, s, 1);
         for (j = 0; j<N_targets; j++) printf(" %+.6e",targets[j]);
       }
@@ -264,6 +285,6 @@ int main
 static void usage(void)
 {
   fprintf (stderr, 
-  "Usage: net-eval log-file range { / low high grid-size } [ \"targets\" ]\n");
+   "Usage: net-eval log-file range { / low high grid-size } [ \"targets\" | h[#] ]\n");
   exit(1);
 }

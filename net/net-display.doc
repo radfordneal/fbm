@@ -56,4 +56,10 @@ When -h is specified, the format is as follows:
 and similarly for other groups.  This is also the format used for the
 noise sigmas.
 
-            Copyright (c) 1995-2004 by Radford M. Neal
+When a group of connection weights or biases are configured via a
+configuration file specified by net-spec, the weights are shown in
+their index order in the configuration, which may have nothing to do
+with their source or destination units.  Note that these weights may
+be shared by more than one connection.
+
+            Copyright (c) 1995-2021 by Radford M. Neal

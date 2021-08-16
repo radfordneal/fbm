@@ -146,7 +146,17 @@ int net_setup_param_count
               * a->N_outputs;
   }
 
-  if (a->has_bo) count += a->N_outputs;
+  if (a->has_bo)
+  { if (flgs && flgs->bias_config[a->N_layers])
+    { a->bias_config[a->N_layers] =
+        net_config_read (flgs->config_files + flgs->bias_config[a->N_layers],
+                         -1, a->N_outputs);
+      count += a->bias_config[l]->N_wts;
+    }
+    else
+    { count += a->N_outputs;
+    }
+  }
   
   return count;
 }
@@ -333,7 +343,8 @@ void net_setup_param_pointers
   w->bo = 0;
   if (a->has_bo)
   { w->bo = b;
-    b += a->N_outputs;
+    b += a->bias_config[a->N_layers] ? a->bias_config[a->N_layers]->N_wts 
+                                     : a->N_outputs;
   }
 }
 
@@ -561,8 +572,9 @@ int net_setup_param_group
   if (a->has_bo) 
   { *offset = i; 
     *source = 0;
-    *configured = 0;
-    i += a->N_outputs; 
+    *configured = a->bias_config[a->N_layers]!=0;
+    i += *configured ? a->bias_config[a->N_layers]->N_wts 
+                     : a->N_outputs; 
     if (--grp==0) goto done;
   }
 

@@ -180,7 +180,12 @@ void net_func
   /* Compute values for the outputs. */
 
   if (a->has_bo)
-  { bias_values (v->o, a->N_outputs, w->bo);
+  { if (a->bias_config[a->N_layers])
+    { bias_values_config (v->o, a->N_outputs, w->bo, a->bias_config[l]);
+    }
+    else
+    { bias_values (v->o, a->N_outputs, w->bo);
+    }
   }
   else
   { memset (v->o, 0, a->N_outputs * sizeof *v->o);

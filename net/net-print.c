@@ -164,7 +164,12 @@ void net_print_params
   if (a->has_bo)
   { printf("\nOutput Biases [%d]\n\n",g++);
     if (s!=0) printf("%10.2f:",*s->bo_cm);
-    print_param_array (w->bo, a->N_outputs, s!=0);
+    if (a->bias_config[a->N_layers])
+    { print_param_array (w->bo, a->bias_config[a->N_layers]->N_wts, s!=0);
+    }
+    else   
+    { print_param_array (w->bo, a->N_outputs, s!=0);
+    }
   }
 
   if (a->has_ao)

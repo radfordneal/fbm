@@ -121,7 +121,12 @@ void net_grad
   }
 
   if (a->has_bo) 
-  { add_grad1 (g->bo, d->o, a->N_outputs);
+  { if (a->bias_config[a->N_layers])
+    { add_grad1_config (g->bo, d->o, a->bias_config[a->N_layers]);
+    }
+    else
+    { add_grad1 (g->bo, d->o, a->N_outputs);
+    }
   }
 }
 

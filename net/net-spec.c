@@ -112,6 +112,18 @@ int main
     if (flgs && list_flags (flgs->omit, a->N_inputs, 1, ps) > 0)
     { printf("  omit%s",ps);
     }
+    if (flgs && flgs->input_config[a->N_layers])
+    { printf("  input-config:%s",
+             flgs->config_files+flgs->input_config[a->N_layers]);
+    }
+    if (flgs && flgs->hidden_config[a->N_layers])
+    { printf("  hidden-config:%s",
+             flgs->config_files+flgs->hidden_config[a->N_layers]);
+    }
+    if (flgs && flgs->bias_config[a->N_layers])
+    { printf("  bias-config:%s",
+             flgs->config_files+flgs->bias_config[a->N_layers]);
+    }
     printf("\n");
   
     printf("\n");
@@ -206,6 +218,24 @@ int main
                           -1, a->N_hidden[l]), 1);
         }
       }
+      if (flgs->input_config[a->N_layers])
+      { printf("Output layer input weight configuration\n");
+        print_config (net_config_read 
+                       (flgs->config_files+flgs->input_config[a->N_layers],
+                        a->N_inputs, a->N_outputs), 0);
+      }
+      if (flgs->hidden_config[a->N_layers])
+      { printf("Output layer last hidden weight configuration\n");
+        print_config (net_config_read 
+                       (flgs->config_files+flgs->hidden_config[a->N_layers],
+                        a->N_hidden[l-1], a->N_outputs), 0);
+      }
+      if (flgs->bias_config[a->N_layers])
+      { printf("Output layer bias configuration\n");
+        print_config (net_config_read 
+                       (flgs->config_files+flgs->bias_config[a->N_layers],
+                        -1, a->N_outputs), 1);
+      }
     }
   
     log_file_close(&logf);
@@ -296,7 +326,7 @@ int main
       exit(2);
     }
 
-    if (*ap!=0 && strcmp(*ap,"/")!=0)
+    if (*ap!=0 && strcmp(*ap,"/")!=0)  /* more to come, so a hidden layer */
     { if (a->N_layers == Max_layers)
       { fprintf(stderr,"Too many layers specified (maximum is %d)\n",
                         Max_layers);
@@ -310,13 +340,9 @@ int main
       }
       a->N_layers += 1;
     }
-    else
+    else  /* last layer size, so this is the output layer */
     { a->N_outputs = size;
       if (type!=-1) usage();
-      if (iconfig || hconfig || bconfig)
-      { fprintf(stderr,
-"input-config, hidden-config, and bias-config flags are for hidden layers only\n");
-      }
     }
   }
 
@@ -504,19 +530,26 @@ int main
 
   if (*ap!=0) usage();
 
-  if (p->ti.scale || p->ti.alpha[2]!=0
-   || p->bo.scale || p->bo.alpha[2]!=0)
-  { fprintf(stderr,"Illegal prior for biases or offsets\n");
+  if (p->ti.scale || p->ti.alpha[2]!=0)
+  { fprintf(stderr,"Illegal prior for input offsets\n");
     exit(1); 
   }
 
   for (l = 0; l<a->N_layers; l++)
   { if (p->bh[l].scale || p->bh[l].alpha[2]!=0
      || p->th[l].scale || p->th[l].alpha[2]!=0)
-    { fprintf(stderr,"Illegal prior for biases or offsets\n");
+    { fprintf(stderr,"Illegal prior for hidden biases or offsets\n");
       exit(1); 
     }
-    if (flgs->input_config[l] && (p->ih[l].scale || p->ih[l].alpha[1]!=0)
+  }
+
+  if (p->bo.scale || p->bo.alpha[2]!=0)
+  { fprintf(stderr,"Illegal prior for output biases\n");
+    exit(1); 
+  }
+
+  for (l = 0; l<=a->N_layers; l++)  /* hidden and output layers */
+  { if (flgs->input_config[l] && (p->ih[l].scale || p->ih[l].alpha[1]!=0)
      || flgs->hidden_config[l] && (p->hh[l].scale || p->hh[l].alpha[1]!=0))
     { fprintf(stderr,"Illegal prior for weights with configuration file\n");
       exit(1); 

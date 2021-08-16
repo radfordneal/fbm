@@ -61,7 +61,7 @@ are looked at, as specifed by later arguments).  If the "-" is placed
 before the list of inputs, the list gives the inputs that are NOT
 omitted.  Inputs are numbered starting with 1.
 
-Hidden layers may have the following flags:
+Hidden layers and the output layer may have the following flags:
 
     input-config:&lt;file&gt;
     hidden-config:&lt;file&gt;
@@ -73,12 +73,15 @@ hidden layer.  The files must contain specifications for which
 connections from the input layer or previous hidden layer, or which
 biases, are present, and how the weight/bias parameters are used for
 these connections or biases (with possible sharing of weights/biases
-between connections).  See <A HREF="net-config.html">net-config.doc</A> for documentation on how the
-configuration is specified in such a file.  The named configuration
-files do not need to exist when the configuration is specified; they
-are read (and checked for errors) only when needed later.  A
-configuration file may be specified with an initial "%", in which case
-the remainder is a command that is run to output the "file" contents.
+between connections).  Note that for the output layer, hidden-config
+refers to the last hidden layer. 
+
+See <A HREF="net-config.html">net-config.doc</A> for documentation on how a configuration is
+specified in a file.  The named configuration files do not need to
+exist when the configuration is specified; they are read (and checked
+for errors) only when needed later.  A configuration file may be
+specified with an initial "%", in which case the remainder is a
+command that is run to output the "file" contents.
 
 Following a "/", the priors for groups of weights, biases, offsets,
 and adjustments are specified, in one of two forms.  For the syntax of

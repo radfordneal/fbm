@@ -153,8 +153,17 @@ void net_prior_generate
        not_omitted(flgs?flgs->omit:0,a->N_inputs,1), a->N_outputs, 
        s->ao, p->io, centre, out_value);
 
-  if (a->has_bo) pick_unit_params (w->bo, s->bo_cm, a->N_outputs, 
-                                   s->ao, p->bo, centre, value);
+  if (a->has_bo)
+  { if (a->bias_config[a->N_layers])
+    { pick_unit_params_config 
+                       (w->bo, s->bo_cm, a->bias_config[a->N_layers]->N_wts,
+                        p->bo, centre, value);
+    }
+    else
+    { pick_unit_params (w->bo, s->bo_cm, a->N_outputs, 
+                        s->ao, p->bo, centre, value);
+    }
+  }
 
   if (m!=0 && m->type=='R') 
   {
@@ -429,8 +438,17 @@ void net_prior_prob
     }
   }
 
-  if (a->has_bo) compute_prior (w->bo, a->N_outputs, lp, dp ? dp->bo : 0,
-                                *s->bo_cm, p->bo.alpha[1], s->ao, op); 
+  if (a->has_bo)
+  { if (a->bias_config[a->N_layers])
+    { compute_prior (w->bo, a->bias_config[a->N_layers]->N_wts, lp, 
+                            dp ? dp->bo : 0, *s->bo_cm, 
+                            p->bo.alpha[1], 0, op); 
+    }
+    else
+    { compute_prior (w->bo, a->N_outputs, lp, dp ? dp->bo : 0,
+                            *s->bo_cm, p->bo.alpha[1], s->ao, op); 
+    }
+  }
 
   return;
 }
@@ -610,7 +628,13 @@ void net_prior_max_second
   }
 
   if (a->has_bo)
-  { max_second (d->bo, a->N_outputs, *s->bo_cm, s->ao, p->bo.alpha[1]);
+  { if (a->bias_config[a->N_layers])
+    { max_second (d->bo, a->bias_config[a->N_layers]->N_wts, 
+                  *s->bo_cm, 0, p->bo.alpha[1]);
+    }
+    else
+    { max_second (d->bo, a->N_outputs, *s->bo_cm, s->ao, p->bo.alpha[1]);
+    }
   }
 }
 

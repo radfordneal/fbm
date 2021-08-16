@@ -26,10 +26,10 @@
    For biases, s is always 0. */
 
 typedef struct
-{ unsigned short s;		  /* Index of source unit(s), from 0 */
-  unsigned short d; 		  /* Index of destination unit(s), from 0 */
-  int w; 			  /* Index of weight(s), from 0, negative may */
-} net_connection;		  /*   be used to indicate end of array */
+{ unsigned short s;		/* Index of source unit(s), from 0, 0 for bias*/
+  unsigned short d; 		/* Index of destination unit(s), from 0 */
+  int w; 			/* Index of weight(s), from 0, negative used */
+} net_connection;		/*   to indicate end of array */
 
 /* Options for how connections are sorted and grouped, for performance. */
 
@@ -81,9 +81,9 @@ typedef struct
   int has_ah[Max_layers];	/* Do hidden layers have adjustments? */
   int has_ao;			/* Does output layer have adjustments? */
 
-  net_config *input_config[Max_layers];   /* Pointers used during program,  */
-  net_config *bias_config[Max_layers];    /*   but set to zero in log file  */
-  net_config *hidden_config[Max_layers];  /*   (hidden_config[0] is unused) */
+  net_config *input_config[Max_layers+1];   /* Pointers used during program,  */
+  net_config *bias_config[Max_layers+1];    /*   but set to zero in log file  */
+  net_config *hidden_config[Max_layers+1];  /*   (hidden_config[0] is unused) */
 } net_arch;
 
 
@@ -108,7 +108,7 @@ typedef struct
 
   char layer_type[Max_layers];     /* Type of hidden units in layer */
 
-                                   /* Below with +1 for tmp use w input layer */
+                                   /* Below with +1 for output layer, at end */
   short input_config[Max_layers+1]; /* Index of input config file, 0 if none */
   short bias_config[Max_layers+1];  /* Index of bias config file, 0 if none */
   short hidden_config[Max_layers+1];/* Index of hidden config file, 0 if none */

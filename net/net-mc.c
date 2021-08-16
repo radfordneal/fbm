@@ -510,9 +510,16 @@ int mc_app_sample
                       arch->N_outputs, &priors->io);
     }
   
-    if (arch->has_bo) rgrid_met_unit (pm, it,
-                                      params.bo, sigmas.bo_cm, sigmas.ao,
-                                      arch->N_outputs, &priors->bo);
+    if (arch->has_bo) 
+    { if (arch->bias_config[arch->N_layers])
+      { rgrid_met_unit (pm, it, params.bo, sigmas.bo_cm, 0,
+                        arch->bias_config[arch->N_layers]->N_wts, &priors->bo);
+      }
+      else
+      { rgrid_met_unit (pm, it, params.bo, sigmas.bo_cm, sigmas.ao,
+                        arch->N_outputs, &priors->bo);
+      }
+    }
   }
 
   if (sample_noise && model->type=='R')

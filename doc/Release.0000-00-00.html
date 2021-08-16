@@ -16,11 +16,12 @@ Changes in this version.
 
 3) For neural network models, the configuration of the connections and
    their weights into a hidden layer, from the input layer or the
-   previous hidden layer, may now be set up explicitly, rather than
-   (as previously) layers always being fully-connected, without weight
-   sharing.  In particular, this allows for specification of models
-   with convolutional layers.  See <A HREF="net-spec.html">net-spec.doc</A> and <A HREF="net-config.html">net-config.doc</A> for
-   details, as well as the tutorial example in <A HREF="Ex-image.html">Ex-image.doc</A>.
+   previous hidden layer, as well as the hidden unit biases, may now
+   be set up explicitly, rather than (as previously) layers always
+   being fully-connected, without weight sharing.  In particular, this
+   allows for specification of models with convolutional layers.  See
+   <A HREF="net-spec.html">net-spec.doc</A> and <A HREF="net-config.html">net-config.doc</A> for details, as well as the
+   tutorial example in <A HREF="Ex-image.html">Ex-image.doc</A>.
 
 4) The sample-hyper operation for neural network models can now take
    an argument in order to restrict the updates to the hyperparameters

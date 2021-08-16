@@ -1266,3 +1266,163 @@ Hidden layer 0 input weight configuration
      2      1      2
      1      3      1
 
+ 
+--- H
+ 
+
+Network Architecture:
+
+  Input layer:     size 5
+  Hidden layer 0:  size 5  identity  bias-config:%echo  3 1   = +   1 =  + +  + +
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Hidden Biases:           3.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  9.000
+
+Hidden layer 0 bias configuration
+
+5 connections, 4 biases
+
+     3      1
+     3      2
+     1      2
+     2      3
+     3      4
+
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Hidden Layer 0 Biases [1]
+
+      3.00: +0.10  +0.20  +0.30  +0.40
+
+Hidden Layer 0 to Output Weights [2]
+
+ 9.00 9.00: +5.00
+
+      9.00: +6.00
+
+      9.00: +7.00
+
+      9.00: +8.00
+
+      9.00: +9.00
+
+Noise levels
+
+   5.00 -  5.00
+
+ 1.00000000e-01  2.00000000e-01  3.00000000e-01  4.00000000e-01 
+ 5.00000000e+00  6.00000000e+00  7.00000000e+00  8.00000000e+00  9.00000000e+00 
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.002000  Energy: 4.13
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   +0.10   +2.0815e-04  +2.0608e-04   +2.0711e-01  +2.0711e-01     0.0000
+     1   +0.20   +3.6116e-04  +3.5529e-04   +3.5822e-01  +3.5822e-01     0.0000
+     2   +0.30   +2.0211e-04  +2.0056e-04   +2.0133e-01  +2.0133e-01     0.0000
+     3   +0.40   +2.4148e-04  +2.3941e-04   +2.4044e-01  +2.4044e-01     0.0000
+     4   +5.00   +6.7335e-05  +6.7321e-05   +6.7328e-02  +6.7328e-02     0.0000
+     5   +6.00   +8.2482e-05  +8.2466e-05   +8.2474e-02  +8.2474e-02     0.0000
+     6   +7.00   +1.0604e-04  +1.0600e-04   +1.0602e-01  +1.0602e-01     0.0000
+     7   +8.00   +9.8772e-05  +9.8759e-05   +9.8765e-02  +9.8765e-02     0.0000
+     8   +9.00   +1.1112e-04  +1.1110e-04   +1.1111e-01  +1.1111e-01     0.0000
+
+Largest absolute log ratio: 0.0000
+
+  1.10000  1.20000  1.30000  1.40000  1.50000 +2.000000e-01 +3.000000e-01 +7.000000e-01 +0.000000e+00 +0.000000e+00
+  1.10000  1.20000  1.30000  1.40000  1.50000 +7.700000e+00
+7.7
+ 
+--- I
+ 
+
+Network Architecture:
+
+  Input layer:     size 5
+  Hidden layer 0:  size 5  tanh  bias-config:%echo  3 1   = +   1 =  + +  +3 +3
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Hidden Biases:           3.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  9.000
+
+Hidden layer 0 bias configuration
+
+5 connections, 6 biases
+
+     3      1
+     3      2
+     1      2
+     2      3
+     5      6
+
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Hidden Layer 0 Biases [1]
+
+      3.00: +0.10  +0.20  +0.30  +0.40  +0.50  +0.60
+
+Hidden Layer 0 to Output Weights [2]
+
+ 9.00 9.00: +5.00
+
+      9.00: +6.00
+
+      9.00: +7.00
+
+      9.00: +8.00
+
+      9.00: +9.00
+
+Noise levels
+
+   5.00 -  5.00
+
+ 1.00000000e-01  2.00000000e-01  3.00000000e-01  4.00000000e-01 
+ 5.00000000e-01  6.00000000e-01  5.00000000e+00  6.00000000e+00  7.00000000e+00 
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.002000  Energy: 4.29
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   +0.10   +6.7990e-04  +6.7854e-04   +6.7922e-01  +6.7922e-01     0.0000
+     1   +0.20   +1.1938e-03  +1.1892e-03   +1.1915e+00  +1.1915e+00     0.0000
+     2   +0.30   +6.0649e-04  +6.0551e-04   +6.0600e-01  +6.0600e-01     0.0000
+     3   +0.40   +4.4500e-05  +4.4389e-05   +4.4444e-02  +4.4444e-02     0.0000
+     4   +0.50   +5.5611e-05  +5.5500e-05   +5.5556e-02  +5.5556e-02     0.0000
+     5   +0.60   +7.3511e-04  +7.3408e-04   +7.3459e-01  +7.3460e-01     0.0000
+     6   +5.00   +8.2321e-05  +8.2307e-05   +8.2314e-02  +8.2314e-02     0.0000
+     7   +6.00   +1.0446e-04  +1.0445e-04   +1.0446e-01  +1.0446e-01     0.0000
+     8   +7.00   +1.1681e-04  +1.1679e-04   +1.1680e-01  +1.1680e-01     0.0000
+     9   +8.00   +9.8772e-05  +9.8759e-05   +9.8765e-02  +9.8765e-02     0.0000
+    10   +9.00   +1.6713e-04  +1.6711e-04   +1.6712e-01  +1.6712e-01     0.0000
+
+Largest absolute log ratio: 0.0000
+
+  1.10000  1.20000  1.30000  1.40000  1.50000 +1.973753e-01 +2.913126e-01 +2.913126e-01 +0.000000e+00 +5.370496e-01
+  1.10000  1.20000  1.30000  1.40000  1.50000 +9.607387e+00
+9.60739

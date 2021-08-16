@@ -35,7 +35,7 @@
 
 
 static void add_grad1 (net_param *restrict, net_value *restrict, int);
-static void add_grad1_config (net_param *restrict, net_value *restrict, int,
+static void add_grad1_config (net_param *restrict, net_value *restrict,
                               net_config *restrict);
 static void add_grad2 (net_param *restrict, net_value *restrict, 
                        net_param *restrict, int, net_value *restrict, int,
@@ -75,7 +75,12 @@ void net_grad
     int N_hidden = a->N_hidden[l];
 
     if (a->has_bh[l]) 
-    { add_grad1 (g->bh[l], d->s[l], N_hidden);
+    { if (a->bias_config[l])
+      { add_grad1_config (g->bh[l], d->s[l], a->bias_config[l]);
+      }
+      else
+      { add_grad1 (g->bh[l], d->s[l], N_hidden);
+      }
     }
 
     if (a->has_ih[l])
@@ -143,7 +148,6 @@ static void add_grad1
 static void add_grad1_config
 ( net_param *restrict g,  /* Array of derivatives to add to */
   net_value *restrict v,  /* Derivatives with respect to unit values */
-  int n,		  /* Number of units */
   net_config *restrict cf /* Configuration for biases */
 )
 { net_connection *cn = cf->conn;

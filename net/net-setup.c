@@ -142,8 +142,16 @@ int net_setup_param_count
   }
 
   if (a->has_io) 
-  { count += not_omitted(flgs?flgs->omit:0,a->N_inputs,1)
-              * a->N_outputs;
+  { if (flgs && flgs->input_config[a->N_layers])
+    { a->input_config[a->N_layers] = 
+        net_config_read (flgs->config_files + flgs->input_config[a->N_layers],
+                         a->N_inputs, a->N_outputs);
+      count += a->input_config[a->N_layers]->N_wts;
+    }
+    else
+    { count += not_omitted(flgs?flgs->omit:0,a->N_inputs,1)
+                * a->N_outputs;
+    }
   }
 
   if (a->has_bo)
@@ -337,7 +345,8 @@ void net_setup_param_pointers
   w->io = 0;
   if (a->has_io) 
   { w->io = b;
-    b += not_omitted(flgs?flgs->omit:0,a->N_inputs,1) * a->N_outputs;
+    b += a->input_config[a->N_layers] ? a->input_config[a->N_layers]->N_wts
+       : not_omitted(flgs?flgs->omit:0,a->N_inputs,1) * a->N_outputs;
   }
 
   w->bo = 0;
@@ -564,8 +573,9 @@ int net_setup_param_group
   if (a->has_io) 
   { *offset = i;    
     *source = not_omitted(flgs?flgs->omit:0,a->N_inputs,1);
-    *configured = 0;
-    i += *source * a->N_outputs; 
+    *configured = a->input_config[a->N_layers]!=0;
+    i += *configured ? a->input_config[a->N_layers]->N_wts
+                     : *source * a->N_outputs; 
     if (--grp==0) goto done;
   }
 

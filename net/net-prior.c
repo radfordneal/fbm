@@ -149,9 +149,18 @@ void net_prior_generate
                                     s->ao, p->ho[l], centre, out_value);
   }
 
-  if (a->has_io) pick_weights (w->io, s->io_cm, s->io,
-       not_omitted(flgs?flgs->omit:0,a->N_inputs,1), a->N_outputs, 
-       s->ao, p->io, centre, out_value);
+  if (a->has_io) 
+  { if (a->input_config[a->N_layers])
+    { pick_weights_config (w->io, s->io_cm, s->io,
+                           a->N_inputs, a->input_config[a->N_layers]->N_wts,
+                           p->io, centre, out_value);
+    }
+    else
+    { pick_weights (w->io, s->io_cm, s->io,
+                    not_omitted(flgs?flgs->omit:0,a->N_inputs,1), a->N_outputs, 
+                    s->ao, p->io, centre, out_value);
+    }
+  }
 
   if (a->has_bo)
   { if (a->bias_config[a->N_layers])
@@ -427,13 +436,20 @@ void net_prior_prob
   }
 
   if (a->has_io) 
-  { k = 0;
-    for (i = 0; i<a->N_inputs; i++)
-    { if (flgs==0 || (flgs->omit[i]&1)==0)
-      { compute_prior (w->io + k*a->N_outputs, a->N_outputs, lp, 
-                       dp ? dp->io + k*a->N_outputs : 0,
-                       s->io[k], p->io.alpha[2], s->ao, op); 
-        k += 1;
+  { if (a->input_config[a->N_layers])
+    { compute_prior (w->io, a->input_config[a->N_layers]->N_wts, lp,
+                     dp ? dp->io : 0,
+                     *s->io_cm, p->io.alpha[2], 0, op);
+    }
+    else
+    { k = 0;
+      for (i = 0; i<a->N_inputs; i++)
+      { if (flgs==0 || (flgs->omit[i]&1)==0)
+        { compute_prior (w->io + k*a->N_outputs, a->N_outputs, lp, 
+                         dp ? dp->io + k*a->N_outputs : 0,
+                         s->io[k], p->io.alpha[2], s->ao, op); 
+          k += 1;
+        }
       }
     }
   }
@@ -617,12 +633,18 @@ void net_prior_max_second
   }
 
   if (a->has_io)
-  { k = 0; 
-    for (i = 0; i<a->N_inputs; i++)
-    { if (flgs==0 || (flgs->omit[i]&1)==0)
-      { max_second (d->io + k*a->N_outputs, a->N_outputs,
-                    s->io[k], s->ao, p->io.alpha[2]);
-        k += 1;
+  { if (a->input_config[l])
+    { max_second (d->io, a->input_config[a->N_layers]->N_wts, *s->io_cm,
+                  0, p->io.alpha[2]);
+    }
+    else
+    { k = 0; 
+      for (i = 0; i<a->N_inputs; i++)
+      { if (flgs==0 || (flgs->omit[i]&1)==0)
+        { max_second (d->io + k*a->N_outputs, a->N_outputs,
+                      s->io[k], s->ao, p->io.alpha[2]);
+          k += 1;
+        }
       }
     }
   }

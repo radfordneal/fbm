@@ -116,8 +116,14 @@ void net_grad
   }
 
   if (a->has_io) 
-  { add_grad2 (g->io, v->i, a->has_ti ? w->ti : 0, a->N_inputs, 
-               d->o, a->N_outputs, flgs?flgs->omit:0, 1);
+  { if (a->input_config[a->N_layers])
+    { add_grad2_config (g->io, v->i, a->has_ti ? w->ti : 0, d->o,
+                        a->input_config[a->N_layers]);
+    }
+    else
+    { add_grad2 (g->io, v->i, a->has_ti ? w->ti : 0, a->N_inputs, 
+                 d->o, a->N_outputs, flgs?flgs->omit:0, 1);
+    }
   }
 
   if (a->has_bo) 

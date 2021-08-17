@@ -505,9 +505,16 @@ int mc_app_sample
     }
   
     if (arch->has_io) 
-    { rgrid_met_conn (pm, it, params.io, sigmas.io_cm, sigmas.io, sigmas.ao,
-                      not_omitted(flgs?flgs->omit:0,arch->N_inputs,1), 
-                      arch->N_outputs, &priors->io);
+    { if (arch->input_config[arch->N_layers])
+      { rgrid_met_conn_config (pm, it, params.io, sigmas.io_cm, sigmas.io,
+                    arch->N_inputs, arch->input_config[arch->N_layers]->N_wts,
+                    &priors->io); 
+      }
+      else
+      { rgrid_met_conn (pm, it, params.io, sigmas.io_cm, sigmas.io, sigmas.ao,
+                        not_omitted(flgs?flgs->omit:0,arch->N_inputs,1), 
+                        arch->N_outputs, &priors->io);
+      }
     }
   
     if (arch->has_bo) 
@@ -613,10 +620,18 @@ int mc_app_sample
     }
   
     if (arch->has_io && THISGRP)
-    { gibbs_conn (sample_hyper, 
-                  params.io, sigmas.io_cm, sigmas.io, sigmas.ao,
-                  not_omitted(flgs?flgs->omit:0,arch->N_inputs,1), 
-                  arch->N_outputs, &priors->io);
+    { if (arch->input_config[arch->N_layers])
+      { gibbs_conn_config (sample_hyper, 
+                      params.io, sigmas.io_cm, sigmas.io,
+                      arch->N_inputs, arch->input_config[arch->N_layers]->N_wts,
+                      &priors->io); 
+      }
+      else
+      { gibbs_conn (sample_hyper, 
+                    params.io, sigmas.io_cm, sigmas.io, sigmas.ao,
+                    not_omitted(flgs?flgs->omit:0,arch->N_inputs,1), 
+                    arch->N_outputs, &priors->io);
+      }
     }
   
     if (arch->has_bo && THISGRP)
@@ -629,7 +644,7 @@ int mc_app_sample
         arch->has_bo ? params.bo : 0, 
           sigmas.bo_cm,
           priors->bo.alpha[1],
-        arch->has_io ? params.io : 0,   
+        arch->has_io && !arch->input_config[arch->N_layers] ? params.io : 0,   
           sigmas.io, 
           priors->io.alpha[2], 
           not_omitted(flgs?flgs->omit:0,arch->N_inputs,1), 
@@ -1558,17 +1573,6 @@ void mc_app_stepsizes
     { seconds.i[i] = 0;
     }
 
-    if (arch->has_io)
-    { for (i = 0; i<arch->N_inputs; i++)
-      { if (flgs==0 || (flgs->omit[i]&1)==0)
-        for (j = 0; j<arch->N_outputs; j++)
-        { w = sigmas.io[i];
-          if (sigmas.ao!=0) w *= sigmas.ao[j];
-          seconds.i[i] += (w*w) * seconds.o[j];
-        }
-      }
-    }
-
     for (l = 0; l<arch->N_layers; l++)
     { if (arch->has_ih[l])
       { if (arch->input_config[l])
@@ -1587,6 +1591,27 @@ void mc_app_stepsizes
               if (sigmas.ah[l]!=0) w *= sigmas.ah[l][j];
               seconds.i[i] += (w*w) * seconds.s[l][j];
             }
+          }
+        }
+      }
+    }
+
+    if (arch->has_io)
+    { if (arch->input_config[arch->N_layers])
+      { w = *sigmas.io;
+        for (k = 0; k<arch->input_config[arch->N_layers]->N_conn; k++)
+        { i = arch->input_config[arch->N_layers]->conn[k].s;
+          j = arch->input_config[arch->N_layers]->conn[k].d;
+          seconds.i[i] += (w*w) * seconds.o[j];
+        }
+      }
+      else
+      { for (i = 0; i<arch->N_inputs; i++)
+        { if (flgs==0 || (flgs->omit[i]&1)==0)
+          for (j = 0; j<arch->N_outputs; j++)
+          { w = sigmas.io[i];
+            if (sigmas.ao!=0) w *= sigmas.ao[j];
+            seconds.i[i] += (w*w) * seconds.o[j];
           }
         }
       }
@@ -1680,13 +1705,23 @@ void mc_app_stepsizes
   }
 
   if (arch->has_io)
-  { k = 0;
-    for (i = 0; i<arch->N_inputs; i++)
-    { if (flgs==0 || (flgs->omit[i]&1)==0)
-      { for (j = 0; j<arch->N_outputs; j++)
-        { stepsizes.io [k*arch->N_outputs + j] += train_sumsq[i] * seconds.o[j];
+  { if (arch->input_config[arch->N_layers])
+    { for (k = 0; k<arch->input_config[arch->N_layers]->N_conn; k++)
+      { i = arch->input_config[arch->N_layers]->conn[k].s;
+        j = arch->input_config[arch->N_layers]->conn[k].d;
+        stepsizes.io [arch->input_config[arch->N_layers]->conn[k].w]
+          += train_sumsq[i] * seconds.o[j];
+      }
+    }
+    else
+    { k = 0;
+      for (i = 0; i<arch->N_inputs; i++)
+      { if (flgs==0 || (flgs->omit[i]&1)==0)
+        { for (j = 0; j<arch->N_outputs; j++)
+          { stepsizes.io [k*arch->N_outputs + j] += train_sumsq[i]*seconds.o[j];
+          }
+          k += 1;
         }
-        k += 1;
       }
     }
   }

@@ -141,11 +141,6 @@ void net_back
   if (start<0)
   {
     memset (d->i, 0, a->N_inputs * sizeof *d->i);
-
-    if (a->has_io)
-    { sum_derivatives (d->o, a->N_outputs, d->i, a->N_inputs, w->io,
-                       flgs ? flgs->omit : 0, 1);
-    }
  
     for (l = 0; l<a->N_layers; l++)
     { if (a->has_ih[l])
@@ -156,6 +151,16 @@ void net_back
         { sum_derivatives (d->s[l], a->N_hidden[l], d->i, a->N_inputs, w->ih[l],
                            flgs ? flgs->omit : 0, 1<<(l+1));
         }
+      }
+    }
+
+    if (a->has_io)
+    { if (a->input_config[a->N_layers])
+      { sum_derivatives_config(d->o, d->i, w->io, a->input_config[a->N_layers]);
+      }
+      else
+      { sum_derivatives (d->o, a->N_outputs, d->i, a->N_inputs, w->io,
+                         flgs ? flgs->omit : 0, 1);
       }
     }
   }

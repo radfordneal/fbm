@@ -148,17 +148,23 @@ void net_print_params
     }
     printf("\n\n");
     if (s!=0) printf("%5.2f",*s->io_cm);
-    j = 0;
-    for (i = 0; i<a->N_inputs; i++)
-    { if (flgs==0 || (flgs->omit[i]&1)==0)
-      { if (j>0) printf("\n");
-        if (s!=0 && j>0) printf("     ");
-        if (s!=0) printf(" %4.2f:",s->io[j]);
-        print_param_array (w->io+a->N_outputs*j, a->N_outputs, s!=0);
-        j += 1;
-      }
+    if (a->input_config[a->N_layers])
+    { if (s!=0) printf(":     ");
+      print_param_array(w->io, a->input_config[a->N_layers]->N_wts, s!=0);
     }
-    if (j==0) printf("\n");
+    else
+    { j = 0;
+      for (i = 0; i<a->N_inputs; i++)
+      { if (flgs==0 || (flgs->omit[i]&1)==0)
+        { if (j>0) printf("\n");
+          if (s!=0 && j>0) printf("     ");
+          if (s!=0) printf(" %4.2f:",s->io[j]);
+          print_param_array (w->io+a->N_outputs*j, a->N_outputs, s!=0);
+          j += 1;
+        }
+      }
+      if (j==0) printf("\n");
+    }
   }
 
   if (a->has_bo)

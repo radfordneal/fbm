@@ -192,8 +192,14 @@ void net_func
   }
 
   if (a->has_io)
-  { add_connections (v->o, a->N_outputs, v->i, a->N_inputs,
-                     w->io, a->has_ti ? w->ti : 0, flgs ? flgs->omit : 0, 1);
+  { if (a->input_config[a->N_layers])
+    { add_connections_config (v->o, v->i, w->io,
+        a->has_ti ? w->ti : 0, a->input_config[a->N_layers]);
+    }
+    else
+    { add_connections (v->o, a->N_outputs, v->i, a->N_inputs,
+                       w->io, a->has_ti ? w->ti : 0, flgs ? flgs->omit : 0, 1);
+    }
   }
 
   for (l = 0; l<a->N_layers; l++)

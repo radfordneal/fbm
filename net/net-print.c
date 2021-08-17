@@ -132,11 +132,17 @@ void net_print_params
   { if (a->has_ho[l])
     { printf("\nHidden Layer %d to Output Weights [%d]\n\n",l,g++);
       if (s!=0) printf("%5.2f",*s->ho_cm[l]);
-      for (i = 0; i<a->N_hidden[l]; i++)
-      { if (i>0) printf("\n");
-        if (s!=0 && i>0) printf("     ");
-        if (s!=0) printf(" %4.2f:",s->ho[l][i]);
-        print_param_array (w->ho[l]+a->N_outputs*i, a->N_outputs, s!=0);
+      if (l==a->N_layers-1 && a->hidden_config[l+1])  /* only last for now... */
+      { if (s!=0) printf(":     ");
+        print_param_array (w->ho[l], a->hidden_config[l+1]->N_wts, s!=0);
+      }
+      else
+      { for (i = 0; i<a->N_hidden[l]; i++)
+        { if (i>0) printf("\n");
+          if (s!=0 && i>0) printf("     ");
+          if (s!=0) printf(" %4.2f:",s->ho[l][i]);
+          print_param_array (w->ho[l]+a->N_outputs*i, a->N_outputs, s!=0);
+        }
       }
     }
   }

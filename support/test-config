@@ -247,3 +247,19 @@ net-tbl q0q1q2 log 0
 net-grad-test log 0 0.002
 net-eval log 0 / 10 10 0 / 20 20 0 / 30 30 0 / 40 40 0 / 50 50 0
 echo 12.1 5.5 2.2 0 0
+
+echo " "; echo "--- L"; echo " "
+
+net-spec log 1 5 identity 1 hidden-config:"%echo  1 1 1  5 1 1  2 1 2" \
+             / ih=3 ho=4
+net-spec log config
+data-spec log 1 1 / "%echo 0.2 7" .
+model-spec log real 5
+net-gen log fix - <<end
+2 3 4 5 6 100 10000
+end
+net-display log 0
+net-grad-test log 0 0.002
+net-eval log 0 / 10 10 0 h
+net-eval log 0 / 10 10 0 
+echo 308000

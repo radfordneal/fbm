@@ -497,9 +497,17 @@ int mc_app_sample
                                            arch->N_hidden[l], &priors->th[l]);
   
       if (arch->has_ho[l]) 
-      { rgrid_met_conn (pm, it,
-                        params.ho[l], sigmas.ho_cm[l], sigmas.ho[l], sigmas.ao,
-                        arch->N_hidden[l], arch->N_outputs, &priors->ho[l]);
+      { if (l==arch->N_layers-1 && arch->hidden_config[l+1])  /* only last... */
+        { rgrid_met_conn_config (pm, it,
+                       params.ho[l], sigmas.ho_cm[l], sigmas.ho[l], 
+                       arch->N_hidden[l], arch->hidden_config[l+1]->N_wts,
+                       &priors->ho[l]);
+          }
+        else
+        { rgrid_met_conn (pm, it,
+                       params.ho[l], sigmas.ho_cm[l], sigmas.ho[l], sigmas.ao,
+                       arch->N_hidden[l], arch->N_outputs, &priors->ho[l]);
+        }
       }
           
     }
@@ -613,9 +621,17 @@ int mc_app_sample
   
     for (l = arch->N_layers-1; l>=0; l--)
     { if (arch->has_ho[l] && THISGRP)
-      { gibbs_conn (sample_hyper, 
-                    params.ho[l], sigmas.ho_cm[l], sigmas.ho[l], sigmas.ao,
-                    arch->N_hidden[l], arch->N_outputs, &priors->ho[l]);
+      { if (l==arch->N_layers-1 && arch->hidden_config[l+1])  /* only last... */
+        { gibbs_conn_config (sample_hyper, 
+                             params.ho[l], sigmas.ho_cm[l], sigmas.ho[l],
+                             arch->N_hidden[l], arch->hidden_config[l+1]->N_wts,
+                             &priors->ho[l]);
+          }
+        else
+        { gibbs_conn (sample_hyper, 
+                      params.ho[l], sigmas.ho_cm[l], sigmas.ho[l], sigmas.ao,
+                      arch->N_hidden[l], arch->N_outputs, &priors->ho[l]);
+        }
       }
     }
   
@@ -640,7 +656,12 @@ int mc_app_sample
     }
 
     if (arch->has_ao && THISGRP)
-    { gibbs_adjustments (sigmas.ao, priors->ao, arch->N_outputs, 
+    { int has_ho[Max_layers];
+      memcpy (has_ho, arch->has_ho, Max_layers * sizeof *has_ho);
+      if (arch->hidden_config[arch->N_layers]) 
+      { has_ho[arch->N_layers-1] = 0;
+      }
+      gibbs_adjustments (sigmas.ao, priors->ao, arch->N_outputs, 
         arch->has_bo ? params.bo : 0, 
           sigmas.bo_cm,
           priors->bo.alpha[1],
@@ -649,7 +670,7 @@ int mc_app_sample
           priors->io.alpha[2], 
           not_omitted(flgs?flgs->omit:0,arch->N_inputs,1), 
         arch->N_layers,
-          arch->has_ho,
+          has_ho,
           params.ho,
           sigmas.ho,
           priors->ho,
@@ -1523,10 +1544,20 @@ void mc_app_stepsizes
 
     for (i = 0; i<arch->N_hidden[l]; i++)
     { if (arch->has_ho[l])
-      { for (j = 0; j<arch->N_outputs; j++)
-        { w = sigmas.ho[l][i];
-          if (sigmas.ao!=0) w *= sigmas.ao[j];
-          seconds.h[l][i] += (w*w) * seconds.o[j];
+      { if (l==arch->N_layers-1 && arch->hidden_config[l+1])  /* only last... */
+        { w = *sigmas.ho_cm[l];
+          for (k = 0; k<arch->hidden_config[l+1]->N_conn; k++)
+          { i = arch->hidden_config[l+1]->conn[k].s;
+            j = arch->hidden_config[l+1]->conn[k].d;
+            seconds.h[l][i] += (w*w) * seconds.o[j];
+          }
+        }
+        else
+        { for (j = 0; j<arch->N_outputs; j++)
+          { w = sigmas.ho[l][i];
+            if (sigmas.ao!=0) w *= sigmas.ao[j];
+            seconds.h[l][i] += (w*w) * seconds.o[j];
+          }
         }
       }
     }
@@ -1696,9 +1727,19 @@ void mc_app_stepsizes
     }
 
     if (arch->has_ho[l])
-    { for (i = 0; i<arch->N_hidden[l]; i++)
-      { for (j = 0; j<arch->N_outputs; j++)
-        { stepsizes.ho [l] [i*arch->N_outputs + j] += N_train * seconds.o[j];
+    { if (l==arch->N_layers-1 && arch->hidden_config[l+1])  /* only last... */
+      { for (k = 0; k<arch->hidden_config[l+1]->N_conn; k++)
+        { i = arch->hidden_config[l+1]->conn[k].s;
+          j = arch->hidden_config[l+1]->conn[k].d;
+          stepsizes.ho [l] [arch->hidden_config[l+1]->conn[k].w]
+            += N_train * seconds.o[j];
+        }
+      }
+      else
+      { for (i = 0; i<arch->N_hidden[l]; i++)
+        { for (j = 0; j<arch->N_outputs; j++)
+          { stepsizes.ho [l] [i*arch->N_outputs + j] += N_train * seconds.o[j];
+          }
         }
       }
     }

@@ -144,9 +144,18 @@ void net_prior_generate
     if (a->has_th[l]) pick_unit_params (w->th[l], s->th_cm[l], a->N_hidden[l], 
                                         0, p->th[l], centre, value);
 
-    if (a->has_ho[l]) pick_weights (w->ho[l], s->ho_cm[l], s->ho[l], 
-                                    a->N_hidden[l], a->N_outputs, 
-                                    s->ao, p->ho[l], centre, out_value);
+    if (a->has_ho[l])
+    { if (l==a->N_layers-1 && a->hidden_config[l+1])  /* only last for now... */
+      { pick_weights_config (w->ho[l], s->ho_cm[l], s->ho[l],
+                             a->N_hidden[l], a->hidden_config[l+1]->N_wts,
+                             p->ho[l], centre, value);
+      }
+      else
+      { pick_weights (w->ho[l], s->ho_cm[l], s->ho[l], 
+                                a->N_hidden[l], a->N_outputs, 
+                                s->ao, p->ho[l], centre, out_value);
+      }
+    }
   }
 
   if (a->has_io) 
@@ -427,10 +436,17 @@ void net_prior_prob
                                      p->th[l].alpha[1], 0, op);
 
     if (a->has_ho[l]) 
-    { for (i = 0; i<a->N_hidden[l]; i++)
-      { compute_prior (w->ho[l] + i*a->N_outputs, a->N_outputs, lp, 
-                       dp ? dp->ho[l] + i*a->N_outputs : 0,
-                       s->ho[l][i], p->ho[l].alpha[2], s->ao, op); 
+    { if (l==a->N_layers-1 && a->hidden_config[l+1])  /* only last for now... */
+      { compute_prior (w->ho[l], a->hidden_config[l+1]->N_wts, lp,
+                       dp ? dp->ho[l] : 0, 
+                       *s->ho_cm[l], p->ho[l].alpha[2], 0, op);
+      }
+      else
+      { for (i = 0; i<a->N_hidden[l]; i++)
+        { compute_prior (w->ho[l] + i*a->N_outputs, a->N_outputs, lp, 
+                         dp ? dp->ho[l] + i*a->N_outputs : 0,
+                         s->ho[l][i], p->ho[l].alpha[2], s->ao, op); 
+        }
       }
     }
   }
@@ -625,9 +641,15 @@ void net_prior_max_second
     }
 
     if (a->has_ho[l])
-    { for (i = 0; i<a->N_hidden[l]; i++)
-      { max_second (d->ho[l] + i*a->N_outputs, a->N_outputs, 
-                    s->ho[l][i], s->ao, p->ho[l].alpha[2]);
+    { if (l==a->N_layers-1 && a->hidden_config[l+1])  /* only last for now... */
+      { max_second (d->ho[l], a->hidden_config[l+1]->N_wts, *s->ho_cm[l],
+                    0, p->ho[l].alpha[2]);
+      }
+      else
+      { for (i = 0; i<a->N_hidden[l]; i++)
+        { max_second (d->ho[l] + i*a->N_outputs, a->N_outputs, 
+                      s->ho[l][i], s->ao, p->ho[l].alpha[2]);
+        }
       }
     }
   }

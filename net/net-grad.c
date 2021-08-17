@@ -110,8 +110,14 @@ void net_grad
     }
 
     if (a->has_ho[l])
-    { add_grad2 (g->ho[l], v->h[l], a->has_th[l] ? w->th[l] : 0,
-                 N_hidden, d->o, a->N_outputs, (unsigned short *) 0, 0);
+    { if (l==a->N_layers-1 && a->hidden_config[l+1])  /* only last for now... */
+      { add_grad2_config (g->ho[l], v->h[l], a->has_th[l] ? w->th[l] : 0,
+                          d->o, a->hidden_config[l+1]);
+      }
+      else
+      { add_grad2 (g->ho[l], v->h[l], a->has_th[l] ? w->th[l] : 0,
+                   N_hidden, d->o, a->N_outputs, (unsigned short *) 0, 0);
+      }
     }
   }
 

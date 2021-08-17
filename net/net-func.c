@@ -204,8 +204,14 @@ void net_func
 
   for (l = 0; l<a->N_layers; l++)
   { if (a->has_ho[l])
-    { add_connections (v->o, a->N_outputs, v->h[l], a->N_hidden[l], 
-              w->ho[l], a->has_th[l] ? w->th[l] : 0, (unsigned short *) 0, 0);
+    { if (l==a->N_layers-1 && a->hidden_config[l+1])  /* only last for now... */
+      { add_connections_config (v->o, v->h[l], w->ho[l], 
+                         a->has_th[l] ? w->th[l] : 0, a->hidden_config[l+1]);
+      }
+      else
+      { add_connections (v->o, a->N_outputs, v->h[l], a->N_hidden[l], w->ho[l],
+                         a->has_th[l] ? w->th[l] : 0, (unsigned short *) 0, 0);
+      }
     }
   }
 }

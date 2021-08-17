@@ -73,8 +73,13 @@ void net_back
     memset (dh, 0, N_hidden * sizeof *dh);
     
     if (a->has_ho[l])
-    { sum_derivatives (d->o, a->N_outputs, dh, N_hidden, 
-                       w->ho[l], (unsigned short *) 0, 0);
+    { if (l==a->N_layers-1 && a->hidden_config[l+1])  /* only last for now... */
+      { sum_derivatives_config (d->o, dh, w->ho[l], a->hidden_config[l+1]);
+      }
+      else 
+      { sum_derivatives (d->o, a->N_outputs, dh, N_hidden, 
+                         w->ho[l], (unsigned short *) 0, 0);
+      }
     }
 
     if (l<a->N_layers-1 && a->has_hh[l])

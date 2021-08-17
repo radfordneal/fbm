@@ -628,8 +628,8 @@ void net_prior_max_second
     }
 
     if (l<a->N_layers-1 && a->has_hh[l]) 
-    { if (a->hidden_config[l])
-      { max_second (d->hh[l], a->hidden_config[l]->N_wts, *s->hh_cm[l],
+    { if (a->hidden_config[l+1])
+      { max_second (d->hh[l], a->hidden_config[l+1]->N_wts, *s->hh_cm[l],
                     0, p->hh[l].alpha[2]);
       }
       else

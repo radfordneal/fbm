@@ -1708,11 +1708,11 @@ void mc_app_stepsizes
     }
  
     if (l<arch->N_layers-1 && arch->has_hh[l])
-    { if (arch->hidden_config[l])
-      { for (k = 0; k<arch->hidden_config[l]->N_conn; k++)
-        { i = arch->hidden_config[l]->conn[k].s;
-          j = arch->hidden_config[l]->conn[k].d;
-          stepsizes.hh [l] [arch->hidden_config[l]->conn[k].w]
+    { if (arch->hidden_config[l+1])
+      { for (k = 0; k<arch->hidden_config[l+1]->N_conn; k++)
+        { i = arch->hidden_config[l+1]->conn[k].s;
+          j = arch->hidden_config[l+1]->conn[k].d;
+          stepsizes.hh [l] [arch->hidden_config[l+1]->conn[k].w]
             += N_train * seconds.s[l+1][j];
         }
       }

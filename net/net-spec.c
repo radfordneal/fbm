@@ -92,6 +92,7 @@ int main
       if (flgs==0 || flgs->layer_type[l]==Tanh_type) printf("  tanh");
       else if (flgs->layer_type[l]==Identity_type)   printf("  identity");
       else if (flgs->layer_type[l]==Sin_type)        printf("  sin");
+      else if (flgs->layer_type[l]==Softplus_type)   printf("  softplus");
       else                                           printf("  UNKNOWN TYPE!");
       if (flgs && list_flags (flgs->omit, a->N_inputs, 1<<(l+1), ps) > 0)
       { printf("  omit%s",ps);
@@ -313,6 +314,10 @@ int main
       else if (strcmp(*ap,"sin")==0)
       { if (type>=0) usage();
         type = Sin_type;
+      }
+      else if (strcmp(*ap,"softplus")==0)
+      { if (type>=0) usage();
+        type = Softplus_type;
       }
       else
       { usage();
@@ -627,7 +632,7 @@ static void usage(void)
   fprintf(stderr,
    "Flags: input-config:<file> hidden-config:<file> bias-config:<file>\n");
   fprintf(stderr,
-   "       omit:[-]<input>{,<input>} tanh identity sin\n");
+   "       omit:[-]<input>{,<input>} tanh identity sin softplus\n");
 
   exit(1);
 }

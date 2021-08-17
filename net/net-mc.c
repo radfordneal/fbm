@@ -1586,6 +1586,7 @@ void mc_app_stepsizes
     { switch (flgs==0 ? Tanh_type : flgs->layer_type[l])
       { case Tanh_type: 
         case Identity_type:
+        case Softplus_type:
         { seconds.s[l][i] = seconds.h[l][i];
           break;
         }

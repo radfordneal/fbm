@@ -131,6 +131,11 @@ void net_back
       { ds[i] = 2 * cos(v->s[l][i]*sqrt_2) * dh[i];
       }
     }
+    else if (flgs->layer_type[l]==Softplus_type)
+    { for (i = 0; i<N_hidden; i++)
+      { ds[i] = 1 / (1+exp(-v->s[l][i])) * dh[i];
+      }
+    }
     else if (flgs->layer_type[l]==Identity_type)
     { for (i = 0; i<N_hidden; i++)
       { ds[i] = dh[i];

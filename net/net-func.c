@@ -167,6 +167,12 @@ void net_func
       { vh[j] = sqrt_2*sin(sh[j]*sqrt_2);
       }
     }
+    else if (flgs->layer_type[l]==Softplus_type)
+    { for (j = 0; j<N_hidden; j++)
+      { vh[j] = sh[j]>0 ? sh[j] + log(1+exp(-sh[j])) /* avoid overflow */
+                        : log(1+exp(sh[j]));
+      }
+    }
     else if (flgs->layer_type[l]==Identity_type)
     { for (j = 0; j<N_hidden; j++)
       { vh[j] = sh[j];

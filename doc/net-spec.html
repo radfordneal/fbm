@@ -40,7 +40,7 @@ argument giving the size of the layer.
 For hidden layers, the activation function to use may be specified
 using one of the following flags:
 
-    tanh  identity  sin
+    tanh  identity  sin  softplus
 
 The default is tanh, the hyperbolic tangent function.  The identity
 flag causes the output of a hidden unit in the layer to be identical
@@ -48,7 +48,8 @@ its summed input.  The sin flag specifies that the activation function
 to be h(u) = sqrt(2)*sin(sqrt(2)*u).  The multiplications by sqrt(2)
 in this activation function make a network with one hidden layer of
 this type correspond in the limit of many hidden units to a Gaussian
-process model with covariance function given by exp(-distance^2).
+process model with covariance function given by exp(-distance^2).  The
+softplus activation function is h(u) = log(1+exp(u)).
 
 The following flag is supported for hidden layers and the output
 layer:

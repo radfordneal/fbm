@@ -117,7 +117,7 @@ void net_func
 
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     { 
-#     if USE_SLEEF && __AVX__ && __FMA__
+#     if USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
       { j = 3;
         while (j<N_hidden)
         { _mm256_storeu_pd (vh+j-3,  
@@ -170,7 +170,9 @@ void net_func
         double a = sh[j];
         int l = a>0;
         if (l) a = -a;
-        double v = fast_log (1 + fast_exp(a));
+        double v;
+        v = 1 + fast_exp(a);
+        v = fast_log(v);
         if (l) v += sh[j];
         vh[j] = v;
       }
@@ -310,7 +312,7 @@ do \
   } \
 } while (0)
 
-#if USE_SIMD_INTRINSICS && __AVX__ && USE_FMA && __FMA__
+#if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
 
 #define ADD_CONNECTIONS00 \
 do \
@@ -573,7 +575,7 @@ static void add_connections_config
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w;
-#   if USE_SIMD_INTRINSICS && __AVX__ && USE_FMA && __FMA__
+#   if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m256d VOI = _mm256_set1_pd (v[cn[c].s] + off[cn[c].s]);

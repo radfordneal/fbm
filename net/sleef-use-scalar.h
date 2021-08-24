@@ -21,16 +21,19 @@
 #if USE_SLEEF
 # include <stdint.h>
 # define __SLEEF_REMPITAB__
-# if __AVX__ && __FMA__
+# if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
 #   include "../sleef-include/sleefinline_purecfma_scalar.h"
 #   define fast_exp Sleef_expd1_u10purecfma
 #   define fast_log Sleef_logd1_u10purecfma
+#   define fast_tanh Sleef_tanhd1_u10purecfma
 # else
 #   include "../sleef-include/sleefinline_purec_scalar.h"
 #   define fast_exp Sleef_expd1_u10purec
 #   define fast_log Sleef_logd1_u10purec
+#   define fast_tanh Sleef_tanhd1_u10purec
 # endif
 #else
 # define fast_exp exp
 # define fast_log log
+# define fast_tanh tanh
 #endif

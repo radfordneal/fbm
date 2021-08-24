@@ -15,10 +15,10 @@
 
 #if USE_SLEEF
 # include <stdint.h>
-# if __AVX__ && __FMA__
+# if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
 #   include "../sleef-include/sleefinline_avx2128.h"
 #   include "../sleef-include/sleefinline_avx2.h"
-# elif __AVX__
+# elif USE_SIMD_INTRINSICS && __AVX__
 #   include "../sleef-include/sleefinline_sse4.h"
 #   include "../sleef-include/sleefinline_avx.h"
 # endif

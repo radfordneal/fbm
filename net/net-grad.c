@@ -224,7 +224,7 @@ do \
   } \
 } while (0)
 
-#if USE_SIMD_INTRINSICS && __AVX__ && USE_FMA && __FMA__
+#if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
 
 #define ADD_GRAD2_00 \
 do \
@@ -522,7 +522,7 @@ static void add_grad2_config
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w;
-#   if USE_SIMD_INTRINSICS && __AVX__ && USE_FMA && __FMA__
+#   if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m256d SI = _mm256_set1_pd (s[cn[c].s] + off[cn[c].s]);

@@ -228,7 +228,7 @@ do \
   } \
 } while (0)
 
-#if USE_SIMD_INTRINSICS && __AVX__ && USE_FMA &&__FMA__
+#if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA &&__FMA__
 
 #define SUM_DERIVATIVES0 \
 do \

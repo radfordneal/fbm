@@ -26,7 +26,8 @@
 #include "net.h"
 
 #include "intrinsics-use.h"
-#include "sleef-use.h"
+#include "sleef-use-simd.h"
+#include "sleef-use-scalar.h"
 
 
 /* This module calculates the values of the output units in a network, given 

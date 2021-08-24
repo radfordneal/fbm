@@ -1,4 +1,4 @@
-/* SLEEF-USE.H - Possibly include header files for SLEEF. */
+/* SLEEF-USE.H - Possibly include header files for SLEEF SIMD functions. */
 
 /* Copyright (c) 2021 by Radford M. Neal 
  *
@@ -16,14 +16,10 @@
 #if USE_SLEEF
 # include <stdint.h>
 # if __AVX__ && __FMA__
-#   include "../sleef-include/sleefinline_purecfma_scalar.h"
 #   include "../sleef-include/sleefinline_avx2128.h"
 #   include "../sleef-include/sleefinline_avx2.h"
 # elif __AVX__
-#   include "../sleef-include/sleefinline_purec_scalar.h"
 #   include "../sleef-include/sleefinline_sse4.h"
 #   include "../sleef-include/sleefinline_avx.h"
-# else
-#   include "../sleef-include/sleefinline_purec_scalar.h"
 # endif
 #endif

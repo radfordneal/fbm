@@ -27,28 +27,7 @@
 #include "rand.h"
 
 #include "intrinsics-use.h"
-
-
-/* DEFINE FAST VERSIONS OF EXP AND LOG.  Just the ordinary versions if SLEEF 
-   isn't being used.  Note that since the fast versions are inlined, they
-   shouldn't be used in code that isn't time critical. */
-
-#if USE_SLEEF
-# include <stdint.h>
-# define __SLEEF_REMPITAB__
-# if __AVX__ && __FMA__
-#   include "../sleef-include/sleefinline_purecfma_scalar.h"
-#   define fast_exp Sleef_expd1_u10purecfma
-#   define fast_log Sleef_logd1_u10purecfma
-# else
-#   include "../sleef-include/sleefinline_purec_scalar.h"
-#   define fast_exp Sleef_expd1_u10purec
-#   define fast_log Sleef_logd1_u10purec
-# endif
-#else
-# define fast_exp exp
-# define fast_log log
-#endif
+#include "sleef-use-scalar.h"
 
 
 /* CONSTANTS INVOLVING PI. */

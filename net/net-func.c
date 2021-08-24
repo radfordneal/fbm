@@ -151,14 +151,9 @@ void net_func
         { vh[j-1] = Sleef_tanhd1_u35purec (sh[j-1]);
         }
       }
-#     elif USE_SLEEF
-      { for (j = 0; j<N_hidden; j++)
-        { vh[j] = Sleef_tanhd1_u35purec (sh[j]);
-        }
-      }
 #     else
       { for (j = 0; j<N_hidden; j++)
-        { vh[j] = tanh (sh[j]);
+        { vh[j] = fast_tanh (sh[j]);
         }
       }
 #     endif
@@ -170,8 +165,14 @@ void net_func
     }
     else if (flgs->layer_type[l]==Softplus_type)
     { for (j = 0; j<N_hidden; j++)
-      { vh[j] = sh[j]>0 ? sh[j] + log(1+exp(-sh[j])) /* avoid overflow */
-                        : log(1+exp(sh[j]));
+      { /* Do it differently for sh[j]>0 to avoid overflow.  Call fast_exp
+           and fast_log in only one place, since they're inlined. */
+        double a = sh[j];
+        int l = a>0;
+        if (l) a = -a;
+        double v = fast_log (1 + fast_exp(a));
+        if (l) v += sh[j];
+        vh[j] = v;
       }
     }
     else if (flgs->layer_type[l]==Identity_type)

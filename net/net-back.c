@@ -26,6 +26,7 @@
 #include "net.h"
 
 #include "intrinsics-use.h"
+#include "sleef-use-scalar.h"
 
 
 /* This module finds the derivative of the "error" for a particular case
@@ -92,11 +93,12 @@ void net_back
       }
     }
 
-    net_value *restrict vh = v->h[l];
     net_value *restrict ds = d->s[l];
 
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     {
+      net_value *restrict vh = v->h[l];
+
 #     if USE_SIMD_INTRINSICS && __AVX__ && 0  /* disabled, since doesn't help */
       { __m256d ONE = _mm256_set1_pd(1.0);
         i = 3;
@@ -127,13 +129,15 @@ void net_back
 #     endif
     }
     else if (flgs->layer_type[l]==Sin_type)
-    { for (i = 0; i<N_hidden; i++)
-      { ds[i] = 2 * cos(v->s[l][i]*sqrt_2) * dh[i];
+    { net_value *restrict vs = v->s[l];
+      for (i = 0; i<N_hidden; i++)
+      { ds[i] = 2 * cos(vs[i]*sqrt_2) * dh[i];
       }
     }
     else if (flgs->layer_type[l]==Softplus_type)
-    { for (i = 0; i<N_hidden; i++)
-      { ds[i] = 1 / (1+exp(-v->s[l][i])) * dh[i];
+    { net_value *restrict vs = v->s[l];
+      for (i = 0; i<N_hidden; i++)
+      { ds[i] = 1 / (1+fast_exp(-vs[i])) * dh[i];
       }
     }
     else if (flgs->layer_type[l]==Identity_type)

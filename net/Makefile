@@ -30,9 +30,10 @@ include ../mc/mc.make
 
 
 net-func.o:	net-func.c	misc.h prior.h model.h net.h data.h \
-				intrinsics-use.h sleef-use-simd.h
+				intrinsics-use.h sleef-use-simd.h \
+				sleef-use-scalar.h
 net-back.o:	net-back.c	misc.h prior.h model.h net.h data.h \
-				intrinsics-use.h
+				intrinsics-use.h sleef-use-scalar.h
 net-grad.o:	net-grad.c	misc.h prior.h model.h net.h data.h \
 				intrinsics-use.h
 net-util.o:	net-util.c	misc.h prior.h model.h net.h data.h

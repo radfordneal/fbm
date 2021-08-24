@@ -15,16 +15,18 @@
 
 
 /* DEFINE FAST VERSIONS OF EXP AND LOG.  Just the ordinary versions if SLEEF 
-   isn't being used.  Note that since the fast versions are inlined, they
-   should be avoided in code that isn't time critical. */
+   isn't being used.  Note that since the fast versions may be inlined, they
+   should be avoided in code that isn't time critical. 
+
+   May be tweaked according to how good the standard library functions are. */
 
 #if USE_SLEEF
 # include <stdint.h>
 # define __SLEEF_REMPITAB__
 # if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
 #   include "../sleef-include/sleefinline_purecfma_scalar.h"
-#   define fast_exp Sleef_expd1_u10purecfma
-#   define fast_log Sleef_logd1_u10purecfma
+#   define fast_exp exp // Sleef_expd1_u10purecfma is slower on ubuntu 20.04
+#   define fast_log log // Sleef_logd1_u10purecfma is slower on ubuntu 20.04
 #   define fast_tanh Sleef_tanhd1_u10purecfma
 # else
 #   include "../sleef-include/sleefinline_purec_scalar.h"

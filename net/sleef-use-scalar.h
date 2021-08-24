@@ -14,7 +14,7 @@
  */
 
 
-/* DEFINE FAST VERSIONS OF EXP AND LOG.  Just the ordinary versions if SLEEF 
+/* DEFINE FAST VERSIONS OF EXP/LOG/TANH.  Just the ordinary versions if SLEEF 
    isn't being used.  Note that since the fast versions may be inlined, they
    should be avoided in code that isn't time critical. 
 

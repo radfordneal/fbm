@@ -1,6 +1,6 @@
 #!/bin/bash
 
 gcc -O3 -march=native $@ \
-    sleef-test.c sleef-test-fns.c -o sleef-test
+    sleef-test.c sleef-test-fns.c -lm -o sleef-test
 gcc -O3 -march=native $@ \
-    sleef-test-simd.c sleef-test-fns-simd.c -o sleef-test-simd
+    sleef-test-simd.c sleef-test-fns-simd.c -lm -o sleef-test-simd

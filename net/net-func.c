@@ -245,15 +245,9 @@ void net_func
     }
     else if (flgs->layer_type[l]==Softplus_type)
     { for (j = 0; j<N_hidden; j++)
-      { /* Do it differently for sh[j]>0 to avoid overflow.  Call fast_exp
-           and fast_log in only one place, since they're inlined. */
-        double a = sh[j];
-        int l = a>0;
-        if (l) a = -a;
-        double v;
-        v = 1 + exp(a);
-        v = log(v);
-        if (l) v += sh[j];
+      { double a = sh[j];
+        double v = log (1 + exp(-fabs(a)));  /* avoid overflow */
+        if (a>0) v += a;
         vh[j] = v;
       }
     }

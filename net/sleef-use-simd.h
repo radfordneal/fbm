@@ -15,6 +15,7 @@
 
 #if USE_SLEEF
 # include <stdint.h>
+# define __SLEEF_REMPITAB__
 # if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
 #   include "../sleef-include/sleefinline_avx2128.h"
 #   include "../sleef-include/sleefinline_avx2.h"

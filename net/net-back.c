@@ -26,6 +26,7 @@
 #include "net.h"
 
 #include "intrinsics-use.h"
+#include "sleef-use-simd.h"
 
 
 /* This module finds the derivative of the "error" for a particular case
@@ -134,10 +135,65 @@ void net_back
       }
     }
     else if (flgs->layer_type[l]==Softplus_type)
-    { net_value *restrict vs = v->s[l];
-      for (i = 0; i<N_hidden; i++)
-      { ds[i] = dh[i] / (1+exp(-vs[i]));
+    { 
+      net_value *restrict vs = v->s[l];
+
+#     if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
+      { __m256d ONE = _mm256_set1_pd(1.0);
+        i = 3;
+        while (i<N_hidden)
+        { __m256d NVS = _mm256_sub_pd (_mm256_setzero_pd(),
+                                       _mm256_loadu_pd(vs+i-3));
+          _mm256_storeu_pd (ds+i-3, 
+                            _mm256_div_pd (_mm256_loadu_pd(dh+i-3),
+                              _mm256_add_pd (ONE, Sleef_expd4_u10avx2(NVS))));
+          i += 4;
+        }
+        i -= 2;
+        if (i<N_hidden)
+        { __m128d NVS = _mm_sub_pd (_mm_setzero_pd(),
+                                    _mm_loadu_pd(vs+i-1));
+          _mm_storeu_pd (ds+i-1, 
+                         _mm_div_pd (_mm_loadu_pd(dh+i-1),
+                         _mm_add_pd (_mm256_castpd256_pd128(ONE), 
+                                     Sleef_expd2_u10avx2128(NVS))));
+          i += 2;
+        }
+        if (i<=N_hidden)
+        { ds[i] = dh[i] / (1+exp(-vs[i]));
+        }
       }
+#     elif USE_SIMD_INTRINSICS && __AVX__
+      { __m256d ONE = _mm256_set1_pd(1.0);
+        i = 3;
+        while (i<N_hidden)
+        { __m256d NVS = _mm256_sub_pd (_mm256_setzero_pd(),
+                                       _mm256_loadu_pd(vs+i-3));
+          _mm256_storeu_pd (ds+i-3, 
+                            _mm256_div_pd (_mm256_loadu_pd(dh+i-3),
+                              _mm256_add_pd (ONE, Sleef_expd4_u10avx(NVS))));
+          i += 4;
+        }
+        i -= 2;
+        if (i<N_hidden)
+        { __m128d NVS = _mm_sub_pd (_mm_setzero_pd(),
+                                    _mm_loadu_pd(vs+i-1));
+          _mm_storeu_pd (ds+i-1, 
+                         _mm_div_pd (_mm_loadu_pd(dh+i-1),
+                         _mm_add_pd (_mm256_castpd256_pd128(ONE), 
+                                     Sleef_expd2_u10sse4(NVS))));
+          i += 2;
+        }
+        if (i<=N_hidden)
+        { ds[i] = dh[i] / (1+exp(-vs[i]));
+        }
+      }
+#     else
+      { for (i = 0; i<N_hidden; i++)
+        { ds[i] = dh[i] / (1+exp(-vs[i]));
+        }
+      }
+#     endif
     }
     else if (flgs->layer_type[l]==Identity_type)
     { for (i = 0; i<N_hidden; i++)

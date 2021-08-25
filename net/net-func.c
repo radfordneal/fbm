@@ -27,7 +27,24 @@
 
 #include "intrinsics-use.h"
 #include "sleef-use-simd.h"
-#include "sleef-use-scalar.h"
+
+
+#define USE_QUICK_AND_DIRTY_TANH 1  /* Whether to use the faster tanh below */
+
+#if USE_QUICK_AND_DIRTY_TANH
+# define TANH quick_and_dirty_tanh
+#else
+# define TANH tanh
+#endif
+
+
+/* COMPUTE TANH QUICKLY, BUT NOT VERY ACCURATELY.  Loses accuracy for
+   x near zero, but that shouldn't matter much for neural network use. */
+
+static inline double quick_and_dirty_tanh (double x)
+{
+  return 1.0 - 2.0 / (1.0+exp(x+x));
+}
 
 
 /* This module calculates the values of the output units in a network, given 
@@ -117,45 +134,108 @@ void net_func
 
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     { 
-#     if USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
-      { j = 3;
-        while (j<N_hidden)
-        { _mm256_storeu_pd (vh+j-3,  
-                            Sleef_tanhd4_u35avx2 (_mm256_loadu_pd(sh+j-3)));
-          j += 4;
+#     if USE_QUICK_AND_DIRTY_TANH
+#       if USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
+        { __m256d one = _mm256_set1_pd(1.0);
+          __m256d two = _mm256_set1_pd(2.0);
+          j = 3;
+          while (j<N_hidden)
+          { __m256d x = _mm256_loadu_pd(sh+j-3);
+            x = _mm256_add_pd(x,x);
+            x = Sleef_expd4_u10avx2(x);
+            x = _mm256_sub_pd(one, _mm256_div_pd (two, _mm256_add_pd (one, x)));
+            _mm256_storeu_pd (vh+j-3, x);
+            j += 4;
+          }
+          j -= 2;
+          if (j<N_hidden)
+          { __m128d x = _mm_loadu_pd(sh+j-1);
+            x = _mm_add_pd(x,x);
+            x = Sleef_expd2_u10avx2128(x);
+            x = _mm_sub_pd (_mm256_castpd256_pd128(one), 
+                   _mm_div_pd (_mm256_castpd256_pd128(two),
+                     _mm_add_pd (_mm256_castpd256_pd128(one), x)));
+            _mm_storeu_pd (vh+j-1, x);
+            j += 2;
+          }
+          if (j<=N_hidden)
+          { vh[j-1] = TANH (sh[j-1]);
+          }
         }
-        j -= 2;
-        if (j<N_hidden)
-        { _mm_storeu_pd (vh+j-1,  
-                         Sleef_tanhd2_u35avx2128 (_mm_loadu_pd(sh+j-1)));
-          j += 2;
+#       elif USE_SLEEF && __AVX__
+        { __m256d one = _mm256_set1_pd(1.0);
+          __m256d two = _mm256_set1_pd(2.0);
+          j = 3;
+          while (j<N_hidden)
+          { __m256d x = _mm256_loadu_pd(sh+j-3);
+            x = _mm256_add_pd(x,x);
+            x = Sleef_expd4_u10avx(x);
+            x = _mm256_sub_pd(one, _mm256_div_pd (two, _mm256_add_pd (one, x)));
+            _mm256_storeu_pd (vh+j-3, x);
+            j += 4;
+          }
+          j -= 2;
+          if (j<N_hidden)
+          { __m128d x = _mm_loadu_pd(sh+j-1);
+            x = _mm_add_pd(x,x);
+            x = Sleef_expd2_u10sse4(x);
+            x = _mm_sub_pd (_mm256_castpd256_pd128(one), 
+                   _mm_div_pd (_mm256_castpd256_pd128(two),
+                     _mm_add_pd (_mm256_castpd256_pd128(one), x)));
+            _mm_storeu_pd (vh+j-1, x);
+            j += 2;
+          }
+          if (j<=N_hidden)
+          { vh[j-1] = TANH (sh[j-1]);
+          }
         }
-        if (j<=N_hidden)
-        { vh[j-1] = Sleef_tanhd1_u35purecfma (sh[j-1]);
+#       else
+        { for (j = 0; j<N_hidden; j++)
+          { vh[j] = TANH (sh[j]);
+          }
         }
-      }
-#     elif USE_SLEEF && __AVX__
-      { j = 3;
-        while (j<N_hidden)
-        { _mm256_storeu_pd (vh+j-3,  
-                            Sleef_tanhd4_u35avx (_mm256_loadu_pd(sh+j-3)));
-          j += 4;
-        }
-        j -= 2;
-        if (j<N_hidden)
-        { _mm_storeu_pd (vh+j-1,  
-                         Sleef_tanhd2_u35sse4 (_mm_loadu_pd(sh+j-1)));
-          j += 2;
-        }
-        if (j<=N_hidden)
-        { vh[j-1] = Sleef_tanhd1_u35purec (sh[j-1]);
-        }
-      }
+#       endif
 #     else
-      { for (j = 0; j<N_hidden; j++)
-        { vh[j] = fast_tanh (sh[j]);
+#       if USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
+        { j = 3;
+          while (j<N_hidden)
+          { _mm256_storeu_pd (vh+j-3,  
+                              Sleef_tanhd4_u35avx2 (_mm256_loadu_pd(sh+j-3)));
+            j += 4;
+          }
+          j -= 2;
+          if (j<N_hidden)
+          { _mm_storeu_pd (vh+j-1,  
+                           Sleef_tanhd2_u35avx2128 (_mm_loadu_pd(sh+j-1)));
+            j += 2;
+          }
+          if (j<=N_hidden)
+          { vh[j-1] = tanh (sh[j-1]);
+          }
         }
-      }
+#       elif USE_SLEEF && __AVX__
+        { j = 3;
+          while (j<N_hidden)
+          { _mm256_storeu_pd (vh+j-3,  
+                              Sleef_tanhd4_u35avx (_mm256_loadu_pd(sh+j-3)));
+            j += 4;
+          }
+          j -= 2;
+          if (j<N_hidden)
+          { _mm_storeu_pd (vh+j-1,  
+                           Sleef_tanhd2_u35sse4 (_mm_loadu_pd(sh+j-1)));
+            j += 2;
+          }
+          if (j<=N_hidden)
+          { vh[j-1] = tanh (sh[j-1]);
+          }
+        }
+#       else
+        { for (j = 0; j<N_hidden; j++)
+          { vh[j] = tanh (sh[j]);
+          }
+        }
+#       endif
 #     endif
     }
     else if (flgs->layer_type[l]==Sin_type)
@@ -171,8 +251,8 @@ void net_func
         int l = a>0;
         if (l) a = -a;
         double v;
-        v = 1 + fast_exp(a);
-        v = fast_log(v);
+        v = 1 + exp(a);
+        v = log(v);
         if (l) v += sh[j];
         vh[j] = v;
       }

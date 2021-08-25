@@ -26,9 +26,6 @@
 #include "net.h"
 #include "rand.h"
 
-#include "intrinsics-use.h"
-#include "sleef-use-scalar.h"
-
 
 /* CONSTANTS INVOLVING PI. */
 
@@ -79,6 +76,7 @@ void net_model_prob
   static double alpha_saved=0.0;/* Constant is already computed for this alpha*/
   static double cnst;		/* Saved value of this constant */
 
+  int N_outputs = a->N_outputs;
   double d, x, alpha;
   int i;
 
@@ -88,7 +86,7 @@ void net_model_prob
     { 
       if (pr) *pr = 0;
 
-      for (i = 0; i<a->N_outputs; i++)
+      for (i = 0; i<N_outputs; i++)
       { 
         if (isnan(t[i]))
         { if (dp) dp->o[i] = 0;
@@ -101,10 +99,10 @@ void net_model_prob
 
         /* Note: The exp computation below never overflows. */
 
-        double ep1 = fast_exp (-abs_oi) + 1;
+        double ep1 = exp (-abs_oi) + 1;
 
         if (pr)  /* find log probability */
-        { double log_ep1 = fast_log (ep1);
+        { double log_ep1 = log (ep1);
           *pr += (t[i] - 0.5*(sign_oi+1)) * oi - log_ep1;
         }
 
@@ -120,10 +118,10 @@ void net_model_prob
     {
       double m, e, s;
 
-      if (isnan(*t)) 
+      if (isnan(*t))  /* target not observed */
       { if (pr) *pr = 0;
         if (dp) 
-        { for (i = 0; i<a->N_outputs; i++)
+        { for (i = 0; i<N_outputs; i++)
           { dp->o[i] = 0;
           }
         }
@@ -131,24 +129,25 @@ void net_model_prob
       }
 
       m = v->o[0];
-      for (i = 1; i<a->N_outputs; i++)
+      for (i = 1; i<N_outputs; i++)
       { if (v->o[i]>m) m = v->o[i];
       }
 
       s = 0;
-      for (i = 0; i<a->N_outputs; i++)
-      { e = fast_exp (v->o[i] - m);
+      for (i = 0; i<N_outputs; i++)
+      { e = exp (v->o[i] - m);
         if (dp) dp->o[i] = e;
         s += e;
       }
 
       if (pr) 
-      { *pr = v->o[(int)*t] - m - fast_log(s);
+      { *pr = v->o[(int)*t] - m - log(s);
       }
 
       if (dp)
-      { for (i = 0; i<a->N_outputs; i++)
-        { dp->o[i] /= s;
+      { s = 1/s;
+        for (i = 0; i<N_outputs; i++)
+        { dp->o[i] *= s;
         }
         dp->o[(int)*t] -= 1;
       }
@@ -165,10 +164,10 @@ void net_model_prob
         if (pr) *pr = 0;
 
         if (pr && op<1) 
-        { *pr -= 0.5 * a->N_outputs * Log2pi;
+        { *pr -= 0.5 * N_outputs * Log2pi;
         }
 
-        for (i = 0; i<a->N_outputs; i++)
+        for (i = 0; i<N_outputs; i++)
         { if (isnan(t[i]))
           { if (dp) dp->o[i] = 0;
             if (pr && op<1) *pr += 0.5 * Log2pi;
@@ -196,10 +195,10 @@ void net_model_prob
           { cnst = lgamma((alpha+1)/2) - lgamma(alpha/2) - 0.5*log(M_PI*alpha);
             alpha_saved = alpha;
           }
-          *pr += a->N_outputs * cnst;
+          *pr += N_outputs * cnst;
         }
 
-        for (i = 0; i<a->N_outputs; i++)
+        for (i = 0; i<N_outputs; i++)
         { if (isnan(t[i]))
           { if (dp) dp->o[i] = 0;
             if (pr && op<1) *pr -= cnst;
@@ -299,6 +298,7 @@ void net_model_max_second
   net_sigmas *s		/* Hyperparameters, including noise sigmas */
 )
 {
+  int N_outputs = a->N_outputs;
   double alpha;
   int i;
 
@@ -306,7 +306,7 @@ void net_model_max_second
   {
     case 'B':  /* Binary data values */
     {
-      for (i = 0; i<a->N_outputs; i++)
+      for (i = 0; i<N_outputs; i++)
       { msd[i] = 0.25;
       }
 
@@ -315,7 +315,7 @@ void net_model_max_second
 
     case 'C':  /* Single class with multiple possible values */
     {
-      for (i = 0; i<a->N_outputs; i++)
+      for (i = 0; i<N_outputs; i++)
       { msd[i] = 0.25;
       }
 
@@ -326,7 +326,7 @@ void net_model_max_second
     {
       alpha = m->noise.alpha[2];
 
-      for (i = 0; i<a->N_outputs; i++)
+      for (i = 0; i<N_outputs; i++)
       { msd[i] = alpha==0 ? 1 / (s->noise[i] * s->noise[i])
                           : (alpha+1) / (alpha * s->noise[i] * s->noise[i]);
       }
@@ -400,6 +400,7 @@ void net_model_guess
   int type		/* 0=mean, 1=random, 2=median */
 )
 {
+  int N_outputs = a->N_outputs;
   double z, pr, r, noise, alpha;
   int i;
 
@@ -409,7 +410,7 @@ void net_model_guess
     { 
       if (type==2) abort();
 
-      for (i = 0; i<a->N_outputs; i++)
+      for (i = 0; i<N_outputs; i++)
       { pr = 1 / (1+exp(-v->o[i]));
         t[i] = type==1 ? rand_uniform()<pr : pr;
       }
@@ -423,7 +424,7 @@ void net_model_guess
 
       z = v->o[0];
 
-      for (i = 1; i<a->N_outputs; i++)
+      for (i = 1; i<N_outputs; i++)
       { z = addlogs(z,v->o[i]);
       }
 
@@ -432,7 +433,7 @@ void net_model_guess
         *t = 0; /* just in case */
       }
 
-      for (i = 0; i<a->N_outputs; i++)
+      for (i = 0; i<N_outputs; i++)
       { pr = exp (v->o[i] - z);
         if (type==1)
         { r -= pr;
@@ -451,7 +452,7 @@ void net_model_guess
   
     case 'R': case 0:  /* Real-valued target */
     { 
-      for (i = 0; i<a->N_outputs; i++)
+      for (i = 0; i<N_outputs; i++)
       { t[i] = v->o[i];
         if (type==1 && m->type!=0)
         { noise = s->noise[i];

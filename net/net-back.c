@@ -26,7 +26,6 @@
 #include "net.h"
 
 #include "intrinsics-use.h"
-#include "sleef-use-scalar.h"
 
 
 /* This module finds the derivative of the "error" for a particular case
@@ -137,7 +136,7 @@ void net_back
     else if (flgs->layer_type[l]==Softplus_type)
     { net_value *restrict vs = v->s[l];
       for (i = 0; i<N_hidden; i++)
-      { ds[i] = 1 / (1+fast_exp(-vs[i])) * dh[i];
+      { ds[i] = 1 / (1+exp(-vs[i])) * dh[i];
       }
     }
     else if (flgs->layer_type[l]==Identity_type)

@@ -145,6 +145,11 @@ void mc_trajectory
 
   /* Compute the trajectory, using as many approximations as asked for. */
 
+  mc_value *restrict ds_q = ds->q;
+  mc_value *restrict ds_p = ds->p;
+  mc_value *restrict ds_grad = ds->grad;
+  mc_value *restrict ds_stepsize = ds->stepsize;
+
   switch (tj->type)
   { 
     case '2': case 'G':
@@ -170,19 +175,19 @@ void mc_trajectory
           if (tj->rev_sym!=-1)
           { 
             if (ds->know_grad!=1)
-            { mc_app_energy(ds,1,1,0,ds->grad);
+            { mc_app_energy(ds,1,1,0,ds_grad);
             }
   
             for (k = firsti; k<=lasti; k++)
-            { ds->p[k] -= b1 * ds->stepsize[k] * ds->grad[k];
-              ds->q[k] += a1 * ds->stepsize[k] * ds->p[k];
+            { ds_p[k] -= b1 * ds_stepsize[k] * ds_grad[k];
+              ds_q[k] += a1 * ds_stepsize[k] * ds_p[k];
             }
   
-            mc_app_energy(ds,1,1,0,ds->grad);
+            mc_app_energy(ds,1,1,0,ds_grad);
   
             for (k = firsti; k<=lasti; k++)
-            { ds->p[k] -= b2 * ds->stepsize[k] * ds->grad[k];
-              ds->q[k] += a2 * ds->stepsize[k] * ds->p[k];
+            { ds_p[k] -= b2 * ds_stepsize[k] * ds_grad[k];
+              ds_q[k] += a2 * ds_stepsize[k] * ds_p[k];
             }
 
             ds->know_grad = 0;
@@ -192,22 +197,22 @@ void mc_trajectory
           if (tj->rev_sym!=0)
           {
             for (k = firsti; k<=lasti; k++)
-            { ds->q[k] += a2 * ds->stepsize[k] * ds->p[k];
+            { ds_q[k] += a2 * ds_stepsize[k] * ds_p[k];
             }
 
-            mc_app_energy(ds,1,1,0,ds->grad);
+            mc_app_energy(ds,1,1,0,ds_grad);
 
             for (k = firsti; k<=lasti; k++)
-            { ds->p[k] -= b2 * ds->stepsize[k] * ds->grad[k];
-              ds->q[k] += a1 * ds->stepsize[k] * ds->p[k];
+            { ds_p[k] -= b2 * ds_stepsize[k] * ds_grad[k];
+              ds_q[k] += a1 * ds_stepsize[k] * ds_p[k];
             }
 
             mc_app_energy (ds, 1, 1, 
                            need_pot && n==1 ? &ds->pot_energy : 0,
-                           ds->grad);
+                           ds_grad);
 
             for (k = firsti; k<=lasti; k++)
-            { ds->p[k] -= b1 * ds->stepsize[k] * ds->grad[k];
+            { ds_p[k] -= b1 * ds_stepsize[k] * ds_grad[k];
             }
 
             ds->know_grad = 1;
@@ -227,22 +232,22 @@ void mc_trajectory
           if (tj->rev_sym!=-1)
           {
             for (k = firsti; k<=lasti; k++)
-            { ds->q[k] += b1 * ds->stepsize[k] * ds->p[k];
+            { ds_q[k] += b1 * ds_stepsize[k] * ds_p[k];
             }
     
-            mc_app_energy(ds,1,1,0,ds->grad);
+            mc_app_energy(ds,1,1,0,ds_grad);
   
             for (k = firsti; k<=lasti; k++)
-            { ds->p[k] -= a1 * ds->stepsize[k] * ds->grad[k];
-              ds->q[k] += b2 * ds->stepsize[k] * ds->p[k];
+            { ds_p[k] -= a1 * ds_stepsize[k] * ds_grad[k];
+              ds_q[k] += b2 * ds_stepsize[k] * ds_p[k];
             }
     
             mc_app_energy (ds, 1, 1, 
                        need_pot && n==1 && tj->rev_sym==0 ? &ds->pot_energy : 0,
-                       ds->grad);
+                       ds_grad);
   
             for (k = firsti; k<=lasti; k++)
-            { ds->p[k] -= a2 * ds->stepsize[k] * ds->grad[k];
+            { ds_p[k] -= a2 * ds_stepsize[k] * ds_grad[k];
             }
     
             ds->know_grad = 1;
@@ -252,19 +257,19 @@ void mc_trajectory
           if (tj->rev_sym!=0)
           {
             if (ds->know_grad!=1)
-            { mc_app_energy(ds,1,1,0,ds->grad);
+            { mc_app_energy(ds,1,1,0,ds_grad);
             }
 
             for (k = firsti; k<=lasti; k++)
-            { ds->p[k] -= a2 * ds->stepsize[k] * ds->grad[k];
-              ds->q[k] += b2 * ds->stepsize[k] * ds->p[k];
+            { ds_p[k] -= a2 * ds_stepsize[k] * ds_grad[k];
+              ds_q[k] += b2 * ds_stepsize[k] * ds_p[k];
             }
 
-            mc_app_energy(ds,1,1,0,ds->grad);
+            mc_app_energy(ds,1,1,0,ds_grad);
   
             for (k = firsti; k<=lasti; k++)
-            { ds->p[k] -= a1 * ds->stepsize[k] * ds->grad[k];
-              ds->q[k] += b1 * ds->stepsize[k] * ds->p[k];
+            { ds_p[k] -= a1 * ds_stepsize[k] * ds_grad[k];
+              ds_q[k] += b1 * ds_stepsize[k] * ds_p[k];
             }
 
             ds->know_grad = 0;
@@ -301,33 +306,33 @@ void mc_trajectory
         if (tj->rev_sym!=-1)
         {
           if (ds->know_grad!=1)
-          { mc_app_energy(ds,1,1,0,ds->grad);
+          { mc_app_energy(ds,1,1,0,ds_grad);
           }
 
           for (k = firsti; k<=lasti; k++)
-          { ds->p[k] -= sf * b[0] * ds->stepsize[k] * ds->grad[k];
-            ds->q[k] += sf * a[0] * ds->stepsize[k] * ds->p[k];
+          { ds_p[k] -= sf * b[0] * ds_stepsize[k] * ds_grad[k];
+            ds_q[k] += sf * a[0] * ds_stepsize[k] * ds_p[k];
           }
   
-          mc_app_energy(ds,1,1,0,ds->grad);
+          mc_app_energy(ds,1,1,0,ds_grad);
   
           for (k = firsti; k<=lasti; k++)
-          { ds->p[k] -= sf * b[1] * ds->stepsize[k] * ds->grad[k];
-            ds->q[k] += sf * a[1] * ds->stepsize[k] * ds->p[k];
+          { ds_p[k] -= sf * b[1] * ds_stepsize[k] * ds_grad[k];
+            ds_q[k] += sf * a[1] * ds_stepsize[k] * ds_p[k];
           }
   
-          mc_app_energy(ds,1,1,0,ds->grad);
+          mc_app_energy(ds,1,1,0,ds_grad);
   
           for (k = firsti; k<=lasti; k++)
-          { ds->p[k] -= sf * b[2] * ds->stepsize[k] * ds->grad[k];
-            ds->q[k] += sf * a[2] * ds->stepsize[k] * ds->p[k];
+          { ds_p[k] -= sf * b[2] * ds_stepsize[k] * ds_grad[k];
+            ds_q[k] += sf * a[2] * ds_stepsize[k] * ds_p[k];
           }
   
-          mc_app_energy(ds,1,1,0,ds->grad);
+          mc_app_energy(ds,1,1,0,ds_grad);
   
           for (k = firsti; k<=lasti; k++)
-          { ds->p[k] -= sf * b[3] * ds->stepsize[k] * ds->grad[k];
-            ds->q[k] += sf * a[3] * ds->stepsize[k] * ds->p[k];
+          { ds_p[k] -= sf * b[3] * ds_stepsize[k] * ds_grad[k];
+            ds_q[k] += sf * a[3] * ds_stepsize[k] * ds_p[k];
           }
 
           ds->know_grad = 0;
@@ -337,36 +342,36 @@ void mc_trajectory
         if (tj->rev_sym!=0)
         {
           for (k = firsti; k<=lasti; k++)
-          { ds->q[k] += sf * a[3] * ds->stepsize[k] * ds->p[k]; 
+          { ds_q[k] += sf * a[3] * ds_stepsize[k] * ds_p[k]; 
           }
 
-          mc_app_energy(ds,1,1,0,ds->grad);
+          mc_app_energy(ds,1,1,0,ds_grad);
 
           for (k = firsti; k<=lasti; k++)
-          { ds->p[k] -= sf * b[3] * ds->stepsize[k] * ds->grad[k];
-            ds->q[k] += sf * a[2] * ds->stepsize[k] * ds->p[k];
+          { ds_p[k] -= sf * b[3] * ds_stepsize[k] * ds_grad[k];
+            ds_q[k] += sf * a[2] * ds_stepsize[k] * ds_p[k];
           }
 
-          mc_app_energy(ds,1,1,0,ds->grad);
+          mc_app_energy(ds,1,1,0,ds_grad);
 
           for (k = firsti; k<=lasti; k++)
-          { ds->p[k] -= sf * b[2] * ds->stepsize[k] * ds->grad[k];
-            ds->q[k] += sf * a[1] * ds->stepsize[k] * ds->p[k];
+          { ds_p[k] -= sf * b[2] * ds_stepsize[k] * ds_grad[k];
+            ds_q[k] += sf * a[1] * ds_stepsize[k] * ds_p[k];
           }
 
-          mc_app_energy(ds,1,1,0,ds->grad);
+          mc_app_energy(ds,1,1,0,ds_grad);
 
           for (k = firsti; k<=lasti; k++)
-          { ds->p[k] -= sf * b[1] * ds->stepsize[k] * ds->grad[k];
-            ds->q[k] += sf * a[0] * ds->stepsize[k] * ds->p[k];
+          { ds_p[k] -= sf * b[1] * ds_stepsize[k] * ds_grad[k];
+            ds_q[k] += sf * a[0] * ds_stepsize[k] * ds_p[k];
           }
 
           mc_app_energy (ds, 1, 1, 
                          need_pot && n==1 ? &ds->pot_energy : 0,
-                         ds->grad);
+                         ds_grad);
 
           for (k = firsti; k<=lasti; k++)
-          { ds->p[k] -= sf * b[0] * ds->stepsize[k] * ds->grad[k];
+          { ds_p[k] -= sf * b[0] * ds_stepsize[k] * ds_grad[k];
           }
 
           ds->know_grad = 1;
@@ -386,11 +391,11 @@ void mc_trajectory
         /* Compute trajectory with initial and final half-steps for momentum .*/
 
         if (ds->know_grad!=approx_order[0])
-        { mc_app_energy (ds, na, approx_order[0], 0, ds->grad);
+        { mc_app_energy (ds, na, approx_order[0], 0, ds_grad);
         }
   
         for (k = firsti; k<=lasti; k++)
-        { ds->p[k] -= sfh * ds->stepsize[k] * ds->grad[k];
+        { ds_p[k] -= sfh * ds_stepsize[k] * ds_grad[k];
         }
 
         a = 0;
@@ -398,7 +403,7 @@ void mc_trajectory
         for (;;)
         {
           for (k = firsti; k<=lasti; k++)
-          { ds->q[k] += sf * ds->stepsize[k] * ds->p[k];
+          { ds_q[k] += sf * ds_stepsize[k] * ds_p[k];
           }
   
           a = (a+x+ta) % ta;
@@ -406,20 +411,20 @@ void mc_trajectory
 
           mc_app_energy (ds, na, approx_order[o], 
                          need_pot && n==1 ? &ds->pot_energy : 0, 
-                         ds->grad);
+                         ds_grad);
   
           n -= 1;
           if (n==0) break;
   
           for (k = firsti; k<=lasti; k++)
-          { ds->p[k] -= sf * ds->stepsize[k] * ds->grad[k];
+          { ds_p[k] -= sf * ds_stepsize[k] * ds_grad[k];
           }
         }
 
         if (a!=0) abort();
   
         for (k = firsti; k<=lasti; k++)
-        { ds->p[k] -= sfh * ds->stepsize[k] * ds->grad[k];
+        { ds_p[k] -= sfh * ds_stepsize[k] * ds_grad[k];
         }
 
         ds->know_grad = approx_order[0];
@@ -430,7 +435,7 @@ void mc_trajectory
         /* Compute trajectory with initial and final half-steps for position. */
 
         for (k = firsti; k<=lasti; k++)
-        { ds->q[k] += sfh * ds->stepsize[k] * ds->p[k];
+        { ds_q[k] += sfh * ds_stepsize[k] * ds_p[k];
         }
 
         a = x==-1 ? 0 : ta-1;
@@ -440,24 +445,24 @@ void mc_trajectory
           a = (a+x+ta) % ta;
           o = a<na ? a : 2*na-a-1;
 
-          mc_app_energy (ds, na, approx_order[o], 0, ds->grad);
+          mc_app_energy (ds, na, approx_order[o], 0, ds_grad);
 
           for (k = firsti; k<=lasti; k++)
-          { ds->p[k] -= sf * ds->stepsize[k] * ds->grad[k];
+          { ds_p[k] -= sf * ds_stepsize[k] * ds_grad[k];
           } 
   
           n -= 1;
           if (n==0) break;
 
           for (k = firsti; k<=lasti; k++)
-          { ds->q[k] += sf * ds->stepsize[k] * ds->p[k];
+          { ds_q[k] += sf * ds_stepsize[k] * ds_p[k];
           }
         }
 
         if (a != (x==-1 ? 0 : ta-1)) abort();
   
         for (k = firsti; k<=lasti; k++)
-        { ds->q[k] += sfh * ds->stepsize[k] * ds->p[k];
+        { ds_q[k] += sfh * ds_stepsize[k] * ds_p[k];
         }
 
         ds->know_grad = 0;

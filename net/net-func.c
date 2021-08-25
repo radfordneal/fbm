@@ -57,18 +57,18 @@ static inline double quick_and_dirty_tanh (double x)
 
 #define sqrt_2 1.4142135623730950488
 
-static void bias_values (net_value *restrict, int, net_param *restrict);
+static void bias_values (net_value *restrict, int, net_param const*);
 
-static void bias_values_config (net_value *restrict, int, net_param *restrict,
-                                net_config *restrict);
+static void bias_values_config (net_value *restrict, int, net_param const*,
+                                net_config const*);
 
-static void add_connections (net_value *restrict, int, net_value *restrict, int,
-                             net_param *restrict, net_param *restrict,
-                             unsigned short *restrict, int);
+static void add_connections (net_value *restrict, int, net_value const*, int,
+                             net_param const*, net_param const*,
+                             unsigned short const*, int);
 
-static void add_connections_config (net_value *restrict, net_value *restrict,
-                                    net_param *restrict, net_param *restrict,
-                                    net_config *restrict);
+static void add_connections_config (net_value *restrict, net_value const*,
+                                    net_param const*, net_param const*,
+                                    net_config const*);
 
 
 /* EVALUATE NETWORK FUNCTION FOR GIVEN INPUTS.  The inputs are taken from
@@ -77,11 +77,11 @@ static void add_connections_config (net_value *restrict, net_value *restrict,
    already present in the net_values structure. */
 
 void net_func 
-( net_values *v,	/* Place to get inputs and store outputs */
+( net_values *restrict v, /* Place to get inputs and store outputs */
   int start,		/* Number of hidden layers with known values */
-  net_arch *a,		/* Network architecture */
-  net_flags *flgs,	/* Network flags, null if none */
-  net_params *w		/* Network parameters */
+  net_arch const* a,	/* Network architecture */
+  net_flags const* flgs,/* Network flags, null if none */
+  net_params const* w	/* Network parameters */
 )
 {
   int l, j;
@@ -306,7 +306,7 @@ void net_func
 static void bias_values
 ( net_value *restrict v,	/* Array of unit values to set */
   int n,			/* Number of units */
-  net_param *restrict b		/* Biases */
+  net_param const* b		/* Biases */
 )
 { 
   int j;
@@ -321,8 +321,8 @@ static void bias_values
 static void bias_values_config
 ( net_value *restrict v,	/* Array of unit values to set */
   int n,			/* Number of units */
-  net_param *restrict b,	/* Biases */
-  net_config *restrict cf	/* Configuration for biases */
+  net_param const* b,		/* Biases */
+  net_config const* cf		/* Configuration for biases */
 )
 { 
   net_connection *cn = cf->conn;
@@ -427,7 +427,7 @@ do \
         i += 1; \
         w += nd; \
       } \
-      net_param *w2 = w+nd; \
+      net_param const*w2 = w+nd; \
       i += 1; \
       for (;;) \
       { if (i==ns) goto one_more; \
@@ -605,11 +605,11 @@ do \
 static void add_connections
 ( net_value *restrict s,  /* Summed input for destination units to add to */
   int nd,		  /* Number of destination units */
-  net_value *restrict v,  /* Values for source units */
+  net_value const* v,     /* Values for source units */
   int ns,		  /* Number of source units */
-  net_param *restrict w,  /* Connection weights */
-  net_param *restrict off,/* Offsets to add to source unit values */
-  unsigned short *restrict omit,  /* Omit flags, null if not present */
+  net_param const* w,     /* Connection weights */
+  net_param const* off,   /* Offsets to add to source unit values */
+  unsigned short const* omit, /* Omit flags, null if not present */
   int ob		  /* Bit to look at in omit flags */
 )
 {
@@ -638,10 +638,10 @@ static void add_connections
 
 static void add_connections_config
 ( net_value *restrict s,  /* Summed input for destination units to add to */
-  net_value *restrict v,  /* Values for source units */
-  net_param *restrict w,  /* Connection weights */
-  net_param *restrict off,/* Offsets to add to source unit values */
-  net_config *restrict cf /* Configuration for connections and weights */
+  net_value const* v,     /* Values for source units */
+  net_param const* w,     /* Connection weights */
+  net_param const* off,   /* Offsets to add to source unit values */
+  net_config const* cf    /* Configuration for connections and weights */
 )
 {
   net_connection *cn;

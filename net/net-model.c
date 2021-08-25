@@ -60,14 +60,14 @@
    its derivatives may be suppressed, with a possible saving in time. */
 
 void net_model_prob
-( net_values *v,	/* Values for units in network */
-  double *t,		/* Target values, fudged for piecewise const hazard */
-  double *pr,		/* Place to store log probability, zero if not wanted */
-  net_values *dp,	/* Place to store log probability derivatives, or zero*/
-  net_arch *a,		/* Network architecture */
-  model_specification *m, /* Data model */
-  model_survival *sv,	/* Type of hazard function for survival model, or null*/
-  net_sigmas *s,	/* Hyperparameters, including noise sigmas */
+( net_values const*v,	/* Values for units in network */
+  double const*t,	/* Target values, fudged for piecewise const hazard */
+  double *restrict pr,	/* Place to store log probability, zero if not wanted */
+  net_values *restrict dp,/* Place to store log probability derivatives, or 0 */
+  net_arch const*a,	/* Network architecture */
+  model_specification const*m, /* Data model */
+  model_survival const*sv,/* Type of hazard function for survival model, or 0 */
+  net_sigmas const*s,	/* Hyperparameters, including noise sigmas */
   int op		/* Can we ignore some factors? */
 )
 {

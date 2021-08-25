@@ -148,7 +148,7 @@ void mc_trajectory
   mc_value *restrict ds_q = ds->q;
   mc_value *restrict ds_p = ds->p;
   mc_value *restrict ds_grad = ds->grad;
-  mc_value *restrict ds_stepsize = ds->stepsize;
+  mc_value const* ds_stepsize = ds->stepsize;
 
   switch (tj->type)
   { 

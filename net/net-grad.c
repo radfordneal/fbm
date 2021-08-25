@@ -34,15 +34,15 @@
    unit values. */
 
 
-static void add_grad1 (net_param *restrict, net_value *restrict, int);
-static void add_grad1_config (net_param *restrict, net_value *restrict,
-                              net_config *restrict);
-static void add_grad2 (net_param *restrict, net_value *restrict, 
-                       net_param *restrict, int, net_value *restrict, int,
-                       unsigned short *restrict, int);
-static void add_grad2_config (net_param *restrict, net_value *restrict, 
-                       net_param *restrict, net_value *restrict,
-                       net_config *restrict);
+static void add_grad1 (net_param *restrict, net_value const*, int);
+static void add_grad1_config (net_param *restrict, net_value const*,
+                              net_config const*);
+static void add_grad2 (net_param *restrict, net_value const*, 
+                       net_param const*, int, net_value const*, int,
+                       unsigned short const*, int);
+static void add_grad2_config (net_param *restrict, net_value const*, 
+                       net_param const*, net_value const*,
+                       net_config const*);
 
 
 /* ADD TO GRADIENT OF ERROR WITH RESPECT TO NETWORK PARAMETERS.  Adds to 
@@ -56,12 +56,12 @@ static void add_grad2_config (net_param *restrict, net_value *restrict,
    have input offset parameters. */
 
 void net_grad
-( net_params *g,	/* Gradient with respect to parameters to add to */
-  net_params *w,	/* Network parameters */
-  net_values *v,	/* Values for units in network for a case */
-  net_values *d,	/* Backpropagated derivatives for a case */
-  net_arch *a,		/* Network architecture */
-  net_flags *flgs	/* Network flags, null if none */
+( net_params *restrict g, /* Gradient with respect to parameters to add to */
+  net_params const*w,	/* Network parameters */
+  net_values const*v,	/* Values for units in network for a case */
+  net_values const*d,	/* Backpropagated derivatives for a case */
+  net_arch const*a,	/* Network architecture */
+  net_flags const*flgs	/* Network flags, null if none */
 )
 { 
   int l;
@@ -147,7 +147,7 @@ void net_grad
 
 static void add_grad1
 ( net_param *restrict g,  /* Array of derivatives to add to */
-  net_value *restrict v,  /* Derivatives with respect to unit values */
+  net_value const* v,     /* Derivatives with respect to unit values */
   int n			  /* Number of units */
 )
 { 
@@ -164,8 +164,8 @@ static void add_grad1
 
 static void add_grad1_config
 ( net_param *restrict g,  /* Array of derivatives to add to */
-  net_value *restrict v,  /* Derivatives with respect to unit values */
-  net_config *restrict cf /* Configuration for biases */
+  net_value const* v,     /* Derivatives with respect to unit values */
+  net_config const* cf    /* Configuration for biases */
 )
 { net_connection *cn = cf->conn;
   int c, j, k;
@@ -475,12 +475,12 @@ do \
 
 static void add_grad2
 ( net_param *restrict g,  /* Array of derivatives to add to */
-  net_value *restrict v,  /* Source unit values */
-  net_param *restrict off,/* Offsets for source units, or zero if no offsets */
+  net_value const* v,     /* Source unit values */
+  net_param const* off,   /* Offsets for source units, or zero if no offsets */
   int nv,		  /* Number of source units */
-  net_value *restrict d,  /* Derivatives with respect to destination units */
+  net_value const* d,     /* Derivatives with respect to destination units */
   int nd,		  /* Number of destination units */
-  unsigned short *restrict omit,  /* Omit flags, null if not present */
+  unsigned short const* omit, /* Omit flags, null if not present */
   int ob		  /* Bit to look at in omit flags */
 )
 { 
@@ -511,10 +511,10 @@ static void add_grad2
 
 static void add_grad2_config
 ( net_param *restrict g,  /* Array of derivatives to add to */
-  net_value *restrict s,  /* Source unit values */
-  net_param *restrict off,/* Offsets for source units, or zero if no offsets */
-  net_value *restrict d,  /* Derivatives with respect to destination units */
-  net_config *restrict cf /* Configuration for connections and weights */
+  net_value const* s,     /* Source unit values */
+  net_param const* off,   /* Offsets for source units, or zero if no offsets */
+  net_value const* d,     /* Derivatives with respect to destination units */
+  net_config const* cf    /* Configuration for connections and weights */
 )
 {
   net_connection *cn;

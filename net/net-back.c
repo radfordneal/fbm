@@ -38,11 +38,11 @@
 
 #define sqrt_2 1.4142135623730950488
 
-static void sum_derivatives  (net_value *restrict, int, net_value *restrict,
-                              int, net_param *restrict, 
-                              unsigned short *restrict, int);
-static void sum_derivatives_config (net_value *restrict, net_value *restrict,
-                                    net_param *restrict, net_config *restrict);
+static void sum_derivatives  (net_value const*, int, net_value *restrict,
+                              int, net_param const*, 
+                              unsigned short const*, int);
+static void sum_derivatives_config (net_value const*, net_value *restrict,
+                                    net_param const*, net_config const*);
 
 
 /* BACKPROPAGATE ERROR DERIVATIVES.  The first argument must contain the 
@@ -54,12 +54,12 @@ static void sum_derivatives_config (net_value *restrict, net_value *restrict,
    layer 'start', or back all the way to the inputs if 'start' is -1. */
 
 void net_back
-( net_values *v,	/* Values for units in network */
-  net_values *d,	/* Place to get output derivatives, and store others */
+( net_values const*v,	/* Values for units in network */
+  net_values *restrict d,/* Place to get output derivatives, and store others */
   int start,		/* Earliest layer to find derivatives for */
-  net_arch *a,		/* Network architecture */
-  net_flags *flgs,	/* Network flags, null if none */
-  net_params *w		/* Network parameters */
+  net_arch const*a,	/* Network architecture */
+  net_flags const*flgs,	/* Network flags, null if none */
+  net_params const*w	/* Network parameters */
 )
 {
   int l, i;
@@ -97,7 +97,7 @@ void net_back
 
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     {
-      net_value *restrict vh = v->h[l];
+      net_value const* vh = v->h[l];
 
 #     if USE_SIMD_INTRINSICS && __AVX__ && 0  /* disabled, since doesn't help */
       { __m256d ONE = _mm256_set1_pd(1.0);
@@ -129,14 +129,14 @@ void net_back
 #     endif
     }
     else if (flgs->layer_type[l]==Sin_type)
-    { net_value *restrict vs = v->s[l];
+    { net_value const* vs = v->s[l];
       for (i = 0; i<N_hidden; i++)
       { ds[i] = 2 * cos(vs[i]*sqrt_2) * dh[i];
       }
     }
     else if (flgs->layer_type[l]==Softplus_type)
     { 
-      net_value *restrict vs = v->s[l];
+      net_value const* vs = v->s[l];
 
 #     if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
       { __m256d ONE = _mm256_set1_pd(1.0);
@@ -311,7 +311,7 @@ do \
   else \
   { __m256d TV, TV2; \
     for (i = 1; i<ns; i+=2) \
-    { net_param *w2 = w+nd; \
+    { net_param const*w2 = w+nd; \
       TV = _mm256_setzero_pd(); \
       TV2 = _mm256_setzero_pd(); \
       j = 3; \
@@ -500,12 +500,12 @@ do \
 #endif
 
 static void sum_derivatives
-( net_value *restrict dd, /* Derivatives with respect to destination units */
+( net_value const* dd,    /* Derivatives with respect to destination units */
   int nd,		  /* Number of destination units */
   net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
   int ns,		  /* Number of source units */
-  net_param *restrict w,  /* Connection weights */
-  unsigned short *restrict omit,  /* Omit flags, null if not present */
+  net_param const* w,     /* Connection weights */
+  unsigned short const* omit,  /* Omit flags, null if not present */
   int b			  /* Bit to look at in omit flags */
 )
 {
@@ -523,10 +523,10 @@ static void sum_derivatives
    a given destination layer to the totals for the source layer. */
 
 static void sum_derivatives_config
-( net_value *restrict dd, /* Derivatives with respect to destination units */
+( net_value const* dd,    /* Derivatives with respect to destination units */
   net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
-  net_param *restrict w,  /* Connection weights */
-  net_config *restrict cf /* Configuration for connections and weights */
+  net_param const* w,     /* Connection weights */
+  net_config const* cf    /* Configuration for connections and weights */
 )
 {
   net_connection *cn;

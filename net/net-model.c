@@ -88,7 +88,7 @@ void net_model_prob
 
       for (i = 0; i<N_outputs; i++)
       { 
-        if (isnan(t[i]))
+        if (isnan(t[i]))  /* target not observed */
         { if (dp) dp->o[i] = 0;
           continue;
         }
@@ -168,9 +168,9 @@ void net_model_prob
         }
 
         for (i = 0; i<N_outputs; i++)
-        { if (isnan(t[i]))
+        { if (isnan(t[i]))  /* target not observed */
           { if (dp) dp->o[i] = 0;
-            if (pr && op<1) *pr += 0.5 * Log2pi;
+            if (pr && op<1) *pr += 0.5 * Log2pi;  /* undo what was done above */
             continue;
           }
           d = (v->o[i] - t[i]) / s->noise[i];
@@ -199,7 +199,7 @@ void net_model_prob
         }
 
         for (i = 0; i<N_outputs; i++)
-        { if (isnan(t[i]))
+        { if (isnan(t[i]))  /* target not observed */
           { if (dp) dp->o[i] = 0;
             if (pr && op<1) *pr -= cnst;
             continue;
@@ -228,7 +228,7 @@ void net_model_prob
       int censored;
       double m, ot, ho;
 
-      if (isnan(t[0]))
+      if (isnan(t[0]))  /* target not observed */
       { if (pr) *pr = 0;
         if (dp) dp->o[0] = 0;
         break;

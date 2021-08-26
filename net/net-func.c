@@ -244,12 +244,88 @@ void net_func
       }
     }
     else if (flgs->layer_type[l]==Softplus_type)
-    { for (j = 0; j<N_hidden; j++)
-      { double a = sh[j];
-        double v = log (1 + exp(-fabs(a)));  /* avoid overflow */
-        if (a>0) v += a;
-        vh[j] = v;
+    {
+#     if USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
+      { __m256d zero = _mm256_setzero_pd();
+        __m256d one = _mm256_set1_pd(1.0);
+        __m256d mask = 
+                 _mm256_castpd_si256 (_mm256_set1_epi64x ((long long)1<<63));
+        j = 3;
+        while (j<N_hidden)
+        { __m256d a = _mm256_loadu_pd(sh+j-3);
+          __m256d v = _mm256_or_pd(a,mask);  /* compute -fabs(a) */
+          v = Sleef_expd4_u10avx2(v);
+          v = _mm256_add_pd(one,v);
+          v = Sleef_logd4_u10avx2(v);
+          v = _mm256_add_pd (v, _mm256_and_pd (a, 
+                                  _mm256_cmp_pd(a,zero,_CMP_GT_OQ)));
+          _mm256_storeu_pd (vh+j-3, v);
+          j += 4;
+        }
+        j -= 2;
+        if (j<N_hidden)
+        { __m128d a = _mm_loadu_pd(sh+j-1);
+          __m128d v = _mm_or_pd(a,_mm256_castpd256_pd128(mask));
+          v = Sleef_expd2_u10avx2128(v);
+          v = _mm_add_pd(_mm256_castpd256_pd128(one),v);
+          v = Sleef_logd2_u10avx2128(v);
+          v = _mm_add_pd (v, _mm_and_pd (a, 
+                _mm_cmp_pd (a, _mm256_castpd256_pd128(zero), _CMP_GT_OQ)));
+          _mm_storeu_pd (vh+j-1, v);
+          j += 2;
+        }
+        if (j<=N_hidden)
+        { double a = sh[j-1];
+          double v = log (1 + exp(-fabs(a)));  /* avoid overflow */
+          if (a>0) v += a;
+          vh[j-1] = v;
+        }
       }
+#     elif USE_SLEEF && __AVX__
+      { __m256d zero = _mm256_setzero_pd();
+        __m256d one = _mm256_set1_pd(1.0);
+        __m256d mask = 
+                 _mm256_castpd_si256 (_mm256_set1_epi64x ((long long)1<<63));
+        j = 3;
+        while (j<N_hidden)
+        { __m256d a = _mm256_loadu_pd(sh+j-3);
+          __m256d v = _mm256_or_pd(a,mask);  /* compute -fabs(a) */
+          v = Sleef_expd4_u10avx(v);
+          v = _mm256_add_pd(one,v);
+          v = Sleef_logd4_u10avx(v);
+          v = _mm256_add_pd (v, _mm256_and_pd (a, 
+                                  _mm256_cmp_pd(a,zero,_CMP_GT_OQ)));
+          _mm256_storeu_pd (vh+j-3, v);
+          j += 4;
+        }
+        j -= 2;
+        if (j<N_hidden)
+        { __m128d a = _mm_loadu_pd(sh+j-1);
+          __m128d v = _mm_or_pd(a,_mm256_castpd256_pd128(mask));
+          v = Sleef_expd2_u10sse4(v);
+          v = _mm_add_pd(_mm256_castpd256_pd128(one),v);
+          v = Sleef_logd2_u10sse4(v);
+          v = _mm_add_pd (v, _mm_and_pd (a, 
+                _mm_cmp_pd (a, _mm256_castpd256_pd128(zero), _CMP_GT_OQ)));
+          _mm_storeu_pd (vh+j-1, v);
+          j += 2;
+        }
+        if (j<=N_hidden)
+        { double a = sh[j-1];
+          double v = log (1 + exp(-fabs(a)));  /* avoid overflow */
+          if (a>0) v += a;
+          vh[j-1] = v;
+        }
+      }
+#     else
+      { for (j = 0; j<N_hidden; j++)
+        { double a = sh[j];
+          double v = log (1 + exp(-fabs(a)));  /* avoid overflow */
+          if (a>0) v += a;
+          vh[j] = v;
+        }
+      }
+#     endif
     }
     else if (flgs->layer_type[l]==Identity_type)
     { for (j = 0; j<N_hidden; j++)

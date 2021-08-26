@@ -153,6 +153,7 @@ The following activation functions are supported:\vspace{-26pt}
 \begin{quotation}\noindent
 \begin{tabbing}
 {\bf tanh:}\ \ \ \ \ \ \ \= $a(u)\ =\ \tanh(u)$.\\[3pt]
+{\bf softplus:}\> $a(u)\ =\ \log(1+\exp(u))$.\\[3pt]
 {\bf sin:}\>  $a(u)\ =\ \sqrt{2}\,\sin(\sqrt{2}u)$.\\[4pt]
 {\bf identity:}\> $a(u)\ =\ u$.\vspace{-5pt}
 \end{tabbing}
@@ -644,6 +645,7 @@ The second term in the first equation above is omitted for the last
 hidden layer.  In the second equation, $a'^{\ell}(u^{\ell}_i)$ is the derivative
 of the activation function, evaluated at $u^{\ell}_i$.  For the $\tanh$
 activation function, this is equal to $1 - \big[v^{\ell}_i\big]^2\!$.
+For the softplus activation function, it is $1\,/\,(1+\exp(-u^{\ell}_i))$.
 
 When the connections from a hidden layer to the next hidden layer are
 configured, the first equation above is modified as follows:\beq

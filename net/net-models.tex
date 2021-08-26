@@ -37,26 +37,26 @@ summarized on the next page.
 \begin{center}\small
 \begin{tabular}{ll}
 %
-  \multicolumn{2}{c}{\bf Values associated with units} \\[8pt]
+  \multicolumn{2}{c}{\bf Values associated with units} \\[5pt]
 %
   $v^I_i$            & Value of $i$th input unit, before the offset is 
                        added \\[3pt]
   $v^{\ell}_i$       & Value of $i$th hidden unit in layer $\ell$, before the  
                        offset is added \\[3pt]
-  $v^O_i$            & Value of the $i$th output unit \\[12pt]
+  $v^O_i$            & Value of the $i$th output unit \\[10pt]
 
   $u^{\ell}_i$       & Value of the input to the $i$th unit of hidden
                        layer $\ell$ \\[3pt]
   $a^{\ell}$         & Activation function for hidden layer $\ell$, used
-                       to compute $v^{\ell}_i = a^{\ell}(u^{\ell}_i)$\\[18pt]
+                       to compute $v^{\ell}_i = a^{\ell}(u^{\ell}_i)$\\[11pt]
 %
-  \multicolumn{2}{c}{\bf Parameters of the network} \\[8pt]
+  \multicolumn{2}{c}{\bf Parameters of the network} \\[5pt]
 %
   $t^I_i$            & Offset for $i$th input unit \\[3pt]
   $t^\ell_i$         & Offset for $i$th hidden unit in layer $\ell$ \\[3pt]
 
   $b^{\ell}_j$       & Bias for $j$th unit in hidden layer $\ell$ \\[3pt]
-  $b^O_j$            & Bias for $j$th output unit \\[12pt]
+  $b^O_j$            & Bias for $j$th output unit \\[10pt]
 
   $w^{I,O}_{i,j}$    & Weight from $i$th input unit to $j$th output unit \\[3pt]
   $w^{I,\ell}_{i,j}$ & Weight from $i$th input unit to $j$th unit in hidden
@@ -64,28 +64,46 @@ summarized on the next page.
   $w^{\ell\!-\!1,\ell}_{i,j}$ & Weight from $i$th unit in hidden layer
                        $\ell\!-\!1$ to $j$th unit in hidden layer $\ell$ \\[3pt]
   $w^{\ell,O}_{i,j}$   & Weight from $i$th unit in hidden layer $\ell$ to the
-                       $j$th output unit \\[12pt]
+                       $j$th output unit \\[10pt]
 
+  $b^{\ell}_k$       & Bias $k$ in configured biases for hidden 
+                       layer $\ell$ \\[3pt]
+  $b^O_k$            & Bias $k$ in configured biases for the output 
+                       layer \\[3pt]
   $w^{I,\ell}_k$     & Weight $k$ in configured connections from the input layer
                        to hidden layer $\ell$ \\[3pt]
+  $w^{I,O}_k$        & Weight $k$ in configured connections from the input layer
+                       to the output layer $\ell$ \\[3pt]
   $w^{\ell\!-\!1,\ell}_k$ & Weight $k$ in configured connections from hidden 
                         layer $\ell\!-\!1$ to hidden layer $\ell$ \\[3pt]
-  $C^{I,\ell}$       & Set of triples, $(i,j,k)$, giving configuration of
+  $w^{\ell,O}_k$     & Weight $k$ in configured connections from last hidden 
+                        layer, $\ell$, to the output layer \\[3pt]
+  $B^{\ell}$         & Set of doublets, $(j,k)$, giving configuration of
+                       biases for hidden layer $\ell$ \\[3pt]
+  $B^{O}$            & Set of doublets, $(j,k)$, giving configuration of
+                       biases for the output layer \\[3pt]
+  $C^{I,\ell}$       & Set of triplets, $(i,j,k)$, giving configuration of
                        connections from the input layer to hidden 
                        layer $\ell$ \\[3pt]
-  $C^{\ell\!-\!1,\ell}$  & Set of triples, $(i,j,k)$, giving configuration of
+  $C^{I,O}$          & Set of triplets, $(i,j,k)$, giving configuration of
+                       connections from the input layer to the output 
+                       layer \\[3pt]
+  $C^{\ell\!-\!1,\ell}$  & Set of triplets, $(i,j,k)$, giving configuration of
                        connections from hidden layer $\ell\!-\!1$ to hidden 
-                       layer $\ell$\\[18pt]
+                       layer $\ell$\\[3pt]
+  $C^{\ell,O}$       & Set of triplets, $(i,j,k)$, giving configuration of
+                       connections from the last hidden layer, $\ell$, to the
+                       output layer \\[11pt]
 %
-  \multicolumn{2}{c}{\bf Hyperparameters defining priors for parameters} \\[8pt]
+  \multicolumn{2}{c}{\bf Hyperparameters defining priors for parameters} \\[5pt]
 %
   $\sigma^I_t$        & Common sigma for offsets of input units \\[3pt]
   $\sigma^{\ell}_t$   & Common sigma for offsets of units in hidden layer 
-                      $\ell$ \\[12pt]
+                      $\ell$ \\[10pt]
 
   $\sigma^{\ell}_b$   & Common sigma for biases of units in hidden layer 
                       $\ell$ \\[3pt]
-  $\sigma^O_b$        & Common sigma for biases of output units \\[12pt]
+  $\sigma^O_b$        & Common sigma for biases of output units \\[10pt]
 
   $\sigma^{I,O}_w$    & Common sigma for weights from input units to output
                         units \\[3pt]
@@ -95,7 +113,7 @@ summarized on the next page.
                              layer $\ell\!-\!1$ to units in hidden layer $\ell$ 
                              \\[3pt]
   $\sigma^{\ell,O}_w$    & Common sigma for weights from units in hidden
-                           layer $\ell$ to output units \\[12pt]
+                           layer $\ell$ to output units \\[10pt]
 
   $\sigma^{I,O}_{w,i}$    & Sigma for weights from input unit $i$ to output
                             units \\[3pt]
@@ -105,7 +123,7 @@ summarized on the next page.
                              layer $\ell\!-\!1$ to units in hidden layer $\ell$ 
                                  \\[3pt]
   $\sigma^{\ell,O}_{w,i}$  & Sigma for weights from unit $i$ in hidden layer
-                             $\ell$ to output units \\[12pt]
+                             $\ell$ to output units \\[10pt]
 
   $\sigma^O_{a,j}$      & Sigma adjustment for weights and biases into output 
                           unit $j$ \\[3pt]
@@ -149,7 +167,7 @@ omitted for the first hidden layer; terms involving other pairs of
 layers will also be omitted when those connections are absent from the
 architecture.
 
-The following activation functions are supported:\vspace{-26pt}
+The following activation functions are supported:\vspace{-22pt}
 \begin{quotation}\noindent
 \begin{tabbing}
 {\bf tanh:}\ \ \ \ \ \ \ \= $a(u)\ =\ \tanh(u)$.\\[3pt]
@@ -159,30 +177,46 @@ The following activation functions are supported:\vspace{-26pt}
 \end{tabbing}
 \end{quotation}
 
-Connections from an input layer to a hidden layer may not be fully
-connected, but instead be configured by specifying a set, $C^{I,\ell}$
-of triples, $(i,j,k)$, indicating that unit $i$ in the input layer
-contributes to the input of unit $j$ of the hidden layer, using the
-weight indexed by $k$.  The set of weights referenced may be smaller
-(or larger) than the number in that would be present when each input
-unit connects to each hidden unit, with an unshared weight.  The
+Connections from an input layer to a hidden or output layer may not be
+fully connected, but can instead be configured by specifying a set,
+$C^{I,\ell}$ of triplets, $(i,j,k)$, indicating that unit $i$ in the
+input layer contributes to the input of unit $j$ of the hidden layer,
+using the weight indexed by $k$, or similarly by a set $C^{I,O}$ for
+the output layer.  The set of weights referenced may be smaller (or
+larger) than the number in that would be present when each input unit
+connects to each hidden or output unit, with an unshared weight.  The
 configuration may specify that a weight is shared by more than one
 $i$,$j$ pair, and a single $i$,$j$ pair may be connected with more
-than one weight.  Similarly, connections from a hidden layer to the
-next hidden layer may be specified by a set of triples
-$C^{\ell\!-\!1,\ell}$.
+than one weight.  
 
-When the connections from inputs and the previous hidden layer are
-configured in this way, the input to a unit is computed as follows:\beq
-  u^{\ell}_j & = & b^{\ell}_j \ +\!\!\!
+Similarly, connections from a hidden layer to the next hidden layer
+may be specified by a set of triplets $C^{\ell\!-\!1,\ell}$, and
+connections from the last hidden layer to the output layer may be
+specified by a set $C^{\ell,O}$, with $\ell$ the index of the last
+hidden layer.
+
+The bias connections for a hidden or output layer may also be
+configured, by specifying a set, $B^{\ell}$ or $B^O$, of doublets,
+$(j,k)$, indicating that the bias indexed by $k$ is used for unit $j$.
+A bias may be shared among several units. Some units may have no bias,
+or more than one bias.
+
+When the biases and connections to a hidden layer from inputs and the
+previous hidden layer are configured in this way, the input to a hidden
+unit is computed as follows:
+\beq
+  u^{\ell}_j & = & 
+         \sum_{k\,:\, (j,k)\in B^{\ell}}\!\!\!\!\!\!
+                        b^{\ell}_k \ +\!\!\!
          \sum_{(i,k)\,:\, (i,j,k)\in C^{I,\ell}}\!\!\!\!\!\!
                         w^{I,\ell}_k (v^I_i+t^I_i) \ +\!\!\!
          \sum_{(i,k)\,:\, (i,j,k)\in C^{\ell\!-\!1,\ell}}\!\!\!\!\!\!
                w^{\ell-1,\ell}_k (v^{\ell-1}_i+t^{\ell-1}_i)
 \label{func1-c}\eeq%
-When one set of connections into a hidden layer is configured in this
-way, and the other is fully-connected, the appropriate combination of
-equations \ref{func1} and \ref{func1-c} is used.
+When some of the connections or biases into a hidden layer are
+configured in this way, but others are fully-connected, the
+appropriate combination of equations~(\ref{func1}) and (\ref{func1-c})
+is used.
 
 
 \subsection*{Data models}\label{app-sec-models}
@@ -670,9 +704,9 @@ configured connections to the inputs.
 \subsubsection*{Derivatives of the log likelihood with respect to parameters}
 
 The derivatives of $L$ with respect to the network parameters (with
-explicitly represented noise sigmas fixed) are obtained using the
-derivatives with respect to unit values and unit inputs found in the
-previous section, as follows:\beq
+any explicitly represented noise sigmas fixed) are obtained using the
+derivatives with respect to unit values and unit inputs that were found in 
+the previous section, as follows:\beq
   {\partial L \over \partial b^O_{i\ }\!} & = & 
     {\partial L \over \partial v^O_i} \\[5pt]
   {\partial L \over \partial b^{\ell}_{i\ }\!} & = & 

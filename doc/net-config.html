@@ -4,13 +4,15 @@
 NET-CONFIG:  Specify weight configuration for a layer's connections
 
 By default, units in one layer of a network are fully connected to
-units in a layer that it feeds into.  Alternatively, for hidden
-layers, what connections exist from the previous hidden layer or from
-the input layer, and any sharing of weights between these connections,
-can be specified in a configuration file, referenced from the
-"input-config" or "hidden-config" flags in the network specification.
-Similarly, biases for hidden layers may be configured with sharing or
-sparsity.  See <A HREF="net-spec.html">net-spec.doc</A> for details.
+units in a layer that feeds into it.  Alternatively, for hidden and
+output layers, one can use a configuration file to specify what
+connections exist from the previous hidden layer (last hidden layer
+for outputs) or from the input layer, as well as any sharing of
+weights between these connections.  Similarly, biases for hidden
+layers may be configured with sharing or sparsity.  The configuration
+files to use are specified by the "input-config", "hidden-config", or
+"bias-config" flags in the network specification.  See <A HREF="net-spec.html">net-spec.doc</A>
+for details.
 
 Configuration files can be written in various ways, as given by the
 detailed syntax at the end of this document.  The simplest form, as a

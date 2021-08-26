@@ -27,7 +27,7 @@ archictures.
 The last form is for displaying the network architecture stored in the
 specified log file.  The optional "config" argument causes the
 detailed configuration from input-config and hidden-config flags to be
-output, in its fullly-expanded form (as individual triplets or pairs).
+output, in its fully-expanded form (as individual triplets or pairs).
 
 N-inputs and N-outputs are the numbers of units in the input and
 output layers.  The sizes of zero or more hidden layers are specified

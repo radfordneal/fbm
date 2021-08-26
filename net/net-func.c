@@ -530,7 +530,7 @@ do \
         i += 1; \
         w += nd; \
       } \
-      net_param *w2 = w+nd; \
+      net_param const*w2 = w+nd; \
       i += 1; \
       for (;;) \
       { if (i==ns) goto one_more; \

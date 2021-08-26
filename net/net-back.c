@@ -395,7 +395,7 @@ do \
   else \
   { __m256d TV, TV2; \
     for (i = 1; i<ns; i+=2) \
-    { net_param *w2 = w+nd; \
+    { net_param const*w2 = w+nd; \
       TV = _mm256_setzero_pd(); \
       TV2 = _mm256_setzero_pd(); \
       j = 3; \

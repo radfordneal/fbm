@@ -1103,7 +1103,7 @@ int main
     { 
       double a;
 
-      printf("Average abs. error guessing median:  ");
+      printf("Average abs. error guessing median:   ");
 
       for (j = 0; j<data_spec->N_targets; j++)
       { a = abs_error[j] / N_test;

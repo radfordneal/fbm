@@ -1558,30 +1558,26 @@ void mc_app_stepsizes
         { for (k = 0; k<arch->bias_config[l]->N_conn; k++)
           { j = arch->bias_config[l]->conn[k].d;
             typl[j] += sq(*sigmas.bh_cm[l]);
-//fprintf(stderr,"Bias H%d U%d S%f\n",l,j,sq(*sigmas.bh_cm[l]));
           }
         }
         else
         { for (j = 0; j<arch->N_hidden[l]; j++)
           { typl[j] += sq(*sigmas.bh_cm[l]);
-//fprintf(stderr,"Bias H%d U%d S%f\n",l,j,sq(*sigmas.bh_cm[l]));
           }
         }
       }
       if (arch->has_ih[l])
       { if (arch->input_config[l])
         { for (k = 0; k<arch->input_config[l]->N_conn; k++)
-          { i = arch->bias_config[l]->conn[k].s;
-            j = arch->bias_config[l]->conn[k].d;
+          { i = arch->input_config[l]->conn[k].s;
+            j = arch->input_config[l]->conn[k].d;
             typl[j] += (train_sumsq[i]/N_train) * sq(*sigmas.ih_cm[l]);
-//fprintf(stderr,"Input H%d U%d,%d S%f\n",l,i,j,(train_sumsq[i]/N_train) * sq(*sigmas.ih_cm[l]));
           }
         }
         else
         { for (j = 0; j<arch->N_hidden[l]; j++)
           { for (i = 0; i<arch->N_inputs; i++)
             { typl[j] += (train_sumsq[i]/N_train) * sq(*sigmas.ih_cm[l]);
-//fprintf(stderr,"Input H%d U%d,%d S%f\n",l,i,j,(train_sumsq[i]/N_train) * sq(*sigmas.ih_cm[l]));
             }
           }
         }
@@ -1589,17 +1585,15 @@ void mc_app_stepsizes
       if (l>0 && arch->has_hh[l-1])
       { if (arch->hidden_config[l])
         { for (k = 0; k<arch->hidden_config[l]->N_conn; k++)
-          { i = arch->bias_config[l]->conn[k].s;
-            j = arch->bias_config[l]->conn[k].d;
+          { i = arch->hidden_config[l]->conn[k].s;
+            j = arch->hidden_config[l]->conn[k].d;
             typl[j] += sq (typical.h[l-1][i] * *sigmas.hh_cm[l-1]);
-//fprintf(stderr,"Hidden H%d U%d,%d S%f\n",l,i,j, sq(typical.h[l-1][i] * *sigmas.hh_cm[l-1]));
           }
         }
         else
         { for (j = 0; j<arch->N_hidden[l]; j++)
           { for (i = 0; i<arch->N_hidden[l-1]; i++)
             { typl[j] += sq (typical.h[l-1][i] * *sigmas.hh_cm[l-1]);
-//fprintf(stderr,"Hidden H%d U%d,%d S%f\n",l,i,j, sq(typical.h[l-1][i] * *sigmas.hh_cm[l-1]));
             }
           }
         }

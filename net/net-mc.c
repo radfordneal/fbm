@@ -1527,6 +1527,8 @@ int mc_app_zero_gen
 
 /* SET STEPSIZES FOR EACH COORDINATE. */
 
+static inline double sq (double x) { return x*x; }
+
 void mc_app_stepsizes
 ( mc_dynamic_state *ds	/* Current dynamical state */
 )
@@ -1539,21 +1541,56 @@ void mc_app_stepsizes
   /* Find "typical" squared values for hidden units. */
 
   for (l = 0; l<arch->N_layers; l++)
-  { for (i = 0; i<arch->N_hidden[l]; i++)
+  { 
+    for (j = 0; j<arch->N_hidden[l]; j++)
     { if (TYPICAL_VALUES_ALL_ONE)
-      { typical.h[l][i] = 1;
+      { typical.h[l][j] = 1;
       }
       else
-      { double sqv = 1;
-        /* ... */
-        typical.h[l][i] = sqv;
+      { double sqv = 0;
+        if (arch->has_bh[l])
+        { if (arch->bias_config[l])
+          {
+          }
+          else
+          { sqv += sq(*sigmas.bh_cm[l]);
+//fprintf(stderr,"Bias H%d U%d S%f\n",l,j,sq(*sigmas.bh_cm[l]));
+          }
+        }
+        if (arch->has_ih[l])
+        { if (arch->input_config[l])
+          {
+          }
+          else
+          { for (i = 0; i<arch->N_inputs; i++)
+            { sqv += (train_sumsq[i]/N_train) * sq(*sigmas.ih_cm[l]);
+//fprintf(stderr,"Input H%d U%d,%d S%f\n",l,i,j,(train_sumsq[i]/N_train) * sq(*sigmas.ih_cm[l]));
+            }
+          }
+        }
+        if (l>0 && arch->has_hh[l-1])
+        { if (arch->hidden_config[l])
+          {
+          }
+          else
+          { for (i = 0; i<arch->N_hidden[l-1]; i++)
+            { sqv += sq (typical.h[l-1][i] * *sigmas.hh_cm[l-1]);
+//fprintf(stderr,"Hidden H%d U%d,%d S%f\n",l,i,j,sq (typical.h[l-1][i] * *sigmas.hh_cm[l-1]));
+            }
+          }
+        }
+        typical.h[l][j] = sqv;
       }
     }
-    if (!TYPICAL_VALUES_ALL_ONE && flgs && (flgs->layer_type[l]==Tanh_type || 
-                                            flgs->layer_type[l]==Sin_type))
-    { for (i = 0; i<arch->N_hidden[l]; i++)
-      { if (typical.h[l][i]>1)
-        { typical.h[l][i] = 1;
+
+    if (!TYPICAL_VALUES_ALL_ONE)
+    { if (flgs==0 || flgs->layer_type[l]==Tanh_type
+                  || flgs->layer_type[l]==Sin_type)
+      { for (j = 0; j<arch->N_hidden[l]; j++)
+        { if (typical.h[l][j]>1)
+          { typical.h[l][j] = 1;
+          }
+//fprintf(stderr,"Final H%d U%d T%f\n",l,j,typical.h[l][j]);
         }
       }
     }

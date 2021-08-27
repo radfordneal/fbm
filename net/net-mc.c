@@ -29,6 +29,12 @@
 #include "net-data.h"
 
 
+/* SETTING TO DISABLE SIMULATION OF "TYPICAL" SQUARED VALUES. */
+
+#define TYPICAL_VALUES_ALL_ONE 0  /* Set to 1 to disable simulation of values,
+                                     thereby reverting to the old heuristic */
+
+
 /* SHOULD A CHEAP ENERGY FUNCTION BE USED?  If set to 0, the full energy
    function is used, equal to minus the log of the probability of the 
    training data, given the current weights and noise hyperparameters.
@@ -60,7 +66,7 @@ static net_params params;	/* Pointers to parameters, which are position
 static net_params stepsizes;	/* Pointers to stepsizes */
 static net_values seconds;	/* Second derivatives */
 static double *train_sumsq;	/* Sums of squared training input values */
-static net_values typical;	/* Typical values for hidden units */
+static net_values typical;	/* Typical squared values for hidden units */
 
 static net_values *deriv;	/* Derivatives for training cases */
 static net_params grad;		/* Pointers to gradient for network parameters*/
@@ -1530,11 +1536,26 @@ void mc_app_stepsizes
 
   inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
 
-  /* Find "typical" values for hidden units. */
+  /* Find "typical" squared values for hidden units. */
 
   for (l = 0; l<arch->N_layers; l++)
   { for (i = 0; i<arch->N_hidden[l]; i++)
-    { typical.h[l][i] = 1;
+    { if (TYPICAL_VALUES_ALL_ONE)
+      { typical.h[l][i] = 1;
+      }
+      else
+      { double sqv = 1;
+        /* ... */
+        typical.h[l][i] = sqv;
+      }
+    }
+    if (!TYPICAL_VALUES_ALL_ONE && flgs && (flgs->layer_type[l]==Tanh_type || 
+                                            flgs->layer_type[l]==Sin_type))
+    { for (i = 0; i<arch->N_hidden[l]; i++)
+      { if (typical.h[l][i]>1)
+        { typical.h[l][i] = 1;
+        }
+      }
     }
   }
 

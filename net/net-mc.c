@@ -35,6 +35,11 @@
                                      thereby reverting to the old heuristic */
 
 
+/* FUNCTION TO SQUARE ITS ARGUMENT. */
+
+static inline double sq (double x) { return x*x; }
+
+
 /* SHOULD A CHEAP ENERGY FUNCTION BE USED?  If set to 0, the full energy
    function is used, equal to minus the log of the probability of the 
    training data, given the current weights and noise hyperparameters.
@@ -252,7 +257,7 @@ void mc_app_initialize
     
       for (j = 0; j<arch->N_inputs; j++)
       { for (i = 0; i<N_train; i++)
-        { train_sumsq[j] += train_values[i].i[j] * train_values[i].i[j];
+        { train_sumsq[j] += sq (train_values[i].i[j]);
         }
       }
 
@@ -265,8 +270,7 @@ void mc_app_initialize
 
         for (n = 0; surv->time[n]!=0; n++)
         { if (n==Max_time_points) abort();
-          tsq += surv->log_time ? log(surv->time[n])*log(surv->time[n]) 
-                                : surv->time[n]*surv->time[n];
+          tsq += sq (surv->log_time ? log(surv->time[n]) : surv->time[n]);
         }
 
         train_sumsq[0] = N_train * tsq / n;
@@ -1527,8 +1531,6 @@ int mc_app_zero_gen
 
 /* SET STEPSIZES FOR EACH COORDINATE. */
 
-static inline double sq (double x) { return x*x; }
-
 void mc_app_stepsizes
 ( mc_dynamic_state *ds	/* Current dynamical state */
 )
@@ -1541,45 +1543,66 @@ void mc_app_stepsizes
   /* Find "typical" squared values for hidden units. */
 
   for (l = 0; l<arch->N_layers; l++)
-  { 
-    for (j = 0; j<arch->N_hidden[l]; j++)
-    { if (TYPICAL_VALUES_ALL_ONE)
-      { typical.h[l][j] = 1;
+  { net_value *typl = typical.h[l];
+    if (TYPICAL_VALUES_ALL_ONE)
+    { for (j = 0; j<arch->N_hidden[l]; j++)
+      { typl[j] = 1;
       }
-      else
-      { double sqv = 0;
-        if (arch->has_bh[l])
-        { if (arch->bias_config[l])
-          {
-          }
-          else
-          { sqv += sq(*sigmas.bh_cm[l]);
+    }
+    else
+    { for (j = 0; j<arch->N_hidden[l]; j++)
+      { typl[j] = 0;
+      }
+      if (arch->has_bh[l])
+      { if (arch->bias_config[l])
+        { for (k = 0; k<arch->bias_config[l]->N_conn; k++)
+          { j = arch->bias_config[l]->conn[k].d;
+            typl[j] += sq(*sigmas.bh_cm[l]);
 //fprintf(stderr,"Bias H%d U%d S%f\n",l,j,sq(*sigmas.bh_cm[l]));
           }
         }
-        if (arch->has_ih[l])
-        { if (arch->input_config[l])
-          {
+        else
+        { for (j = 0; j<arch->N_hidden[l]; j++)
+          { typl[j] += sq(*sigmas.bh_cm[l]);
+//fprintf(stderr,"Bias H%d U%d S%f\n",l,j,sq(*sigmas.bh_cm[l]));
           }
-          else
+        }
+      }
+      if (arch->has_ih[l])
+      { if (arch->input_config[l])
+        { for (k = 0; k<arch->input_config[l]->N_conn; k++)
+          { i = arch->bias_config[l]->conn[k].s;
+            j = arch->bias_config[l]->conn[k].d;
+            typl[j] += (train_sumsq[i]/N_train) * sq(*sigmas.ih_cm[l]);
+//fprintf(stderr,"Input H%d U%d,%d S%f\n",l,i,j,(train_sumsq[i]/N_train) * sq(*sigmas.ih_cm[l]));
+          }
+        }
+        else
+        { for (j = 0; j<arch->N_hidden[l]; j++)
           { for (i = 0; i<arch->N_inputs; i++)
-            { sqv += (train_sumsq[i]/N_train) * sq(*sigmas.ih_cm[l]);
+            { typl[j] += (train_sumsq[i]/N_train) * sq(*sigmas.ih_cm[l]);
 //fprintf(stderr,"Input H%d U%d,%d S%f\n",l,i,j,(train_sumsq[i]/N_train) * sq(*sigmas.ih_cm[l]));
             }
           }
         }
-        if (l>0 && arch->has_hh[l-1])
-        { if (arch->hidden_config[l])
-          {
+      }
+      if (l>0 && arch->has_hh[l-1])
+      { if (arch->hidden_config[l])
+        { for (k = 0; k<arch->hidden_config[l]->N_conn; k++)
+          { i = arch->bias_config[l]->conn[k].s;
+            j = arch->bias_config[l]->conn[k].d;
+            typl[j] += sq (typical.h[l-1][i] * *sigmas.hh_cm[l-1]);
+//fprintf(stderr,"Hidden H%d U%d,%d S%f\n",l,i,j, sq(typical.h[l-1][i] * *sigmas.hh_cm[l-1]));
           }
-          else
+        }
+        else
+        { for (j = 0; j<arch->N_hidden[l]; j++)
           { for (i = 0; i<arch->N_hidden[l-1]; i++)
-            { sqv += sq (typical.h[l-1][i] * *sigmas.hh_cm[l-1]);
-//fprintf(stderr,"Hidden H%d U%d,%d S%f\n",l,i,j,sq (typical.h[l-1][i] * *sigmas.hh_cm[l-1]));
+            { typl[j] += sq (typical.h[l-1][i] * *sigmas.hh_cm[l-1]);
+//fprintf(stderr,"Hidden H%d U%d,%d S%f\n",l,i,j, sq(typical.h[l-1][i] * *sigmas.hh_cm[l-1]));
             }
           }
         }
-        typical.h[l][j] = sqv;
       }
     }
 
@@ -1587,10 +1610,10 @@ void mc_app_stepsizes
     { if (flgs==0 || flgs->layer_type[l]==Tanh_type
                   || flgs->layer_type[l]==Sin_type)
       { for (j = 0; j<arch->N_hidden[l]; j++)
-        { if (typical.h[l][j]>1)
-          { typical.h[l][j] = 1;
+        { if (typl[j]>1)
+          { typl[j] = 1;
           }
-//fprintf(stderr,"Final H%d U%d T%f\n",l,j,typical.h[l][j]);
+//fprintf(stderr,"Final H%d U%d T%f\n",l,j,typl[j]);
         }
       }
     }

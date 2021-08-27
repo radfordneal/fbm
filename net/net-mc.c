@@ -60,6 +60,7 @@ static net_params params;	/* Pointers to parameters, which are position
 static net_params stepsizes;	/* Pointers to stepsizes */
 static net_values seconds;	/* Second derivatives */
 static double *train_sumsq;	/* Sums of squared training input values */
+static net_values typical;	/* Typical values for hidden units */
 
 static net_values *deriv;	/* Derivatives for training cases */
 static net_params grad;		/* Pointers to gradient for network parameters*/
@@ -201,12 +202,17 @@ void mc_app_initialize
   
     net_setup_param_pointers (&stepsizes, arch, flgs);
 
-    /* Set up second derivative structure. */
+    /* Find number of network values. */
 
     value_count = net_setup_value_count(arch);
+
+    /* Set up second derivative and typical value structures. */
+
     value_block = chk_alloc (value_count, sizeof *value_block);
-  
     net_setup_value_pointers (&seconds, value_block, arch);
+
+    value_block = chk_alloc (value_count, sizeof *value_block);
+    net_setup_value_pointers (&typical, value_block, arch);
   
     /* Read training data, if any, and allocate space for derivatives. */
   
@@ -232,7 +238,6 @@ void mc_app_initialize
     
       deriv = chk_alloc (N_train, sizeof *deriv);
     
-      value_count = net_setup_value_count(arch);
       value_block = chk_alloc (value_count*N_train, sizeof *value_block);
     
       for (i = 0; i<N_train; i++) 
@@ -1525,6 +1530,14 @@ void mc_app_stepsizes
 
   inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
 
+  /* Find "typical" values for hidden units. */
+
+  for (l = 0; l<arch->N_layers; l++)
+  { for (i = 0; i<arch->N_hidden[l]; i++)
+    { typical.h[l][i] = 1;
+    }
+  }
+
   /* Compute estimated second derivatives of minus log likelihood for
      unit values. */
 
@@ -1714,14 +1727,15 @@ void mc_app_stepsizes
         { i = arch->hidden_config[l+1]->conn[k].s;
           j = arch->hidden_config[l+1]->conn[k].d;
           stepsizes.hh [l] [arch->hidden_config[l+1]->conn[k].w]
-            += N_train * seconds.s[l+1][j];
+            += N_train * typical.h[l][i] * seconds.s[l+1][j];
         }
       }
       else
       { for (i = 0; i<arch->N_hidden[l]; i++)
-        { for (j = 0; j<arch->N_hidden[l+1]; j++)
+        { net_value pv = N_train * typical.h[l][i];
+          for (j = 0; j<arch->N_hidden[l+1]; j++)
           { stepsizes.hh [l] [i*arch->N_hidden[l+1] + j] 
-              += N_train * seconds.s[l+1][j];
+              += pv * seconds.s[l+1][j];
           }
         }
       }
@@ -1733,13 +1747,14 @@ void mc_app_stepsizes
         { i = arch->hidden_config[l+1]->conn[k].s;
           j = arch->hidden_config[l+1]->conn[k].d;
           stepsizes.ho [l] [arch->hidden_config[l+1]->conn[k].w]
-            += N_train * seconds.o[j];
+            += N_train * typical.h[l][i] * seconds.o[j];
         }
       }
       else
       { for (i = 0; i<arch->N_hidden[l]; i++)
-        { for (j = 0; j<arch->N_outputs; j++)
-          { stepsizes.ho [l] [i*arch->N_outputs + j] += N_train * seconds.o[j];
+        { net_value pv = N_train * typical.h[l][i];
+          for (j = 0; j<arch->N_outputs; j++)
+          { stepsizes.ho [l] [i*arch->N_outputs + j] += pv * seconds.o[j];
           }
         }
       }

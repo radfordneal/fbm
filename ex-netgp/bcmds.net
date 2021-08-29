@@ -4,13 +4,13 @@
 net-spec blog.net 2 15 1 / ih=0.05:0.5 bh=0.05:0.5 ho=x0.05:0.5 bo=100 
 model-spec blog.net binary
 
-data-spec blog.net 2 1 2 / bdata@1:300 . bdata@301:500 .
+data-spec blog.net 2 1 2 / bdata@1:300 . bdata@301: .
 
 net-gen blog.net fix 0.5
 mc-spec blog.net repeat 10 sample-noise heatbath hybrid 100:10 0.2
 net-mc blog.net 1
 
 mc-spec blog.net repeat 10 sample-sigmas heatbath 0.95 hybrid 100:10 0.3 negate
-net-mc blog.net 200
+net-mc blog.net 5000
 
-net-pred mpa blog.net 51:
+net-pred mpa blog.net 201:

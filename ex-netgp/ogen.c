@@ -5,7 +5,7 @@
 
 #include "rand.h"
 
-#define N_cases 200
+#define N_cases 1100
 
 int main(void)
 {

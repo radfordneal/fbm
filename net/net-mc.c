@@ -1544,6 +1544,7 @@ void mc_app_stepsizes
 
   for (l = 0; l<arch->N_layers; l++)
   { net_value *typl = typical.h[l];
+    double alpha, var_adj;
     if (TYPICAL_VALUES_ALL_ONE)
     { for (j = 0; j<arch->N_hidden[l]; j++)
       { typl[j] = 1;
@@ -1554,46 +1555,52 @@ void mc_app_stepsizes
       { typl[j] = 0;
       }
       if (arch->has_bh[l])
-      { if (arch->bias_config[l])
+      { alpha = priors->bh[l].alpha[1];
+        var_adj = alpha==0 ? 1 : alpha<3 ? 3 : alpha/(alpha-2);
+        if (arch->bias_config[l])
         { for (k = 0; k<arch->bias_config[l]->N_conn; k++)
           { j = arch->bias_config[l]->conn[k].d;
-            typl[j] += sq(*sigmas.bh_cm[l]);
+            typl[j] += var_adj * sq(*sigmas.bh_cm[l]);
           }
         }
         else
         { for (j = 0; j<arch->N_hidden[l]; j++)
-          { typl[j] += sq(*sigmas.bh_cm[l]);
+          { typl[j] += var_adj * sq(*sigmas.bh_cm[l]);
           }
         }
       }
       if (arch->has_ih[l])
-      { if (arch->input_config[l])
+      { alpha = priors->ih[l].alpha[2];
+        var_adj = alpha==0 ? 1 : alpha<3 ? 3 : alpha/(alpha-2);
+        if (arch->input_config[l])
         { for (k = 0; k<arch->input_config[l]->N_conn; k++)
           { i = arch->input_config[l]->conn[k].s;
             j = arch->input_config[l]->conn[k].d;
-            typl[j] += (train_sumsq[i]/N_train) * sq(*sigmas.ih_cm[l]);
+            typl[j] += var_adj * (train_sumsq[i]/N_train)*sq(*sigmas.ih_cm[l]);
           }
         }
         else
         { for (j = 0; j<arch->N_hidden[l]; j++)
           { for (i = 0; i<arch->N_inputs; i++)
-            { typl[j] += (train_sumsq[i]/N_train) * sq(*sigmas.ih_cm[l]);
+            { typl[j] += var_adj * (train_sumsq[i]/N_train)*sq(sigmas.ih[l][i]);
             }
           }
         }
       }
       if (l>0 && arch->has_hh[l-1])
-      { if (arch->hidden_config[l])
+      { alpha = priors->hh[l-1].alpha[2];
+        var_adj = alpha==0 ? 1 : alpha<3 ? 3 : alpha/(alpha-2);
+        if (arch->hidden_config[l])
         { for (k = 0; k<arch->hidden_config[l]->N_conn; k++)
           { i = arch->hidden_config[l]->conn[k].s;
             j = arch->hidden_config[l]->conn[k].d;
-            typl[j] += sq (typical.h[l-1][i] * *sigmas.hh_cm[l-1]);
+            typl[j] += var_adj * sq (typical.h[l-1][i] * *sigmas.hh_cm[l-1]);
           }
         }
         else
         { for (j = 0; j<arch->N_hidden[l]; j++)
           { for (i = 0; i<arch->N_hidden[l-1]; i++)
-            { typl[j] += sq (typical.h[l-1][i] * *sigmas.hh_cm[l-1]);
+            { typl[j] += var_adj * sq (typical.h[l-1][i] * sigmas.hh[l-1][i]);
             }
           }
         }
@@ -1607,7 +1614,6 @@ void mc_app_stepsizes
         { if (typl[j]>1)
           { typl[j] = 1;
           }
-//fprintf(stderr,"Final H%d U%d T%f\n",l,j,typl[j]);
         }
       }
     }

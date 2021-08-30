@@ -29,6 +29,8 @@
 \subsection*{Neural Network Models Implemented in the Flexible
    Bayesian Modelling Software}
 
+Radford M. Neal, 2021
+
 This document gives the mathematical details of the Bayesian neural
 network models implemented in the FBM software.  The notation used is
 summarized on the next page.
@@ -835,23 +837,53 @@ can be expressed as follows:\beq
   {\partial^2 L \over \partial (w^{S,D}_{i,j})^2} & = &
     (v^S_i)^2\,{\partial^2 L \over \partial (u^D_j)^2}
 \eeq%
-When the weight is on a connection from an input unit, $v^S_i = v^I_i$ is 
-the $i$th input for this training case, which is known.  If the weight
-is on a connection from a hidden unit, $(v^S_i)^2$ is assumed to be one,
-which is the maximum possible value for $\tanh$ units.  With weights
-for configured connections, an analogous formula is used that sums over
-the connections for which the weight is used.
+To estimate this, an estimate of $(v^S_i)^2$ is needed.
 
-Second derivatives with respect to biases and offsets are simply equal
-to the second derivatives with respect to the associated summed input to
-the hidden or output units.
+When the weight is on a connection from an input unit, $v^S_i = v^I_i$
+is the $i$th input for this training case, which is known.  The sum of
+$(v^I_i)^2$ for all training cases is computed once, for each $i$, and
+then used for stepsize heuristics thereafter.  From this sum, the
+mean is also computed, and used as the ``typical'' squared value of
+that input unit.
+
+Estimates of ``typical'' squared values for hidden units are made by
+simulating a forward pass, in which actual parameter values are not
+used, but instead parameters are assumed to be typical, given the
+current hyperparameters.  Just one simulation is done for each update
+needing stepsizes, not one for every training case - the typical
+squared values are taken to be the same for each training case,
+approximating (roughly) the mean over training cases.
+
+The typical squared value for a hidden unit with the identity
+activation function is found from the sum of the previously-estimated
+typical squared values of the units connecting to this unit (one for a
+bias connection) multipled by the prior variance of the weight (or
+bias) on that connection, as given by the controlling hyperparameter.
+(For parameters with t distributions, the variance is capped at what
+it would be if the degrees of freedom were three.)
+
+For a layer of tanh hidden units, the typical squared value found in
+this way is reduced to one if it exceeds one, since one is the
+maximum squared value of tanh.  Similarly, the typical squared value
+for a unit with activation function $\sqrt{2}\,\sin(\sqrt{2}u)$ is capped
+at two.  Units with the softplus activation function are treated the same as 
+those with identity activation function.
+
+Second derivatives with respect to biases are simply equal to the
+second derivatives with respect to the associated summed input to the
+hidden or output units.  Second derivatives with respect to offsets
+are equal to the second derivatives with respect to the associated
+input unit, or with respect to the output of the associated hidden
+unit.
 
 These heuristic estimates for the second derivatives of $L$ due to
 each training case with respect to the various network parameters are
-summed for all cases in the training set.  To these are added
-estimates of the second derivatives of the log prior probability with
-respect to each parameter, giving estimates of the second derivatives
-of the log posterior.
+summed for all cases in the training set.  (No actual summation is
+needed, however, only a multiplication, since the typical squared
+values used are the same for all training cases.)  To these estimates
+are added estimates of the second derivatives of the log prior
+probability with respect to each parameter, giving estimates of the
+second derivatives of the log posterior.
 
 For the second derivative of the log prior with respect to weight
 $w_{i,j}$, we have\beq

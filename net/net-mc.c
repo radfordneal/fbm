@@ -1618,11 +1618,17 @@ void mc_app_stepsizes
     }
 
     if (!TYPICAL_VALUES_ALL_ONE)
-    { if (flgs==0 || flgs->layer_type[l]==Tanh_type
-                  || flgs->layer_type[l]==Sin_type)
+    { if (flgs==0 || flgs->layer_type[l]==Tanh_type)
       { for (j = 0; j<arch->N_hidden[l]; j++)
         { if (typl[j]>1)
           { typl[j] = 1;
+          }
+        }
+      }
+      if (flgs!=0 && flgs->layer_type[l]==Sin_type)
+      { for (j = 0; j<arch->N_hidden[l]; j++)
+        { if (typl[j]>2)
+          { typl[j] = 2;
           }
         }
       }

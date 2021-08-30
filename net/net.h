@@ -93,7 +93,9 @@ typedef struct
 
    The omit flags are 1 when an input is omitted for a layer.  The low-order
    bit pertains to the output, with bits above that pertaining to successive
-   hidden layers.  The layer flags are currently unused.
+   hidden layers.  The any_omitted array indicates in element 0 whether any
+   inputs are omitted for the output, and in element l+1 whether any inputs
+   are omitted for hidden layer l.
 
    Stored in log files under type 'F', but may be omitted if all the flags
    are zero.  Changes may invalidate old log files. */
@@ -106,6 +108,7 @@ typedef struct
 typedef struct
 {
   unsigned short omit[Max_inputs]; /* Whether inputs omitted, for each layer */
+  char any_omitted[Max_layers+1];  /* Whether any inputs omitted for layer */
 
   char layer_type[Max_layers];     /* Type of hidden units in layer */
 

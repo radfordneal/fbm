@@ -344,10 +344,12 @@ int main
           (flgs->omit[i] | ((flgs->omit[i]&1)<<(a->N_layers+1))) & ~1;
       }
       a->N_layers += 1;
+      flgs->any_omitted[a->N_layers] = omit;
     }
     else  /* last layer size, so this is the output layer */
     { a->N_outputs = size;
       if (type!=-1) usage();
+      flgs->any_omitted[0] = omit;
     }
   }
 

@@ -113,7 +113,8 @@ void net_func
       }
       else
       { add_connections (sh, N_hidden, v->i, a->N_inputs, 
-          w->ih[l], a->has_ti ? w->ti : 0, flgs ? flgs->omit : 0, 1<<(l+1));
+          w->ih[l], a->has_ti ? w->ti : 0, 
+          flgs && flgs->any_omitted[l+1] ? flgs->omit : 0, 1<<(l+1));
       }
     }
 
@@ -358,7 +359,8 @@ void net_func
     }
     else
     { add_connections (v->o, a->N_outputs, v->i, a->N_inputs,
-                       w->io, a->has_ti ? w->ti : 0, flgs ? flgs->omit : 0, 1);
+                       w->io, a->has_ti ? w->ti : 0, 
+                       flgs && flgs->any_omitted[0] ? flgs->omit : 0, 1);
     }
   }
 
@@ -685,7 +687,7 @@ static void add_connections
   int ns,		  /* Number of source units */
   net_param const* w,     /* Connection weights */
   net_param const* off,   /* Offsets to add to source unit values */
-  unsigned short const* omit, /* Omit flags, null if not present */
+  unsigned short const* omit, /* Omit flags, null if not present/relevant */
   int ob		  /* Bit to look at in omit flags */
 )
 {

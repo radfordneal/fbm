@@ -90,7 +90,8 @@ void net_grad
       }
       else
       { add_grad2 (g->ih[l], v->i, a->has_ti ? w->ti : 0, a->N_inputs, 
-                   d->s[l], N_hidden, flgs?flgs->omit:0, 1<<(l+1));
+                   d->s[l], N_hidden, 
+                   flgs && flgs->any_omitted[l+1] ? flgs->omit : 0, 1<<(l+1));
       }
     }
 
@@ -128,7 +129,8 @@ void net_grad
     }
     else
     { add_grad2 (g->io, v->i, a->has_ti ? w->ti : 0, a->N_inputs, 
-                 d->o, a->N_outputs, flgs?flgs->omit:0, 1);
+                 d->o, a->N_outputs, 
+                 flgs && flgs->any_omitted[0] ? flgs->omit : 0, 1);
     }
   }
 

@@ -218,7 +218,7 @@ void net_back
         }
         else 
         { sum_derivatives (d->s[l], a->N_hidden[l], d->i, a->N_inputs, w->ih[l],
-                           flgs ? flgs->omit : 0, 1<<(l+1));
+                      flgs && flgs->any_omitted[l+1]? flgs->omit : 0, 1<<(l+1));
         }
       }
     }
@@ -229,7 +229,7 @@ void net_back
       }
       else
       { sum_derivatives (d->o, a->N_outputs, d->i, a->N_inputs, w->io,
-                         flgs ? flgs->omit : 0, 1);
+                    flgs && flgs->any_omitted[0] ? flgs->omit : 0, 1);
       }
     }
   }

@@ -10,5 +10,5 @@ is done with a command such as the following:
 and then run it to produce idata (on standard output).  Information is
 also printed on standard error, more if an argument is given to igen.
 
-Note that idata-train and idata-test are just the first 1200 and last
-1800 lines of idata.
+Note that idata-train and idata-test are just the first 1536 and last
+2464 lines of idata.

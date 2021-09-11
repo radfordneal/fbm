@@ -1,0 +1,20 @@
+#!/bin/bash
+
+echo " "; echo "--- A"; echo " "
+
+net-spec log 3 11 2 / ih=1 ah=1 ho=1 ao=1
+data-spec log 3 2 / "%echo 100 200 300 17 18" .
+model-spec log real 1
+net-gen log 5
+for i in 0 1 2 3 4; do net-display log $i; done
+
+echo " "; echo "--- B"; echo " "
+
+net-spec log 3 10 2 / ih=1 ah=1 ho=1 ao=1
+data-spec log 3 2 / "%echo 1 1 1 1 10" .
+model-spec log real 1
+mc-spec log repeat 100 met-1 0.3 
+net-mc log 1
+mc-spec log repeat 100 sample-sigmas repeat 10 met-1 0.3 
+net-mc log 4
+for i in 1 2 3 4; do net-display log $i; done

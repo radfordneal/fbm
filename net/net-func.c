@@ -366,9 +366,10 @@ void net_func
 
   for (l = 0; l<a->N_layers; l++)
   { if (a->has_ho[l])
-    { if (l==a->N_layers-1 && a->hidden_config[l+1])  /* only last for now... */
+    { int k = 2*a->N_layers-1-l;
+      if (a->hidden_config[k])
       { add_connections_config (v->o, v->h[l], w->ho[l], 
-                         a->has_th[l] ? w->th[l] : 0, a->hidden_config[l+1]);
+                         a->has_th[l] ? w->th[l] : 0, a->hidden_config[k]);
       }
       else
       { add_connections (v->o, a->N_outputs, v->h[l], a->N_hidden[l], w->ho[l],

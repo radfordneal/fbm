@@ -263,3 +263,21 @@ net-grad-test log 0 0.002
 net-eval log 0 / 10 10 0 h
 net-eval log 0 / 10 10 0 
 echo 308000
+
+echo " "; echo "--- M"; echo " "
+
+net-spec log 1 5 cfg-i:"%echo 1 3 1" identity \
+               4 identity cfg-h:"%echo 3 2 1" \
+	       1 cfg-h1:"%echo 2 1 1" cfg-h0:"%echo 3 1 1" \
+             / ih=3 hh=2 h0o=4 h1o=5
+net-spec log config
+data-spec log 1 1 / "%echo 2 7" .
+model-spec log real 5
+net-gen log fix - <<end
+3 4 100 10000
+end
+net-display log 0
+net-grad-test log 0 0.002
+net-eval log 0 / 2 2 0 h0
+net-eval log 0 / 2 2 0 h1
+net-eval log 0 / 2 2 0 

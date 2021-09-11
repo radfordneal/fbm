@@ -140,11 +140,12 @@ int net_setup_param_count
     if (a->has_th[l]) count += a->N_hidden[l];
 
     if (a->has_ho[l])
-    { if (l==a->N_layers-1 && flgs && flgs->hidden_config[l+1])/* only last...*/
-      { a->hidden_config[l+1] = 
-          net_config_read (flgs->config_files + flgs->hidden_config[l+1],
+    { int k = 2*a->N_layers-1-l;
+      if (flgs && flgs->hidden_config[k])
+      { a->hidden_config[k] = 
+          net_config_read (flgs->config_files + flgs->hidden_config[k],
                            a->N_hidden[l], a->N_outputs);
-        count += a->hidden_config[l+1]->N_wts;
+        count += a->hidden_config[k]->N_wts;
       }
       else
       { count += a->N_hidden[l]*a->N_outputs;
@@ -347,9 +348,10 @@ void net_setup_param_pointers
   for (l = a->N_layers-1; l>=0; l--)
   { w->ho[l] = 0;
     if (a->has_ho[l]) 
-    { w->ho[l] = b;
-      b += l==a->N_layers-1 && a->hidden_config[l+1] 
-            ? a->hidden_config[l+1]->N_wts : a->N_hidden[l]*a->N_outputs;
+    { int k = 2*a->N_layers-1-l;
+      w->ho[l] = b;
+      b += a->hidden_config[k] ? a->hidden_config[k]->N_wts
+                               : a->N_hidden[l]*a->N_outputs;
     }
   }
 
@@ -573,10 +575,11 @@ int net_setup_param_group
 
   for (l = a->N_layers-1; l>=0; l--)
   { if (a->has_ho[l]) 
-    { *offset = i; 
+    { int k = 2*a->N_layers-1-l;
+      *offset = i; 
       *source = a->N_hidden[l];
-      *configured = l==a->N_layers-1 && a->hidden_config[l+1];
-      i += *configured ? a->hidden_config[l+1]->N_wts
+      *configured = a->hidden_config[k]!=0;
+      i += *configured ? a->hidden_config[k]->N_wts
                        : a->N_hidden[l]*a->N_outputs; 
       if (--grp==0) goto done;
     }

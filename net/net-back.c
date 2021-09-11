@@ -74,8 +74,9 @@ void net_back
     memset (dh, 0, N_hidden * sizeof *dh);
     
     if (a->has_ho[l])
-    { if (l==a->N_layers-1 && a->hidden_config[l+1])  /* only last for now... */
-      { sum_derivatives_config (d->o, dh, w->ho[l], a->hidden_config[l+1]);
+    { int k = 2*a->N_layers-1-l;
+      if (a->hidden_config[k])
+      { sum_derivatives_config (d->o, dh, w->ho[l], a->hidden_config[k]);
       }
       else 
       { sum_derivatives (d->o, a->N_outputs, dh, N_hidden, 

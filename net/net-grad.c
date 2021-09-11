@@ -111,9 +111,10 @@ void net_grad
     }
 
     if (a->has_ho[l])
-    { if (l==a->N_layers-1 && a->hidden_config[l+1])  /* only last for now... */
+    { int k = 2*a->N_layers-1-l;
+      if (a->hidden_config[k])
       { add_grad2_config (g->ho[l], v->h[l], a->has_th[l] ? w->th[l] : 0,
-                          d->o, a->hidden_config[l+1]);
+                          d->o, a->hidden_config[k]);
       }
       else
       { add_grad2 (g->ho[l], v->h[l], a->has_th[l] ? w->th[l] : 0,

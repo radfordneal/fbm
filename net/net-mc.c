@@ -512,10 +512,11 @@ int mc_app_sample
                                            arch->N_hidden[l], &priors->th[l]);
   
       if (arch->has_ho[l]) 
-      { if (l==arch->N_layers-1 && arch->hidden_config[l+1])  /* only last... */
+      { int k = 2*arch->N_layers-1-l;
+        if (arch->hidden_config[k])
         { rgrid_met_conn_config (pm, it,
                        params.ho[l], sigmas.ho_cm[l], sigmas.ho[l], 
-                       arch->N_hidden[l], arch->hidden_config[l+1]->N_wts,
+                       arch->N_hidden[l], arch->hidden_config[k]->N_wts,
                        &priors->ho[l]);
           }
         else
@@ -636,10 +637,11 @@ int mc_app_sample
   
     for (l = arch->N_layers-1; l>=0; l--)
     { if (arch->has_ho[l] && THISGRP)
-      { if (l==arch->N_layers-1 && arch->hidden_config[l+1])  /* only last... */
+      { int k = 2*arch->N_layers-1-l;
+        if (arch->hidden_config[k])
         { gibbs_conn_config (sample_hyper, 
                              params.ho[l], sigmas.ho_cm[l], sigmas.ho[l],
-                             arch->N_hidden[l], arch->hidden_config[l+1]->N_wts,
+                             arch->N_hidden[l], arch->hidden_config[k]->N_wts,
                              &priors->ho[l]);
           }
         else
@@ -1654,11 +1656,12 @@ void mc_app_stepsizes
 
     for (i = 0; i<arch->N_hidden[l]; i++)
     { if (arch->has_ho[l])
-      { if (l==arch->N_layers-1 && arch->hidden_config[l+1])  /* only last... */
+      { int kk = 2*arch->N_layers-1-l;
+        if (arch->hidden_config[kk])
         { w = *sigmas.ho_cm[l];
-          for (k = 0; k<arch->hidden_config[l+1]->N_conn; k++)
-          { i = arch->hidden_config[l+1]->conn[k].s;
-            j = arch->hidden_config[l+1]->conn[k].d;
+          for (k = 0; k<arch->hidden_config[kk]->N_conn; k++)
+          { i = arch->hidden_config[kk]->conn[k].s;
+            j = arch->hidden_config[kk]->conn[k].d;
             seconds.h[l][i] += (w*w) * seconds.o[j];
           }
         }
@@ -1839,11 +1842,12 @@ void mc_app_stepsizes
     }
 
     if (arch->has_ho[l])
-    { if (l==arch->N_layers-1 && arch->hidden_config[l+1])  /* only last... */
-      { for (k = 0; k<arch->hidden_config[l+1]->N_conn; k++)
-        { i = arch->hidden_config[l+1]->conn[k].s;
-          j = arch->hidden_config[l+1]->conn[k].d;
-          stepsizes.ho [l] [arch->hidden_config[l+1]->conn[k].w]
+    { int kk = 2*arch->N_layers-1-l;
+      if (arch->hidden_config[kk])
+      { for (k = 0; k<arch->hidden_config[kk]->N_conn; k++)
+        { i = arch->hidden_config[kk]->conn[k].s;
+          j = arch->hidden_config[kk]->conn[k].d;
+          stepsizes.ho [l] [arch->hidden_config[kk]->conn[k].w]
             += N_train * typical.h[l][i] * seconds.o[j];
         }
       }

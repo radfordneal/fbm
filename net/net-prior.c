@@ -145,9 +145,10 @@ void net_prior_generate
                                         0, p->th[l], centre, value);
 
     if (a->has_ho[l])
-    { if (l==a->N_layers-1 && a->hidden_config[l+1])  /* only last for now... */
+    { int k = 2*a->N_layers-1-l;
+      if (a->hidden_config[k])
       { pick_weights_config (w->ho[l], s->ho_cm[l], s->ho[l],
-                             a->N_hidden[l], a->hidden_config[l+1]->N_wts,
+                             a->N_hidden[l], a->hidden_config[k]->N_wts,
                              p->ho[l], centre, value);
       }
       else
@@ -436,8 +437,9 @@ void net_prior_prob
                                      p->th[l].alpha[1], 0, op);
 
     if (a->has_ho[l]) 
-    { if (l==a->N_layers-1 && a->hidden_config[l+1])  /* only last for now... */
-      { compute_prior (w->ho[l], a->hidden_config[l+1]->N_wts, lp,
+    { int k = 2*a->N_layers-1-l;
+      if (a->hidden_config[k])
+      { compute_prior (w->ho[l], a->hidden_config[k]->N_wts, lp,
                        dp ? dp->ho[l] : 0, 
                        *s->ho_cm[l], p->ho[l].alpha[2], 0, op);
       }
@@ -641,8 +643,9 @@ void net_prior_max_second
     }
 
     if (a->has_ho[l])
-    { if (l==a->N_layers-1 && a->hidden_config[l+1])  /* only last for now... */
-      { max_second (d->ho[l], a->hidden_config[l+1]->N_wts, *s->ho_cm[l],
+    { int k = 2*a->N_layers-1-l;
+      if (a->hidden_config[k])
+      { max_second (d->ho[l], a->hidden_config[k]->N_wts, *s->ho_cm[l],
                     0, p->ho[l].alpha[2]);
       }
       else

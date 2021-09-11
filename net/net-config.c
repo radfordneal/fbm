@@ -48,10 +48,14 @@ static char **read_items (char *file)
   }
   char **item = (char **) chk_alloc (Max_items+1, sizeof *item);
   int n = 0;
-  char s[101]; 
-  s[100] = 0;
-  while (fscanf(fp,"%100s",s)==1)
-  { char *h = strchr(s,'#');
+  char s[1002]; 
+  s[1001] = 0;
+  while (fscanf(fp,"%1001s",s)==1)
+  { if (strlen(s)>1000)
+    { fprintf (stderr, "Line in configuration file is too long (max 1000)\n");
+      exit(2);
+    }
+    char *h = strchr(s,'#');
     if (h)
     { char c;
       *h = 0;

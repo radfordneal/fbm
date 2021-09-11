@@ -3,9 +3,10 @@
 NET-SPEC:  Create a new network, or display specifications for existing net.
 
 Net-spec creates a log file containing records describing the network
-architecture and the associated priors.  When invoked with just a log
-file as argument, it displays the specifications of the network stored
-in that log file.
+architecture and the associated priors.  The network architectures
+that can be specified are described in net.doc and net-models.PDF.
+When invoked with just a log file as argument, net-spec displays the
+specifications of the network stored in that log file.
 
 Usage:
 

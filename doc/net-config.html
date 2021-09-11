@@ -10,9 +10,8 @@ connections exist from the previous hidden layer (last hidden layer
 for outputs) or from the input layer, as well as any sharing of
 weights between these connections.  Similarly, biases for hidden
 layers may be configured with sharing or sparsity.  The configuration
-files to use are specified by the "input-config", "hidden-config", or
-"bias-config" flags in the network specification.  See <A HREF="net-spec.html">net-spec.doc</A>
-for details.
+files to use are specified by the "cfg-i", "cfg-h", or "cfg-b" flags
+in the network specification.  See <A HREF="net-spec.html">net-spec.doc</A> for details.
 
 Configuration files can be written in various ways, as given by the
 detailed syntax at the end of this document.  The simplest form, as a
@@ -38,7 +37,7 @@ weights may be shared.
 
 As an example, suppose the following network specification is used:
 
-    net-spec log 2 3 input-config:conf 1 / ih=2 ho=3
+    net-spec log 2 3 cfg-i:conf 1 / ih=2 ho=3
 
 and the file "conf" contains the following:
 
@@ -89,7 +88,7 @@ form "&lt;rep&gt;(" and ")", where &lt;rep&gt; is a positive integer (defaulting
 to 1 if absent).  Such repeated groups may be nested.  A group of
 triplets enclosed by "&lt;rep&gt;[" and "]" will update the indexes used for
 relative values, but without producing any connections.  A group of
-triplets enclosed by "&lt;rep&gt;{" and "}" will act like one encosed by
+triplets enclosed by "&lt;rep&gt;{" and "}" will act like one enclosed by
 "&lt;rep&gt;(" and ")" except that, after all repetitions, the indexes used
 for relative values will be restored to ther values before the repeat
 group.
@@ -100,7 +99,7 @@ network that computes a convolution of an input sequence of length 10
 with a 3-point linear filter, which is then used in a logistic
 regression model for binary classification:
 
-    net-spec log 10 8 identity input-config:filter 1 / ih=1 ho=1 bo=1
+    net-spec log 10 8 identity cfg-i:filter 1 / ih=1 ho=1 bo=1
     model-spec log binary
 
 where the file "filter" contains
@@ -132,8 +131,9 @@ Another way to specify the same configuration is as follows:
     8(  + + 1  2{  + = +  } )
 
 Numbers may be specified using single-letter symbols, to which values
-are assigned by items of the form &lt;letter&gt;=&lt;number&gt;.  For example, the
-above may instead be written as
+are assigned by items of the form &lt;letter&gt;=&lt;number&gt;.  Numbers may also
+be combined with "+" or "-".  For example, the above may instead be
+written as
 
     R=8  s=3 
     R(  + + 1  s-1{  + = +  } )

@@ -7,9 +7,8 @@ connections exist from the previous hidden layer (last hidden layer
 for outputs) or from the input layer, as well as any sharing of
 weights between these connections.  Similarly, biases for hidden
 layers may be configured with sharing or sparsity.  The configuration
-files to use are specified by the "input-config", "hidden-config", or
-"bias-config" flags in the network specification.  See net-spec.doc
-for details.
+files to use are specified by the "cfg-i", "cfg-h", or "cfg-b" flags
+in the network specification.  See net-spec.doc for details.
 
 Configuration files can be written in various ways, as given by the
 detailed syntax at the end of this document.  The simplest form, as a
@@ -35,7 +34,7 @@ weights may be shared.
 
 As an example, suppose the following network specification is used:
 
-    net-spec log 2 3 input-config:conf 1 / ih=2 ho=3
+    net-spec log 2 3 cfg-i:conf 1 / ih=2 ho=3
 
 and the file "conf" contains the following:
 
@@ -97,7 +96,7 @@ network that computes a convolution of an input sequence of length 10
 with a 3-point linear filter, which is then used in a logistic
 regression model for binary classification:
 
-    net-spec log 10 8 identity input-config:filter 1 / ih=1 ho=1 bo=1
+    net-spec log 10 8 identity cfg-i:filter 1 / ih=1 ho=1 bo=1
     model-spec log binary
 
 where the file "filter" contains

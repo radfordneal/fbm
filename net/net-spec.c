@@ -98,13 +98,13 @@ int main
       { printf("  omit%s",ps);
       }
       if (flgs && flgs->input_config[l])
-      { printf("  input-config:%s",flgs->config_files+flgs->input_config[l]);
+      { printf("  cfg-i:%s",flgs->config_files+flgs->input_config[l]);
       }
       if (flgs && flgs->hidden_config[l])
-      { printf("  hidden-config:%s",flgs->config_files+flgs->hidden_config[l]);
+      { printf("  cfg-h:%s",flgs->config_files+flgs->hidden_config[l]);
       }
       if (flgs && flgs->bias_config[l])
-      { printf("  bias-config:%s",flgs->config_files+flgs->bias_config[l]);
+      { printf("  cfg-b:%s",flgs->config_files+flgs->bias_config[l]);
       }
       printf("\n");
     }
@@ -114,15 +114,15 @@ int main
     { printf("  omit%s",ps);
     }
     if (flgs && flgs->input_config[a->N_layers])
-    { printf("  input-config:%s",
+    { printf("  cfg-i:%s",
              flgs->config_files+flgs->input_config[a->N_layers]);
     }
     if (flgs && flgs->hidden_config[a->N_layers])
-    { printf("  hidden-config:%s",
+    { printf("  cfg-h:%s",
              flgs->config_files+flgs->hidden_config[a->N_layers]);
     }
     if (flgs && flgs->bias_config[a->N_layers])
-    { printf("  bias-config:%s",
+    { printf("  cfg-b:%s",
              flgs->config_files+flgs->bias_config[a->N_layers]);
     }
     printf("\n");
@@ -278,28 +278,28 @@ int main
         omit = 1;
         parse_flags (*ap+4, flgs->omit, a->N_inputs, 1);
       }
-      else if (strncmp(*ap,"input-config:",13)==0)
+      else if (strncmp(*ap,"cfg-i:",6)==0)
       { if (iconfig) usage();
         iconfig = 1;
-        strcpy(flgs->config_files+fileix,*ap+13);
+        strcpy(flgs->config_files+fileix,*ap+6);
         if (a->N_layers<=Max_layers) flgs->input_config[a->N_layers] = fileix;
         fileix += strlen(flgs->config_files+fileix) + 1;
       }
-      else if (strncmp(*ap,"hidden-config:",14)==0)
+      else if (strncmp(*ap,"cfg-h:",6)==0)
       { if (hconfig) usage();
         if (a->N_layers==0)
-        { fprintf(stderr,"hidden-config not allowed for first hidden layer\n");
+        { fprintf(stderr,"cfg-h not allowed for first hidden layer\n");
           exit(2);
         }
         hconfig = 1;
-        strcpy(flgs->config_files+fileix,*ap+14);
+        strcpy(flgs->config_files+fileix,*ap+6);
         if (a->N_layers<=Max_layers) flgs->hidden_config[a->N_layers] = fileix;
         fileix += strlen(flgs->config_files+fileix) + 1;
       }
-      else if (strncmp(*ap,"bias-config:",12)==0)
+      else if (strncmp(*ap,"cfg-b:",6)==0)
       { if (bconfig) usage();
         bconfig = 1;
-        strcpy(flgs->config_files+fileix,*ap+12);
+        strcpy(flgs->config_files+fileix,*ap+6);
         if (a->N_layers<=Max_layers) flgs->bias_config[a->N_layers] = fileix;
         fileix += strlen(flgs->config_files+fileix) + 1;
       }
@@ -327,7 +327,7 @@ int main
     }
 
     if (omit && iconfig)
-    { fprintf(stderr, "omit flag may not be combined with input-config\n");
+    { fprintf(stderr, "omit flag may not be combined with cfg-i\n");
       exit(2);
     }
 
@@ -518,13 +518,27 @@ int main
           { fprintf(stderr,"Invalid layer number: %d\n",l); 
             exit(1); 
           }
+          if (flgs->input_config[l]
+           || flgs->hidden_config[l]
+           || flgs->bias_config[l])
+          { fprintf(stderr,
+              "Adjustments not allowed for layer with configured weights\n");
+            exit(1);
+          }
           a->has_ah[l] = 1;
           if ((p->ah[l] = atof(pr))<=0) usage();
         }
       }
       else if (sscanf(*ap,"ao%c",&eq)==1 && eq=='=')
       { if (strcmp(pr,"-")!=0)
-        { a->has_ao = 1;
+        { if (flgs->input_config[a->N_layers] 
+           || flgs->hidden_config[a->N_layers]
+           || flgs->bias_config[a->N_layers])
+          { fprintf(stderr,
+              "Adjustments not allowed for layer with configured weights\n");
+            exit(1);
+          }
+          a->has_ao = 1;
           if ((p->ao = atof(pr))<=0) usage();
         }
       }
@@ -633,7 +647,7 @@ static void usage(void)
    "Prior: [x]Width[:[Alpha-type][:[Alpha-unit][:[Alpha-weight]]]]\n");
 
   fprintf(stderr,
-   "Flags: input-config:<file> hidden-config:<file> bias-config:<file>\n");
+   "Flags: cfg-i:<file> cfg-h:<file> cfg-b:<file>\n");
   fprintf(stderr,
    "       omit:[-]<input>{,<input>} tanh identity sin softplus\n");
 

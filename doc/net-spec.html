@@ -63,21 +63,28 @@ are looked at, as specifed by later arguments).  If the "-" is placed
 before the list of inputs, the list gives the inputs that are NOT
 omitted.  Inputs are numbered starting with 1.
 
-Hidden layers and the output layer may have the following flags:
+Hidden layers and the output layer may have configurations for biases
+and for connections to input or hidden layers, specified using the
+following flags:
 
-    cfg-i:&lt;file&gt;
-    cfg-h:&lt;file&gt;
     cfg-b:&lt;file&gt;
+    cfg-i:&lt;file&gt;
+    cfg-h#:&lt;file&gt;
 
 except that the cfg-i flag may not be combined with an omit flag, the
 cfg-h flag may not be specified for the first hidden layer, and the
 cfg-i and cfg-h flags may not be specified if the layer has per-unit
-adjustments for the prior on the associated connections.  The files
-must contain specifications for which connections from the input layer
-or previous hidden layer, or which biases, are present, and how the
-weight/bias parameters are used for these connections or biases (with
-possible sharing of weights/biases between connections).  Note that
-for the output layer, cfg-h refers to the last hidden layer.
+adjustments for the prior on the associated connections.  The # part
+of the cfg-h flag may be omitted (and must be omitted for hidden
+layers), and defaults to the prevous layer; for output layers, it
+allows for separate configurations for the connections to the various
+hidden layers (numbered from 0).
+
+The files given must contain specifications for which connections from
+the input layer or a previous hidden layer, or which biases, are
+present, and how the weight/bias parameters are used for these
+connections or biases (with possible sharing of weights/biases between
+connections). 
 
 See <A HREF="net-config.html">net-config.doc</A> for documentation on how a configuration is
 specified in a file.  The named configuration files do not need to

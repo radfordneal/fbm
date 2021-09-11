@@ -117,9 +117,18 @@ int main
     { printf("  cfg-i:%s",
              flgs->config_files+flgs->input_config[a->N_layers]);
     }
-    if (flgs && flgs->hidden_config[a->N_layers])
-    { printf("  cfg-h:%s",
-             flgs->config_files+flgs->hidden_config[a->N_layers]);
+    for (l = a->N_layers-1; l>=0; l--)
+    { int k = 2*a->N_layers-1-l;
+      if (flgs && flgs->hidden_config[k])
+      { if (a->N_layers==1)
+        { printf("  cfg-h:%s",
+                 flgs->config_files+flgs->hidden_config[k]);
+        }
+        else
+        { printf("  cfg-h%d:%s", l,
+                 flgs->config_files+flgs->hidden_config[k]);
+        }
+      }
     }
     if (flgs && flgs->bias_config[a->N_layers])
     { printf("  cfg-b:%s",
@@ -225,11 +234,19 @@ int main
                        (flgs->config_files+flgs->input_config[a->N_layers],
                         a->N_inputs, a->N_outputs), 0);
       }
-      if (flgs->hidden_config[a->N_layers])
-      { printf("Output layer last hidden weight configuration\n");
-        print_config (net_config_read 
-                       (flgs->config_files+flgs->hidden_config[a->N_layers],
-                        a->N_hidden[l-1], a->N_outputs), 0);
+      for (l = a->N_layers-1; l>=0; l--)
+      { int k = 2*a->N_layers-1-l;
+        if (flgs->hidden_config[k])
+        { if (a->N_layers==1)
+          { printf("Output layer hidden weight configuration\n");
+          }
+          else
+          { printf("Output layer hidden layer %d weight configuration\n",l);
+          }
+          print_config (net_config_read 
+                         (flgs->config_files+flgs->hidden_config[k],
+                          a->N_hidden[l], a->N_outputs), 0);
+        }
       }
       if (flgs->bias_config[a->N_layers])
       { printf("Output layer bias configuration\n");
@@ -259,7 +276,7 @@ int main
   while (*ap!=0 && strcmp(*ap,"/")!=0)
   { 
     double size;
-    int omit, iconfig, hconfig, bconfig, type;
+    int omit, iconfig, hconfig, bconfig, type, must_be_output;
     int i;
 
     if ((size = atoi(*ap++))<=0) usage();
@@ -271,6 +288,7 @@ int main
     hconfig = 0;
     bconfig = 0;
     type = -1;
+    must_be_output = 0;
 
     while ((*ap)[0]>='a' && (*ap)[0]<='z')
     { if (strncmp(*ap,"omit:",5)==0)
@@ -285,15 +303,32 @@ int main
         if (a->N_layers<=Max_layers) flgs->input_config[a->N_layers] = fileix;
         fileix += strlen(flgs->config_files+fileix) + 1;
       }
-      else if (strncmp(*ap,"cfg-h:",6)==0)
-      { if (hconfig) usage();
-        if (a->N_layers==0)
-        { fprintf(stderr,"cfg-h not allowed for first hidden layer\n");
+      else if (strncmp(*ap,"cfg-h",5)==0)
+      { char *q;
+        int k;
+        if (ap[0][5]==':')
+        { q = *ap+6;
+          k = a->N_layers;
+        }
+        else
+        { q = strchr(*ap,':');
+          if (q==0) usage();
+          q += 1;
+          k = atoi(*ap+5);
+          if (k<0 || k>a->N_layers-1) usage();
+          k = 2*a->N_layers-1-k;
+          must_be_output = 1;
+        }
+        if (hconfig&(1<<k)) usage();
+        if (k==0)
+        { fprintf(stderr,"cfg-h not allowed when no previous hidden layer\n");
           exit(2);
         }
-        hconfig = 1;
-        strcpy(flgs->config_files+fileix,*ap+6);
-        if (a->N_layers<=Max_layers) flgs->hidden_config[a->N_layers] = fileix;
+        hconfig |= 1<<k;
+        strcpy(flgs->config_files+fileix,q);
+        if (a->N_layers<=Max_layers) 
+        { flgs->hidden_config[k] = fileix;
+        }
         fileix += strlen(flgs->config_files+fileix) + 1;
       }
       else if (strncmp(*ap,"cfg-b:",6)==0)
@@ -337,19 +372,24 @@ int main
                         Max_layers);
         exit(1);
       }
+      if (must_be_output)
+      { fprintf(stderr,
+         "Specifying # of hidden layer configuration is for allowed only for output layer\n");
+        exit(1);
+      }
       a->N_hidden[a->N_layers] = size;
       flgs->layer_type[a->N_layers] = type==-1 ? Tanh_type : type;
       for (i = 0; i<a->N_inputs; i++) 
       { flgs->omit[i] = 
           (flgs->omit[i] | ((flgs->omit[i]&1)<<(a->N_layers+1))) & ~1;
       }
-      a->N_layers += 1;
       flgs->any_omitted[a->N_layers] = omit;
+      a->N_layers += 1;
     }
     else  /* last layer size, so this is the output layer */
     { a->N_outputs = size;
       if (type!=-1) usage();
-      flgs->any_omitted[0] = omit;
+      flgs->any_omitted[a->N_layers] = omit;
     }
   }
 
@@ -532,11 +572,17 @@ int main
       else if (sscanf(*ap,"ao%c",&eq)==1 && eq=='=')
       { if (strcmp(pr,"-")!=0)
         { if (flgs->input_config[a->N_layers] 
-           || flgs->hidden_config[a->N_layers]
            || flgs->bias_config[a->N_layers])
           { fprintf(stderr,
               "Adjustments not allowed for layer with configured weights\n");
             exit(1);
+          }
+          for (l = 0; l<a->N_layers; l++)
+          { if (flgs->hidden_config[2*a->N_layers-1-l])
+            { fprintf(stderr,
+                "Adjustments not allowed for layer with configured weights\n");
+              exit(1);
+            }
           }
           a->has_ao = 1;
           if ((p->ao = atof(pr))<=0) usage();

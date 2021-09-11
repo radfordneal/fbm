@@ -83,8 +83,8 @@ typedef struct
 
   net_config *input_config[Max_layers+1];   /* Pointers used during program,  */
   net_config *bias_config[Max_layers+1];    /*   but set to zero in log file  */
-  net_config *hidden_config[Max_layers+1];  /*   (hidden_config[0] is unused) */
-} net_arch;
+  net_config *hidden_config[2*Max_layers];  /*   hidden_config[0] is unused   */
+} net_arch;                                 /*   hh first, then ho (reversed) */
 
 
 /* FLAGS MODIFYING ARCHITECTURE.  This record records extra flags modifying
@@ -93,9 +93,9 @@ typedef struct
 
    The omit flags are 1 when an input is omitted for a layer.  The low-order
    bit pertains to the output, with bits above that pertaining to successive
-   hidden layers.  The any_omitted array indicates in element 0 whether any
-   inputs are omitted for the output, and in element l+1 whether any inputs
-   are omitted for hidden layer l.
+   hidden layers.  The any_omitted array indicates in element a->N_layers 
+   whether any inputs are omitted for the output, and in element l whether 
+   any inputs are omitted for hidden layer l.
 
    Stored in log files under type 'F', but may be omitted if all the flags
    are zero.  Changes may invalidate old log files. */
@@ -115,7 +115,8 @@ typedef struct
                                    /* Below with +1 for output layer, at end */
   short input_config[Max_layers+1]; /* Index of input config file, 0 if none */
   short bias_config[Max_layers+1];  /* Index of bias config file, 0 if none */
-  short hidden_config[Max_layers+1];/* Index of hidden config file, 0 if none */
+  short hidden_config[2*Max_layers];/* Index of hidden config file, 0 if none */
+                                    /*   has hh first, then ho (reversed) */
 
   char config_files[2000];         /* Names of files for input/hidden configs */
 

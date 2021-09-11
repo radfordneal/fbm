@@ -114,7 +114,7 @@ void net_func
       else
       { add_connections (sh, N_hidden, v->i, a->N_inputs, 
           w->ih[l], a->has_ti ? w->ti : 0, 
-          flgs && flgs->any_omitted[l+1] ? flgs->omit : 0, 1<<(l+1));
+          flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1));
       }
     }
 
@@ -359,8 +359,8 @@ void net_func
     }
     else
     { add_connections (v->o, a->N_outputs, v->i, a->N_inputs,
-                       w->io, a->has_ti ? w->ti : 0, 
-                       flgs && flgs->any_omitted[0] ? flgs->omit : 0, 1);
+                    w->io, a->has_ti ? w->ti : 0, 
+                    flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1);
     }
   }
 

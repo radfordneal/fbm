@@ -1579,7 +1579,7 @@ void mc_app_stepsizes
             typl[j] += var_adj * (train_sumsq[i]/N_train)*sq(*sigmas.ih_cm[l]);
           }
         }
-        else if (flgs && flgs->any_omitted[l+1])
+        else if (flgs && flgs->any_omitted[l])
         { for (j = 0; j<arch->N_hidden[l]; j++)
           { for (i = 0; i<arch->N_inputs; i++)
             { if (flgs->omit[i] & (1<<(l+1)))

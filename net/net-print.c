@@ -32,6 +32,7 @@
 
 
 static void print_param_array (net_param *, int, int);
+static void print_adjustment_array (net_sigma *, int);
 static void print_sigma_array (net_sigma *, int);
 
 
@@ -115,8 +116,8 @@ void net_print_params
     if (a->has_ah[l])
     { if (s!=0)
       { printf("\nHidden Layer %d Adjustments [%d]\n\n",l,g);
-        printf("          ");
-        print_sigma_array(s->ah[l],a->N_hidden[l]);
+        printf("           ");
+        print_adjustment_array(s->ah[l],a->N_hidden[l]);
       }
       g += 1;
     }
@@ -187,8 +188,8 @@ void net_print_params
   if (a->has_ao)
   { if (s!=0)
     { printf("\nOutput Adjustments [%d]\n\n",g);
-      printf("          ");
-      print_sigma_array(s->ao,a->N_outputs);
+      printf("           ");
+      print_adjustment_array(s->ao,a->N_outputs);
     }
     g += 1;
   }
@@ -329,6 +330,28 @@ static void print_sigma_array
       else printf(" ");
     }
     printf("%5.2f",s[i]);
+  }
+
+  printf("\n");
+}
+
+
+/* PRINT ARRAY OF ADJUSTMENT VALUES.  The array may have to extend over several
+   lines.  Each new line (but not the first) is preceded by eleven spaces. */
+
+static void print_adjustment_array
+( net_sigma *s,
+  int n
+)
+{ 
+  int i;
+
+  for (i = 0; i<n; i++)
+  { if (i!=0)
+    { if (i%10==0) printf("\n           ");
+      else printf(" ");
+    }
+    printf("%6.2f",s[i]);
   }
 
   printf("\n");

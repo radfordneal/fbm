@@ -486,6 +486,7 @@ int main
         }
       }
       else if (sscanf(*ap,"ho%c",&eq)==1 && eq=='='
+            || sscanf(*ap,"h%do%c",&l,&eq)==2 && l>=0 && eq=='='
             || sscanf(*ap,"ho%d%c",&l,&eq)==2 && l>=0 && eq=='=')
       { if (strcmp(pr,"-")!=0)
         { if (l==-1) l = a->N_layers-1;

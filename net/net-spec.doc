@@ -119,8 +119,8 @@ that specify the prior for the "adjustments" to the distributions of
 weights and biases going into a given unit are specified following
 these priors.
 
-In the second form, groups of parameters are identified by name, as
-follows:
+In the second form, groups of parameters are identified by name,
+sometimes with a hidden layer number, as follows:
 
     ti      offsets for the inputs
     ih#     weights from inputs to hidden layer # (default for # is 0)
@@ -128,8 +128,9 @@ follows:
     th#     offsets for hidden layer # (default for # is 0)
     hh#     weights from hidden layer #-1 to hidden layer # (default 
             for # is 1)
-    ho#     weights from hidden layer # to outputs (default for # is
+    h#o     weights from hidden layer # to outputs (default for # is
             the last hidden layer)
+    ho#     same as h#o
     io      weights from inputs to outputs
     bo      biases for outputs
     ah#     adjustments for hidden layer # (default for # is 0)

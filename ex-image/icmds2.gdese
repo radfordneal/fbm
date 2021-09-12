@@ -13,8 +13,8 @@ logb=ilog2
 for run in 1 2 3 4; do
 
   log=$logb.gdese$run
-  end=`calc 400\*$run`
-  start=`calc $end-399`
+  end=`calc 384\*$run`
+  start=`calc $end-383`
 
   net-spec $log 36 80 cfg-i:iconfig 4 / ih=10 bh=10 ho=10 bo=10
   model-spec $log class

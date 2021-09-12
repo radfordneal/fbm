@@ -12,8 +12,8 @@ logb=ilog2
 for run in 1 2 3 4; do (
 
   log=$logb.net$run
-  end=`calc 400\*$run`
-  start=`calc $end-399`
+  end=`calc 384\*$run`
+  start=`calc $end-383`
 
   net-spec $log 36 80 cfg-i:iconfig 4 \
                 / ih=0.2:2 bh=0.3:2 ho=0.1:3::4 bo=0.1:2

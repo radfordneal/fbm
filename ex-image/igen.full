@@ -1,4 +1,4 @@
-N_cases: 4000, N_train: 1600, noise: 0.500000
+N_cases: 4000, N_train: 1536, noise: 0.500000
 
 Case 1, Class X(1), Centred at 2,3, PP: +0.001 X0.998 O0.000 H0.001
 

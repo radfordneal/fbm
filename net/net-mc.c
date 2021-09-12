@@ -1617,6 +1617,11 @@ void mc_app_stepsizes
           }
         }
       }
+      if (arch->has_ah[l])
+      { for (j = 0; j<arch->N_hidden[l]; j++)
+        { typl[j] *= sq (sigmas.ah[l][j]);
+        }
+      }
     }
 
     if (!TYPICAL_VALUES_ALL_ONE)

@@ -1,9 +1,9 @@
 This directory contains data files, command files, and generation
 programs for the examples of image models.  To play with the data as
-in the manual, all you need to use are the data and command files (eg,
-idata-train and icmds1.net).  If you want to change the way the data
-was generated, you'll need to recompile the generation program, which
-is done with a command such as the following:
+in the documentation, all you need to use are the data and command
+files (eg, idata-train and icmds1.net).  If you want to change the way
+the data was generated, you'll need to recompile the generation
+program, which is done with a command such as the following:
 
    cc igen.c rand.c -DRAND_FILE=\"../util/randfile\" -lm -o igen
 

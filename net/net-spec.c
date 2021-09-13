@@ -290,7 +290,7 @@ int main
     type = -1;
     must_be_output = 0;
 
-    while ((*ap)[0]>='a' && (*ap)[0]<='z')
+    while (*ap!=0 && (*ap)[0]>='a' && (*ap)[0]<='z')
     { if (strncmp(*ap,"omit:",5)==0)
       { if (omit) usage();
         omit = 1;

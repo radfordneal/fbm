@@ -3,8 +3,14 @@
 use=
 for run in 1 2 3 4; do
   log=$1.gdese$run
-  use=$use\ $log\ `net-plt t B $log | find-min`
+  this=$log\ `net-plt t B $log | find-min`
+  echo PERFORMANCE ON VALIDATION SET USING: $this
+  net-pred nmpa $this
+  echo PERFORMANCE ON TEST SET USING: $this
+  net-pred nmpa $this / idata-test .
+  use=$use\ $this
 done
 
-echo PERFORMANCE USING: $use
+echo PERFORMANCE ON TEST SET USING ALL RUNS:
+echo "  " $use
 net-pred nmpa $use / idata-test .

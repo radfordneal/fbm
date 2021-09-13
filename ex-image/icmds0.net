@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Commands to apply Bayesian neural network to an image classification problem.
+#
 # This version uses uses a simple linear logistic model, which is not expected
 # to perform at all well (but should be better than uniform guessing).
 #
@@ -32,10 +33,10 @@ for run in 1 2 3 4; do (
   net-mc $log 2
   
   mc-spec $log sample-sigmas heatbath hybrid 100:10 0.3
-  net-mc $log 3000
+  net-mc $log 1500
   
 ) & done
 
 wait
   
-./iend.net $logb 1001:
+./iend.net $logb 501:

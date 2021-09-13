@@ -3,6 +3,8 @@
 for run in 1 2 3 4; do
   echo RUN $run PERFORMANCE ON ITS VALIDATION SET:
   net-pred mnpa $1.net$run $2 
+  echo RUN $run PERFORMANCE ON TEST SET:
+  net-pred mnpa $1.net$run $2 / idata-test .
 done
 
 echo PERFORMANCE ON TEST SET USING ALL RUNS:

@@ -3,13 +3,14 @@
 # Commands to apply a neural network trained with gradient descent and early
 # stopping to an image classification problem.
 #
-# This version uses one hidden layer fully connected to the input.
+# This version uses uses a simple linear logistic model, which is not expected
+# to perform at all well (but should be better than uniform guessing).
 #
 # Four runs are done, each on three quarters of the training set, with
 # the left-out quarters used to select the iterations to use.  Final
 # testing is done on the cases not in the training set.
 
-logb=ilog1
+logb=ilog0
 
 for run in 1 2 3 4; do
 
@@ -17,12 +18,12 @@ for run in 1 2 3 4; do
   end=`calc 384\*$run`
   start=`calc $end-383`
 
-  net-spec $log 36 80 softplus 4 / ih=10 bh=10 ho=10 bo=10
+  net-spec $log 36 4 / io=10 bo=10
   model-spec $log class
   
   data-spec $log 36 1 4 / idata-train@-$start:$end . idata-train@$start:$end .
 
-  net-gd $log 20000 10 / 0.01 0.1 0.15 0.2 batch &
+  net-gd $log 2000 / 0.1 0.1 batch &
 
 done
 

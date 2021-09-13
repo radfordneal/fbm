@@ -6,31 +6,32 @@ NET-CONFIG:  Specify weight configuration for a layer's connections
 By default, units in one layer of a network are fully connected to
 units in a layer that feeds into it.  Alternatively, for hidden and
 output layers, one can use a configuration file to specify what
-connections exist from the previous hidden layer (last hidden layer
+connections exist from the previous hidden layer (or any hidden layer
 for outputs) or from the input layer, as well as any sharing of
 weights between these connections.  Similarly, biases for hidden
-layers may be configured with sharing or sparsity.  The configuration
-files to use are specified by the "cfg-i", "cfg-h", or "cfg-b" flags
-in the network specification.  See <A HREF="net-spec.html">net-spec.doc</A> for details.
+layers and the outputs may be configured with sharing or sparsity.
+The configuration files to use are specified by the "cfg-i", "cfg-h",
+or "cfg-b" flags in the network specification.  See <A HREF="net-spec.html">net-spec.doc</A> for
+details.
 
 Configuration files can be written in various ways, as given by the
 detailed syntax at the end of this document.  The simplest form, as a
 sequence of source-destination-weight triplets, is presented first
 below, followed by increasingly elaborate forms.  Configuration files
-for biases have the same form as those for input-to-hidden or
-hidden-to-hidden connections, except the source-destination-weight
-triplets are replaced by unit-bias doublets.
+for biases have the same form as those for input-to-hidden,
+hidden-to-hidden, or hidden-to-output connections, except the
+source-destination-weight triplets are replaced by unit-bias doublets.
 
-This configuration file (which may be output from a command, if
+This configuration file (which may be the output of a command, if
 specified with "%", see <A HREF="net-spec.html">net-spec.doc</A>) can contain one or more triplets
 of the form
 
     &lt;source-unit&gt; &lt;destination-unit&gt; &lt;weight-index&gt;
 
 These elements may be positive integers. The source unit ranges from 1
-to the number of units in the source layer (the input layer or the
-previous hidden layer).  The destimation unit ranges from 1 to the
-number of units in the hidden layer this configuration applies to.
+to the number of units in the source layer (either the input layer or
+a hidden layer).  The destination unit ranges from 1 to the number of
+units in the hidden or output layer this configuration applies to.
 The weight-index ranges from 1 to the number of weights used, which
 may be less (or, unusally, more) than the number of connections, since
 weights may be shared.
@@ -93,11 +94,11 @@ triplets enclosed by "&lt;rep&gt;{" and "}" will act like one enclosed by
 for relative values will be restored to ther values before the repeat
 group.
 
-The utility of relative specifications specifications and grouping is
-illustrated by the following network specification, which sets up a
-network that computes a convolution of an input sequence of length 10
-with a 3-point linear filter, which is then used in a logistic
-regression model for binary classification:
+The utility of relative specifications and grouping is illustrated by
+the following network specification, which sets up a network that
+computes a convolution of an input sequence of length 10 with a
+3-point linear filter, which is then used in a logistic regression
+model for binary classification:
 
     net-spec log 10 8 identity cfg-i:filter 1 / ih=1 ho=1 bo=1
     model-spec log binary

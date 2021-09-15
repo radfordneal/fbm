@@ -1,0 +1,4 @@
+This directory contains .h files declaring C routines for use in C++
+programs - and in particular, for use with CUDA programs compiled with
+nvcc.  These just wrap the corresponding .h files in ../util or ../mc
+with the stuff required for C++ to call C.

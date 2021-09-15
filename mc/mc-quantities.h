@@ -1,6 +1,6 @@
-/* INTRINSICS-USE.H - Possibly include header files for Intel intrinsics. */
+/* MC-QUANTITIES.H - Declarations of procedures for Monte Carlo quantities. */
 
-/* Copyright (c) 2021 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -13,6 +13,7 @@
  * application.  All use of these programs is entirely at the user's own risk.
  */
 
-#if (USE_SIMD_INTRINSICS || USE_SLEEF) && __AVX__
-# include  <immintrin.h>
-#endif
+extern void mc_initialize  (log_gobbled *);
+extern void mc_available   (struct quantdesc[Max_quantities], log_gobbled *);
+extern void mc_evaluate    (struct quantdesc[Max_quantities], quantities_held *,
+                            log_gobbled *);

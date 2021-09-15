@@ -1,4 +1,4 @@
-/* INTRINSICS-USE.H - Possibly include header files for Intel intrinsics. */
+/* CUDA-USE.H - Possibly set up for use of CUDA. */
 
 /* Copyright (c) 2021 by Radford M. Neal 
  *
@@ -13,6 +13,33 @@
  * application.  All use of these programs is entirely at the user's own risk.
  */
 
-#if (USE_SIMD_INTRINSICS || USE_SLEEF) && __AVX__
-# include  <immintrin.h>
+#if __CUDACC__  /* using CUDA */
+
+#define restrict __restrict__
+
+static void check_cuda_error (cudaError_t err, const char *where)
+{ if (err != cudaSuccess)
+  { printf ("%s: CUDA error: %s\n", where, cudaGetErrorString(err));
+    abort();
+  }
+}
+
+static void *managed_alloc (unsigned n, unsigned size)
+{ void *p;
+  check_cuda_error (cudaMallocManaged (&p, (size_t)n*size), "Alloc failed");
+  return p;
+}
+
+#define managed_free cudaFree
+
+#else  /* not using CUDA */
+
+#define __host__
+#define __device__
+#define __managed__
+#define __restrict__ restrict
+
+#define managed_alloc chk_alloc
+#define managed_free free
+
 #endif

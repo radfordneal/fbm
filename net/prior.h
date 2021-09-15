@@ -1,1 +1,1 @@
-../util/prior.h
+../gpu-include/prior.h

@@ -1,1 +1,1 @@
-../util/rand.h
+../gpu-include/rand.h

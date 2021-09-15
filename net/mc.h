@@ -1,1 +1,1 @@
-../mc/mc.h
+../gpu-include/mc.h

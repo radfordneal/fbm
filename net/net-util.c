@@ -1,6 +1,6 @@
 /* NET-UTIL.C - Various utility procedures for use in neural network code. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -17,6 +17,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+
+#include "cuda-use.h"
 
 #include "misc.h"
 #include "log.h"

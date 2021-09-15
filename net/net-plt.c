@@ -1,6 +1,6 @@
 /* NET-PLT.C - Procedures used to plot data on neural networks. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "cuda-use.h"
+
 #include "misc.h"
 #include "log.h"
 #include "quantities.h"
@@ -26,14 +28,14 @@
 
 extern void net_arguments  (char ***);
 extern void net_initialize (log_gobbled *);
-extern void net_available  (quantities_described, log_gobbled *);
-extern void net_evaluate   (quantities_described, quantities_held *,
+extern void net_available  (struct quantdesc[Max_quantities], log_gobbled *);
+extern void net_evaluate   (struct quantdesc[Max_quantities], quantities_held *,
                             log_gobbled *);
 extern void net_mc_cleanup (void);
 
 extern void mc_initialize  (log_gobbled *);
-extern void mc_available   (quantities_described, log_gobbled *);
-extern void mc_evaluate    (quantities_described, quantities_held *,
+extern void mc_available   (struct quantdesc[Max_quantities], log_gobbled *);
+extern void mc_evaluate    (struct quantdesc[Max_quantities], quantities_held *,
                             log_gobbled *);
 
 void (*quant_app_arguments[]) (char ***) =
@@ -52,14 +54,14 @@ void (*quant_app_initialize[]) (log_gobbled *) =
   0 
 };
 
-void (*quant_app_available[]) (quantities_described, log_gobbled *) = 
+void (*quant_app_available[]) (struct quantdesc[Max_quantities], log_gobbled*) =
 { net_available,
   mc_available, 
   0 
 };
 
-void (*quant_app_evaluate[]) (quantities_described, quantities_held *,
-                              log_gobbled *) =
+void (*quant_app_evaluate[])(struct quantdesc[Max_quantities], quantities_held*,
+                             log_gobbled *) =
 { net_evaluate,
   mc_evaluate,
   0

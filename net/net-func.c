@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "cuda-use.h"
+
 #include "misc.h"
 #include "log.h"
 #include "prior.h"

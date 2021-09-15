@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "cuda-use.h"
+
 #include "misc.h"
 #include "rand.h"
 #include "log.h"
@@ -150,11 +152,11 @@ void mc_app_initialize
   {
     /* Check that required specification records are present. */
   
-    arch   = logg->data['A'];
-    flgs   = logg->data['F'];
-    model  = logg->data['M'];
-    priors = logg->data['P'];
-    surv   = logg->data['V'];
+    arch   = (net_arch *) logg->data['A'];
+    flgs   = (net_flags *) logg->data['F'];
+    model  = (model_specification *) logg->data['M'];
+    priors = (net_priors *) logg->data['P'];
+    surv   = (model_survival *) logg->data['V'];
 
     net_check_specs_present(arch,priors,0,model,surv);
 
@@ -165,15 +167,15 @@ void mc_app_initialize
 
     /* Look for quadratic approximation record.  If there is one, we use it. */
 
-    quadratic_approx = logg->data['Q'];
+    quadratic_approx = (double *) logg->data['Q'];
   
     /* Locate existing network, if one exists. */
   
     sigmas.total_sigmas = net_setup_sigma_count(arch,flgs,model);
     params.total_params = net_setup_param_count(arch,flgs);
   
-    sigmas.sigma_block = logg->data['S'];
-    params.param_block = logg->data['W'];
+    sigmas.sigma_block = (net_sigma *) logg->data['S'];
+    params.param_block = (net_param *) logg->data['W'];
   
     grad.total_params = params.total_params;
   
@@ -197,8 +199,10 @@ void mc_app_initialize
     }
     else
     {
-      sigmas.sigma_block = chk_alloc (sigmas.total_sigmas, sizeof (net_sigma));
-      params.param_block = chk_alloc (params.total_params, sizeof (net_param));
+      sigmas.sigma_block = 
+        (net_sigma *) chk_alloc (sigmas.total_sigmas, sizeof (net_sigma));
+      params.param_block = 
+        (net_param *) chk_alloc (params.total_params, sizeof (net_param));
   
       net_setup_sigma_pointers (&sigmas, arch, flgs, model);
       net_setup_param_pointers (&params, arch, flgs);
@@ -209,7 +213,8 @@ void mc_app_initialize
     /* Set up stepsize structure. */
   
     stepsizes.total_params = params.total_params;
-    stepsizes.param_block = chk_alloc (params.total_params, sizeof (net_param));
+    stepsizes.param_block = 
+      (net_param *) chk_alloc (params.total_params, sizeof (net_param));
   
     net_setup_param_pointers (&stepsizes, arch, flgs);
 
@@ -219,15 +224,15 @@ void mc_app_initialize
 
     /* Set up second derivative and typical value structures. */
 
-    value_block = chk_alloc (value_count, sizeof *value_block);
+    value_block = (net_value *) chk_alloc (value_count, sizeof *value_block);
     net_setup_value_pointers (&seconds, value_block, arch);
 
-    value_block = chk_alloc (value_count, sizeof *value_block);
+    value_block = (net_value *) chk_alloc (value_count, sizeof *value_block);
     net_setup_value_pointers (&typical, value_block, arch);
   
     /* Read training data, if any, and allocate space for derivatives. */
   
-    data_spec = logg->data['D'];
+    data_spec = (data_specifications *) logg->data['D'];
 
     if (data_spec!=0 && model==0)
     { fprintf(stderr,"No model specified for data\n");
@@ -240,16 +245,17 @@ void mc_app_initialize
       exit(1);
     }
 
-    train_sumsq = chk_alloc (arch->N_inputs, sizeof *train_sumsq);
+    train_sumsq = (double *) chk_alloc (arch->N_inputs, sizeof *train_sumsq);
     for (j = 0; j<arch->N_inputs; j++) train_sumsq[j] = 0;
   
     if (data_spec!=0)
     { 
       net_data_read (1, 0, arch, model, surv);
     
-      deriv = chk_alloc (N_train, sizeof *deriv);
+      deriv = (net_values *) chk_alloc (N_train, sizeof *deriv);
     
-      value_block = chk_alloc (value_count*N_train, sizeof *value_block);
+      value_block = 
+        (net_value *) chk_alloc (value_count*N_train, sizeof *value_block);
     
       for (i = 0; i<N_train; i++) 
       { net_setup_value_pointers (&deriv[i], value_block+value_count*i, arch);
@@ -284,7 +290,7 @@ void mc_app_initialize
 
     if (logg->data['t']!=0)
     { 
-      mc_traj *trj = logg->data['t'];
+      mc_traj *trj = (mc_traj *) logg->data['t'];
 
       if (trj->approx_file[0]!=0)
       { 
@@ -308,8 +314,8 @@ void mc_app_initialize
 
         /* Allocate space for data from file and read it. */
 
-        approx_case = calloc (approx_count, sizeof *approx_case);
-        approx_times = calloc (N_train, sizeof *approx_times);
+        approx_case = (int *) calloc (approx_count, sizeof *approx_case);
+        approx_times = (int *) calloc (N_train, sizeof *approx_times);
 
         for (i = 0; i<N_train; i++)
         { approx_times[i] = 0;

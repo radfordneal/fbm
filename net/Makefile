@@ -18,6 +18,8 @@ programs:	net-spec net-gen net-rej net-eval net-display net-pred net-mc \
 		net-gd net-plt net-tbl net-hist net-dvar \
 		net-grad-test net-stepsizes net-genp net-approx net-his
 
+gpu:		net-mc-gpu
+
 clean:
 	rm -f *.o *.exe \
 		  net-spec net-gen net-rej net-eval net-display net-pred net-mc\
@@ -271,3 +273,85 @@ net-hist:	net-plt.o	net-mc.o ars.o net-setup.o prior.o net-prior.o \
 		  -lm -o net-hist
 
 net-plt.o:	net-plt.c	misc.h log.h quantities.h mc.h
+
+
+# GPU versions.
+
+net-mc-gpu:	mc.o net-mc-gpu.o \
+		  ars.o misc.o log.o rand.o numin.o prior.o \
+		  data-trans.o mc-iter.o mc-traj.o mc-util.o \
+		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
+		  net-setup-gpu.o net-prior-gpu.o net-model-gpu.o \
+		  mc-quantities.o quantities.o model.o \
+		  net-plt-gpu.o net-quantities-gpu.o \
+                  net-data-gpu.o net-util-gpu.o net-config-gpu.o \
+		  net-back-gpu.o net-grad-gpu.o net-func-gpu.o
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets \
+		  mc.o net-mc-gpu.o ars.o misc.o log.o rand.o numin.o prior.o \
+		  data-trans.o mc-iter.o mc-traj.o mc-util.o \
+		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
+		  net-setup-gpu.o net-prior-gpu.o net-model-gpu.o \
+		  mc-quantities.o quantities.o model.o \
+		  net-plt-gpu.o net-quantities-gpu.o \
+		  net-data-gpu.o net-util-gpu.o net-config-gpu.o \
+		  net-back-gpu.o net-grad-gpu.o net-func-gpu.o \
+		  -lm -o net-mc-gpu
+
+net-func-gpu.o:	net-func.c misc.h prior.h model.h net.h data.h \
+			   intrinsics-use.h sleef-use-simd.h cuda-use.h
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
+		  net-func.c -o net-func-gpu.o
+
+net-back-gpu.o:	net-back.c misc.h prior.h model.h net.h data.h \
+			   intrinsics-use.h cuda-use.h
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
+		  net-back.c -o net-back-gpu.o
+
+net-grad-gpu.o:	net-grad.c misc.h prior.h model.h net.h data.h \
+			   intrinsics-use.h cuda-use.h
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
+		  net-grad.c -o net-grad-gpu.o
+
+net-util-gpu.o:	net-util.c misc.h prior.h model.h net.h data.h
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
+		  net-util.c -o net-util-gpu.o
+
+net-config-gpu.o:	net-config.c misc.h prior.h model.h net.h data.h
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
+		  net-config.c -o net-config-gpu.o
+
+net-setup-gpu.o:	net-setup.c misc.h prior.h model.h net.h data.h  
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
+		  net-setup.c -o net-setup-gpu.o
+
+net-prior-gpu.o:	net-prior.c misc.h prior.h model.h net.h data.h rand.h
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
+		  net-prior.c -o net-prior-gpu.o
+
+net-model-gpu.o:	net-model.c misc.h prior.h model.h net.h data.h rand.h \
+				    intrinsics-use.h
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
+		  net-model.c -o net-model-gpu.o
+
+net-data-gpu.o:	net-data.c misc.h prior.h model.h net.h data.h net-data.h \
+			   numin.h
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
+		  net-data.c -o net-data-gpu.o
+
+net-print-gpu.o:	net-print.c misc.h prior.h model.h net.h data.h 
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
+		  net-print.c -o net-print-gpu.o
+
+net-quantities-gpu.o: net-quantities.c misc.h prior.h model.h net.h data.h \
+				net-data.h quantities.h log.h
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
+		  net-quantities.c -o net-quantities-gpu.o
+
+net-plt-gpu.o:	net-plt.c misc.h log.h quantities.h mc.h
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
+		  net-plt.c -o net-plt-gpu.o
+
+net-mc-gpu.o:	net-mc.c misc.h rand.h log.h mc.h data.h prior.h \
+			 model.h net.h net-data.h
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
+		  net-mc.c -o net-mc-gpu.o

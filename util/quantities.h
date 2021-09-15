@@ -38,7 +38,7 @@
 
 #define Max_quantities 50 /* Max. number of quantities that can be specified */
 
-typedef struct
+typedef struct quantdesc
 {
   short letter;		/* Letter associated with quantity, zero for empty */
   short available;	/* Whether somebody knows how to get value of quantity*/

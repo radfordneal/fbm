@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "cuda-use.h"
+
 #include "misc.h"
 #include "log.h"
 #include "data.h"
@@ -405,20 +407,22 @@ void net_config_sort (net_config *cf)
 
   /* We will keep remaining connections, not otherwise handled, in 'rem'. */
 
-  net_connection *rem = chk_alloc (n+1, sizeof *rem);  /* one -1 at end */
+  net_connection *rem = 
+    (net_connection *) chk_alloc (n+1, sizeof *rem);  /* one -1 at end */
   memcpy (rem, cf->conn, (n+1) * sizeof *rem);
   int r = n;
 
   /* We will put all connections, as sorted and grouped, in successive parts 
      of 'all', setting pointers to parts of it in cf. */
 
-  net_connection *all = chk_alloc (n+9+3, sizeof *all);  
+  net_connection *all = (net_connection *) chk_alloc (n+9+3, sizeof *all);  
               /* Allow up to nine -1's, then +3 to ensure AVX loads are OK */
   int a = 0;
 
   /* Temporary storage. */
 
-  net_connection *tmp = chk_alloc (n+1, sizeof *rem);  /* one -1 at end */
+  net_connection *tmp = 
+    (net_connection *) chk_alloc (n+1, sizeof *rem);  /* one -1 at end */
 
   non_adjacency (cf->conn,  "original");
 

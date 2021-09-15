@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "cuda-use.h"
+
 #include "misc.h"
 #include "log.h"
 #include "quantities.h"
@@ -80,11 +82,11 @@ void net_initialize
 { 
   /* Check that required specification records are present. */
 
-  arch   = logg->data['A'];
-  flgs   = logg->data['F'];
-  model  = logg->data['M'];
-  priors = logg->data['P'];
-  surv   = logg->data['V'];
+  arch   = (net_arch *) logg->data['A'];
+  flgs   = (net_flags *) logg->data['F'];
+  model  = (model_specification *) logg->data['M'];
+  priors = (net_priors *) logg->data['P'];
+  surv   = (model_survival *) logg->data['V'];
 
   net_check_specs_present(arch,priors,0,model,surv);
 
@@ -93,8 +95,8 @@ void net_initialize
   sigmas.total_sigmas = net_setup_sigma_count(arch,flgs,model);
   params.total_params = net_setup_param_count(arch,flgs);
 
-  sigmas.sigma_block = logg->data['S'];
-  params.param_block = logg->data['W'];
+  sigmas.sigma_block = (net_sigma *) logg->data['S'];
+  params.param_block = (net_param *) logg->data['W'];
 
   if (sigmas.sigma_block==0 || params.param_block==0 
    || logg->index['S']!=logg->index['W'])
@@ -112,16 +114,18 @@ void net_initialize
   net_setup_param_pointers (&params, arch, flgs);
 
   grad.total_params = params.total_params;
-  grad.param_block = chk_alloc (grad.total_params, sizeof (net_param));
+  grad.param_block = 
+    (net_param *) chk_alloc (grad.total_params, sizeof (net_param));
   net_setup_param_pointers (&grad, arch, flgs);
 
   net_setup_value_pointers (&deriv, 
-    chk_alloc (net_setup_value_count(arch), sizeof (net_value)), arch);
+    (net_value *) chk_alloc (net_setup_value_count(arch), sizeof (net_value)),
+    arch);
 
   /* Read training and test data, if present. */
 
   have_train_data = have_test_data = have_test_targets = 0;
-  data_spec = logg->data['D'];
+  data_spec = (data_specifications *) logg->data['D'];
 
   if (data_spec!=0)
   {
@@ -140,7 +144,7 @@ void net_initialize
 
     M_targets = arch->N_outputs;
 
-    target_guess = chk_alloc (M_targets, sizeof *target_guess);
+    target_guess = (double *) chk_alloc (M_targets, sizeof *target_guess);
   }
 }
 
@@ -148,7 +152,7 @@ void net_initialize
 /* INDICATE WHAT QUANTITIES ARE AVAILABLE FROM THIS MODULE. */
 
 void net_available 
-( quantities_described qd,
+( struct quantdesc qd[Max_quantities],
   log_gobbled *logg
 )
 { 
@@ -316,7 +320,7 @@ void net_available
 /* EVALUATE QUANTITIES KNOWN TO THIS MODULE. */
 
 void net_evaluate 
-( quantities_described qd, 
+( struct quantdesc qd[Max_quantities], 
   quantities_held *qh,
   log_gobbled *logg
 )

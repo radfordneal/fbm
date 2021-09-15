@@ -1,6 +1,6 @@
 /* NET-DATA.C - Procedures for reading data for neural networks. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -17,6 +17,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+
+#include "cuda-use.h"
 
 #include "misc.h"
 #include "log.h"
@@ -158,8 +160,9 @@ static net_values *read_inputs
 
   value_count = net_setup_value_count(arch);
 
-  value_block = chk_alloc (value_count*N_cases, sizeof *value_block);
-  values      = chk_alloc (N_cases, sizeof *values);
+  value_block = 
+    (net_value *) chk_alloc (value_count*N_cases, sizeof *value_block);
+  values = (net_values *) chk_alloc (N_cases, sizeof *values);
 
   for (i = 0; i<N_cases; i++) 
   { net_setup_value_pointers (&values[i], value_block+value_count*i, arch);
@@ -205,7 +208,7 @@ static double *read_targets
     exit(1);
   }
 
-  tg = chk_alloc (data_spec->N_targets*N_cases, sizeof (double));
+  tg = (double *) chk_alloc (data_spec->N_targets*N_cases, sizeof (double));
 
   for (i = 0; i<N_cases; i++)
   { 

@@ -1,8 +1,12 @@
 #!/bin/bash
 
 # Commands to apply Bayesian neural network to an image classification problem.
-# This version uses one hidden layer fully connected to the input, followed
-# by a second hidden layer, with both hidden layers connecting to the output.
+#
+# This version uses one hidden layer with convolutional connections, and
+# a second hidden layer connected to the first, with identical weights for
+# all units for one filter.  The first hidden layer connects to the outputs
+# with identical weights for all units from one filter.  The second hidden 
+# layer is fully connected to the outputs.
 #
 # Four runs are done, each on three quarters of the training set, with
 # the left-out quarters used to assess things like convergence.  Final
@@ -16,45 +20,32 @@ for run in 1 2 3 4; do (
   end=`calc 384\*$run`
   start=`calc $end-383`
 
-  net-spec $log 36 80 12 4 / ih=0.05:3::1.5 bh0=0.3:2 ho0=0.1:3::4 \
-                             hh=0.4:3::4 bh1=0.2:2 ho1=0.05:4 bo=0.1:2
+  net-spec $log 36 \
+                80 softplus cfg-b:bconfig cfg-i:iconfig \
+                16 cfg-h:h2config \
+                8 \
+                4 cfg-h0:hconfig \
+            / bh0=0.2:2 ih=0.2:2 bh1=0.1:2 hh1=0.1:2 bh2=0.1:2 hh2=0.1:2 \
+              bo=0.1:2 h2o=0.1:2 h1o=0.1:2 h0o=0.1:2
   model-spec $log class
   
   data-spec $log 36 1 4 / idata-train@-$start:$end . idata-train@$start:$end .
 
   rand-seed $log $run
   
-  net-gen $log fix 0.08
+  net-gen $log fix 0.1
 
-  mc-spec $log repeat 750 heatbath hybrid 100:10 0.03
+  mc-spec $log repeat 120 heatbath hybrid 200:20 0.06
   net-mc $log 1
 
-  mc-spec $log repeat 300 sample-hyper 1 sample-hyper 2 \
-                          sample-hyper 6 sample-hyper 7 \
-                          heatbath hybrid 250:25 0.04
+  mc-spec $log repeat 60 sample-sigmas heatbath hybrid 400:40 0.1
   net-mc $log 2
+  
+  mc-spec $log repeat 24 sample-sigmas heatbath 0.9 hybrid 1000:100 0.18 negate
+  net-mc $log 1500 
 
-  mc-spec $log repeat 150 sample-hyper 1 sample-hyper 2 \
-                          sample-hyper 6 sample-hyper 7 \
-                          heatbath hybrid 500:50 0.06
-  net-mc $log 3
-
-  mc-spec $log repeat 60 sample-hyper 1 sample-hyper 2 \
-                         sample-hyper 6 sample-hyper 7 \
-                         heatbath hybrid 1250:125 0.13
-  net-mc $log 4
-  
-  mc-spec $log repeat 60 sample-hyper 1 sample-hyper 2 \
-                         sample-hyper 6 sample-hyper 7 \
-                         heatbath 0.87 hybrid 1250:125 0.19 negate
-  net-mc $log 200
-  
-  mc-spec $log repeat 60 sample-hyper \
-                         heatbath 0.93 hybrid 1250:125 0.13 negate
-  net-mc $log 3000
-  
 ) & done
 
 wait
   
-./iend.net $logb 1001:
+./iend.net $logb 501:

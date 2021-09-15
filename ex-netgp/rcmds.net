@@ -11,6 +11,22 @@ mc-spec rlog.net repeat 10 sample-noise heatbath hybrid 100:10 0.2
 net-mc rlog.net 1
 
 mc-spec rlog.net sample-sigmas heatbath hybrid 1000:10 0.4
+net-mc rlog.net 1000
+
+echo " "; echo "Predictions after running for 1000 iterations:"
+net-pred npa rlog.net 101:
+
+net-mc rlog.net 2000
+
+echo " "; echo "Predictions after running for 2000 iterations:"
+net-pred npa rlog.net 101:
+
+net-mc rlog.net 10000
+
+echo " "; echo "Predictions after running for 10000 iterations:"
+net-pred npa rlog.net 101:
+
 net-mc rlog.net 25000
 
-net-pred npa rlog.net 201:%10
+echo " "; echo "Predictions after running for 25000 iterations:"
+net-pred npa rlog.net 101:

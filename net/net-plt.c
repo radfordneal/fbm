@@ -24,6 +24,7 @@
 #include "log.h"
 #include "quantities.h"
 #include "mc.h"
+#include "mc-quantities.h"
 
 
 extern void net_arguments  (char ***);
@@ -32,11 +33,6 @@ extern void net_available  (struct quantdesc[Max_quantities], log_gobbled *);
 extern void net_evaluate   (struct quantdesc[Max_quantities], quantities_held *,
                             log_gobbled *);
 extern void net_mc_cleanup (void);
-
-extern void mc_initialize  (log_gobbled *);
-extern void mc_available   (struct quantdesc[Max_quantities], log_gobbled *);
-extern void mc_evaluate    (struct quantdesc[Max_quantities], quantities_held *,
-                            log_gobbled *);
 
 void (*quant_app_arguments[]) (char ***) =
 { net_arguments,

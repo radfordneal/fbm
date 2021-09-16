@@ -41,8 +41,12 @@
 
   static void show_gpu (void)
   { struct cudaDeviceProp prop;
-    check_cuda_error (cudaGetDeviceProperties(&prop,0), "Get properties");
-    printf("%s, Compute Capability %d.%d\n", prop.name, prop.major, prop.minor);
+    char *e = getenv("SHOW_GPU");
+    if (e && strcmp(e,"false")!=0 && strcmp(e,"FALSE")!=0 && strcmp(e,"0")!=0)
+    { check_cuda_error (cudaGetDeviceProperties(&prop,0), "Get properties");
+      printf("%s, Compute Capability %d.%d\n",  
+              prop.name, prop.major, prop.minor);
+    }
   }
 
 # define BLKSIZE 64  /* Block size to use when launching CUDA kernels */

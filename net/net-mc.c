@@ -1485,7 +1485,7 @@ void mc_app_energy
   { log_prob = 0;
     if (gr)
     { for (i = 0; i<ds->dim; i++) 
-      { gr[i] = 0;
+      { grad.param_block[i] = 0;
       }
     }
     inv_temp = -inv_temp;
@@ -1536,9 +1536,6 @@ void mc_app_energy
 #       if __CUDACC__
         { if (energy)
           { energie = *energy;
-          }
-          if (gr)
-          { memcpy (grad.param_block, gr, grad.total_params*sizeof(net_param));
           }
           check_cuda_error (cudaGetLastError(), 
                             "Before launching many_cases");

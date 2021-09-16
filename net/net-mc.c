@@ -65,7 +65,11 @@ STAMAN double energie;		/* Accumulator for energy in managed storage */
 STAMAN net_arch *arch;		/* Network architecture */
 STAMAN net_flags *flgs;		/* Network flags, null if none */
 STAMAN model_specification *model; /* Data model */
+STAMAN net_priors *priors;	/* Network priors */
 STAMAN model_survival *surv;	/* Hazard type for survival model */
+
+STAMAN net_sigmas sigmas;	/* Hyperparameters for network, auxiliary state
+				   for Monte Carlo */
 
 STAMAN net_params params;	/* Pointers to parameters, which are position
 				   coordinates for dynamical Monte Carlo */
@@ -77,10 +81,6 @@ STAMAN int approx_count;	/* Number of entries in approx-file, 0 if none*/
 
 STAMAN int *approx_case; 	/* Data on how approximations are to be done  */
 STAMAN int *approx_times;	/*   as read from approx_file                 */
-
-static net_priors *priors;	/* Network priors */
-static net_sigmas sigmas;	/* Hyperparameters for network, auxiliary state
-				   for Monte Carlo */
 
 static double *quadratic_approx;/* Quadratic approximation to log likelihood  */
 
@@ -163,9 +163,10 @@ void mc_app_initialize
                make_managed (logg->data['F'],logg->actual_size['F']);
     model  = (model_specification *) 
                make_managed (logg->data['M'],logg->actual_size['M']);
+    priors = (net_priors *) 
+               make_managed (logg->data['P'],logg->actual_size['P']);
     surv   = (model_survival *) 
                make_managed (logg->data['V'],logg->actual_size['V']);
-    priors = (net_priors *) logg->data['P'];
 
     net_check_specs_present(arch,priors,0,model,surv);
 
@@ -183,7 +184,8 @@ void mc_app_initialize
     sigmas.total_sigmas = net_setup_sigma_count(arch,flgs,model);
     params.total_params = net_setup_param_count(arch,flgs);
   
-    sigmas.sigma_block = (net_sigma *) logg->data['S'];
+    sigmas.sigma_block = (net_sigma *) 
+                          make_managed (logg->data['S'],logg->actual_size['S']);
     params.param_block = (net_param *) 
                           make_managed (logg->data['W'],logg->actual_size['W']);
   

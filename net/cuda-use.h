@@ -30,6 +30,8 @@
     return p;
   }
 
+# define managed_free cudaFree
+
   static void *make_managed (void *p, unsigned sz)
   { if (p==0) return p;
     void *q = managed_alloc (1, sz);
@@ -37,7 +39,11 @@
     return q;
   }
 
-# define managed_free cudaFree
+  static void show_gpu (void)
+  { struct cudaDeviceProp prop;
+    check_cuda_error (cudaGetDeviceProperties(&prop,0), "Get properties");
+    printf("%s, Compute Capability %d.%d\n", prop.name, prop.major, prop.minor);
+  }
 
 # define BLKSIZE 64  /* Block size to use when launching CUDA kernels */
 
@@ -46,12 +52,15 @@
 # define __host__
 # define __device__
 # define __managed__
+
 # define __restrict__ restrict
 
 # define managed_alloc chk_alloc
 # define managed_free free
 
 # define make_managed(p,sz) (p)
+
+# define show_gpu() do {} while(0)
 
 #endif
 

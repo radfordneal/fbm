@@ -155,6 +155,8 @@ void mc_app_initialize
 
   if (!initialize_done)
   {
+    show_gpu();
+
     /* Check that required specification records are present. */
 
     arch   = (net_arch *) 

@@ -57,6 +57,8 @@
 
 
 #define HOSTDEV __host__ __device__  /* For convenience */
+#define STAMAN static __managed__
+#define EXTMAN extern __managed__
 
 
 #if __CUDA_ARCH__  /* COMPILING FOR GPU */

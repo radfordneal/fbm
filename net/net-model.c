@@ -86,6 +86,10 @@ HOSTDEV void net_model_prob
 {
   extern double lgamma(double);
 
+//printf("In model_prob\n");
+//printf("N_outputs=%d\n",a->N_outputs);
+//printf("type=%d\n",m->type);
+
   static double alpha_saved=0.0;/* Constant is already computed for this alpha*/
   static double cnst;		/* Saved value of this constant */
 
@@ -97,6 +101,7 @@ HOSTDEV void net_model_prob
   {
     case 'B':  /* Binary data values */
     { 
+//printf("In model_prob B\n");
       if (pr) *pr = 0;
 
       for (i = 0; i<N_outputs; i++)
@@ -123,6 +128,7 @@ HOSTDEV void net_model_prob
         { dp->o[i] = sign_oi/ep1 + 0.5*(1.0-sign_oi) - t[i];
         }
       }
+//printf("Done model_prob B\n");
 
       break;
     }

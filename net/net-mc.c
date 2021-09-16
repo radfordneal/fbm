@@ -58,9 +58,9 @@ static inline double sq (double x) { return x*x; }
 
 static int initialize_done = 0;	/* Has this all been set up? */
 
-#define STAMAN static __managed__
-
 STAMAN double energie;		/* Accumulator for energy in managed storage */
+STAMAN double log_prob;		/* Place to store log prob from model */
+STAMAN double fudged_target;	/* Managed storage for fudged survival target */
 
 STAMAN net_arch *arch;		/* Network architecture */
 STAMAN net_flags *flgs;		/* Network flags, null if none */
@@ -212,7 +212,7 @@ void mc_app_initialize
     else
     {
       sigmas.sigma_block = 
-        (net_sigma *) chk_alloc (sigmas.total_sigmas, sizeof (net_sigma));
+        (net_sigma *) managed_alloc (sigmas.total_sigmas, sizeof (net_sigma));
       params.param_block = 
         (net_param *) managed_alloc (params.total_params, sizeof (net_param));
   
@@ -244,7 +244,8 @@ void mc_app_initialize
   
     /* Read training data, if any, and allocate space for derivatives. */
   
-    data_spec = (data_specifications *) logg->data['D'];
+    data_spec = (data_specifications *) 
+                  make_managed(logg->data['D'],logg->actual_size['D']);
 
     if (data_spec!=0 && model==0)
     { fprintf(stderr,"No model specified for data\n");
@@ -1325,10 +1326,9 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
   double gr_weight	/* Weight for this case for gradient */
 )
 {
-  double log_prob;
   int k;
 
-printf("In one_case\n");
+//printf("In one_case\n");
 
   if (model->type=='V'          /* Handle piecewise-constant hazard    */
    && surv->hazard_type=='P')   /*   model specially                   */
@@ -1356,9 +1356,9 @@ printf("In one_case\n");
     {
       net_func (&train_values[i], 0, arch, flgs, &params);
       
-      ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
+      fudged_target = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
   
-      net_model_prob(&train_values[i], &ft,
+      net_model_prob(&train_values[i], &fudged_target,
                      &log_prob, gr ? &deriv[i] : 0, arch, model, surv, 
                      &sigmas, Cheap_energy);
   
@@ -1395,32 +1395,32 @@ printf("In one_case\n");
   
   else /* Everything except piecewise-constant hazard model */
   { 
-printf("Calling net_func\n");
+//printf("Calling net_func\n");
     net_func (&train_values[i], 0, arch, flgs, &params);
   
-printf("Calling model_prob\n");
+//printf("Calling model_prob\n");
     net_model_prob(&train_values[i], train_targets+data_spec->N_targets*i,
                    &log_prob, gr ? &deriv[i] : 0, arch, model, surv,
                    &sigmas, Cheap_energy);
-printf("Returned from model_prob\n");
+//printf("Returned from model_prob\n");
     
     if (energy) *energy -= en_weight * log_prob;
-printf("Past energy chng\n");
-printf("N_outputs: %d, gr_weight %f\n",arch->N_outputs,gr_weight); 
+//printf("Past energy chng\n");
+//printf("N_outputs: %d, gr_weight %f\n",arch->N_outputs,gr_weight); 
     if (gr)
     { if (gr_weight!=1)
       { for (k = 0; k<arch->N_outputs; k++)
         { deriv[i].o[k] *= gr_weight;
         }
       }
-printf("Calling net_back\n");
+//printf("Calling net_back\n");
       net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
                 arch, flgs, &params);
-printf("Calling net_grad\n");
+//printf("Calling net_grad\n");
       net_grad (&grad, &params, &train_values[i], &deriv[i], arch, flgs);
     }
   }
-printf("Done one_case\n");
+//printf("Done one_case\n");
 }
 
 
@@ -1435,9 +1435,9 @@ __global__ void many_cases
   double gr_weight	/* Weight for this case for gradient */
 )
 { int i = start + blockIdx.x * blockDim.x + threadIdx.x;
-  if (i==0) printf("Starting many_cases: %d\n",i);
+  //if (i==0) printf("Starting many_cases: %d\n",i);
   if (i < N_train) 
-  { if (i==0) one_case (energy, gr, i, en_weight, gr_weight);
+  { one_case (energy, gr, i, en_weight, gr_weight);
   }
 }
 
@@ -1457,9 +1457,22 @@ void mc_app_energy
 
   inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
 
-  if (gr && gr!=grad.param_block)
-  { grad.param_block = gr;
-    net_setup_param_pointers (&grad, arch, flgs);
+  if (gr)
+  {
+#   if __CUDACC__
+    { if (grad.param_block==0)
+      { grad.param_block = 
+         (net_param *) managed_alloc (grad.total_params, sizeof (net_param));
+        net_setup_param_pointers (&grad, arch, flgs);
+      }
+    }
+#   else
+    { if (grad.param_block!=gr)
+      { grad.param_block = gr;
+        net_setup_param_pointers (&grad, arch, flgs);
+      }
+    }
+#   endif
   }
 
   if (inv_temp>=0)
@@ -1519,16 +1532,26 @@ void mc_app_energy
       if (N_approx==1 || gr==0)
       {
 #       if __CUDACC__
-        { energie = *energy;
+        { if (energy)
+          { energie = *energy;
+          }
+          if (gr)
+          { memcpy (grad.param_block, gr, grad.total_params*sizeof(net_param));
+          }
           check_cuda_error (cudaGetLastError(), 
                             "Before launching many_cases");
           many_cases <<<(N_train+BLKSIZE-1)/BLKSIZE, BLKSIZE>>> 
-                     (&energie, gr, 0, inv_temp, inv_temp);
+                     (&energie, grad.param_block, 0, inv_temp, inv_temp);
           check_cuda_error (cudaDeviceSynchronize(), 
                             "Synchronizing after launching many_cases");
           check_cuda_error (cudaGetLastError(), 
                             "After synchronizing with many_cases");
-          *energy = energie;
+          if (gr)
+          { memcpy (gr, grad.param_block, grad.total_params*sizeof(net_param));
+          }
+          if (energy)
+          { *energy = energie;
+          }
         }
 #       else
         { for (i = 0; i<N_train; i++)

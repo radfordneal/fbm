@@ -47,9 +47,9 @@ double *test_targets;		/* True targets for test cases */
 
 /* PROCEDURES. */
 
-static double     *read_targets (numin_source *, int,   net_arch *);
+static double     *read_targets (numin_source *, int,   net_arch *, int);
 static net_values *read_inputs  (numin_source *, int *, net_arch *, 
-                                 model_specification *, model_survival *);
+                                 model_specification *, model_survival *, int);
 
 
 /* FREE SPACE OCCUPIED BY DATA.  Also useful as a way to reset when the
@@ -64,7 +64,7 @@ void net_data_free (void)
   }
 
   if (train_targets!=0)
-  { free(train_targets);
+  { managed_free(train_targets);
     train_targets = 0;
   }
 
@@ -120,21 +120,21 @@ void net_data_read
   { 
     numin_spec (&ns, "data@1,0",1);
     numin_spec (&ns, data_spec->train_inputs, data_spec->N_inputs);
-    train_values = read_inputs (&ns, &N_train, arch, model, surv);
+    train_values = read_inputs (&ns, &N_train, arch, model, surv, 1);
 
     numin_spec (&ns, data_spec->train_targets, data_spec->N_targets);
-    train_targets = read_targets (&ns, N_train, arch);
+    train_targets = read_targets (&ns, N_train, arch, 1);
   }
 
   if (want_test && data_spec->test_inputs[0]!=0)
   {
     numin_spec (&ns, "data@1,0",1);
     numin_spec (&ns, data_spec->test_inputs, data_spec->N_inputs);
-    test_values = read_inputs (&ns, &N_test, arch, model, surv);
+    test_values = read_inputs (&ns, &N_test, arch, model, surv, 0);
 
     if (data_spec->test_targets[0]!=0)
     { numin_spec (&ns, data_spec->test_targets, data_spec->N_targets);
-      test_targets = read_targets (&ns, N_test, arch);
+      test_targets = read_targets (&ns, N_test, arch, 0);
     }
   }
 }
@@ -147,7 +147,8 @@ static net_values *read_inputs
   int *N_cases_ptr,
   net_arch *arch,
   model_specification *model, 
-  model_survival *surv
+  model_survival *surv,
+  int managed
 )
 {
   net_value *value_block;
@@ -160,9 +161,13 @@ static net_values *read_inputs
 
   value_count = net_setup_value_count(arch);
 
-  value_block = 
-    (net_value *) managed_alloc (value_count*N_cases, sizeof *value_block);
-  values = (net_values *) managed_alloc (N_cases, sizeof *values);
+  value_block = managed ? 
+    (net_value *) managed_alloc (value_count*N_cases, sizeof *value_block)
+     : (net_value *) chk_alloc (value_count*N_cases, sizeof *value_block);
+
+  values = managed ?
+    (net_values *) managed_alloc (N_cases, sizeof *values)
+     : (net_values *) chk_alloc (N_cases, sizeof *values);
 
   for (i = 0; i<N_cases; i++) 
   { net_setup_value_pointers (&values[i], value_block+value_count*i, arch);
@@ -196,7 +201,8 @@ static net_values *read_inputs
 static double *read_targets
 ( numin_source *ns,
   int N_cases,
-  net_arch *arch
+  net_arch *arch,
+  int managed
 )
 {
   double *tg;
@@ -208,7 +214,9 @@ static double *read_targets
     exit(1);
   }
 
-  tg = (double *) managed_alloc (data_spec->N_targets*N_cases, sizeof (double));
+  tg = managed ?
+    (double *) managed_alloc (data_spec->N_targets*N_cases, sizeof (double))
+      : (double *) chk_alloc (data_spec->N_targets*N_cases, sizeof (double));
 
   for (i = 0; i<N_cases; i++)
   { 

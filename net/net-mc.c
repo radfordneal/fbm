@@ -60,6 +60,8 @@ static int initialize_done = 0;	/* Has this all been set up? */
 
 #define STAMAN static __managed__
 
+STAMAN double energie;		/* Accumulator for energy in managed storage */
+
 STAMAN net_arch *arch;		/* Network architecture */
 STAMAN net_flags *flgs;		/* Network flags, null if none */
 STAMAN model_specification *model; /* Data model */
@@ -86,6 +88,7 @@ static net_params stepsizes;	/* Pointers to stepsizes */
 static net_values seconds;	/* Second derivatives */
 static double *train_sumsq;	/* Sums of squared training input values */
 static net_values typical;	/* Typical squared values for hidden units */
+
 
 
 /* PROCEDURES. */
@@ -153,12 +156,17 @@ void mc_app_initialize
   if (!initialize_done)
   {
     /* Check that required specification records are present. */
-  
-    arch   = (net_arch *) logg->data['A'];
-    flgs   = (net_flags *) logg->data['F'];
-    model  = (model_specification *) logg->data['M'];
-    priors = (net_priors *) logg->data['P'];
-    surv   = (model_survival *) logg->data['V'];
+
+    arch   = (net_arch *) 
+               make_managed (logg->data['A'],logg->actual_size['A']);
+    flgs   = (net_flags *)
+               make_managed (logg->data['F'],logg->actual_size['F']);
+    model  = (model_specification *) 
+               make_managed (logg->data['M'],logg->actual_size['M']);
+    priors = (net_priors *) 
+               make_managed (logg->data['P'],logg->actual_size['P']);
+    surv   = (model_survival *) 
+               make_managed (logg->data['V'],logg->actual_size['V']);
 
     net_check_specs_present(arch,priors,0,model,surv);
 
@@ -176,8 +184,10 @@ void mc_app_initialize
     sigmas.total_sigmas = net_setup_sigma_count(arch,flgs,model);
     params.total_params = net_setup_param_count(arch,flgs);
   
-    sigmas.sigma_block = (net_sigma *) logg->data['S'];
-    params.param_block = (net_param *) logg->data['W'];
+    sigmas.sigma_block = (net_sigma *) 
+                          make_managed (logg->data['S'],logg->actual_size['S']);
+    params.param_block = (net_param *) 
+                          make_managed (logg->data['W'],logg->actual_size['W']);
   
     grad.total_params = params.total_params;
   
@@ -1318,6 +1328,8 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
   double log_prob;
   int k;
 
+printf("In one_case\n");
+
   if (model->type=='V'          /* Handle piecewise-constant hazard    */
    && surv->hazard_type=='P')   /*   model specially                   */
   { 
@@ -1383,25 +1395,32 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
   
   else /* Everything except piecewise-constant hazard model */
   { 
+printf("Calling net_func\n");
     net_func (&train_values[i], 0, arch, flgs, &params);
   
+printf("Calling model_prob\n");
     net_model_prob(&train_values[i], train_targets+data_spec->N_targets*i,
                    &log_prob, gr ? &deriv[i] : 0, arch, model, surv,
                    &sigmas, Cheap_energy);
+printf("Returned from model_prob\n");
     
     if (energy) *energy -= en_weight * log_prob;
-  
+printf("Past energy chng\n");
+printf("N_outputs: %d, gr_weight %f\n",arch->N_outputs,gr_weight); 
     if (gr)
     { if (gr_weight!=1)
       { for (k = 0; k<arch->N_outputs; k++)
         { deriv[i].o[k] *= gr_weight;
         }
       }
+printf("Calling net_back\n");
       net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
                 arch, flgs, &params);
+printf("Calling net_grad\n");
       net_grad (&grad, &params, &train_values[i], &deriv[i], arch, flgs);
     }
   }
+printf("Done one_case\n");
 }
 
 
@@ -1416,8 +1435,9 @@ __global__ void many_cases
   double gr_weight	/* Weight for this case for gradient */
 )
 { int i = start + blockIdx.x * blockDim.x + threadIdx.x;
+  if (i==0) printf("Starting many_cases: %d\n",i);
   if (i < N_train) 
-  { one_case (energy, gr, i, en_weight, gr_weight);
+  { if (i==0) one_case (energy, gr, i, en_weight, gr_weight);
   }
 }
 
@@ -1499,14 +1519,16 @@ void mc_app_energy
       if (N_approx==1 || gr==0)
       {
 #       if __CUDACC__
-        { check_cuda_error (cudaGetLastError(), 
+        { energie = *energy;
+          check_cuda_error (cudaGetLastError(), 
                             "Before launching many_cases");
           many_cases <<<(N_train+BLKSIZE-1)/BLKSIZE, BLKSIZE>>> 
-                     (energy, gr, 0, inv_temp, inv_temp);
+                     (&energie, gr, 0, inv_temp, inv_temp);
           check_cuda_error (cudaDeviceSynchronize(), 
                             "Synchronizing after launching many_cases");
           check_cuda_error (cudaGetLastError(), 
                             "After synchronizing with many_cases");
+          *energy = energie;
         }
 #       else
         { for (i = 0; i<N_train; i++)

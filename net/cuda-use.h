@@ -30,6 +30,13 @@
     return p;
   }
 
+  static void *make_managed (void *p, unsigned sz)
+  { if (p==0) return p;
+    void *q = managed_alloc (1, sz);
+    memcpy (q, p, sz);
+    return q;
+  }
+
 # define managed_free cudaFree
 
 # define BLKSIZE 64  /* Block size to use when launching CUDA kernels */
@@ -43,6 +50,8 @@
 
 # define managed_alloc chk_alloc
 # define managed_free free
+
+# define make_managed(p,sz) (p)
 
 #endif
 

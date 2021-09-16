@@ -18,7 +18,10 @@ programs:	net-spec net-gen net-rej net-eval net-display net-pred net-mc \
 		net-gd net-plt net-tbl net-hist net-dvar \
 		net-grad-test net-stepsizes net-genp net-approx net-his
 
-gpu:		net-mc-gpu net-eval-gpu
+# GPU versions of some programs.  Note that the GPU version of net-eval 
+# is primarily for testing.  It is probably slower than the CPU version.
+
+gpu:		net-mc-gpu net-grad-test-gpu net-eval-gpu
 
 clean:
 	rm -f *.o *.exe \
@@ -320,6 +323,29 @@ net-mc-gpu.o:	net-mc.c misc.h rand.h log.h mc.h data.h prior.h \
 			 model.h net.h net-data.h
 		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
 		  net-mc.c -o net-mc-gpu.o
+
+net-grad-test-gpu:	mc-grad-test.o \
+				net-mc-gpu.o ars.o misc.o log.o rand.o \
+				numin.o data-trans.o mc-iter.o mc-traj.o \
+				mc-util.o mc-metropolis.o mc-hybrid.o \
+				mc-quantities.o quantities.o mc-heatbath.o \
+				mc-slice.o prior.o model.o \
+				net-model-gpu.o net-func-gpu.o net-back-gpu.o \
+				net-grad-gpu.o net-data-gpu.o net-util-gpu.o \
+				net-config-gpu.o net-quantities-gpu.o \
+				net-plt-gpu.o net-setup-gpu.o net-prior-gpu.o
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets \
+			mc-grad-test.o \
+				net-mc-gpu.o ars.o misc.o log.o rand.o \
+				numin.o data-trans.o mc-iter.o mc-traj.o \
+				mc-util.o mc-metropolis.o mc-hybrid.o \
+				mc-quantities.o quantities.o mc-heatbath.o \
+				mc-slice.o prior.o model.o \
+				net-model-gpu.o net-func-gpu.o net-back-gpu.o \
+				net-grad-gpu.o net-data-gpu.o net-util-gpu.o \
+				net-config-gpu.o net-quantities-gpu.o \
+				net-plt-gpu.o net-setup-gpu.o net-prior-gpu.o \
+		  -lm -o net-grad-test-gpu
 
 net-func-gpu.o:	net-func.c misc.h prior.h model.h net.h data.h \
 			   intrinsics-use.h sleef-use-simd.h cuda-use.h

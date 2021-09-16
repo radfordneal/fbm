@@ -36,15 +36,15 @@
    unit values. */
 
 
-static void add_grad1 (net_param *restrict, net_value const*, int);
-static void add_grad1_config (net_param *restrict, net_value const*,
-                              net_config const*);
-static void add_grad2 (net_param *restrict, net_value const*, 
-                       net_param const*, int, net_value const*, int,
-                       unsigned short const*, int);
-static void add_grad2_config (net_param *restrict, net_value const*, 
-                       net_param const*, net_value const*,
-                       net_config const*);
+HOSTDEV static void add_grad1 (net_param *restrict, net_value const*, int);
+HOSTDEV static void add_grad1_config (net_param *restrict, net_value const*,
+                                      net_config const*);
+HOSTDEV static void add_grad2 (net_param *restrict, net_value const*, 
+                               net_param const*, int, net_value const*, int,
+                               unsigned short const*, int);
+HOSTDEV static void add_grad2_config (net_param *restrict, net_value const*, 
+                                      net_param const*, net_value const*,
+                                      net_config const*);
 
 
 /* ADD TO GRADIENT OF ERROR WITH RESPECT TO NETWORK PARAMETERS.  Adds to 
@@ -57,7 +57,7 @@ static void add_grad2_config (net_param *restrict, net_value const*,
    error with respect to the input unit values if the network does not
    have input offset parameters. */
 
-void net_grad
+HOSTDEV void net_grad
 ( net_params *restrict g, /* Gradient with respect to parameters to add to */
   net_params const*w,	/* Network parameters */
   net_values const*v,	/* Values for units in network for a case */
@@ -150,7 +150,7 @@ void net_grad
 
 /* ADD TO GRADIENT FROM UNIT DERIVATIVE. */
 
-static void add_grad1
+HOSTDEV static void add_grad1
 ( net_param *restrict g,  /* Array of derivatives to add to */
   net_value const* v,     /* Derivatives with respect to unit values */
   int n			  /* Number of units */
@@ -167,7 +167,7 @@ static void add_grad1
    just goes through the original list of connections in the configuration,
    without trying to optimize. */
 
-static void add_grad1_config
+HOSTDEV static void add_grad1_config
 ( net_param *restrict g,  /* Array of derivatives to add to */
   net_value const* v,     /* Derivatives with respect to unit values */
   net_config const* cf    /* Configuration for biases */
@@ -478,7 +478,7 @@ do \
 
 #endif
 
-static void add_grad2
+HOSTDEV static void add_grad2
 ( net_param *restrict g,  /* Array of derivatives to add to */
   net_value const* v,     /* Source unit values */
   net_param const* off,   /* Offsets for source units, or zero if no offsets */
@@ -514,7 +514,7 @@ static void add_grad2
 /* ADD TO GRADIENT FROM PRODUCT OF UNIT VALUE AND UNIT DERIVATIVE.  For
    when the connections are specified by a configuration file. */
 
-static void add_grad2_config
+HOSTDEV static void add_grad2_config
 ( net_param *restrict g,  /* Array of derivatives to add to */
   net_value const* s,     /* Source unit values */
   net_param const* off,   /* Offsets for source units, or zero if no offsets */

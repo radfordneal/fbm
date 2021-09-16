@@ -34,19 +34,16 @@
 #define USE_QUICK_AND_DIRTY_TANH 1  /* Whether to use the faster tanh below */
 
 #if USE_QUICK_AND_DIRTY_TANH
-# define TANH quick_and_dirty_tanh
+# define TANH(x) quick_and_dirty_tanh(x)
 #else
-# define TANH tanh
+# define TANH(x) tanh(x)
 #endif
 
 
 /* COMPUTE TANH QUICKLY, BUT NOT VERY ACCURATELY.  Loses accuracy for
    x near zero, but that shouldn't matter much for neural network use. */
 
-static inline double quick_and_dirty_tanh (double x)
-{
-  return 1.0 - 2.0 / (1.0+exp(x+x));
-}
+#define quick_and_dirty_tanh(x) (1 - 2 / (1+exp(2*(x))))
 
 
 /* This module calculates the values of the output units in a network, given 
@@ -59,16 +56,17 @@ static inline double quick_and_dirty_tanh (double x)
 
 #define sqrt_2 1.4142135623730950488
 
-static void bias_values (net_value *restrict, int, net_param const*);
+HOSTDEV static void bias_values (net_value *restrict, int, net_param const*);
 
-static void bias_values_config (net_value *restrict, int, net_param const*,
-                                net_config const*);
+HOSTDEV static void bias_values_config (net_value *restrict, int, 
+                                        net_param const*, net_config const*);
 
-static void add_connections (net_value *restrict, int, net_value const*, int,
-                             net_param const*, net_param const*,
+HOSTDEV static void add_connections (net_value *restrict, int, net_value const*,
+                             int, net_param const*, net_param const*,
                              unsigned short const*, int);
 
-static void add_connections_config (net_value *restrict, net_value const*,
+HOSTDEV static void add_connections_config (net_value *restrict, 
+                                    net_value const*,
                                     net_param const*, net_param const*,
                                     net_config const*);
 
@@ -78,7 +76,7 @@ static void add_connections_config (net_value *restrict, net_value const*,
    correct unit values for that number of hidden layers are assumed to be
    already present in the net_values structure. */
 
-void net_func 
+HOSTDEV void net_func 
 ( net_values *restrict v, /* Place to get inputs and store outputs */
   int start,		/* Number of hidden layers with known values */
   net_arch const* a,	/* Network architecture */
@@ -384,7 +382,7 @@ void net_func
 
 /* SET UNIT VALUES TO BIASES. */
 
-static void bias_values
+HOSTDEV static void bias_values
 ( net_value *restrict v,	/* Array of unit values to set */
   int n,			/* Number of units */
   net_param const* b		/* Biases */
@@ -399,7 +397,7 @@ static void bias_values
    just goes through the original list of connections in the configuration,
    without trying to optimize. */
 
-static void bias_values_config
+HOSTDEV static void bias_values_config
 ( net_value *restrict v,	/* Array of unit values to set */
   int n,			/* Number of units */
   net_param const* b,		/* Biases */
@@ -683,7 +681,7 @@ do \
 
 #endif
 
-static void add_connections
+HOSTDEV static void add_connections
 ( net_value *restrict s,  /* Summed input for destination units to add to */
   int nd,		  /* Number of destination units */
   net_value const* v,     /* Values for source units */
@@ -717,7 +715,7 @@ static void add_connections
    Adds the weighted input due to connections from one source layer to the 
    current unit values for the destination layer. */
 
-static void add_connections_config
+HOSTDEV static void add_connections_config
 ( net_value *restrict s,  /* Summed input for destination units to add to */
   net_value const* v,     /* Values for source units */
   net_param const* w,     /* Connection weights */

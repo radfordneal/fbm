@@ -58,32 +58,34 @@ static inline double sq (double x) { return x*x; }
 
 static int initialize_done = 0;	/* Has this all been set up? */
 
-static net_arch *arch;		/* Network architecture */
-static net_flags *flgs;		/* Network flags, null if none */
-static model_specification *model; /* Data model */
-static net_priors *priors;	/* Network priors */
-static model_survival *surv;	/* Hazard type for survival model */
+#define STAMAN static __managed__
 
-static net_sigmas sigmas;	/* Hyperparameters for network, auxiliary state
+STAMAN net_arch *arch;		/* Network architecture */
+STAMAN net_flags *flgs;		/* Network flags, null if none */
+STAMAN model_specification *model; /* Data model */
+STAMAN net_priors *priors;	/* Network priors */
+STAMAN model_survival *surv;	/* Hazard type for survival model */
+
+STAMAN net_sigmas sigmas;	/* Hyperparameters for network, auxiliary state
 				   for Monte Carlo */
 
-static net_params params;	/* Pointers to parameters, which are position
+STAMAN net_params params;	/* Pointers to parameters, which are position
 				   coordinates for dynamical Monte Carlo */
+
+STAMAN net_values *deriv;	/* Derivatives for training cases */
+STAMAN net_params grad;		/* Pointers to gradient for network parameters*/
+
+STAMAN int approx_count;	/* Number of entries in approx-file, 0 if none*/
+
+STAMAN int *approx_case; 	/* Data on how approximations are to be done  */
+STAMAN int *approx_times;	/*   as read from approx_file                 */
+
+static double *quadratic_approx;/* Quadratic approximation to log likelihood  */
 
 static net_params stepsizes;	/* Pointers to stepsizes */
 static net_values seconds;	/* Second derivatives */
 static double *train_sumsq;	/* Sums of squared training input values */
 static net_values typical;	/* Typical squared values for hidden units */
-
-static net_values *deriv;	/* Derivatives for training cases */
-static net_params grad;		/* Pointers to gradient for network parameters*/
-
-static double *quadratic_approx;/* Quadratic approximation to log likelihood  */
-
-static int approx_count;	/* Number of entries in approx-file, 0 if none*/
-
-static int *approx_case; 	/* Data on how approximations are to be done  */
-static int *approx_times;	/*   as read from approx_file                 */
 
 
 /* PROCEDURES. */
@@ -202,7 +204,7 @@ void mc_app_initialize
       sigmas.sigma_block = 
         (net_sigma *) chk_alloc (sigmas.total_sigmas, sizeof (net_sigma));
       params.param_block = 
-        (net_param *) chk_alloc (params.total_params, sizeof (net_param));
+        (net_param *) managed_alloc (params.total_params, sizeof (net_param));
   
       net_setup_sigma_pointers (&sigmas, arch, flgs, model);
       net_setup_param_pointers (&params, arch, flgs);
@@ -252,10 +254,10 @@ void mc_app_initialize
     { 
       net_data_read (1, 0, arch, model, surv);
     
-      deriv = (net_values *) chk_alloc (N_train, sizeof *deriv);
+      deriv = (net_values *) managed_alloc (N_train, sizeof *deriv);
     
       value_block = 
-        (net_value *) chk_alloc (value_count*N_train, sizeof *value_block);
+        (net_value *) managed_alloc (value_count*N_train, sizeof *value_block);
     
       for (i = 0; i<N_train; i++) 
       { net_setup_value_pointers (&deriv[i], value_block+value_count*i, arch);
@@ -284,7 +286,7 @@ void mc_app_initialize
     }
 
     /* Look for trajectory specification, and if there is one, read the
-       approximation file, in there is one. */
+       approximation file, if there is one. */
 
     approx_count = 0;
 
@@ -1304,7 +1306,7 @@ static void gibbs_adjustments
 
 /* EVALUATE POTENTIAL ENERGY AND ITS GRADIENT. */
 
-static void one_case  /* Energy and gradient from one training case */
+HOSTDEV static void one_case  /* Energy and gradient from one training case */
 ( 
   double *energy,	/* Place to increment energy, null if not required */
   mc_value *gr,		/* Place to increment gradient, null if not required */
@@ -1402,6 +1404,26 @@ static void one_case  /* Energy and gradient from one training case */
   }
 }
 
+
+#if __CUDACC__
+
+__global__ void many_cases 
+(
+  double *energy,	/* Place to increment energy, null if not required */
+  mc_value *gr,		/* Place to increment gradient, null if not required */
+  int start,		/* Start of cases to look at */
+  double en_weight,	/* Weight for this case for energy */
+  double gr_weight	/* Weight for this case for gradient */
+)
+{ int i = start + blockIdx.x * blockDim.x + threadIdx.x;
+  if (i < N_train) 
+  { one_case (energy, gr, i, en_weight, gr_weight);
+  }
+}
+
+#endif
+
+
 void mc_app_energy
 ( mc_dynamic_state *ds,	/* Current dynamical state */
   int N_approx,		/* Number of gradient approximations in use */
@@ -1446,6 +1468,8 @@ void mc_app_energy
 
   if (inv_temp!=0 && (data_spec!=0 || quadratic_approx))
   {
+    net_model_check (model);    
+
     if (quadratic_approx)
     {
       double *b, *V;
@@ -1474,9 +1498,22 @@ void mc_app_energy
     {
       if (N_approx==1 || gr==0)
       {
-        for (i = 0; i<N_train; i++)
-        { one_case (energy, gr, i, inv_temp, inv_temp);
+#       if __CUDACC__
+        { check_cuda_error (cudaGetLastError(), 
+                            "Before launching many_cases");
+          many_cases <<<(N_train+BLKSIZE-1)/BLKSIZE, BLKSIZE>>> 
+                     (energy, gr, 0, inv_temp, inv_temp);
+          check_cuda_error (cudaDeviceSynchronize(), 
+                            "Synchronizing after launching many_cases");
+          check_cuda_error (cudaGetLastError(), 
+                            "After synchronizing with many_cases");
         }
+#       else
+        { for (i = 0; i<N_train; i++)
+          { one_case (energy, gr, i, inv_temp, inv_temp);
+          }
+        }
+#       endif
       }
       else /* We're using multiple approximations */
       {

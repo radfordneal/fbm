@@ -32,12 +32,12 @@
 
 /* VARIABLES HOLDING DATA.  As declared in net-data.h. */
 
-data_specifications *data_spec;	/* Specifications of data sets */
+__managed__ data_specifications *data_spec; /* Specifications of data sets */
 
-int N_train;			/* Number of training cases */
+__managed__ int N_train;	/* Number of training cases */
 
-net_values *train_values;	/* Values associated with training cases */
-double *train_targets;		/* True targets for training cases */
+__managed__ net_values *train_values;  /* Values for training cases */
+__managed__ double *train_targets;     /* True targets for training cases */
 
 int N_test;			/* Number of test cases */
 
@@ -161,8 +161,8 @@ static net_values *read_inputs
   value_count = net_setup_value_count(arch);
 
   value_block = 
-    (net_value *) chk_alloc (value_count*N_cases, sizeof *value_block);
-  values = (net_values *) chk_alloc (N_cases, sizeof *values);
+    (net_value *) managed_alloc (value_count*N_cases, sizeof *value_block);
+  values = (net_values *) managed_alloc (N_cases, sizeof *values);
 
   for (i = 0; i<N_cases; i++) 
   { net_setup_value_pointers (&values[i], value_block+value_count*i, arch);
@@ -208,7 +208,7 @@ static double *read_targets
     exit(1);
   }
 
-  tg = (double *) chk_alloc (data_spec->N_targets*N_cases, sizeof (double));
+  tg = (double *) managed_alloc (data_spec->N_targets*N_cases, sizeof (double));
 
   for (i = 0; i<N_cases; i++)
   { 

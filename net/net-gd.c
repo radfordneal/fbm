@@ -352,7 +352,8 @@ int main
     for (i = 0; i<N_train; i++)
     { 
       net_func (&train_values[i], 0, arch, flgs, &params);
-    
+
+      net_model_check (model);    
       net_model_prob (&train_values[i], 
                       train_targets + data_spec->N_targets*i,
                       0, deriv, arch, model, surv, &sigmas, 2);
@@ -381,6 +382,7 @@ int main
         { 
           net_func (&train_values[i], 0, arch, flgs, &params);
   
+          net_model_check (model);    
           net_model_prob (&train_values[i], 
                           train_targets + data_spec->N_targets*i,
                           0, deriv, arch, model, surv, &sigmas, 2);
@@ -455,6 +457,7 @@ int main
 
           net_func (&train_values[i], 0, arch, flgs, &params);
     
+          net_model_check (model);    
           net_model_prob (&train_values[i], 
                          train_targets + data_spec->N_targets*i,
                          0, deriv, arch, model, surv, &sigmas, 2);

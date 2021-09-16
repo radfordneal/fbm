@@ -26,6 +26,9 @@ clean:
 	          net-gd net-plt net-tbl net-hist net-dvar \
 	          net-grad-test net-stepsizes net-genp net-approx net-his
 
+clean-gpu:
+	rm -f *-gpu.o net-mc-gpu.exe net-mc-gpu
+
 
 include ../util/util.make
 include ../mc/mc.make

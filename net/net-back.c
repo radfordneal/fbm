@@ -40,11 +40,12 @@
 
 #define sqrt_2 1.4142135623730950488
 
-static void sum_derivatives  (net_value const*, int, net_value *restrict,
-                              int, net_param const*, 
-                              unsigned short const*, int);
-static void sum_derivatives_config (net_value const*, net_value *restrict,
-                                    net_param const*, net_config const*);
+HOSTDEV static void sum_derivatives (net_value const*, int, net_value *restrict,
+                                     int, net_param const*, 
+                                     unsigned short const*, int);
+HOSTDEV static void sum_derivatives_config(net_value const*, 
+                                           net_value *restrict,
+                                           net_param const*, net_config const*);
 
 
 /* BACKPROPAGATE ERROR DERIVATIVES.  The first argument must contain the 
@@ -55,7 +56,7 @@ static void sum_derivatives_config (net_value const*, net_value *restrict,
    to the summed input into the hidden units.  This is done back to hidden 
    layer 'start', or back all the way to the inputs if 'start' is -1. */
 
-void net_back
+HOSTDEV void net_back
 ( net_values const*v,	/* Values for units in network */
   net_values *restrict d,/* Place to get output derivatives, and store others */
   int start,		/* Earliest layer to find derivatives for */
@@ -502,7 +503,7 @@ do \
 
 #endif
 
-static void sum_derivatives
+HOSTDEV static void sum_derivatives
 ( net_value const* dd,    /* Derivatives with respect to destination units */
   int nd,		  /* Number of destination units */
   net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
@@ -525,7 +526,7 @@ static void sum_derivatives
    Adds the weighted sum of derivatives due to connections from source units to
    a given destination layer to the totals for the source layer. */
 
-static void sum_derivatives_config
+HOSTDEV static void sum_derivatives_config
 ( net_value const* dd,    /* Derivatives with respect to destination units */
   net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
   net_param const* w,     /* Connection weights */

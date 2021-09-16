@@ -168,6 +168,7 @@ int main
         else
         { 
           net_func (&train_values[i], 0, a, flgs, w);
+          net_model_check (m);    
           net_model_prob (&train_values[i], 
                           train_targets + data_spec->N_targets*i,
                           &lp, 0, a, m, sv, s, 2);

@@ -296,7 +296,7 @@ net_config *net_config_read (char *file, int ns, int nd)
   int i;
   
   net_config *p;
-  p = (net_config *) chk_alloc (1, sizeof *p);
+  p = (net_config *) managed_alloc (1, sizeof *p);
   p->conn = (net_connection *) chk_alloc (Max_conn+1, sizeof *p->conn);
 
   p->N_wts = 0;
@@ -321,7 +321,7 @@ net_config *net_config_read (char *file, int ns, int nd)
   for (i = 0; item[i]!=NULL; i++) free(item[i]);
   free (item);
 
-  net_connection *q = (net_connection *) chk_alloc (p->N_conn+1, sizeof *q);
+  net_connection *q = (net_connection *) managed_alloc (p->N_conn+1, sizeof *q);
   memcpy (q, p->conn, p->N_conn * sizeof *q);
   q[p->N_conn].w = -1;
   free(p->conn);
@@ -415,7 +415,7 @@ void net_config_sort (net_config *cf)
   /* We will put all connections, as sorted and grouped, in successive parts 
      of 'all', setting pointers to parts of it in cf. */
 
-  net_connection *all = (net_connection *) chk_alloc (n+9+3, sizeof *all);  
+  net_connection *all = (net_connection *) managed_alloc (n+9+3, sizeof *all);  
               /* Allow up to nine -1's, then +3 to ensure AVX loads are OK */
   int a = 0;
 

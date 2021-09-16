@@ -38,6 +38,17 @@
 #define Log2pi  1.83787706640934548356	/* Log(2*M_PI) */
 
 
+/* CHECK THAT A DATA MODEL IS PRESENT. */
+
+void net_model_check (model_specification const*m)
+{
+  if (m->type==0)
+  { fprintf(stderr,"Network has no data model defined\n");
+    exit(1);
+  }
+}
+
+
 /* COMPUTE LOG PROBABILITY OF TARGETS AND/OR ITS DERIVATIVES.  Computes the 
    log of the probability (or probability density) of the observed target 
    values given the observed inputs, as defined by the current network outputs 
@@ -61,7 +72,7 @@
    By passing zero pointers, computation of either the log probability or of
    its derivatives may be suppressed, with a possible saving in time. */
 
-void net_model_prob
+HOSTDEV void net_model_prob
 ( net_values const*v,	/* Values for units in network */
   double const*t,	/* Target values, fudged for piecewise const hazard */
   double *restrict pr,	/* Place to store log probability, zero if not wanted */
@@ -267,15 +278,9 @@ void net_model_prob
 
       break;
     }
-    
-    case 0:
-    { fprintf(stderr,"Network has no data model defined\n");
-      exit(1);
-    }
 
-    default:
-    { fprintf(stderr,"Unknown data model: %c\n",m->type);
-      exit(1);
+    default:  /* No data model, or unknown type of model */
+    { abort();
     }
   }
 }

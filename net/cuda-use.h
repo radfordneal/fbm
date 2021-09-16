@@ -13,33 +13,53 @@
  * application.  All use of these programs is entirely at the user's own risk.
  */
 
-#if __CUDACC__  /* using CUDA */
+#if __CUDACC__  /* USING CUDA */
 
-#define restrict __restrict__
+# define restrict __restrict__
 
-static void check_cuda_error (cudaError_t err, const char *where)
-{ if (err != cudaSuccess)
-  { printf ("%s: CUDA error: %s\n", where, cudaGetErrorString(err));
-    abort();
+  static void check_cuda_error (cudaError_t err, const char *where)
+  { if (err != cudaSuccess)
+    { printf ("%s: CUDA error: %s\n", where, cudaGetErrorString(err));
+      abort();
+    }
+ }
+
+  static void *managed_alloc (unsigned n, unsigned size)
+  { void *p;
+    check_cuda_error (cudaMallocManaged (&p, (size_t)n*size), "Alloc failed");
+    return p;
   }
-}
 
-static void *managed_alloc (unsigned n, unsigned size)
-{ void *p;
-  check_cuda_error (cudaMallocManaged (&p, (size_t)n*size), "Alloc failed");
-  return p;
-}
+# define managed_free cudaFree
 
-#define managed_free cudaFree
+# define BLKSIZE 64  /* Block size to use when launching CUDA kernels */
 
-#else  /* not using CUDA */
+#else  /* NOT USING CUDA */
 
-#define __host__
-#define __device__
-#define __managed__
-#define __restrict__ restrict
+# define __host__
+# define __device__
+# define __managed__
+# define __restrict__ restrict
 
-#define managed_alloc chk_alloc
-#define managed_free free
+# define managed_alloc chk_alloc
+# define managed_free free
+
+#endif
+
+
+#define HOSTDEV __host__ __device__  /* For convenience */
+
+
+#if __CUDA_ARCH__  /* COMPILING FOR GPU */
+
+# define abort abort_in_GPU
+
+  HOSTDEV static void abort(void)
+  { printf("Call of abort() in GPU code - but continuing anyway\n");
+  }
+
+# undef USE_SIMD_INTRINSICS
+# undef USE_FMA
+# undef USE_SLEEF
 
 #endif

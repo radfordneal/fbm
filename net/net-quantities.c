@@ -478,6 +478,7 @@ void net_evaluate
           
                 ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
 
+                net_model_check (model);    
                 net_model_prob(&cases[i], &ft, &lp, 0, arch, model, surv, 
                                &sigmas, 2);
                 p1 += lp;
@@ -500,7 +501,8 @@ void net_evaluate
 
             }
             else
-            { net_model_prob (&cases[i], targets + data_spec->N_targets*i,
+            { net_model_check (model);    
+              net_model_prob (&cases[i], targets + data_spec->N_targets*i,
                               &p1, 0, arch, model, surv, &sigmas, 0);
             }
 
@@ -648,6 +650,7 @@ void net_evaluate
 
           for (i = 0; i<N_train; i++)
           { 
+            net_model_check (model);    
             net_model_prob (&train_values[i], 
                             train_targets + data_spec->N_targets*i,
                             0, &deriv, arch, model, surv, &sigmas, 2);
@@ -694,6 +697,7 @@ void net_evaluate
             { grad.param_block[j] = 0;
             }
 
+            net_model_check (model);    
             net_model_prob (&train_values[i], 
                             train_targets + data_spec->N_targets*i,
                             0, &deriv, arch, model, surv, &sigmas, 2);

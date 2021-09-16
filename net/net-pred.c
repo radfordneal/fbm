@@ -182,6 +182,7 @@ int pred_app_use_index (void)
           
           ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
 
+          net_model_check (m);    
           net_model_prob(&test_values[i], &ft,
                          &lp, 0, a, m, sv, s, 0);
 
@@ -205,6 +206,7 @@ int pred_app_use_index (void)
       }
       else
       {
+        net_model_check (m);
         net_model_prob (&test_values[i], 
                         test_targets + data_spec->N_targets * i, 
                         &test_log_prob[i],

@@ -14,6 +14,11 @@
  */
 
 
+#ifndef HOSTDEV
+#define HOSTDEV  /* don't declare some procedures as __host__ __device__ */
+#endif
+
+
 /* WEIGHT CONFIGURATION.  Records network weight configuration set up for a 
    group of connections with an input-config or hidden-config flag.  Note that
    the stored indexes start at zero, though they are 1-based in the file. 
@@ -266,17 +271,20 @@ void net_prior_prob (net_params *, net_sigmas *, double *, net_params *,
 void net_prior_max_second (net_params *, net_sigmas *, net_arch *, net_flags *,
                            net_priors *);
 
-void net_func (net_values *restrict, int, net_arch const*, net_flags const*, 
-               net_params const*);
-void net_back (net_values const*, net_values *restrict, int, net_arch const*, 
-               net_flags const*, net_params const*);
-void net_grad (net_params *restrict, net_params const*, net_values const*,
-               net_values const*, net_arch const*, net_flags const*);
+HOSTDEV void net_func (net_values *restrict, int, net_arch const*, 
+                       net_flags const*, net_params const*);
+HOSTDEV void net_back (net_values const*, net_values *restrict, int, 
+                       net_arch const*, net_flags const*, net_params const*);
+HOSTDEV void net_grad (net_params *restrict, net_params const*, 
+                       net_values const*, net_values const*, net_arch const*, 
+                       net_flags const*);
 
-void net_model_prob (net_values const*, double const*, double *restrict,
-                     net_values *restrict, net_arch const*,
-                     model_specification const*, model_survival const*,
-                     net_sigmas const*, int);
+HOSTDEV void net_model_prob (net_values const*, double const*, double *restrict,
+                            net_values *restrict, net_arch const*,
+                            model_specification const*, model_survival const*,
+                            net_sigmas const*, int);
+
+void net_model_check (model_specification const*);
 
 void net_model_max_second (net_value *, net_arch *, model_specification *,
                            model_survival *, net_sigmas *);

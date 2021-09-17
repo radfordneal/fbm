@@ -15,6 +15,11 @@
 
 #if __CUDACC__  /* USING CUDA */
 
+# define BLKSIZE 128	/* Block size to use when launching CUDA kernels 
+			    - no more than 128 due to register limit */
+
+# define MAXBLKS 16	/* Maximum number of blocks when launching */
+
 # define restrict __restrict__
 
   static void check_cuda_error (cudaError_t err, const char *where)
@@ -25,8 +30,10 @@
  }
 
   static void *managed_alloc (unsigned n, unsigned size)
-  { void *p;
-    check_cuda_error (cudaMallocManaged (&p, (size_t)n*size), "Alloc failed");
+  { size_t sz = (size_t)n*size;
+    void *p;
+    // printf("Allocating %.0f bytes of managed memory\n",(double)sz);
+    check_cuda_error (cudaMallocManaged (&p, sz), "Alloc failed");
     return p;
   }
 
@@ -44,13 +51,10 @@
     char *e = getenv("SHOW_GPU");
     if (e && strcmp(e,"false")!=0 && strcmp(e,"FALSE")!=0 && strcmp(e,"0")!=0)
     { check_cuda_error (cudaGetDeviceProperties(&prop,0), "Get properties");
-      printf("%s, Compute Capability %d.%d\n",  
-              prop.name, prop.major, prop.minor);
+      printf("%s, Compute Capability %d.%d, using BLKSIZE=%d, MAXBLKS=%d\n",  
+              prop.name, prop.major, prop.minor, BLKSIZE, MAXBLKS);
     }
   }
-
-# define BLKSIZE 64	/* Block size to use when launching CUDA kernels */
-# define MAXBLKS 32	/* Maximum number of blocks when launching */
 
 #else  /* NOT USING CUDA */
 

@@ -393,6 +393,7 @@ void net_replicate_param_pointers
     w1 = w+i-1;
     w2 = w+i;
 
+    w2->total_params = w1->total_params;
     w2->param_block = w1->param_block + offset;
 
     if (a->has_ti) w2->ti = w1->ti + offset;

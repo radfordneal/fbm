@@ -1458,6 +1458,7 @@ __global__ void many_cases
     { memset (thread_grad[i].param_block, 0, 
               thread_grad[i].total_params * sizeof (net_param));
     }
+
     one_case (thread_energy ? thread_energy+i : 0, 
               thread_grad ? thread_grad+i : 0, j, en_weight, gr_weight);
 //if (thread_energy) printf("thread energy %d,%d: %g\n",i,j,thread_energy[i]);
@@ -1569,6 +1570,7 @@ void mc_app_energy
           { int c = N_train-i < BLKSIZE*MAXBLKS ? N_train-i : BLKSIZE*MAXBLKS;
             check_cuda_error (cudaGetLastError(), 
                               "Before launching many_cases");
+//printf("Launching with <<<%d,%d>>>\n",(c+BLKSIZE-1)/BLKSIZE, BLKSIZE);
             many_cases <<<(c+BLKSIZE-1)/BLKSIZE, BLKSIZE>>> 
                        (energy ? thread_energy : 0, 
                         gr ? thread_grad : 0, 
@@ -1583,6 +1585,8 @@ void mc_app_energy
               { unsigned k;
                 for (k = 0; k < grad.total_params; k++)
                 { grad.param_block[k] += thread_grad[j].param_block[k];
+//printf("Grad reduction, param %d from blk group %d, thread %d: + %g -> %g\n",
+// k, i, j, thread_grad[j].param_block[k], grad.param_block[k]);
                 }
               }
             }

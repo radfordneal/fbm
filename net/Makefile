@@ -1,6 +1,6 @@
 # MAKEFILE FOR NEURAL NET PROGRAMS. 
 
-# Copyright (c) 1995-2004 by Radford M. Neal 
+# Copyright (c) 1995-2021 by Radford M. Neal 
 #
 # Permission is granted for anyone to copy, use, modify, or distribute this
 # program and accompanying programs and documents for any purpose, provided 
@@ -38,22 +38,29 @@ include ../mc/mc.make
 
 
 net-func.o:	net-func.c	misc.h prior.h model.h net.h data.h \
-				intrinsics-use.h sleef-use-simd.h
+				intrinsics-use.h sleef-use-simd.h cuda-use.h
 net-back.o:	net-back.c	misc.h prior.h model.h net.h data.h \
-				intrinsics-use.h
+				intrinsics-use.h sleef-use-simd.h cuda-use.h
 net-grad.o:	net-grad.c	misc.h prior.h model.h net.h data.h \
-				intrinsics-use.h
-net-util.o:	net-util.c	misc.h prior.h model.h net.h data.h
-net-config.o:	net-config.c	misc.h prior.h model.h net.h data.h
-net-setup.o:	net-setup.c	misc.h prior.h model.h net.h data.h  
-net-prior.o:	net-prior.c	misc.h prior.h model.h net.h data.h rand.h
+				intrinsics-use.h cuda-use.h
+net-util.o:	net-util.c	misc.h prior.h model.h net.h data.h \
+				cuda-use.h
+net-config.o:	net-config.c	misc.h prior.h model.h net.h data.h \
+				cuda-use.h
+net-setup.o:	net-setup.c	misc.h prior.h model.h net.h data.h \
+				cuda-use.h
+net-prior.o:	net-prior.c	misc.h prior.h model.h net.h data.h rand.h \
+				cuda-use.h
 net-model.o:	net-model.c	misc.h prior.h model.h net.h data.h rand.h \
-				intrinsics-use.h
+				cuda-use.h
 net-data.o:	net-data.c	misc.h prior.h model.h net.h data.h net-data.h \
-				numin.h
-net-print.o:	net-print.c	misc.h prior.h model.h net.h data.h 
+				numin.h \
+				cuda-use.h
+net-print.o:	net-print.c	misc.h prior.h model.h net.h data.h \
+				cuda-use.h
 net-quantities.o: net-quantities.c misc.h prior.h model.h net.h data.h \
-				net-data.h quantities.h log.h
+				net-data.h quantities.h log.h \
+				cuda-use.h
 
 
 net-spec:	net-spec.o	net-util.o net-config.o prior.o \
@@ -92,7 +99,8 @@ net-eval:	net-eval.o	net-util.o net-config.o prior.o net-prior.o \
 		  net-setup.o net-func.o net-model.o model.o misc.o \
 		  log.o rand.o ars.o -lm -o net-eval
 
-net-eval.o:	net-eval.c	misc.h prior.h model.h net.h data.h log.h 
+net-eval.o:	net-eval.c	misc.h prior.h model.h net.h data.h log.h \
+				cuda-use.h
 
 net-values:	net-values.o	net-util.o net-config.o prior.o net-prior.o \
 				net-setup.o \
@@ -224,7 +232,8 @@ net-his:	mc-his.o net-mc.o ars.o misc.o log.o rand.o data-trans.o \
 		  net-config.o -lm -o net-his
 
 net-mc.o:	net-mc.c	misc.h rand.h log.h mc.h data.h prior.h \
-				model.h net.h net-data.h
+				model.h net.h net-data.h \
+				cuda-use.h
 
 net-gd:		net-gd.o	net-setup.o net-func.o net-model.o net-data.o \
 				net-back.o net-grad.o net-prior.o net-util.o \
@@ -278,7 +287,8 @@ net-hist:	net-plt.o	net-mc.o ars.o net-setup.o prior.o net-prior.o \
 		  misc.o log.o rand.o numin.o data-trans.o \
 		  -lm -o net-hist
 
-net-plt.o:	net-plt.c	misc.h log.h quantities.h mc.h
+net-plt.o:	net-plt.c	misc.h log.h quantities.h mc.h \
+				cuda-use.h
 
 
 # GPU versions.
@@ -355,7 +365,7 @@ net-func-gpu.o:	net-func.c misc.h prior.h model.h net.h data.h \
 		  net-func.c -o net-func-gpu.o
 
 net-back-gpu.o:	net-back.c misc.h prior.h model.h net.h data.h \
-			   intrinsics-use.h cuda-use.h
+			   intrinsics-use.h sleef-use-simd.h cuda-use.h
 		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
 		  net-back.c -o net-back-gpu.o
 
@@ -385,12 +395,13 @@ net-prior-gpu.o:	net-prior.c misc.h prior.h model.h net.h data.h rand.h \
 		  net-prior.c -o net-prior-gpu.o
 
 net-model-gpu.o:	net-model.c misc.h prior.h model.h net.h data.h rand.h \
-			   intrinsics-use.h cuda-use.h
+			   cuda-use.h
 		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
 		  net-model.c -o net-model-gpu.o
 
 net-data-gpu.o:	net-data.c misc.h prior.h model.h net.h data.h net-data.h \
-			   numin.h cuda-use.h
+			   numin.h \
+			   cuda-use.h
 		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
 		  net-data.c -o net-data-gpu.o
 

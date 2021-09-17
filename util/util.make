@@ -1,6 +1,6 @@
 # UTILITY MAKEFILE, FOR INCLUSION IN OTHER MAKEFILES.
 
-# Copyright (c) 1995-2004 by Radford M. Neal 
+# Copyright (c) 1995-2021 by Radford M. Neal 
 #
 # Permission is granted for anyone to copy, use, modify, or distribute this
 # program and accompanying programs and documents for any purpose, provided 
@@ -42,6 +42,15 @@ extfunc.h:
 	ln -s ../util/extfunc.h .
 phi.h:
 	ln -s ../util/phi.h .
+
+intrinsics-use.h:
+	ln -s ../util/intrinsics-use.h
+
+sleef-use-simd.h:
+	ln -s ../util/sleef-use-simd.h
+
+cuda-use.h:
+	ln -s ../util/cuda-use.h
 
 misc.c:
 	ln -s ../util/misc.c .

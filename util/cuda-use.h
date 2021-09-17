@@ -15,10 +15,10 @@
 
 #if __CUDACC__  /* USING CUDA */
 
-# define BLKSIZE 128	/* Block size to use when launching CUDA kernels 
+# define BLKSIZE 64	/* Block size to use when launching CUDA kernels 
 			    - no more than 128 due to register limit */
 
-# define MAXBLKS 16	/* Maximum number of blocks when launching */
+# define MAXBLKS 2	/* Maximum number of blocks when launching */
 
 # define restrict __restrict__
 
@@ -79,7 +79,7 @@
 #define EXTMAN extern __managed__
 
 
-#if __CUDA_ARCH__  /* COMPILING FOR GPU */
+#if __CUDACC__ && __CUDA_ARCH__  /* COMPILING FOR GPU */
 
 # define abort abort_in_GPU
 

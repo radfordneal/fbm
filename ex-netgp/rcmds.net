@@ -16,17 +16,17 @@ net-mc rlog.net 1000
 echo " "; echo "Predictions after running for 1000 iterations:"
 net-pred npa rlog.net 101:
 
-net-mc rlog.net 2000
-
-echo " "; echo "Predictions after running for 2000 iterations:"
-net-pred npa rlog.net 101:
-
-net-mc rlog.net 10000
-
-echo " "; echo "Predictions after running for 10000 iterations:"
-net-pred npa rlog.net 101:
-
-net-mc rlog.net 25000
-
-echo " "; echo "Predictions after running for 25000 iterations:"
-net-pred npa rlog.net 101:
+#net-mc rlog.net 2000
+#
+#echo " "; echo "Predictions after running for 2000 iterations:"
+#net-pred npa rlog.net 101:
+#
+#net-mc rlog.net 10000
+#
+#echo " "; echo "Predictions after running for 10000 iterations:"
+#net-pred npa rlog.net 101:
+#
+#net-mc rlog.net 25000
+#
+#echo " "; echo "Predictions after running for 25000 iterations:"
+#net-pred npa rlog.net 101:

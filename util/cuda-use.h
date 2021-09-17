@@ -15,11 +15,6 @@
 
 #if __CUDACC__  /* USING CUDA */
 
-# define BLKSIZE 64	/* Block size to use when launching CUDA kernels 
-			    - no more than 128 due to register limit */
-
-# define MAXBLKS 2	/* Maximum number of blocks when launching */
-
 # define restrict __restrict__
 
   static void check_cuda_error (cudaError_t err, const char *where)
@@ -32,7 +27,7 @@
   static void *managed_alloc (unsigned n, unsigned size)
   { size_t sz = (size_t)n*size;
     void *p;
-    // printf("Allocating %.0f bytes of managed memory\n",(double)sz);
+    if (0) printf("Allocating %.0f bytes of managed memory\n",(double)sz);
     check_cuda_error (cudaMallocManaged (&p, sz), "Alloc failed");
     return p;
   }
@@ -46,13 +41,18 @@
     return q;
   }
 
+  static int ask_show_gpu (void)
+  { char *e = getenv("SHOW_GPU");
+    return e!=0 && strcmp(e,"false")!=0 
+                && strcmp(e,"FALSE")!=0 
+                && strcmp(e,"0")!=0;
+  }
+
   static void show_gpu (void)
   { struct cudaDeviceProp prop;
-    char *e = getenv("SHOW_GPU");
-    if (e && strcmp(e,"false")!=0 && strcmp(e,"FALSE")!=0 && strcmp(e,"0")!=0)
+    if (ask_show_gpu())
     { check_cuda_error (cudaGetDeviceProperties(&prop,0), "Get properties");
-      printf("%s, Compute Capability %d.%d, using BLKSIZE=%d, MAXBLKS=%d\n",  
-              prop.name, prop.major, prop.minor, BLKSIZE, MAXBLKS);
+      printf("%s, Compute Capability %d.%d\n",prop.name,prop.major,prop.minor);
     }
   }
 
@@ -69,6 +69,7 @@
 
 # define make_managed(p,sz) (p)
 
+# define ask_show_gpu() 0
 # define show_gpu() do {} while(0)
 
 #endif

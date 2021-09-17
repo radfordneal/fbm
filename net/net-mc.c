@@ -37,6 +37,25 @@
                                      thereby reverting to the old heuristic */
 
 
+/* CUDA SETTINGS. */
+
+#if __CUDACC__
+
+#define MAX_BLKSIZE 128		/* Limit on # of threads in a block, to avoid
+				   exceeding the per-block register use limit
+				   (max 255 reg/thread, min 32K reg/block) */
+
+#define DEFAULT_PERTHRD 4 	/* Defaults, if not set by CUDA_SIZES  */
+#define DEFAULT_BLKSIZE 64	/*   environment variable, which has   */
+#define DEFAULT_NUMBLKS	32	/*   the form NUMBLKS:BLKSIZE:PERTHRD  */
+
+static int perthrd = DEFAULT_PERTHRD;	/* Number of cases for a CUDA thread */
+static int blksize = DEFAULT_BLKSIZE;	/* Number of threads per block */
+static int numblks = DEFAULT_NUMBLKS;	/* Number of blocks per kernel */
+
+#endif
+
+
 /* FUNCTION TO SQUARE ITS ARGUMENT. */
 
 static inline double sq (double x) { return x*x; }
@@ -86,12 +105,9 @@ static net_values typical;	/* Typical squared values for hidden units */
 
 static net_params grad;		/* Pointers to gradient for network parameters*/
 
-
-/* VALUES COMPUTED BY THREADS.  Allocated in managed memory. */
+/* Values computed by threads, allocated in managed memory. */
 
 #if __CUDACC__
-
-static unsigned max_threads;	/* Maximum concurrent threads */
 
 static double *thread_energy;	/* Energies computed by concurrent threads */
 static net_params *thread_grad;	/* Gradients computed by concurrent threads */
@@ -163,7 +179,35 @@ void mc_app_initialize
 
   if (!initialize_done)
   {
-    show_gpu();
+#   if __CUDACC__
+    { show_gpu();
+
+      char *cuda_sizes = getenv("CUDA_SIZES");
+      if (cuda_sizes)
+      { int t, b, n;
+        char junk;
+        if (sscanf(cuda_sizes,"%d:%d:%d%c",&t,&b,&n,&junk)!=3 
+             || t<1 || b<1 || n<1)
+        { fprintf(stderr,
+           "Bad format for CUDA_SIZES: should be perthrd:blksize,numblks\n");
+          exit(1);
+        }
+        if (b>MAX_BLKSIZE)
+        { fprintf(stderr,"CUDA_SIZES blksize must not exceed %d\n",MAX_BLKSIZE);
+          exit(1);
+        }
+        perthrd = t;
+        blksize = b;
+        numblks = n;
+      }
+
+      if (ask_show_gpu())
+      { printf (
+  "Computing with %d cases per thread, %d threads per block, %d blocks max\n",
+         perthrd, blksize, numblks);
+      }
+    }
+#   endif
 
     /* Check that required specification records are present. */
 
@@ -1445,23 +1489,31 @@ __global__ void many_cases
   double *thread_energy,   /* Places to store energy, null if not required */
   net_params *thread_grad, /* Places to store gradient, null if not required */
   int start,		/* Start of cases to look at */
+  int cases_per_thread,	/* Number of case to handle in one thread */
   double en_weight,	/* Weight for this case for energy */
   double gr_weight	/* Weight for this case for gradient */
 )
-{ int i = blockIdx.x * blockDim.x + threadIdx.x;
-  int j = start + i;
+{ 
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  int j = start + cases_per_thread * i;
+  int k = j + cases_per_thread;
+
   if (j < N_train) 
-  { if (thread_energy)
+  { 
+    if (thread_energy)
     { thread_energy[i] = 0;
     }
+
     if (thread_grad)
     { memset (thread_grad[i].param_block, 0, 
               thread_grad[i].total_params * sizeof (net_param));
     }
 
-    one_case (thread_energy ? thread_energy+i : 0, 
-              thread_grad ? thread_grad+i : 0, j, en_weight, gr_weight);
-//if (thread_energy) printf("thread energy %d,%d: %g\n",i,j,thread_energy[i]);
+    while (j < N_train && j < k)
+    { one_case (thread_energy ? thread_energy+i : 0, 
+                thread_grad ? thread_grad+i : 0, j, en_weight, gr_weight);
+      j += 1;
+    }
   }
 }
 
@@ -1488,7 +1540,9 @@ void mc_app_energy
 
 #   if __CUDACC__
     { if (N_train>0)
-      { max_threads = BLKSIZE*MAXBLKS > N_train ? N_train : BLKSIZE*MAXBLKS;
+      { unsigned max_threads = blksize*numblks*perthrd > N_train 
+                                ? (N_train + perthrd -1) / perthrd
+                                : blksize*numblks;
         if (energy && thread_energy==0)
         { thread_energy = (double *) 
                             managed_alloc (max_threads, sizeof (double));
@@ -1566,22 +1620,35 @@ void mc_app_energy
       {
 #       if __CUDACC__
         { 
-          for (i = 0; i < N_train; i += BLKSIZE*MAXBLKS)
-          { int c = N_train-i < BLKSIZE*MAXBLKS ? N_train-i : BLKSIZE*MAXBLKS;
+          int max_cases_per_launch = perthrd*blksize*numblks;
+
+          i = 0;
+          while (i < N_train)
+          { 
+            int c = N_train-i < max_cases_per_launch ? N_train-i
+                     : max_cases_per_launch;
+
+            int thrds = (c + perthrd - 1) / perthrd;
+            int blks = (thrds + blksize - 1) / blksize;
+
+            if (0)
+            { printf("Launching with <<<%d,%d>>>, %d cases per thread\n",
+                      blks,blksize,perthrd);
+            }
+
             check_cuda_error (cudaGetLastError(), 
                               "Before launching many_cases");
-//printf("Launching with <<<%d,%d>>>\n",(c+BLKSIZE-1)/BLKSIZE, BLKSIZE);
-            many_cases <<<(c+BLKSIZE-1)/BLKSIZE, BLKSIZE>>> 
+            many_cases <<<blks, blksize>>> 
                        (energy ? thread_energy : 0, 
                         gr ? thread_grad : 0, 
-                        i, inv_temp, inv_temp);
+                        i, perthrd, inv_temp, inv_temp);
             check_cuda_error (cudaDeviceSynchronize(), 
                               "Synchronizing after launching many_cases");
             check_cuda_error (cudaGetLastError(), 
                               "After synchronizing with many_cases");
 //printf("Done kernel\n");
             if (gr)
-            { for (j = 0; j<c; j++)
+            { for (j = 0; j<thrds; j++)
               { unsigned k;
                 for (k = 0; k < grad.total_params; k++)
                 { grad.param_block[k] += thread_grad[j].param_block[k];
@@ -1593,11 +1660,13 @@ void mc_app_energy
             if (energy)
             { 
 //printf("starting energy reduction, *energy=%g, c=%d, %d\n",*energy,c,thread_energy!=0);
-              for (j = 0; j<c; j++)
+              for (j = 0; j<thrds; j++)
               { *energy += thread_energy[j];
 //printf("new energy = %g (%d)\n",*energy,j);
               }
             }
+
+            i += c;
           }
         }
 #       else

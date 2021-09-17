@@ -1496,7 +1496,6 @@ __global__ void many_cases
 { 
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = start + cases_per_thread * i;
-  int k = j + cases_per_thread;
 
   if (j < N_train) 
   { 
@@ -1509,7 +1508,8 @@ __global__ void many_cases
               thread_grad[i].total_params * sizeof (net_param));
     }
 
-    while (j < N_train && j < k)
+    int k = j + cases_per_thread;
+    while (j < k && j < N_train)
     { one_case (thread_energy ? thread_energy+i : 0, 
                 thread_grad ? thread_grad+i : 0, j, en_weight, gr_weight);
       j += 1;
@@ -1647,22 +1647,19 @@ void mc_app_energy
             check_cuda_error (cudaGetLastError(), 
                               "After synchronizing with many_cases");
 //printf("Done kernel\n");
+
             if (gr)
             { for (j = 0; j<thrds; j++)
               { unsigned k;
                 for (k = 0; k < grad.total_params; k++)
                 { grad.param_block[k] += thread_grad[j].param_block[k];
-//printf("Grad reduction, param %d from blk group %d, thread %d: + %g -> %g\n",
-// k, i, j, thread_grad[j].param_block[k], grad.param_block[k]);
                 }
               }
             }
+
             if (energy)
-            { 
-//printf("starting energy reduction, *energy=%g, c=%d, %d\n",*energy,c,thread_energy!=0);
-              for (j = 0; j<thrds; j++)
+            { for (j = 0; j<thrds; j++)
               { *energy += thread_energy[j];
-//printf("new energy = %g (%d)\n",*energy,j);
               }
             }
 
@@ -1672,7 +1669,6 @@ void mc_app_energy
 #       else
         { for (i = 0; i<N_train; i++)
           { one_case (energy, gr ? &grad : 0, i, inv_temp, inv_temp);
-//printf("new energy = %g (%d)\n",*energy,i);
           }
         }
 #       endif

@@ -87,8 +87,6 @@ HOSTDEV void net_model_prob
   extern double lgamma(double);
 
 //printf("In model_prob\n");
-//printf("N_outputs=%d\n",a->N_outputs);
-//printf("type=%d\n",m->type);
 
   static double alpha_saved=0.0;/* Constant is already computed for this alpha*/
   static double cnst;		/* Saved value of this constant */

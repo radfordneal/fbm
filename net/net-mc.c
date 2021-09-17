@@ -58,10 +58,6 @@ static inline double sq (double x) { return x*x; }
 
 static int initialize_done = 0;	/* Has this all been set up? */
 
-STAMAN double energie;		/* Accumulator for energy in managed storage */
-STAMAN double log_prob;		/* Place to store log prob from model */
-STAMAN double fudged_target;	/* Managed storage for fudged survival target */
-
 STAMAN net_arch *arch;		/* Network architecture */
 STAMAN net_flags *flgs;		/* Network flags, null if none */
 STAMAN model_specification *model; /* Data model */
@@ -90,12 +86,15 @@ static net_values typical;	/* Typical squared values for hidden units */
 
 static net_params grad;		/* Pointers to gradient for network parameters*/
 
+
+/* VALUES COMPUTED BY THREADS.  Allocated in managed memory. */
+
 #if __CUDACC__
 
-static net_params *thread_grad;	/* Gradients computed by concurrent threads */
-				/*  - allocated in managed memory */
-
 static unsigned max_threads;	/* Maximum concurrent threads */
+
+static double *thread_energy;	/* Energies computed by concurrent threads */
+static net_params *thread_grad;	/* Gradients computed by concurrent threads */
 
 #endif
 
@@ -1339,7 +1338,7 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
 {
   int k;
 
-//printf("In one_case\n");
+//printf("In one_case, %d\n",i);
 
   if (model->type=='V'          /* Handle piecewise-constant hazard    */
    && surv->hazard_type=='P')   /*   model specially                   */
@@ -1367,7 +1366,8 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
     {
       net_func (&train_values[i], 0, arch, flgs, &params);
       
-      fudged_target = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
+      double fudged_target = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
+      double log_prob;
   
       net_model_prob(&train_values[i], &fudged_target,
                      &log_prob, grd ? &deriv[i] : 0, arch, model, surv, 
@@ -1409,12 +1409,14 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
     net_func (&train_values[i], 0, arch, flgs, &params);
   
 //printf("Calling model_prob\n");
+    double log_prob;
     net_model_prob(&train_values[i], train_targets+data_spec->N_targets*i,
                    &log_prob, grd ? &deriv[i] : 0, arch, model, surv,
                    &sigmas, Cheap_energy);
 //printf("Returned from model_prob\n");
     
     if (energy) *energy -= en_weight * log_prob;
+//if (energy) printf("energy %g\n",*energy);
 //printf("Past energy chng\n");
 //printf("N_outputs: %d, gr_weight %f\n",arch->N_outputs,gr_weight); 
     if (grd)
@@ -1428,6 +1430,8 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
                 arch, flgs, &params);
 //printf("Calling net_grad\n");
       net_grad (grd, &params, &train_values[i], &deriv[i], arch, flgs);
+//printf("grd->param_block[0] = %g\n",grd->param_block[0]);
+//printf("grd->param_block[1] = %g\n",grd->param_block[1]);
     }
   }
 //printf("Done one_case\n");
@@ -1438,8 +1442,8 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
 
 __global__ void many_cases 
 (
-  double *energy,	/* Place to increment energy, null if not required */
-  net_params *grp,	/* Places to increment gradient, null if not required */
+  double *thread_energy,   /* Places to store energy, null if not required */
+  net_params *thread_grad, /* Places to store gradient, null if not required */
   int start,		/* Start of cases to look at */
   double en_weight,	/* Weight for this case for energy */
   double gr_weight	/* Weight for this case for gradient */
@@ -1447,7 +1451,16 @@ __global__ void many_cases
 { int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = start + i;
   if (j < N_train) 
-  { one_case (energy, grp ? grp+i : 0, j, en_weight, gr_weight);
+  { if (thread_energy)
+    { thread_energy[i] = 0;
+    }
+    if (thread_grad)
+    { memset (thread_grad[i].param_block, 0, 
+              thread_grad[i].total_params * sizeof (net_param));
+    }
+    one_case (thread_energy ? thread_energy+i : 0, 
+              thread_grad ? thread_grad+i : 0, j, en_weight, gr_weight);
+//if (thread_energy) printf("thread energy %d,%d: %g\n",i,j,thread_energy[i]);
   }
 }
 
@@ -1467,27 +1480,30 @@ void mc_app_energy
 
   inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
 
-  if (gr)
-  {
-    if (grad.param_block!=gr)
-    { grad.param_block = gr;
-      net_setup_param_pointers (&grad, arch, flgs);
-    }
+  if (gr && grad.param_block!=gr)
+  { grad.param_block = gr;
+    net_setup_param_pointers (&grad, arch, flgs);
+  }
 
 #   if __CUDACC__
-    { if (thread_grad==0)
+    { if (N_train>0)
       { max_threads = BLKSIZE*MAXBLKS > N_train ? N_train : BLKSIZE*MAXBLKS;
-        thread_grad = (net_params *) 
-                        managed_alloc (max_threads, sizeof (net_params));
-        thread_grad->total_params = grad.total_params;
-        thread_grad->param_block = (net_param *) 
-          managed_alloc (max_threads * grad.total_params, sizeof (net_param));
-        net_setup_param_pointers (thread_grad, arch, flgs);
-        net_replicate_param_pointers (thread_grad, arch, max_threads);
+        if (energy && thread_energy==0)
+        { thread_energy = (double *) 
+                            managed_alloc (max_threads, sizeof (double));
+        }
+        if (gr && thread_grad==0)
+        { thread_grad = (net_params *) 
+                          managed_alloc (max_threads, sizeof (net_params));
+          thread_grad->total_params = grad.total_params;
+          thread_grad->param_block = (net_param *) 
+            managed_alloc (max_threads * grad.total_params, sizeof (net_param));
+          net_setup_param_pointers (thread_grad, arch, flgs);
+          net_replicate_param_pointers (thread_grad, arch, max_threads);
+        }
       }
     }
 #   endif
-  }
 
   if (inv_temp>=0)
   { net_prior_prob (&params, &sigmas, &log_prob, gr ? &grad : 0, 
@@ -1508,7 +1524,9 @@ void mc_app_energy
   if (-log_prob>=1e30)
   { if (energy) *energy = 1e30;
     if (gr)
-    { for (i = 0; i<ds->dim; i++) gr[i] = 0;
+    { for (i = 0; i<ds->dim; i++)
+      { grad.param_block[i] = 0;
+      }
     }
     return;
   }
@@ -1549,33 +1567,39 @@ void mc_app_energy
         { 
           for (i = 0; i < N_train; i += BLKSIZE*MAXBLKS)
           { int c = N_train-i < BLKSIZE*MAXBLKS ? N_train-i : BLKSIZE*MAXBLKS;
-            if (energy)
-            { energie = *energy;
-            }
             check_cuda_error (cudaGetLastError(), 
                               "Before launching many_cases");
             many_cases <<<(c+BLKSIZE-1)/BLKSIZE, BLKSIZE>>> 
-                       (&energie, gr ? thread_grad : 0, i, inv_temp, inv_temp);
+                       (energy ? thread_energy : 0, 
+                        gr ? thread_grad : 0, 
+                        i, inv_temp, inv_temp);
             check_cuda_error (cudaDeviceSynchronize(), 
                               "Synchronizing after launching many_cases");
             check_cuda_error (cudaGetLastError(), 
                               "After synchronizing with many_cases");
+//printf("Done kernel\n");
             if (gr)
-            { unsigned k;
-              for (k = 0; k < grad.total_params; k++)
-              { for (j = 0; j<c; j++)
+            { for (j = 0; j<c; j++)
+              { unsigned k;
+                for (k = 0; k < grad.total_params; k++)
                 { grad.param_block[k] += thread_grad[j].param_block[k];
                 }
               }
             }
             if (energy)
-            { *energy = energie;
+            { 
+//printf("starting energy reduction, *energy=%g, c=%d, %d\n",*energy,c,thread_energy!=0);
+              for (j = 0; j<c; j++)
+              { *energy += thread_energy[j];
+//printf("new energy = %g (%d)\n",*energy,j);
+              }
             }
           }
         }
 #       else
         { for (i = 0; i<N_train; i++)
-          { one_case (energy, &grad, i, inv_temp, inv_temp);
+          { one_case (energy, gr ? &grad : 0, i, inv_temp, inv_temp);
+//printf("new energy = %g (%d)\n",*energy,i);
           }
         }
 #       endif

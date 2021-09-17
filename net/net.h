@@ -170,7 +170,7 @@ typedef double net_sigma; /* Precision of sigma values */
 
 typedef struct
 { 
-  int total_sigmas;		/* Total number of sigma values */
+  unsigned total_sigmas;	/* Total number of sigma values */
   net_sigma *sigma_block;	/* Block of all sigma values */
 
   net_sigma *ti_cm;		/* Pointer to common sigma for input offsets */
@@ -211,7 +211,7 @@ typedef double net_param; /* Precision of weights, baises, and offsets */
 
 typedef struct
 { 
-  int total_params;		/* Total number of parameter values */
+  unsigned total_params;	/* Total number of parameter values */
   net_param *param_block;	/* Block of all parameters values */
 
   net_param *ti;		/* Offsets of input units */
@@ -247,18 +247,19 @@ typedef struct
 
 /* PROCEDURES. */
 
-int net_setup_sigma_count (net_arch *, net_flags *, model_specification *);
-int net_setup_param_count (net_arch *, net_flags *);
+unsigned net_setup_sigma_count (net_arch *, net_flags *, model_specification *);
+unsigned net_setup_param_count (net_arch *, net_flags *);
 
 void net_setup_sigma_pointers (net_sigmas *, net_arch *, net_flags *, 
                                model_specification *);
 void net_setup_param_pointers (net_params *, net_arch *, net_flags *);
+void net_replicate_param_pointers (net_params *, net_arch *, int);
 
 int net_setup_hyper_group (net_arch *, net_flags *, int, int *, int *, int *);
 int net_setup_param_group 
   (net_arch *, net_flags *, int, int *, int *, int *, int*);
 
-int net_setup_value_count (net_arch *);
+unsigned net_setup_value_count (net_arch *);
 void net_setup_value_pointers (net_values *, net_value *, net_arch *);
 
 void net_prior_generate (net_params *, net_sigmas *, net_arch *, net_flags *,

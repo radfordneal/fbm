@@ -75,7 +75,6 @@ STAMAN net_params params;	/* Pointers to parameters, which are position
 				   coordinates for dynamical Monte Carlo */
 
 STAMAN net_values *deriv;	/* Derivatives for training cases */
-STAMAN net_params grad;		/* Pointers to gradient for network parameters*/
 
 STAMAN int approx_count;	/* Number of entries in approx-file, 0 if none*/
 
@@ -89,6 +88,16 @@ static net_values seconds;	/* Second derivatives */
 static double *train_sumsq;	/* Sums of squared training input values */
 static net_values typical;	/* Typical squared values for hidden units */
 
+static net_params grad;		/* Pointers to gradient for network parameters*/
+
+#if __CUDACC__
+
+static net_params *thread_grad;	/* Gradients computed by concurrent threads */
+				/*  - allocated in managed memory */
+
+static unsigned max_threads;	/* Maximum concurrent threads */
+
+#endif
 
 
 /* PROCEDURES. */
@@ -1322,7 +1331,7 @@ static void gibbs_adjustments
 HOSTDEV static void one_case  /* Energy and gradient from one training case */
 ( 
   double *energy,	/* Place to increment energy, null if not required */
-  mc_value *gr,		/* Place to increment gradient, null if not required */
+  net_params *grd,	/* Place to increment gradient, null if not required */
   int i,		/* Case to look at */
   double en_weight,	/* Weight for this case for energy */
   double gr_weight	/* Weight for this case for gradient */
@@ -1335,7 +1344,7 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
   if (model->type=='V'          /* Handle piecewise-constant hazard    */
    && surv->hazard_type=='P')   /*   model specially                   */
   { 
-    double ot, ft, t0, t1;
+    double ot, t0, t1;
     int censored;
     int w;
   
@@ -1361,12 +1370,12 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
       fudged_target = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
   
       net_model_prob(&train_values[i], &fudged_target,
-                     &log_prob, gr ? &deriv[i] : 0, arch, model, surv, 
+                     &log_prob, grd ? &deriv[i] : 0, arch, model, surv, 
                      &sigmas, Cheap_energy);
   
       if (energy) *energy -= en_weight * log_prob;
   
-      if (gr)
+      if (grd)
       { if (gr_weight!=1)
         { for (k = 0; k<arch->N_outputs; k++)
           { deriv[i].o[k] *= gr_weight;
@@ -1374,8 +1383,7 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
         }
         net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
                   arch, flgs, &params);
-        net_grad (&grad, &params, &train_values[i], &deriv[i], 
-                  arch, flgs);
+        net_grad (grd, &params, &train_values[i], &deriv[i], arch, flgs);
       }
   
       if (ot<=t1) break;
@@ -1402,14 +1410,14 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
   
 //printf("Calling model_prob\n");
     net_model_prob(&train_values[i], train_targets+data_spec->N_targets*i,
-                   &log_prob, gr ? &deriv[i] : 0, arch, model, surv,
+                   &log_prob, grd ? &deriv[i] : 0, arch, model, surv,
                    &sigmas, Cheap_energy);
 //printf("Returned from model_prob\n");
     
     if (energy) *energy -= en_weight * log_prob;
 //printf("Past energy chng\n");
 //printf("N_outputs: %d, gr_weight %f\n",arch->N_outputs,gr_weight); 
-    if (gr)
+    if (grd)
     { if (gr_weight!=1)
       { for (k = 0; k<arch->N_outputs; k++)
         { deriv[i].o[k] *= gr_weight;
@@ -1419,7 +1427,7 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
       net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
                 arch, flgs, &params);
 //printf("Calling net_grad\n");
-      net_grad (&grad, &params, &train_values[i], &deriv[i], arch, flgs);
+      net_grad (grd, &params, &train_values[i], &deriv[i], arch, flgs);
     }
   }
 //printf("Done one_case\n");
@@ -1431,15 +1439,15 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
 __global__ void many_cases 
 (
   double *energy,	/* Place to increment energy, null if not required */
-  mc_value *gr,		/* Place to increment gradient, null if not required */
+  net_params *grp,	/* Places to increment gradient, null if not required */
   int start,		/* Start of cases to look at */
   double en_weight,	/* Weight for this case for energy */
   double gr_weight	/* Weight for this case for gradient */
 )
-{ int i = start + blockIdx.x * blockDim.x + threadIdx.x;
-  //if (i==0) printf("Starting many_cases: %d\n",i);
-  if (i < N_train) 
-  { one_case (energy, gr, i, en_weight, gr_weight);
+{ int i = blockIdx.x * blockDim.x + threadIdx.x;
+  int j = start + i;
+  if (j < N_train) 
+  { one_case (energy, grp ? grp+i : 0, j, en_weight, gr_weight);
   }
 }
 
@@ -1461,17 +1469,21 @@ void mc_app_energy
 
   if (gr)
   {
-#   if __CUDACC__
-    { if (grad.param_block==0)
-      { grad.param_block = 
-         (net_param *) managed_alloc (grad.total_params, sizeof (net_param));
-        net_setup_param_pointers (&grad, arch, flgs);
-      }
+    if (grad.param_block!=gr)
+    { grad.param_block = gr;
+      net_setup_param_pointers (&grad, arch, flgs);
     }
-#   else
-    { if (grad.param_block!=gr)
-      { grad.param_block = gr;
-        net_setup_param_pointers (&grad, arch, flgs);
+
+#   if __CUDACC__
+    { if (thread_grad==0)
+      { max_threads = BLKSIZE*MAXBLKS > N_train ? N_train : BLKSIZE*MAXBLKS;
+        thread_grad = (net_params *) 
+                        managed_alloc (max_threads, sizeof (net_params));
+        thread_grad->total_params = grad.total_params;
+        thread_grad->param_block = (net_param *) 
+          managed_alloc (max_threads * grad.total_params, sizeof (net_param));
+        net_setup_param_pointers (thread_grad, arch, flgs);
+        net_replicate_param_pointers (thread_grad, arch, max_threads);
       }
     }
 #   endif
@@ -1534,27 +1546,36 @@ void mc_app_energy
       if (N_approx==1 || gr==0)
       {
 #       if __CUDACC__
-        { if (energy)
-          { energie = *energy;
-          }
-          check_cuda_error (cudaGetLastError(), 
-                            "Before launching many_cases");
-          many_cases <<<(N_train+BLKSIZE-1)/BLKSIZE, BLKSIZE>>> 
-                     (&energie, grad.param_block, 0, inv_temp, inv_temp);
-          check_cuda_error (cudaDeviceSynchronize(), 
-                            "Synchronizing after launching many_cases");
-          check_cuda_error (cudaGetLastError(), 
-                            "After synchronizing with many_cases");
-          if (gr)
-          { memcpy (gr, grad.param_block, grad.total_params*sizeof(net_param));
-          }
-          if (energy)
-          { *energy = energie;
+        { 
+          for (i = 0; i < N_train; i += BLKSIZE*MAXBLKS)
+          { int c = N_train-i < BLKSIZE*MAXBLKS ? N_train-i : BLKSIZE*MAXBLKS;
+            if (energy)
+            { energie = *energy;
+            }
+            check_cuda_error (cudaGetLastError(), 
+                              "Before launching many_cases");
+            many_cases <<<(c+BLKSIZE-1)/BLKSIZE, BLKSIZE>>> 
+                       (&energie, gr ? thread_grad : 0, i, inv_temp, inv_temp);
+            check_cuda_error (cudaDeviceSynchronize(), 
+                              "Synchronizing after launching many_cases");
+            check_cuda_error (cudaGetLastError(), 
+                              "After synchronizing with many_cases");
+            if (gr)
+            { unsigned k;
+              for (k = 0; k < grad.total_params; k++)
+              { for (j = 0; j<c; j++)
+                { grad.param_block[k] += thread_grad[j].param_block[k];
+                }
+              }
+            }
+            if (energy)
+            { *energy = energie;
+            }
           }
         }
 #       else
         { for (i = 0; i<N_train; i++)
-          { one_case (energy, gr, i, inv_temp, inv_temp);
+          { one_case (energy, &grad, i, inv_temp, inv_temp);
           }
         }
 #       endif
@@ -1568,12 +1589,11 @@ void mc_app_energy
 
           for (j = low; j<high; j++)
           { i = approx_case[j] - 1;
-            one_case (0, gr, i, 1, (double)inv_temp*N_approx/approx_times[i]);
+            one_case(0, &grad, i, 1, (double)inv_temp*N_approx/approx_times[i]);
           }
 
           if (energy)
-          {
-            for (i = 0; i<N_train; i++)
+          { for (i = 0; i<N_train; i++)
             { one_case (energy, 0, i, inv_temp, 1);
             }
           }
@@ -1590,7 +1610,7 @@ void mc_app_energy
           }
 
           for (i = low; i<high; i++)
-          { one_case (energy, gr, i, inv_temp, inv_temp*N_approx);
+          { one_case (energy, &grad, i, inv_temp, inv_temp*N_approx);
           }
 
           if (energy)    

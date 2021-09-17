@@ -49,7 +49,8 @@
     }
   }
 
-# define BLKSIZE 64  /* Block size to use when launching CUDA kernels */
+# define BLKSIZE 64	/* Block size to use when launching CUDA kernels */
+# define MAXBLKS 32	/* Maximum number of blocks when launching */
 
 #else  /* NOT USING CUDA */
 

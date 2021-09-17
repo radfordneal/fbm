@@ -45,7 +45,7 @@
 /* RETURN NUMBER OF HYPERPARAMETERS.  Returns the number of 'sigma' values
    for a network with the given architecture. */
    
-int net_setup_sigma_count
+unsigned net_setup_sigma_count
 ( net_arch *a,		/* Network architecture */
   net_flags *flgs,	/* Network flags, null if none */
   model_specification *m /* Data model */
@@ -88,7 +88,7 @@ int net_setup_sigma_count
    architecture.  Also reads any weight/bias configuration files, and
    fills in the configuration pointers in the net_arch structure. */
 
-int net_setup_param_count
+unsigned net_setup_param_count
 ( net_arch *a,		/* Network architecture */
   net_flags *flgs	/* Network flags, null if none */
 )
@@ -186,7 +186,7 @@ int net_setup_param_count
 /* RETURN NUMBER OF UNIT-RELATED VALUES IN NETWORK.  Returns the number 
    of unit-related values for a network with the given architecture. */
 
-int net_setup_value_count 
+unsigned net_setup_value_count 
 ( net_arch *a		/* Network architecture */
 )
 { 
@@ -369,6 +369,46 @@ void net_setup_param_pointers
   { w->bo = b;
     b += a->bias_config[a->N_layers] ? a->bias_config[a->N_layers]->N_wts 
                                      : a->N_outputs;
+  }
+}
+
+
+/* REPLICATE POINTERS TO NETWORK PARAMETERS.  Given a pointer to a
+   net_params structure, this procedure replicates that structure n-1
+   times in structures that follow, offsetting the param_block pointer
+   and pointers to parts by total_params for each replication. */
+
+void net_replicate_param_pointers
+( net_params *w,	/* The array of structures to replicate the first of */
+  net_arch *a,		/* Network architecture */
+  int n			/* Number of structures to end up with */
+)
+{
+  int offset = w->total_params;
+  net_params *w1, *w2;
+  int i, l;
+
+  for (i = 1; i<n; i++)
+  { 
+    w1 = w+i-1;
+    w2 = w+i;
+
+    w2->param_block = w1->param_block + offset;
+
+    if (a->has_ti) w2->ti = w1->ti + offset;
+    for (l = 0; l<a->N_layers; l++)
+    { if (l>0)
+      { if (a->has_hh[l-1]) w2->hh[l-1] = w1->hh[l-1] + offset;
+      }
+      if (a->has_ih[l]) w2->ih[l] = w1->ih[l] + offset;
+      if (a->has_bh[l]) w2->bh[l] = w1->bh[l] + offset;
+      if (a->has_th[l]) w2->th[l] = w1->th[l] + offset;
+    }
+    for (l = a->N_layers-1; l>=0; l--)
+    { if (a->has_ho[l]) w2->ho[l] = w1->ho[l] + offset;
+    }
+    if (a->has_io) w2->io = w1->io + offset;
+    if (a->has_bo) w2->bo = w1->bo + offset;
   }
 }
 

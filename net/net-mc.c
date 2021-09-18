@@ -84,18 +84,18 @@ static net_priors *priors;	/* Network priors */
 static model_specification *model; /* Data model */
 static model_survival *surv;	/* Hazard type for survival model */
 
-STAMAN net_sigmas sigmas;	/* Hyperparameters for network, auxiliary state
+static net_sigmas sigmas;	/* Hyperparameters for network, auxiliary state
 				   for Monte Carlo.  Includes noise std. dev. */
 
-STAMAN net_params params;	/* Pointers to parameters, which are position
+static net_params params;	/* Pointers to parameters, which are position
 				   coordinates for dynamical Monte Carlo */
 
-STAMAN net_values *deriv;	/* Derivatives for training cases */
+static net_values *deriv;	/* Derivatives for training cases */
 
-STAMAN int approx_count;	/* Number of entries in approx-file, 0 if none*/
+static int approx_count;	/* Number of entries in approx-file, 0 if none*/
 
-STAMAN int *approx_case; 	/* Data on how approximations are to be done  */
-STAMAN int *approx_times;	/*   as read from approx_file                 */
+static int *approx_case; 	/* Data on how approximations are to be done  */
+static int *approx_times;	/*   as read from approx_file                 */
 
 static double *quadratic_approx;/* Quadratic approximation to log likelihood  */
 
@@ -116,6 +116,11 @@ __constant__ int const_has_flgs;   /* Are flags present in const_flgs? */
 
 __constant__ model_specification const_model;  /* Constant copy of model */
 __constant__ model_survival const_surv;  /* Constant copy of surv */
+
+__constant__ net_sigmas const_sigmas;  /* Copy of sigmas in constant memory */
+__constant__ net_params const_params;  /* Copy of params in constant memory */
+
+__constant__ net_values *const_deriv;  /* Copy of deriv ptr in constant memory*/
 
 static double *thread_energy;	/* Energies computed by concurrent threads */
 static net_params *thread_grad;	/* Gradients computed by concurrent threads */
@@ -447,6 +452,15 @@ void mc_app_initialize
         check_cuda_error (cudaGetLastError(), 
                           "After copying to const_surv");
       }
+      cudaMemcpyToSymbol (const_sigmas, &sigmas, sizeof sigmas);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_sigmas");
+      cudaMemcpyToSymbol (const_params, &params, sizeof params);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_params");
+      cudaMemcpyToSymbol (const_deriv, &deriv, sizeof deriv);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_deriv");
     }
 #   endif
 
@@ -1409,10 +1423,13 @@ static void gibbs_adjustments
 
 #if __CUDACC__ && __CUDA_ARCH__  /* Compiling for GPU */
 
-#define arch  (&const_arch)
-#define flgs  (const_has_flgs ? &const_flgs : 0)
-#define model (&const_model)
-#define surv  (&const_surv)
+#define arch   (&const_arch)
+#define flgs   (const_has_flgs ? &const_flgs : 0)
+#define model  (&const_model)
+#define surv   (&const_surv)
+#define sigmas const_sigmas
+#define params const_params
+#define deriv  const_deriv
 
 #endif
 
@@ -1530,6 +1547,9 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
 #undef flgs
 #undef model
 #undef surv
+#undef sigmas
+#undef params
+#undef deriv
 
 #endif
 
@@ -1552,7 +1572,6 @@ __global__ void many_cases
 //printf("device N_inputs: %d, N_outputs: %d, N_hidden[0]: %d (thread %d,%d)\n",
 //        const_arch.N_inputs, const_arch.N_outputs, const_arch.N_hidden[0],
 //        blockIdx.x, threadIdx.x);
-
   if (j < N_train) 
   { 
     double *threi;
@@ -1579,13 +1598,17 @@ __global__ void many_cases
     { __syncthreads();
       if (threadIdx.x==0)
       { for (h = 1; h<blockDim.x && start+cases_per_thread*(i+h) < N_train; h++)
-        { if (thread_energy)
-          { *threi += threi[i+h];
+        { 
+//printf(
+//"R blk %d, idx %d, start %d, i %d, j %d, h %d, Dim %d, N_train %d, cmp %d\n",
+// blockIdx.x, threadIdx.x, start, i, j, h, blockDim.x, N_train, start+cases_per_thread*(i+h));
+          if (thread_energy)
+          { *threi += threi[h];
           }
           if (thread_grad)
           { unsigned k;
             for (k = 0; k < thrgi->total_params; k++)
-            { thrgi->param_block[k] += thrgi[i+h].param_block[k];
+            { thrgi->param_block[k] += thrgi[h].param_block[k];
             }
           }
         }

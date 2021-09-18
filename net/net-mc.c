@@ -80,11 +80,10 @@ static int initialize_done = 0;	/* Has this all been set up? */
 STAMAN net_arch *arch;		/* Network architecture */
 STAMAN net_flags *flgs;		/* Network flags, null if none */
 STAMAN model_specification *model; /* Data model */
-STAMAN net_priors *priors;	/* Network priors */
 STAMAN model_survival *surv;	/* Hazard type for survival model */
 
 STAMAN net_sigmas sigmas;	/* Hyperparameters for network, auxiliary state
-				   for Monte Carlo */
+				   for Monte Carlo.  Includes noise std. dev. */
 
 STAMAN net_params params;	/* Pointers to parameters, which are position
 				   coordinates for dynamical Monte Carlo */
@@ -95,6 +94,8 @@ STAMAN int approx_count;	/* Number of entries in approx-file, 0 if none*/
 
 STAMAN int *approx_case; 	/* Data on how approximations are to be done  */
 STAMAN int *approx_times;	/*   as read from approx_file                 */
+
+static net_priors *priors;	/* Network priors */
 
 static double *quadratic_approx;/* Quadratic approximation to log likelihood  */
 
@@ -217,10 +218,10 @@ void mc_app_initialize
                make_managed (logg->data['F'],logg->actual_size['F']);
     model  = (model_specification *) 
                make_managed (logg->data['M'],logg->actual_size['M']);
-    priors = (net_priors *) 
-               make_managed (logg->data['P'],logg->actual_size['P']);
     surv   = (model_survival *) 
                make_managed (logg->data['V'],logg->actual_size['V']);
+
+    priors = (net_priors *) logg->data['P'];
 
     net_check_specs_present(arch,priors,0,model,surv);
 

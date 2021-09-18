@@ -156,7 +156,7 @@ static char **do_items
   for (;;)
   { 
     int s, d, w, r, l;
-    char junk, nparen;
+    char nparen;
     char *it = item[0];
 
     if (it==NULL || strcmp(it,")")==0 || strcmp(it,"]")==0 || strcmp(it,"}")==0)
@@ -335,7 +335,7 @@ net_config *net_config_read (char *file, int ns, int nd)
 
 /* PRODUCE SORTED / GROUPED VERSIONS OF THE CONFIGURATION. */
 
-static int non_adjacency (net_connection *a, char *prefix)
+static int non_adjacency (net_connection *a, const char *prefix)
 { 
   int n = 0, c0 = 0, c1 = 0, c2 = 0, cx = 0;
   while (a->w >= 0)

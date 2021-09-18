@@ -1,6 +1,6 @@
 /* MODEL.C - Procedures dealing with modeling target value. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -39,7 +39,7 @@ int model_values_check
 ( model_specification *m,	/* Model specification */
   data_specifications *d,	/* Data source specification */
   int n_values,			/* Number of output values in model */
-  char *log_sum_exp_ok		/* Models for which log sum exp scheme is ok */
+  const char *log_sum_exp_ok	/* Models for which log sum exp scheme is ok */
 )
 { 
   int t, n;
@@ -87,8 +87,8 @@ int model_values_check
   if (n_values!=n)
   { if (log_sum_exp_ok!=0 && strchr(log_sum_exp_ok,t)==0 || n_values%n!=0)
     { fprintf(stderr,
-       "Number of model outputs is not appropriate for data model (%d %d %c %s)\n",
-       n_values, n, t, log_sum_exp_ok);
+    "Number of model outputs is not appropriate for data model (%d %d %c %s)\n",
+        n_values, n, t, log_sum_exp_ok);
       exit(1);
     }
   }

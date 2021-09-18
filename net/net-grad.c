@@ -489,9 +489,6 @@ HOSTDEV static void add_grad2
   int ob		  /* Bit to look at in omit flags */
 )
 { 
-  double tv;
-  int i, j;
-
   if (omit==0)
   { if (off==0)
     { ADD_GRAD2_00;

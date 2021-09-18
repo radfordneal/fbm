@@ -1,6 +1,6 @@
 /* NUMIN.H - Interface to module for reading numeric input. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -47,7 +47,7 @@ typedef struct
 
 /* PROCEDURES. */
 
-void numin_spec  (numin_source *, char *, int);	/* Specify source of input */
+void numin_spec  (numin_source *, const char *, int); /* Specify input source */
 int  numin_start (numin_source *);		/* Start reading input */
 void numin_read  (numin_source *, double *);	/* Read next line of input */
 void numin_close (numin_source *);		/* Close file being read */

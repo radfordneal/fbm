@@ -886,7 +886,7 @@ static void rgrid_met_noise
   double inv_temp
 )
 {
-  double nalpha, nprec, sum, d, ps;
+  double sum, d, ps;
   prior_spec *pr;
   int i, j;
 
@@ -1001,7 +1001,7 @@ static void rgrid_met_unit
   prior_spec *pr		/* Prior for sigmas */
 )
 { 
-  double nalpha, nprec, sum, ps, d;
+  double sum, ps, d;
   int i;
 
   if (pr->alpha[0]!=0 && pr->alpha[1]!=0)
@@ -1130,7 +1130,7 @@ static void gibbs_conn_config
 )
 { 
   double width, nalpha, nprec, sum, ps;
-  int i, j;
+  int i;
 
   width = pr->width;
 
@@ -1183,7 +1183,7 @@ static void rgrid_met_conn
   prior_spec *pr	/* Prior for sigmas */
 )
 { 
-  double width, nalpha, nprec, sum, ps, d;
+  double width, sum, ps, d;
   int i, j;
 
   width = prior_width_scaled(pr,ns);

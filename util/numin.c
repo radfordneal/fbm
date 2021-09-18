@@ -1,6 +1,6 @@
 /* NUMIN.C - Module for reading numeric input. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -30,12 +30,13 @@
 
 void numin_spec
 ( numin_source *ns,	/* Structure holding numeric input specification */
-  char *spec,		/* Specification of file and item indexes */
+  const char *spec,	/* Specification of file and item indexes */
   int n_items		/* Number of values needed */
 )
 { 
-  char *s, *f;
+  const char *s;
   int i, j, n;
+  char *f;
 
   s = spec;
 

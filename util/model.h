@@ -1,6 +1,6 @@
 /* MODEL.H - Interface to model specification. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -67,7 +67,7 @@ typedef struct
 /* PROCEDURES. */
 
 int model_values_check (model_specification *, data_specifications *,
-                        int, char *);
+                        int, const char *);
 
 void model_gen (model_specification *, data_specifications *,
                 double *, double *, int, double *);

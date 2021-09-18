@@ -31,5 +31,5 @@ LFLAGS =
 NVCC_OPTIONS = -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
          -DUSE_SIMD_INTRINSICS -DUSE_FMA \
          -DUSE_SLEEF -Xcompiler -ffp-contract=off \
-         --gpu-architecture=compute_86 \
+         --gpu-architecture=compute_35 \
          -ccbin=g++

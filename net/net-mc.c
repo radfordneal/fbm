@@ -45,7 +45,7 @@
 				   exceeding the per-block register use limit
 				   (max 255 reg/thread, min 32K reg/block) */
 
-#define DEFAULT_PERTHRD 4 	/* Defaults, if not set by CUDA_SIZES  */
+#define DEFAULT_PERTHRD 2 	/* Defaults, if not set by CUDA_SIZES  */
 #define DEFAULT_BLKSIZE 64	/*   environment variable, which has   */
 #define DEFAULT_NUMBLKS	32	/*   the form NUMBLKS:BLKSIZE:PERTHRD  */
 
@@ -1382,8 +1382,6 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
 {
   int k;
 
-//printf("In one_case, %d\n",i);
-
   if (model->type=='V'          /* Handle piecewise-constant hazard    */
    && surv->hazard_type=='P')   /*   model specially                   */
   { 
@@ -1499,20 +1497,42 @@ __global__ void many_cases
 
   if (j < N_train) 
   { 
+    double *threi;
+    net_params *thrgi;
+    
     if (thread_energy)
-    { thread_energy[i] = 0;
+    { threi = thread_energy + i;
+      *threi = 0;
     }
 
     if (thread_grad)
-    { memset (thread_grad[i].param_block, 0, 
-              thread_grad[i].total_params * sizeof (net_param));
+    { thrgi = thread_grad + i;
+      memset (thrgi->param_block, 0, thrgi->total_params * sizeof (net_param));
     }
 
-    int k = j + cases_per_thread;
-    while (j < k && j < N_train)
-    { one_case (thread_energy ? thread_energy+i : 0, 
-                thread_grad ? thread_grad+i : 0, j, en_weight, gr_weight);
-      j += 1;
+    int h;
+    for (h = j; h < j+cases_per_thread && h < N_train; h++)
+    { one_case (thread_energy ? threi : 0, thread_grad ? thrgi : 0, 
+                h, en_weight, gr_weight);
+    }
+
+    int stride;
+    for (stride = 1; stride < blockDim.x; stride <<= 1)
+    { __syncthreads();
+      if ((i & (2*stride-1)) == 0 && j + cases_per_thread*stride < N_train)
+      { if (thread_energy)
+        { *threi += threi[stride];
+        }
+//printf("e %d, g %d, stride %02d, blk %02d/%02d, indx %02d, i %03d, j %03d\n",
+//  thread_energy!=0, thread_grad!=0, stride, blockIdx.x, blockDim.x, threadIdx.
+//  x, i, j);
+        if (thread_grad)
+        { unsigned k;
+          for (k = 0; k < thrgi->total_params; k++)
+          { thrgi->param_block[k] += thrgi[stride].param_block[k];
+          }
+        }
+      }
     }
   }
 }
@@ -1646,20 +1666,19 @@ void mc_app_energy
                               "Synchronizing after launching many_cases");
             check_cuda_error (cudaGetLastError(), 
                               "After synchronizing with many_cases");
-//printf("Done kernel\n");
+
+            if (energy)
+            { for (j = 0; j<thrds; j += blksize)
+              { *energy += thread_energy[j];
+              }
+            }
 
             if (gr)
-            { for (j = 0; j<thrds; j++)
+            { for (j = 0; j<thrds; j += blksize)
               { unsigned k;
                 for (k = 0; k < grad.total_params; k++)
                 { grad.param_block[k] += thread_grad[j].param_block[k];
                 }
-              }
-            }
-
-            if (energy)
-            { for (j = 0; j<thrds; j++)
-              { *energy += thread_energy[j];
               }
             }
 

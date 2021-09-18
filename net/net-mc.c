@@ -77,10 +77,12 @@ static inline double sq (double x) { return x*x; }
 
 static int initialize_done = 0;	/* Has this all been set up? */
 
-STAMAN net_arch *arch;		/* Network architecture */
-STAMAN net_flags *flgs;		/* Network flags, null if none */
-STAMAN model_specification *model; /* Data model */
-STAMAN model_survival *surv;	/* Hazard type for survival model */
+static net_arch *arch;		/* Network architecture */
+static net_flags *flgs;		/* Network flags, null if none */
+static net_priors *priors;	/* Network priors */
+
+static model_specification *model; /* Data model */
+static model_survival *surv;	/* Hazard type for survival model */
 
 STAMAN net_sigmas sigmas;	/* Hyperparameters for network, auxiliary state
 				   for Monte Carlo.  Includes noise std. dev. */
@@ -95,8 +97,6 @@ STAMAN int approx_count;	/* Number of entries in approx-file, 0 if none*/
 STAMAN int *approx_case; 	/* Data on how approximations are to be done  */
 STAMAN int *approx_times;	/*   as read from approx_file                 */
 
-static net_priors *priors;	/* Network priors */
-
 static double *quadratic_approx;/* Quadratic approximation to log likelihood  */
 
 static net_params stepsizes;	/* Pointers to stepsizes */
@@ -106,9 +106,16 @@ static net_values typical;	/* Typical squared values for hidden units */
 
 static net_params grad;		/* Pointers to gradient for network parameters*/
 
-/* Values computed by threads, allocated in managed memory. */
+/* Values used or computed by threads, in managed or constant memory. */
 
 #if __CUDACC__
+
+__constant__ net_arch const_arch;  /* Copy of arch in constant memory */
+__constant__ net_flags const_flgs; /* Copy of flgs in constant memory */
+__constant__ int const_has_flgs;   /* Are flags present in const_flgs? */
+
+__constant__ model_specification const_model;  /* Constant copy of model */
+__constant__ model_survival const_surv;  /* Constant copy of surv */
 
 static double *thread_energy;	/* Energies computed by concurrent threads */
 static net_params *thread_grad;	/* Gradients computed by concurrent threads */
@@ -212,14 +219,39 @@ void mc_app_initialize
 
     /* Check that required specification records are present. */
 
-    arch   = (net_arch *) 
-               make_managed (logg->data['A'],logg->actual_size['A']);
-    flgs   = (net_flags *)
-               make_managed (logg->data['F'],logg->actual_size['F']);
-    model  = (model_specification *) 
-               make_managed (logg->data['M'],logg->actual_size['M']);
-    surv   = (model_survival *) 
-               make_managed (logg->data['V'],logg->actual_size['V']);
+    arch   = (net_arch *) logg->data['A'];
+    flgs   = (net_flags *) logg->data['F'];
+
+    model  = (model_specification *) logg->data['M'];
+    surv   = (model_survival *) logg->data['V'];
+
+#   if __CUDACC__
+    { check_cuda_error (cudaGetLastError(), 
+                        "Before copying to constants");
+      cudaMemcpyToSymbol (const_arch, arch, sizeof *arch);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_arch");
+      int has_flgs = flgs != 0;
+      cudaMemcpyToSymbol (const_has_flgs, &has_flgs, sizeof has_flgs);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_has_flgs");
+      if (has_flgs)
+      { cudaMemcpyToSymbol (const_flgs, flgs, sizeof *flgs);
+        check_cuda_error (cudaGetLastError(), 
+                          "After copying to const_flgs");
+      }
+      if (model)
+      { cudaMemcpyToSymbol (const_model, model, sizeof *model);
+        check_cuda_error (cudaGetLastError(), 
+                          "After copying to const_model");
+      }
+      if (surv)
+      { cudaMemcpyToSymbol (const_model, surv, sizeof *surv);
+        check_cuda_error (cudaGetLastError(), 
+                          "After copying to const_surv");
+      }
+    }
+#   endif
 
     priors = (net_priors *) logg->data['P'];
 
@@ -1374,6 +1406,10 @@ static void gibbs_adjustments
 
 HOSTDEV static void one_case  /* Energy and gradient from one training case */
 ( 
+  net_arch *arch,	/* Architecture of network */
+  net_flags *flgs,	/* Flags for architecture (may be null) */
+  model_specification *model,  /* Model for data */
+  model_survival *surv,        /* Model for survival data (or null) */
   double *energy,	/* Place to increment energy, null if not required */
   net_params *grd,	/* Place to increment gradient, null if not required */
   int i,		/* Case to look at */
@@ -1495,6 +1531,10 @@ __global__ void many_cases
 { 
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = start + cases_per_thread * i;
+//printf("In kernel\n");
+//printf("device N_inputs: %d, N_outputs: %d, N_hidden[0]: %d (thread %d,%d)\n",
+//        const_arch.N_inputs, const_arch.N_outputs, const_arch.N_hidden[0],
+//        blockIdx.x, threadIdx.x);
 
   if (j < N_train) 
   { 
@@ -1513,7 +1553,10 @@ __global__ void many_cases
 
     int h;
     for (h = j; h < j+cases_per_thread && h < N_train; h++)
-    { one_case (thread_energy ? threi : 0, thread_grad ? thrgi : 0, 
+    { one_case (&const_arch, const_has_flgs ? &const_flgs : 0, 
+                &const_model, &const_surv,
+                thread_energy ? threi : 0, 
+                thread_grad ? thrgi : 0, 
                 h, en_weight, gr_weight);
     }
 
@@ -1688,7 +1731,8 @@ void mc_app_energy
         }
 #       else
         { for (i = 0; i<N_train; i++)
-          { one_case (energy, gr ? &grad : 0, i, inv_temp, inv_temp);
+          { one_case (arch, flgs, model, surv, 
+                      energy, gr ? &grad : 0, i, inv_temp, inv_temp);
           }
         }
 #       endif
@@ -1702,12 +1746,13 @@ void mc_app_energy
 
           for (j = low; j<high; j++)
           { i = approx_case[j] - 1;
-            one_case(0, &grad, i, 1, (double)inv_temp*N_approx/approx_times[i]);
+            one_case (arch, flgs, model, surv, 0, &grad, i, 1, 
+                      (double)inv_temp*N_approx/approx_times[i]);
           }
 
           if (energy)
           { for (i = 0; i<N_train; i++)
-            { one_case (energy, 0, i, inv_temp, 1);
+            { one_case (arch, flgs, model, surv, energy, 0, i, inv_temp, 1);
             }
           }
         }
@@ -1718,17 +1763,18 @@ void mc_app_energy
 
           if (energy)    
           { for (i = 0; i<low; i++)
-            { one_case (energy, 0, i, inv_temp, 1);
+            { one_case (arch, flgs, model, surv, energy, 0, i, inv_temp, 1);
             }
           }
 
           for (i = low; i<high; i++)
-          { one_case (energy, &grad, i, inv_temp, inv_temp*N_approx);
+          { one_case (arch, flgs, model, surv, energy, &grad, i, 
+                      inv_temp, inv_temp*N_approx);
           }
 
           if (energy)    
           { for (i = high; i<N_train; i++)
-            { one_case (energy, 0, i, inv_temp, 1);
+            { one_case (arch, flgs, model, surv, energy, 0, i, inv_temp, 1);
             }
           }
         }

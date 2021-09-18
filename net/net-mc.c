@@ -1404,14 +1404,20 @@ static void gibbs_adjustments
 }
 
 
-/* EVALUATE POTENTIAL ENERGY AND ITS GRADIENT. */
+/* EVALUATE POTENTIAL ENERGY AND ITS GRADIENT DUE TO ONE TRAINING CASE. 
+   Adds the results to the accumulators passed. */
+
+#if __CUDACC__ && __CUDA_ARCH__  /* Compiling for GPU */
+
+#define arch  (&const_arch)
+#define flgs  (const_has_flgs ? &const_flgs : 0)
+#define model (&const_model)
+#define surv  (&const_surv)
+
+#endif
 
 HOSTDEV static void one_case  /* Energy and gradient from one training case */
 ( 
-  net_arch *arch,	/* Architecture of network */
-  net_flags *flgs,	/* Flags for architecture (may be null) */
-  model_specification *model,  /* Model for data */
-  model_survival *surv,        /* Model for survival data (or null) */
   double *energy,	/* Place to increment energy, null if not required */
   net_params *grd,	/* Place to increment gradient, null if not required */
   int i,		/* Case to look at */
@@ -1518,6 +1524,15 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
 //printf("Done one_case\n");
 }
 
+#if __CUDACC__ && __CUDA_ARCH__  /* Compiling for GPU */
+
+#undef arch
+#undef flgs
+#undef model
+#undef surv
+
+#endif
+
 
 #if __CUDACC__
 
@@ -1555,9 +1570,7 @@ __global__ void many_cases
 
     int h;
     for (h = j; h < j+cases_per_thread && h < N_train; h++)
-    { one_case (&const_arch, const_has_flgs ? &const_flgs : 0, 
-                &const_model, &const_surv,
-                thread_energy ? threi : 0, 
+    { one_case (thread_energy ? threi : 0, 
                 thread_grad ? thrgi : 0, 
                 h, en_weight, gr_weight);
     }
@@ -1752,8 +1765,7 @@ void mc_app_energy
         }
 #       else
         { for (i = 0; i<N_train; i++)
-          { one_case (arch, flgs, model, surv, 
-                      energy, gr ? &grad : 0, i, inv_temp, inv_temp);
+          { one_case (energy, gr ? &grad : 0, i, inv_temp, inv_temp);
           }
         }
 #       endif
@@ -1767,13 +1779,12 @@ void mc_app_energy
 
           for (j = low; j<high; j++)
           { i = approx_case[j] - 1;
-            one_case (arch, flgs, model, surv, 0, &grad, i, 1, 
-                      (double)inv_temp*N_approx/approx_times[i]);
+            one_case(0, &grad, i, 1, (double)inv_temp*N_approx/approx_times[i]);
           }
 
           if (energy)
           { for (i = 0; i<N_train; i++)
-            { one_case (arch, flgs, model, surv, energy, 0, i, inv_temp, 1);
+            { one_case (energy, 0, i, inv_temp, 1);
             }
           }
         }
@@ -1784,18 +1795,17 @@ void mc_app_energy
 
           if (energy)    
           { for (i = 0; i<low; i++)
-            { one_case (arch, flgs, model, surv, energy, 0, i, inv_temp, 1);
+            { one_case (energy, 0, i, inv_temp, 1);
             }
           }
 
           for (i = low; i<high; i++)
-          { one_case (arch, flgs, model, surv, energy, &grad, i, 
-                      inv_temp, inv_temp*N_approx);
+          { one_case (energy, &grad, i, inv_temp, inv_temp*N_approx);
           }
 
           if (energy)    
           { for (i = high; i<N_train; i++)
-            { one_case (arch, flgs, model, surv, energy, 0, i, inv_temp, 1);
+            { one_case (energy, 0, i, inv_temp, 1);
             }
           }
         }

@@ -225,34 +225,6 @@ void mc_app_initialize
     model  = (model_specification *) logg->data['M'];
     surv   = (model_survival *) logg->data['V'];
 
-#   if __CUDACC__
-    { check_cuda_error (cudaGetLastError(), 
-                        "Before copying to constants");
-      cudaMemcpyToSymbol (const_arch, arch, sizeof *arch);
-      check_cuda_error (cudaGetLastError(), 
-                        "After copying to const_arch");
-      int has_flgs = flgs != 0;
-      cudaMemcpyToSymbol (const_has_flgs, &has_flgs, sizeof has_flgs);
-      check_cuda_error (cudaGetLastError(), 
-                        "After copying to const_has_flgs");
-      if (has_flgs)
-      { cudaMemcpyToSymbol (const_flgs, flgs, sizeof *flgs);
-        check_cuda_error (cudaGetLastError(), 
-                          "After copying to const_flgs");
-      }
-      if (model)
-      { cudaMemcpyToSymbol (const_model, model, sizeof *model);
-        check_cuda_error (cudaGetLastError(), 
-                          "After copying to const_model");
-      }
-      if (surv)
-      { cudaMemcpyToSymbol (const_model, surv, sizeof *surv);
-        check_cuda_error (cudaGetLastError(), 
-                          "After copying to const_surv");
-      }
-    }
-#   endif
-
     priors = (net_priors *) logg->data['P'];
 
     net_check_specs_present(arch,priors,0,model,surv);
@@ -447,6 +419,36 @@ void mc_app_initialize
         }
       }
     }
+
+    /* Copy some data to constant memory in the GPU, if using CUDA. */
+
+#   if __CUDACC__
+    { check_cuda_error (cudaGetLastError(), 
+                        "Before copying to constants");
+      cudaMemcpyToSymbol (const_arch, arch, sizeof *arch);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_arch");
+      int has_flgs = flgs != 0;
+      cudaMemcpyToSymbol (const_has_flgs, &has_flgs, sizeof has_flgs);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_has_flgs");
+      if (has_flgs)
+      { cudaMemcpyToSymbol (const_flgs, flgs, sizeof *flgs);
+        check_cuda_error (cudaGetLastError(), 
+                          "After copying to const_flgs");
+      }
+      if (model)
+      { cudaMemcpyToSymbol (const_model, model, sizeof *model);
+        check_cuda_error (cudaGetLastError(), 
+                          "After copying to const_model");
+      }
+      if (surv)
+      { cudaMemcpyToSymbol (const_model, surv, sizeof *surv);
+        check_cuda_error (cudaGetLastError(), 
+                          "After copying to const_surv");
+      }
+    }
+#   endif
 
     /* Make sure we don't do all this again. */
 
@@ -1486,7 +1488,7 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
   { 
 //printf("Calling net_func\n");
     net_func (&train_values[i], 0, arch, flgs, &params);
-  
+//printf("output %.15g\n",train_values[i].o[0]);  
 //printf("Calling model_prob\n");
     double log_prob;
     net_model_prob(&train_values[i], train_targets+data_spec->N_targets*i,
@@ -1495,7 +1497,7 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
 //printf("Returned from model_prob\n");
     
     if (energy) *energy -= en_weight * log_prob;
-//if (energy) printf("energy %g\n",*energy);
+//if (energy) printf("log_prob %.15g\n",log_prob);
 //printf("Past energy chng\n");
 //printf("N_outputs: %d, gr_weight %f\n",arch->N_outputs,gr_weight); 
     if (grd)
@@ -1560,20 +1562,39 @@ __global__ void many_cases
                 h, en_weight, gr_weight);
     }
 
-    int stride;
-    for (stride = 1; stride < blockDim.x; stride <<= 1)
+    if (0)  /* Linear-time reduction */
     { __syncthreads();
-      if ((i & (2*stride-1)) == 0 && j + cases_per_thread*stride < N_train)
-      { if (thread_energy)
-        { *threi += threi[stride];
+      if (threadIdx.x==0)
+      { for (h = 1; h<blockDim.x && start+cases_per_thread*(i+h) < N_train; h++)
+        { if (thread_energy)
+          { *threi += threi[i+h];
+          }
+          if (thread_grad)
+          { unsigned k;
+            for (k = 0; k < thrgi->total_params; k++)
+            { thrgi->param_block[k] += thrgi[i+h].param_block[k];
+            }
+          }
         }
+      }
+    }
+    else  /* Logarithmic-time reduction */
+    {
+      int stride;
+      for (stride = 1; stride < blockDim.x; stride <<= 1)
+      { __syncthreads();
+        if ((i & (2*stride-1)) == 0 && j + cases_per_thread*stride < N_train)
+        { if (thread_energy)
+          { *threi += threi[stride];
+          }
 //printf("e %d, g %d, stride %02d, blk %02d/%02d, indx %02d, i %03d, j %03d\n",
 //  thread_energy!=0, thread_grad!=0, stride, blockIdx.x, blockDim.x, threadIdx.
 //  x, i, j);
-        if (thread_grad)
-        { unsigned k;
-          for (k = 0; k < thrgi->total_params; k++)
-          { thrgi->param_block[k] += thrgi[stride].param_block[k];
+          if (thread_grad)
+          { unsigned k;
+            for (k = 0; k < thrgi->total_params; k++)
+            { thrgi->param_block[k] += thrgi[stride].param_block[k];
+            }
           }
         }
       }
@@ -1712,13 +1733,13 @@ void mc_app_energy
                               "After synchronizing with many_cases");
 
             if (energy)
-            { for (j = 0; j<thrds; j += blksize)
+            { for (j = 0; j<blks; j++)
               { *energy += thread_energy[j];
               }
             }
 
             if (gr)
-            { for (j = 0; j<thrds; j += blksize)
+            { for (j = 0; j<blks; j++)
               { unsigned k;
                 for (k = 0; k < grad.total_params; k++)
                 { grad.param_block[k] += thread_grad[j].param_block[k];

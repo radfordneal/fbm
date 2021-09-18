@@ -1770,7 +1770,7 @@ void mc_app_energy
 
             if (energy)
             { for (j = 0; j<blks; j++)
-              { *energy += thread_energy[j];
+              { *energy += thread_energy[j*blksize];
               }
             }
 
@@ -1778,7 +1778,7 @@ void mc_app_energy
             { for (j = 0; j<blks; j++)
               { unsigned k;
                 for (k = 0; k < grad.total_params; k++)
-                { grad.param_block[k] += thread_grad[j].param_block[k];
+                { grad.param_block[k] += thread_grad[j*blksize].param_block[k];
                 }
               }
             }

@@ -276,7 +276,7 @@ static char **do_items
 
       p->N_conn += 1;
 
-      // fprintf(stderr,"Conn %d: %d %d %d\n",p->N_conn,s,d,w);
+      if (0) fprintf(stderr,"Conn %d: %d %d %d\n",p->N_conn,s,d,w);
     }
 
     item += j;

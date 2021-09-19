@@ -1514,36 +1514,30 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
   
   else /* Everything except piecewise-constant hazard model */
   { 
-//printf("Calling net_func\n");
     net_func (&train_values[i], 0, arch, flgs, &params);
-//printf("output %.15g\n",train_values[i].o[0]);  
-//printf("Calling model_prob\n");
+
     double log_prob;
     net_model_prob(&train_values[i], train_targets+data_spec->N_targets*i,
                    &log_prob, grd ? &deriv[i] : 0, arch, model, surv,
                    &sigmas, Cheap_energy);
-//printf("Returned from model_prob\n");
     
-    if (energy) *energy -= en_weight * log_prob;
-//if (energy) printf("log_prob %.15g\n",log_prob);
-//printf("Past energy chng\n");
-//printf("N_outputs: %d, gr_weight %f\n",arch->N_outputs,gr_weight); 
+    if (energy)
+    { *energy -= en_weight * log_prob;
+    }
+
     if (grd)
     { if (gr_weight!=1)
       { for (k = 0; k<arch->N_outputs; k++)
         { deriv[i].o[k] *= gr_weight;
         }
       }
-//printf("Calling net_back\n");
+
       net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
                 arch, flgs, &params);
-//printf("Calling net_grad\n");
+
       net_grad (grd, &params, &train_values[i], &deriv[i], arch, flgs);
-//printf("grd->param_block[0] = %g\n",grd->param_block[0]);
-//printf("grd->param_block[1] = %g\n",grd->param_block[1]);
     }
   }
-//printf("Done one_case\n");
 }
 
 #if __CUDACC__ && __CUDA_ARCH__  /* Compiling for GPU */
@@ -1573,10 +1567,7 @@ __global__ void many_cases
 { 
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = start + cases_per_thread * i;
-//printf("In kernel\n");
-//printf("device N_inputs: %d, N_outputs: %d, N_hidden[0]: %d (thread %d,%d)\n",
-//        const_arch.N_inputs, const_arch.N_outputs, const_arch.N_hidden[0],
-//        blockIdx.x, threadIdx.x);
+
   if (j < const_N_train) 
   { 
     double *threi;
@@ -1605,11 +1596,7 @@ __global__ void many_cases
       { for (h = 1; 
              h<blockDim.x && start + cases_per_thread * (i+h) < const_N_train;
              h++)
-        { 
-//printf(
-//"R blk %d, idx %d, start %d, i %d, j %d, h %d, Dim %d, N_train %d, cmp %d\n",
-// blockIdx.x, threadIdx.x, start, i, j, h, blockDim.x, N_train, start+cases_per_thread*(i+h));
-          if (thread_energy)
+        { if (thread_energy)
           { *threi += threi[h];
           }
           if (thread_grad)
@@ -1631,9 +1618,6 @@ __global__ void many_cases
         { if (thread_energy)
           { *threi += threi[stride];
           }
-//printf("e %d, g %d, stride %02d, blk %02d/%02d, indx %02d, i %03d, j %03d\n",
-//  thread_energy!=0, thread_grad!=0, stride, blockIdx.x, blockDim.x, threadIdx.
-//  x, i, j);
           if (thread_grad)
           { net_param *p = thrgi[stride].param_block;
             net_param *q = thrgi->param_block;

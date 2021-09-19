@@ -1770,11 +1770,13 @@ void mc_app_energy
             }
 
             if (gr)
-            { for (j = 0; j<blks; j++)
+            { net_params *np = thread_grad;
+              for (j = 0; j<blks; j++)
               { unsigned k;
                 for (k = 0; k < grad.total_params; k++)
-                { grad.param_block[k] += thread_grad[j*blksize].param_block[k];
+                { grad.param_block[k] += np->param_block[k];
                 }
+                np += blksize;
               }
             }
 

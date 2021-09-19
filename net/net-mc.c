@@ -47,7 +47,7 @@
 
 #define DEFAULT_PERTHRD 2 	/* Defaults, if not set by CUDA_SIZES  */
 #define DEFAULT_BLKSIZE 64	/*   environment variable, which has   */
-#define DEFAULT_NUMBLKS	32	/*   the form NUMBLKS:BLKSIZE:PERTHRD  */
+#define DEFAULT_NUMBLKS	48	/*   the form PERTHRD:BLKSIZE:NUMBLKS  */
 
 static int perthrd = DEFAULT_PERTHRD;	/* Number of cases for a CUDA thread */
 static int blksize = DEFAULT_BLKSIZE;	/* Number of threads per block */
@@ -109,6 +109,8 @@ static net_params grad;		/* Pointers to gradient for network parameters*/
 /* Values used or computed by threads, in managed or constant memory. */
 
 #if __CUDACC__
+
+__constant__ int const_N_train;    /* Copy of N_train in constant memory */
 
 __constant__ net_arch const_arch;  /* Copy of arch in constant memory */
 __constant__ net_flags const_flgs; /* Copy of flgs in constant memory */
@@ -202,7 +204,7 @@ void mc_app_initialize
         if (sscanf(cuda_sizes,"%d:%d:%d%c",&t,&b,&n,&junk)!=3 
              || t<1 || b<1 || n<1)
         { fprintf(stderr,
-           "Bad format for CUDA_SIZES: should be perthrd:blksize,numblks\n");
+           "Bad format for CUDA_SIZES: should be perthrd:blksize:numblks\n");
           exit(1);
         }
         if (b>MAX_BLKSIZE)
@@ -430,6 +432,9 @@ void mc_app_initialize
 #   if __CUDACC__
     { check_cuda_error (cudaGetLastError(), 
                         "Before copying to constants");
+      cudaMemcpyToSymbol (const_N_train, &N_train, sizeof N_train);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_N_train");
       cudaMemcpyToSymbol (const_arch, arch, sizeof *arch);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_arch");
@@ -1423,13 +1428,13 @@ static void gibbs_adjustments
 
 #if __CUDACC__ && __CUDA_ARCH__  /* Compiling for GPU */
 
-#define arch   (&const_arch)
-#define flgs   (const_has_flgs ? &const_flgs : 0)
-#define model  (&const_model)
-#define surv   (&const_surv)
-#define sigmas const_sigmas
-#define params const_params
-#define deriv  const_deriv
+#define arch    (&const_arch)
+#define flgs    (const_has_flgs ? &const_flgs : 0)
+#define model   (&const_model)
+#define surv    (&const_surv)
+#define sigmas  const_sigmas
+#define params  const_params
+#define deriv   const_deriv
 
 #endif
 
@@ -1572,7 +1577,7 @@ __global__ void many_cases
 //printf("device N_inputs: %d, N_outputs: %d, N_hidden[0]: %d (thread %d,%d)\n",
 //        const_arch.N_inputs, const_arch.N_outputs, const_arch.N_hidden[0],
 //        blockIdx.x, threadIdx.x);
-  if (j < N_train) 
+  if (j < const_N_train) 
   { 
     double *threi;
     net_params *thrgi;
@@ -1588,7 +1593,7 @@ __global__ void many_cases
     }
 
     int h;
-    for (h = j; h < j+cases_per_thread && h < N_train; h++)
+    for (h = j; h < j+cases_per_thread && h < const_N_train; h++)
     { one_case (thread_energy ? threi : 0, 
                 thread_grad ? thrgi : 0, 
                 h, en_weight, gr_weight);
@@ -1597,7 +1602,9 @@ __global__ void many_cases
     if (0)  /* Linear-time reduction */
     { __syncthreads();
       if (threadIdx.x==0)
-      { for (h = 1; h<blockDim.x && start+cases_per_thread*(i+h) < N_train; h++)
+      { for (h = 1; 
+             h<blockDim.x && start + cases_per_thread * (i+h) < const_N_train;
+             h++)
         { 
 //printf(
 //"R blk %d, idx %d, start %d, i %d, j %d, h %d, Dim %d, N_train %d, cmp %d\n",
@@ -1619,7 +1626,8 @@ __global__ void many_cases
       int stride;
       for (stride = 1; stride < blockDim.x; stride <<= 1)
       { __syncthreads();
-        if ((i & (2*stride-1)) == 0 && j + cases_per_thread*stride < N_train)
+        if ((i & (2*stride-1)) == 0 
+              && j + cases_per_thread*stride < const_N_train)
         { if (thread_energy)
           { *threi += threi[stride];
           }
@@ -1627,9 +1635,12 @@ __global__ void many_cases
 //  thread_energy!=0, thread_grad!=0, stride, blockIdx.x, blockDim.x, threadIdx.
 //  x, i, j);
           if (thread_grad)
-          { unsigned k;
-            for (k = 0; k < thrgi->total_params; k++)
-            { thrgi->param_block[k] += thrgi[stride].param_block[k];
+          { net_param *p = thrgi[stride].param_block;
+            net_param *q = thrgi->param_block;
+            unsigned t = thrgi->total_params;
+            unsigned k;
+            for (k = 0; k < t; k++)
+            { q[k] += p[k];
             }
           }
         }

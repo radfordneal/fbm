@@ -32,9 +32,11 @@
 
 /* VARIABLES HOLDING DATA.  As declared in net-data.h. */
 
-__managed__ data_specifications *data_spec; /* Specifications of data sets */
+data_specifications *data_spec;	/* Specifications of data sets */
 
 __managed__ int N_train;	/* Number of training cases */
+__managed__ int N_inputs;	/* Number of input values, as in data_spec */
+__managed__ int N_targets;	/* Number of target values, as in data_spec */
 
 __managed__ net_values *train_values;  /* Values for training cases */
 __managed__ double *train_targets;     /* True targets for training cases */
@@ -102,15 +104,18 @@ void net_data_read
   if (train_values!=0) want_train = 0;
   if (test_values!=0)  want_test = 0;
 
-  if (model!=0 && model->type=='C' && data_spec->N_targets!=1)
+  N_inputs = data_spec->N_inputs;
+  N_targets = data_spec->N_targets;
+
+  if (model!=0 && model->type=='C' && N_targets!=1)
   { fprintf(stderr,"Only one target is allowed for 'class' models\n");
     exit(1);
   }
 
   model_values_check(model,data_spec,arch->N_outputs,"");
 
-  if (arch->N_inputs!=data_spec->N_inputs 
-                     + (model!=0 && model->type=='V' && surv->hazard_type!='C'))
+  if (arch->N_inputs 
+       != N_inputs + (model!=0 && model->type=='V' && surv->hazard_type!='C'))
   { fprintf(stderr,
      "Number of inputs in data specification doesn't match network inputs\n");
     exit(1);
@@ -119,21 +124,21 @@ void net_data_read
   if (want_train)
   { 
     numin_spec (&ns, "data@1,0",1);
-    numin_spec (&ns, data_spec->train_inputs, data_spec->N_inputs);
+    numin_spec (&ns, data_spec->train_inputs, N_inputs);
     train_values = read_inputs (&ns, &N_train, arch, model, surv, 1);
 
-    numin_spec (&ns, data_spec->train_targets, data_spec->N_targets);
+    numin_spec (&ns, data_spec->train_targets, N_targets);
     train_targets = read_targets (&ns, N_train, arch, 1);
   }
 
   if (want_test && data_spec->test_inputs[0]!=0)
   {
     numin_spec (&ns, "data@1,0",1);
-    numin_spec (&ns, data_spec->test_inputs, data_spec->N_inputs);
+    numin_spec (&ns, data_spec->test_inputs, N_inputs);
     test_values = read_inputs (&ns, &N_test, arch, model, surv, 0);
 
     if (data_spec->test_targets[0]!=0)
-    { numin_spec (&ns, data_spec->test_targets, data_spec->N_targets);
+    { numin_spec (&ns, data_spec->test_targets, N_targets);
       test_targets = read_targets (&ns, N_test, arch, 0);
     }
   }
@@ -215,17 +220,16 @@ static double *read_targets
   }
 
   tg = managed ?
-    (double *) managed_alloc (data_spec->N_targets*N_cases, sizeof (double))
-      : (double *) chk_alloc (data_spec->N_targets*N_cases, sizeof (double));
+    (double *) managed_alloc (N_targets*N_cases, sizeof (double))
+      : (double *) chk_alloc (N_targets*N_cases, sizeof (double));
 
   for (i = 0; i<N_cases; i++)
   { 
-    numin_read(ns,tg+data_spec->N_targets*i);
+    numin_read(ns,tg+N_targets*i);
 
-    for (j = 0; j<data_spec->N_targets; j++)
-    { tg[data_spec->N_targets*i+j] =
-         data_trans (tg[data_spec->N_targets*i+j], 
-                     data_spec->trans[data_spec->N_inputs+j]);
+    for (j = 0; j<N_targets; j++)
+    { tg[N_targets*i+j] = data_trans (tg[N_targets*i+j], 
+                                      data_spec->trans[N_inputs+j]);
     }
   }
 

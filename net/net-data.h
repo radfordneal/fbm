@@ -22,9 +22,11 @@
 /* VARIABLES HOLDING TRAINING AND/OR TEST DATA.  When the values or targets
    aren't known, the pointers are null. */
 
-__managed__ extern data_specifications *data_spec; /* data set specifications */
+extern data_specifications *data_spec; /* data set specifications */
 
-__managed__ extern int N_train;	/* Number of training cases */
+__managed__ extern int N_train;	  /* Number of training cases */
+__managed__ extern int N_inputs;  /* Number of input values, as in data_spec */
+__managed__ extern int N_targets; /* Number of target values, as in data_spec */
 
 __managed__ extern net_values *train_values;  /* Values for training cases */
 __managed__ extern double *train_targets;  /* True targets for training cases */

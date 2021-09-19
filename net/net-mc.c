@@ -310,8 +310,8 @@ void mc_app_initialize
   
     /* Read training data, if any, and allocate space for derivatives. */
   
-    data_spec = (data_specifications *) 
-                  make_managed(logg->data['D'],logg->actual_size['D']);
+    data_spec = (data_specifications *)
+                   make_managed(logg->data['D'],logg->actual_size['D']);
 
     if (data_spec!=0 && model==0)
     { fprintf(stderr,"No model specified for data\n");
@@ -1517,7 +1517,7 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
     net_func (&train_values[i], 0, arch, flgs, &params);
 
     double log_prob;
-    net_model_prob(&train_values[i], train_targets+data_spec->N_targets*i,
+    net_model_prob(&train_values[i], train_targets+N_targets*i,
                    &log_prob, grd ? &deriv[i] : 0, arch, model, surv,
                    &sigmas, Cheap_energy);
     

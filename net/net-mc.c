@@ -111,6 +111,8 @@ static net_params grad;		/* Pointers to gradient for network parameters*/
 #if __CUDACC__
 
 __constant__ int const_N_train;    /* Copy of N_train in constant memory */
+__constant__ int const_N_inputs;   /* Copy of N_inputs in constant memory */
+__constant__ int const_N_targets;  /* Copy of N_targets in constant memory */
 
 __constant__ net_arch const_arch;  /* Copy of arch in constant memory */
 __constant__ net_flags const_flgs; /* Copy of flgs in constant memory */
@@ -435,6 +437,12 @@ void mc_app_initialize
       cudaMemcpyToSymbol (const_N_train, &N_train, sizeof N_train);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_N_train");
+      cudaMemcpyToSymbol (const_N_inputs, &N_inputs, sizeof N_inputs);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_N_inputs");
+      cudaMemcpyToSymbol (const_N_targets, &N_targets, sizeof N_targets);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_N_targets");
       cudaMemcpyToSymbol (const_arch, arch, sizeof *arch);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_arch");
@@ -1428,13 +1436,14 @@ static void gibbs_adjustments
 
 #if __CUDACC__ && __CUDA_ARCH__  /* Compiling for GPU */
 
-#define arch    (&const_arch)
-#define flgs    (const_has_flgs ? &const_flgs : 0)
-#define model   (&const_model)
-#define surv    (&const_surv)
-#define sigmas  const_sigmas
-#define params  const_params
-#define deriv   const_deriv
+#define N_targets	const_N_targets
+#define arch		(&const_arch)
+#define flgs		(const_has_flgs ? &const_flgs : 0)
+#define model		(&const_model)
+#define surv		(&const_surv)
+#define sigmas		const_sigmas
+#define params		const_params
+#define deriv		const_deriv
 
 #endif
 
@@ -1542,6 +1551,7 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
 
 #if __CUDACC__ && __CUDA_ARCH__  /* Compiling for GPU */
 
+#undef N_targets
 #undef arch
 #undef flgs
 #undef model

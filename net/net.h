@@ -281,9 +281,9 @@ HOSTDEV void net_grad (net_params *restrict, net_params const*,
                        net_flags const*);
 
 HOSTDEV void net_model_prob (net_values const*, double const*, double *restrict,
-                            net_values *restrict, net_arch const*,
-                            model_specification const*, model_survival const*,
-                            net_sigmas const*, int);
+                             net_values *restrict, net_arch const*,
+                             model_specification const*, model_survival const*,
+                             net_sigmas const*, int);
 
 void net_model_check (model_specification const*);
 

@@ -1580,7 +1580,16 @@ __global__ void many_cases
 
     if (thread_grad)
     { thrgi = thread_grad + i;
-      memset (thrgi->param_block, 0, thrgi->total_params * sizeof (net_param));
+      if (0)  /* seems to be slower */
+      { memset(thrgi->param_block, 0, thrgi->total_params * sizeof (net_param));
+      }
+      else
+      { unsigned t = thrgi->total_params;
+        unsigned k;
+        for (k = 0; k < t; k++)
+        { thrgi->param_block[k] = 0;
+        }
+      }
     }
 
     int h;

@@ -199,7 +199,21 @@ void mc_app_initialize
   if (!initialize_done)
   {
 #   if __CUDACC__
-    { show_gpu();
+    {
+      char *e =  getenv("SHOW_GPU");
+      int show_gpu = e!=0 && strcmp(e,"false")!=0
+                          && strcmp(e,"FALSE")!=0
+                          && strcmp(e,"0")!=0;
+
+      struct cudaDeviceProp cuda_prop;
+      check_cuda_error(cudaGetDeviceProperties(&cuda_prop,0), "Get properties");
+
+      if (show_gpu)
+      {  printf("%s%s, Compute Capability %d.%d, %d processors, %.1f GBytes\n",
+                cuda_prop.name, cuda_prop.ECCEnabled ? " ECC" : "",
+                cuda_prop.major, cuda_prop.minor,
+                cuda_prop.multiProcessorCount, cuda_prop.totalGlobalMem/1.0e9);
+      }
 
       char *cuda_sizes = getenv("CUDA_SIZES");
       if (cuda_sizes)
@@ -220,7 +234,7 @@ void mc_app_initialize
         numblks = n;
       }
 
-      if (ask_show_gpu())
+      if (show_gpu)
       { printf (
   "Computing with %d cases per thread, %d threads per block, %d blocks max\n",
          perthrd, blksize, numblks);

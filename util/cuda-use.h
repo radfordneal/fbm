@@ -41,24 +41,6 @@
     return q;
   }
 
-  static int ask_show_gpu (void)
-  { char *e = getenv("SHOW_GPU");
-    return e!=0 && strcmp(e,"false")!=0 
-                && strcmp(e,"FALSE")!=0 
-                && strcmp(e,"0")!=0;
-  }
-
-  static void show_gpu (void)
-  { struct cudaDeviceProp prop;
-    if (ask_show_gpu())
-    { check_cuda_error (cudaGetDeviceProperties(&prop,0), "Get properties");
-      printf("%s%s, Compute Capability %d.%d, %d processors, %.1f GBytes\n",
-       prop.name, prop.ECCEnabled ? " ECC" : "",
-       prop.major, prop.minor,
-       prop.multiProcessorCount, prop.totalGlobalMem/1.0e9);
-    }
-  }
-
 #else  /* NOT USING CUDA */
 
 # define __host__

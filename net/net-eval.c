@@ -143,8 +143,6 @@ int main
     ng += 1;
   }
 
-  show_gpu();
-
   /* Open log file and read network architecture and data model. */
 
   log_file_open (&logf, 0);

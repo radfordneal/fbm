@@ -28,7 +28,7 @@ LFLAGS =
 
 # Options for nvcc (CUDA compiler for GPU code)
 
-NVCC_OPTIONS = -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
+NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
          -DUSE_SIMD_INTRINSICS -DUSE_FMA \
          -DUSE_SLEEF -Xcompiler -ffp-contract=off \
          --gpu-architecture=compute_35 \

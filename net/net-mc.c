@@ -1797,10 +1797,10 @@ void mc_app_energy
                 { unsigned k;
                   unsigned e = grad.total_params & ~(unsigned)0x3;
                   for (k = 0; k < e; k += 4)
-                  { _mm256_store_pd (grad.param_block+k, 
-                                     _mm256_add_pd (
-                                       _mm256_loadu_pd (grad.param_block+k),
-                                       _mm256_loadu_pd (np->param_block+k)));
+                  { _mm256_storeu_pd (grad.param_block+k, 
+                                      _mm256_add_pd (
+                                        _mm256_loadu_pd (grad.param_block+k),
+                                        _mm256_loadu_pd (np->param_block+k)));
                   }
                   for (; k < grad.total_params; k++)
                   { grad.param_block[k] += np->param_block[k];

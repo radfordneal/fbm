@@ -52,7 +52,10 @@
   { struct cudaDeviceProp prop;
     if (ask_show_gpu())
     { check_cuda_error (cudaGetDeviceProperties(&prop,0), "Get properties");
-      printf("%s, Compute Capability %d.%d\n",prop.name,prop.major,prop.minor);
+      printf("%s%s, Compute Capability %d.%d, %d processors, %.1f GBytes\n",
+       prop.name, prop.ECCEnabled ? " ECC" : "",
+       prop.major, prop.minor,
+       prop.multiProcessorCount, prop.totalGlobalMem/1.0e9);
     }
   }
 

@@ -30,6 +30,8 @@
 #include "net.h"
 #include "net-data.h"
 
+#include "intrinsics-use.h"
+
 
 /* SETTING TO DISABLE SIMULATION OF "TYPICAL" SQUARED VALUES. */
 
@@ -1790,13 +1792,32 @@ void mc_app_energy
 
             if (gr)
             { net_params *np = thread_grad;
-              for (j = 0; j<blks; j++)
-              { unsigned k;
-                for (k = 0; k < grad.total_params; k++)
-                { grad.param_block[k] += np->param_block[k];
+#             if USE_SIMD_INTRINSICS && __AVX__
+              { for (j = 0; j<blks; j++)
+                { unsigned k;
+                  unsigned e = grad.total_params & ~(unsigned)0x3;
+                  for (k = 0; k < e; k += 4)
+                  { _mm256_store_pd (grad.param_block+k, 
+                                     _mm256_add_pd (
+                                       _mm256_loadu_pd (grad.param_block+k),
+                                       _mm256_loadu_pd (np->param_block+k)));
+                  }
+                  for (; k < grad.total_params; k++)
+                  { grad.param_block[k] += np->param_block[k];
+                  }
+                  np += blksize;
                 }
-                np += blksize;
               }
+#             else
+              { for (j = 0; j<blks; j++)
+                { unsigned k;
+                  for (k = 0; k < grad.total_params; k++)
+                  { grad.param_block[k] += np->param_block[k];
+                  }
+                  np += blksize;
+                }
+              }
+#             endif
             }
 
             i += c;

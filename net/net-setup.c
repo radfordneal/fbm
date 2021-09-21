@@ -184,7 +184,8 @@ unsigned net_setup_param_count
 
 
 /* RETURN NUMBER OF UNIT-RELATED VALUES IN NETWORK.  Returns the number 
-   of unit-related values for a network with the given architecture. */
+   of unit-related values for a network with the given architecture. 
+   Includes the inputs and the outputs. */
 
 unsigned net_setup_value_count 
 ( net_arch *a		/* Network architecture */
@@ -418,18 +419,26 @@ void net_replicate_param_pointers
    structure to point the appropriate places in the block of net_value
    values passed.  The size of this block must be as indicated by the
    net_setup_value_count procedure, which count should be stored by
-   the caller in the total_values field.. */
+   the caller in the total_values field.  However, the count will exclude
+   inputs if a separate 'inputs' argument is passed, indicating where 
+   they are. */
 
 void net_setup_value_pointers
 ( net_values *v,	/* Structure to set up pointers in */
   net_value *b,		/* Block of 'value' values */
-  net_arch *a		/* Network architecture */
+  net_arch *a,		/* Network architecture */
+  net_value *inputs	/* Input values, 0 if part of value block */
 )
 {
   int l;
 
-  v->i = b;
-  b += a->N_inputs;
+  if (inputs)
+  { v->i = inputs;
+  }
+  else
+  { v->i = b;
+    b += a->N_inputs;
+  }
 
   for (l = 0; l<a->N_layers; l++)
   { v->h[l] = b;
@@ -439,7 +448,7 @@ void net_setup_value_pointers
   }
 
   v->o = b;
-  b += a->N_outputs;
+  // b += a->N_outputs; // not necessary
 }
 
 

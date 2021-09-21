@@ -38,7 +38,6 @@
 #define TYPICAL_VALUES_ALL_ONE 0  /* Set to 1 to disable simulation of values,
                                      thereby reverting to the old heuristic */
 
-
 /* CUDA SETTINGS. */
 
 #if __CUDACC__
@@ -108,7 +107,8 @@ static net_values typical;	/* Typical squared values for hidden units */
 
 static net_params grad;		/* Pointers to gradient for network parameters*/
 
-/* Values used or computed by threads, in managed or constant memory. */
+/* Values used or computed by threads, in managed or constant memory.  
+   Sometimes the pointers are in constant memory, but they point to is not. */
 
 #if __CUDACC__
 
@@ -321,15 +321,14 @@ void mc_app_initialize
     /* Set up second derivative and typical value structures. */
 
     value_block = (net_value *) chk_alloc (value_count, sizeof *value_block);
-    net_setup_value_pointers (&seconds, value_block, arch);
+    net_setup_value_pointers (&seconds, value_block, arch, 0);
 
     value_block = (net_value *) chk_alloc (value_count, sizeof *value_block);
-    net_setup_value_pointers (&typical, value_block, arch);
+    net_setup_value_pointers (&typical, value_block, arch, 0);
   
     /* Read training data, if any, and allocate space for derivatives. */
   
-    data_spec = (data_specifications *)
-                   make_managed(logg->data['D'],logg->actual_size['D']);
+    data_spec = (data_specifications *) logg->data['D'];
 
     if (data_spec!=0 && model==0)
     { fprintf(stderr,"No model specified for data\n");
@@ -355,7 +354,7 @@ void mc_app_initialize
         (net_value *) managed_alloc (value_count*N_train, sizeof *value_block);
     
       for (i = 0; i<N_train; i++) 
-      { net_setup_value_pointers (&deriv[i], value_block+value_count*i, arch);
+      { net_setup_value_pointers (&deriv[i], value_block+value_count*i, arch, 0);
       }
     
       for (j = 0; j<arch->N_inputs; j++)

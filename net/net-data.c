@@ -156,6 +156,7 @@ static net_values *read_inputs
   int managed
 )
 {
+  net_value *input_block;
   net_value *value_block;
   net_values *values;
   int value_count;
@@ -166,16 +167,23 @@ static net_values *read_inputs
 
   value_count = net_setup_value_count(arch);
 
+  value_count -= arch->N_inputs;  /* Keep inputs separate, as read-only block */
+
   value_block = managed ? 
     (net_value *) managed_alloc (value_count*N_cases, sizeof *value_block)
      : (net_value *) chk_alloc (value_count*N_cases, sizeof *value_block);
+
+  input_block = managed ?
+    (net_value *) managed_alloc (arch->N_inputs*N_cases, sizeof *input_block)
+     : (net_value *) chk_alloc (arch->N_inputs*N_cases, sizeof *input_block);
 
   values = managed ?
     (net_values *) managed_alloc (N_cases, sizeof *values)
      : (net_values *) chk_alloc (N_cases, sizeof *values);
 
   for (i = 0; i<N_cases; i++) 
-  { net_setup_value_pointers (&values[i], value_block+value_count*i, arch);
+  { net_setup_value_pointers (&values[i], value_block+value_count*i, arch, 
+                              input_block+arch->N_inputs*i);
   }
 
   for (i = 0; i<N_cases; i++) 
@@ -192,6 +200,15 @@ static net_values *read_inputs
         = data_trans (values[i].i[j], data_spec->trans[j-j0]);
     }
   }
+
+# if __CUDACC__
+  { if (managed)
+    { check_cuda_error (cudaMemAdvise (input_block, 
+        arch->N_inputs * sizeof *input_block, cudaMemAdviseSetReadMostly, 0),
+        "Memory advice for input_block");
+    }
+  }
+# endif
 
   numin_close(ns);
 
@@ -232,6 +249,15 @@ static double *read_targets
                                       data_spec->trans[N_inputs+j]);
     }
   }
+
+# if __CUDACC__
+  { if (managed)
+    { check_cuda_error (cudaMemAdvise (tg,
+        N_targets * N_cases * sizeof *tg, cudaMemAdviseSetReadMostly, 0),
+        "Memory advice for input_block");
+    }
+  }
+# endif
 
   numin_close(ns);
 

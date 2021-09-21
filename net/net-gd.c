@@ -266,7 +266,7 @@ int main
     value_count = net_setup_value_count(arch);
     value_block = chk_alloc (value_count, sizeof *value_block);
     
-    net_setup_value_pointers (deriv, value_block, arch);
+    net_setup_value_pointers (deriv, value_block, arch, 0);
   }
 
   if (N_train==0)

@@ -208,7 +208,7 @@ int main
   value_count = net_setup_value_count(a);
   value_block = (net_value *) managed_alloc (value_count, sizeof *value_block);
 
-  net_setup_value_pointers (v, value_block, a);
+  net_setup_value_pointers (v, value_block, a, 0);
 
   /* Evaluate function for the specified networks. */
 

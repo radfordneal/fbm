@@ -39,17 +39,17 @@ __managed__ int N_inputs;	/* Number of input values, as in data_spec */
 __managed__ int N_targets;	/* Number of target values, as in data_spec */
 
 __managed__ net_values *train_values;  /* Values for training cases */
-__managed__ double *train_targets;     /* True targets for training cases */
+__managed__ net_value *train_targets;  /* True training case targets */
 
 int N_test;			/* Number of test cases */
 
 net_values *test_values;	/* Values associated with test cases */
-double *test_targets;		/* True targets for test cases */
+net_value *test_targets;	/* True targets for test cases */
 
 
 /* PROCEDURES. */
 
-static double     *read_targets (numin_source *, int,   net_arch *, int);
+static net_value *read_targets  (numin_source *, int,   net_arch *, int);
 static net_values *read_inputs  (numin_source *, int *, net_arch *, 
                                  model_specification *, model_survival *, int);
 
@@ -60,7 +60,7 @@ static net_values *read_inputs  (numin_source *, int *, net_arch *,
 void net_data_free (void)
 {
   if (train_values!=0)
-  { free(train_values);
+  { managed_free(train_values);  /* doesn't free what's pointed to yet... */
     train_values = 0;
     N_train = 0;
   }
@@ -71,7 +71,7 @@ void net_data_free (void)
   }
 
   if (test_values!=0)
-  { free(test_values);
+  { free(test_values);  /* doesn't free what's pointed to yet... */
     test_values = 0;
     N_test = 0;
   }
@@ -220,14 +220,14 @@ static net_values *read_inputs
 
 /* READ TARGET VALUES FOR A SET OF CASES. */
 
-static double *read_targets
+static net_value *read_targets
 ( numin_source *ns,
   int N_cases,
   net_arch *arch,
   int managed
 )
 {
-  double *tg;
+  net_value *tg;
   int i, j;
 
   if (numin_start(ns)!=N_cases)
@@ -237,8 +237,8 @@ static double *read_targets
   }
 
   tg = managed ?
-    (double *) managed_alloc (N_targets*N_cases, sizeof (double))
-      : (double *) chk_alloc (N_targets*N_cases, sizeof (double));
+    (net_value *) managed_alloc (N_targets*N_cases, sizeof *tg)
+      : (net_value *) chk_alloc (N_targets*N_cases, sizeof *tg);
 
   for (i = 0; i<N_cases; i++)
   { 

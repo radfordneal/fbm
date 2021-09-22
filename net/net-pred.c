@@ -49,7 +49,7 @@ static net_priors *p;
 static net_sigmas sigmas, *s = &sigmas;
 static net_params params, *w = &params;
 
-static double *curr_targets;
+static net_value *curr_targets;
 
 
 /* SET SIZES FOR APPLICATION RECORDS. */
@@ -90,7 +90,7 @@ void pred_app_init (void)
   logg.req_size['S'] = s->total_sigmas * sizeof(net_sigma);
   logg.req_size['W'] = w->total_params * sizeof(net_param);
 
-  curr_targets = chk_alloc (M_targets, sizeof (double));
+  curr_targets = chk_alloc (M_targets, sizeof *curr_targets);
 
   net_data_read (0, 1, a, m, sv);
 

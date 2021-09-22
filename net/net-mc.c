@@ -59,7 +59,7 @@ static int numblks = DEFAULT_NUMBLKS;	/* Number of blocks per kernel */
 
 /* FUNCTION TO SQUARE ITS ARGUMENT. */
 
-static inline double sq (double x) { return x*x; }
+static inline net_value sq (net_value x) { return x*x; }
 
 
 /* SHOULD A CHEAP ENERGY FUNCTION BE USED?  If set to 0, the full energy
@@ -102,7 +102,7 @@ static double *quadratic_approx;/* Quadratic approximation to log likelihood  */
 
 static net_params stepsizes;	/* Pointers to stepsizes */
 static net_values seconds;	/* Second derivatives */
-static double *train_sumsq;	/* Sums of squared training input values */
+static net_value *train_sumsq;	/* Sums of squared training input values */
 static net_values typical;	/* Typical squared values for hidden units */
 
 static net_params grad;		/* Pointers to gradient for network parameters*/
@@ -342,7 +342,7 @@ void mc_app_initialize
       exit(1);
     }
 
-    train_sumsq = (double *) chk_alloc (arch->N_inputs, sizeof *train_sumsq);
+    train_sumsq = (net_value *) chk_alloc (arch->N_inputs, sizeof *train_sumsq);
     for (j = 0; j<arch->N_inputs; j++) train_sumsq[j] = 0;
   
     if (data_spec!=0)
@@ -366,7 +366,7 @@ void mc_app_initialize
 
       if (model!=0 && model->type=='V' && surv->hazard_type!='C')
       {
-        double tsq;
+        net_value tsq;
         int n;
 
         tsq = 0;

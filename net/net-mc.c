@@ -212,7 +212,8 @@ void mc_app_initialize
       {  printf("%s%s, Compute Capability %d.%d, %d processors, %.1f GBytes\n",
                 cuda_prop.name, cuda_prop.ECCEnabled ? " ECC" : "",
                 cuda_prop.major, cuda_prop.minor,
-                cuda_prop.multiProcessorCount, cuda_prop.totalGlobalMem/1.0e9);
+                cuda_prop.multiProcessorCount, 
+                (double)cuda_prop.totalGlobalMem/1024/1024/1024);
       }
 
       char *cuda_sizes = getenv("CUDA_SIZES");

@@ -186,10 +186,10 @@ HOSTDEV static void add_grad1_config
 
 #define ADD_GRAD2(offset,omit) \
 do \
-{ double tv, o; \
+{ net_value tv, o; \
   int i, j; \
   if (nd==1) \
-  { double d0 = d[0]; \
+  { net_value d0 = d[0]; \
     i = 3; \
     while (i<nv) \
     { o = (offset); if (!(omit)) *g++ += (v[i-3] + o) * d0; \
@@ -229,7 +229,7 @@ do \
   } \
 } while (0)
 
-#if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
+#if FP64 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
 
 #define ADD_GRAD2_00 \
 do \
@@ -330,7 +330,7 @@ do \
   } \
 } while (0)
 
-#elif USE_SIMD_INTRINSICS && __AVX__
+#elif FP64 && USE_SIMD_INTRINSICS && __AVX__
 
 #define ADD_GRAD2_00 \
 do \
@@ -431,14 +431,121 @@ do \
   } \
 } while (0)
 
+#elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
+
+#define ADD_GRAD2_00 \
+do \
+{ int i, j; \
+  if (nd==1) \
+  { __m128 D0 = _mm_set1_ps(*d); \
+    i = 3; \
+    while (i<nv) \
+    { _mm_storeu_ps (g+i-3, _mm_add_ps (_mm_loadu_ps(g+i-3), \
+                              _mm_mul_ps (D0, _mm_loadu_ps(v+i-3)))); \
+      i += 4; \
+    } \
+    i -= 2; \
+    if (i<nv) \
+    { __m128 Z = _mm_setzero_ps(); \
+      _mm_storel_pi ((__m64 *)(g+i-1), \
+        _mm_add_ps (_mm_loadl_pi(Z, (__m64 const*) (g+i-1)), \
+         _mm_mul_ps (D0, _mm_loadl_pi (Z, (__m64 const*) (v+i-1))))); \
+      i += 2; \
+    } \
+    if (i<=nv) \
+    { _mm_store_ss (g+i-1, _mm_add_ss (_mm_load_ss(g+i-1), \
+                             _mm_mul_ss (D0, _mm_load_ss(v+i-1)))); \
+    } \
+  } \
+  else \
+  { __m128 TV, TV2; \
+    i = 0; \
+    for (;;) \
+    { for (;;) \
+      { if (i==nv) goto done; \
+        TV = _mm_set1_ps (*(v+i)); \
+        if (_mm_ucomineq_ss (TV, _mm_setzero_ps())) \
+        { break; \
+        } \
+        i += 1; \
+        g += nd; \
+      } \
+      net_value *g2 = g+nd; \
+      i += 1; \
+      for (;;) \
+      { if (i==nv) goto one_more; \
+        TV2 = _mm_set1_ps (*(v+i)); \
+        if (_mm_ucomineq_ss (TV2, _mm_setzero_ps())) \
+        { break; \
+        } \
+        i += 1; \
+        g2 += nd; \
+      } \
+      j = 3; \
+      while (j<nd) \
+      { __m128 D = _mm_loadu_ps(d+j-3); \
+        _mm_storeu_ps (g+j-3, _mm_add_ps (_mm_loadu_ps(g+j-3), \
+                                          _mm_mul_ps (TV, D))); \
+        _mm_storeu_ps (g2+j-3, _mm_add_ps (_mm_loadu_ps(g2+j-3), \
+                                           _mm_mul_ps (TV2, D))); \
+        j += 4; \
+      } \
+      j -= 2; \
+      if (j<nd) \
+      { __m128 Z = _mm_setzero_ps(); \
+        __m128 D = _mm_loadl_pi (Z, (__m64 const*) (d+j-1)); \
+        _mm_storel_pi ((__m64 *)(g+j-1), \
+           _mm_add_ps (_mm_loadl_pi (Z, (__m64 const*) (g+j-1)), \
+                       _mm_mul_ps (TV, D))); \
+        _mm_storel_pi ((__m64 *)(g2+j-1), \
+           _mm_add_ps (_mm_loadl_pi(Z, (__m64 const*) (g2+j-1)),\
+                       _mm_mul_ps (TV2, D))); \
+        j += 2; \
+      } \
+      if (j<=nd) \
+      { __m128 D = _mm_load_ss(d+j-1); \
+        _mm_store_ss (g+j-1, _mm_add_ss (_mm_load_ss(g+j-1), \
+                                         _mm_mul_ss (TV, D))); \
+        _mm_store_ss (g2+j-1, _mm_add_ss (_mm_load_ss(g2+j-1), \
+                                          _mm_mul_ss (TV2, D))); \
+      } \
+      i += 1; \
+      g = g2+nd; \
+    } \
+    goto done; \
+  one_more: \
+    j = 3; \
+    while (j<nd) \
+    { __m128 D = _mm_loadu_ps(d+j-3); \
+      _mm_storeu_ps (g+j-3, _mm_add_ps (_mm_loadu_ps(g+j-3), \
+                                        _mm_mul_ps (TV, D))); \
+      j += 4; \
+    } \
+    j -= 2; \
+    if (j<nd) \
+    { __m128 Z = _mm_setzero_ps(); \
+      __m128 D = _mm_loadl_pi (Z, (__m64 const*) (d+j-1)); \
+      _mm_storel_pi ((__m64 *)(g+j-1), \
+         _mm_add_ps (_mm_loadl_pi (Z, (__m64 const*) (g+j-1)), \
+                     _mm_mul_ps (TV, D))); \
+      j += 2; \
+    } \
+    if (j<=nd) \
+    { __m128 D = _mm_load_ss(d+j-1); \
+      _mm_store_ss (g+j-1, _mm_add_ss (_mm_load_ss(g+j-1), \
+                                       _mm_mul_ss (TV, D))); \
+    } \
+  done: ; \
+  } \
+} while (0)
+
 #else
 
 #define ADD_GRAD2_00 \
 do \
-{ double tv; \
-  int i, j; \
+{ int i, j; \
   if (nd==1) \
-  { double d0 = d[0]; \
+  { net_value d0 = d[0]; \
     i = 3; \
     while (i<nv) \
     { g[i-3] += v[i-3] * d0; \
@@ -454,7 +561,8 @@ do \
     } \
   } \
   else \
-  { for (i = 0; i<nv; i++) \
+  { net_value tv; \
+    for (i = 0; i<nv; i++) \
     { tv = v[i]; \
       if (tv!=0)  \
       { j = 3; \
@@ -524,7 +632,7 @@ HOSTDEV static void add_grad2_config
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w;
-#   if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
+#   if FP64 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m256d SI = _mm256_set1_pd (s[cn[c].s] + off[cn[c].s]);
@@ -542,7 +650,7 @@ HOSTDEV static void add_grad2_config
         }
       }
     }
-#   elif USE_SIMD_INTRINSICS && __AVX__
+#   elif FP64 && USE_SIMD_INTRINSICS && __AVX__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m256d SI = _mm256_set1_pd (s[cn[c].s] + off[cn[c].s]);
@@ -557,13 +665,31 @@ HOSTDEV static void add_grad2_config
           j = cn[c].d;
           _mm256_storeu_pd (g+k, _mm256_add_pd (_mm256_loadu_pd(g+k),
                                    _mm256_mul_pd (SI, _mm256_loadu_pd(d+j))));
+        }
+      }
+    }
+#   elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m128 SI = _mm_set1_ps (s[cn[c].s] + off[cn[c].s]);
+          j = cn[c].d;
+          _mm_storeu_ps (g+k, _mm_add_ps (_mm_loadu_ps(g+k),
+                                          _mm_mul_ps (SI, _mm_loadu_ps(d+j))));
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m128 SI = _mm_set1_ps (s[cn[c].s]);
+          j = cn[c].d;
+          _mm_store_ps (g+k, _mm_add_ps (_mm_loadu_ps(g+k),
+                                         _mm_mul_ps (SI, _mm_loadu_ps(d+j))));
         }
       }
     }
 #   else
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { double soi = s[cn[c].s] + off[cn[c].s];
+        { net_value soi = s[cn[c].s] + off[cn[c].s];
           j = cn[c].d;
           g[k+0] += soi * d[j+0];
           g[k+1] += soi * d[j+1];
@@ -573,7 +699,7 @@ HOSTDEV static void add_grad2_config
       }
       else
       { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { double si = s[cn[c].s];
+        { net_value si = s[cn[c].s];
           j = cn[c].d;
           g[k+0] += si * d[j+0];
           g[k+1] += si * d[j+1];
@@ -590,7 +716,7 @@ HOSTDEV static void add_grad2_config
     cn = cf->single4_s;
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { double soi = s[cn[c].s] + off[cn[c].s];
+      { net_value soi = s[cn[c].s] + off[cn[c].s];
         j = cn[c].d;
         g[k] += soi * d[j];
         j = cn[c+1].d; k = cn[c+1].w; 
@@ -603,7 +729,7 @@ HOSTDEV static void add_grad2_config
     }
     else
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { double si = s[cn[c].s];
+      { net_value si = s[cn[c].s];
         j = cn[c].d;
         g[k] += si * d[j];
         j = cn[c+1].d; k = cn[c+1].w; 
@@ -618,7 +744,7 @@ HOSTDEV static void add_grad2_config
     cn = cf->single4_d;
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { double dj = d[cn[c].d];
+      { net_value dj = d[cn[c].d];
         i = cn[c].s;
         g[k] += (s[i]+off[i]) * dj;
         i = cn[c+1].s; k = cn[c+1].w; 
@@ -631,7 +757,7 @@ HOSTDEV static void add_grad2_config
     }
     else
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { double dj = d[cn[c].d];
+      { net_value dj = d[cn[c].d];
         i = cn[c].s;
         g[k] += s[i] * dj;
         i = cn[c+1].s; k = cn[c+1].w; 

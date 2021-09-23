@@ -136,7 +136,7 @@ HOSTDEV void net_func
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     { 
 #     if USE_QUICK_AND_DIRTY_TANH
-#       if USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
+#       if FP64 && USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
         { __m256d one = _mm256_set1_pd(1.0);
           __m256d two = _mm256_set1_pd(2.0);
           j = 3;
@@ -163,7 +163,7 @@ HOSTDEV void net_func
           { vh[j-1] = TANH (sh[j-1]);
           }
         }
-#       elif USE_SLEEF && __AVX__
+#       elif FP64 && USE_SLEEF && __AVX__
         { __m256d one = _mm256_set1_pd(1.0);
           __m256d two = _mm256_set1_pd(2.0);
           j = 3;
@@ -197,7 +197,7 @@ HOSTDEV void net_func
         }
 #       endif
 #     else
-#       if USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
+#       if FP64 && USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
         { j = 3;
           while (j<N_hidden)
           { _mm256_storeu_pd (vh+j-3,  
@@ -214,7 +214,7 @@ HOSTDEV void net_func
           { vh[j-1] = tanh (sh[j-1]);
           }
         }
-#       elif USE_SLEEF && __AVX__
+#       elif FP64 && USE_SLEEF && __AVX__
         { j = 3;
           while (j<N_hidden)
           { _mm256_storeu_pd (vh+j-3,  
@@ -246,7 +246,7 @@ HOSTDEV void net_func
     }
     else if (flgs->layer_type[l]==Softplus_type)
     {
-#     if USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
+#     if FP64 && USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
       { __m256d zero = _mm256_setzero_pd();
         __m256d one = _mm256_set1_pd(1.0);
         __m256d mask = 
@@ -276,13 +276,13 @@ HOSTDEV void net_func
           j += 2;
         }
         if (j<=N_hidden)
-        { double a = sh[j-1];
-          double v = log (1 + exp(-fabs(a)));  /* avoid overflow */
+        { net_value a = sh[j-1];
+          net_value v = log (1 + exp(-fabs(a)));  /* avoid overflow */
           if (a>0) v += a;
           vh[j-1] = v;
         }
       }
-#     elif USE_SLEEF && __AVX__
+#     elif FP64 && USE_SLEEF && __AVX__
       { __m256d zero = _mm256_setzero_pd();
         __m256d one = _mm256_set1_pd(1.0);
         __m256d mask = 
@@ -312,16 +312,16 @@ HOSTDEV void net_func
           j += 2;
         }
         if (j<=N_hidden)
-        { double a = sh[j-1];
-          double v = log (1 + exp(-fabs(a)));  /* avoid overflow */
+        { net_value a = sh[j-1];
+          net_value v = log (1 + exp(-fabs(a)));  /* avoid overflow */
           if (a>0) v += a;
           vh[j-1] = v;
         }
       }
 #     else
       { for (j = 0; j<N_hidden; j++)
-        { double a = sh[j];
-          double v = log (1 + exp(-fabs(a)));  /* avoid overflow */
+        { net_value a = sh[j];
+          net_value v = log (1 + exp(-fabs(a)));  /* avoid overflow */
           if (a>0) v += a;
           vh[j] = v;
         }
@@ -422,9 +422,9 @@ HOSTDEV static void bias_values_config
 #define ADD_CONNECTIONS(offset,omit) \
 do \
 { int i, j; \
-  double o; \
+  net_param o; \
   if (nd==1) \
-  { double sv[4] = { 0, 0, 0, 0 }; \
+  { net_value sv[4] = { 0, 0, 0, 0 }; \
     i = 3; \
     while (i<ns) \
     { o = (offset); if (!(omit)) sv[0] += (v[i-3] + o) * *w++; \
@@ -465,7 +465,7 @@ do \
   } \
 } while (0)
 
-#if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
+#if FP64 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
 
 #define ADD_CONNECTIONS00 \
 do \
@@ -568,7 +568,7 @@ do \
   } \
 } while (0)
 
-#elif USE_SIMD_INTRINSICS && __AVX__
+#elif FP64 && USE_SIMD_INTRINSICS && __AVX__
 
 #define ADD_CONNECTIONS00 \
 do \
@@ -728,7 +728,7 @@ HOSTDEV static void add_connections_config
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w;
-#   if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
+#   if FP64 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m256d VOI = _mm256_set1_pd (v[cn[c].s] + off[cn[c].s]);
@@ -746,7 +746,7 @@ HOSTDEV static void add_connections_config
         }
       }
     }
-#   elif USE_SIMD_INTRINSICS && __AVX__
+#   elif FP64 && USE_SIMD_INTRINSICS && __AVX__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m256d VOI = _mm256_set1_pd (v[cn[c].s] + off[cn[c].s]);
@@ -767,7 +767,7 @@ HOSTDEV static void add_connections_config
 #   else
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { double voi = v[cn[c].s] + off[cn[c].s];
+        { net_value voi = v[cn[c].s] + off[cn[c].s];
           j = cn[c].d;
           s[j+0] += voi * w[k+0];
           s[j+1] += voi * w[k+1];
@@ -777,7 +777,7 @@ HOSTDEV static void add_connections_config
       }
       else
       { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { double vi = v[cn[c].s];
+        { net_value vi = v[cn[c].s];
           j = cn[c].d; 
           s[j+0] += vi * w[k+0];
           s[j+1] += vi * w[k+1];
@@ -794,7 +794,7 @@ HOSTDEV static void add_connections_config
     cn = cf->single4_s;
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { double voi = v[cn[c].s] + off[cn[c].s];
+      { net_value voi = v[cn[c].s] + off[cn[c].s];
         j = cn[c].d;
         s[j] += voi * w[k];
         j = cn[c+1].d; k = cn[c+1].w; 
@@ -807,7 +807,7 @@ HOSTDEV static void add_connections_config
     }
     else
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { double vi = v[cn[c].s];
+      { net_value vi = v[cn[c].s];
         j = cn[c].d; 
         s[j] += vi * w[k];
         j = cn[c+1].d; k = cn[c+1].w; 
@@ -823,7 +823,7 @@ HOSTDEV static void add_connections_config
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
       { j = cn[c].d;
-        double sj = s[j];
+        net_value sj = s[j];
         i = cn[c].s; 
         sj += (v[i]+off[i]) * w[k];
         i = cn[c+1].s; k = cn[c+1].w; 
@@ -837,7 +837,7 @@ HOSTDEV static void add_connections_config
     }
     else
     { 
-#     if USE_SIMD_INTRINSICS && __AVX2__ && 0  /* disabled since it's slower */
+#     if FP64 && USE_SIMD_INTRINSICS && __AVX2__ && 0 /* disabled: slower */
       { __m256i MASK16 = _mm256_set1_epi64x (0xffff);
         for (c = 0; ; c+=4)
         { __m256i K = _mm256_loadu_si256 ((__m256i *) &cn[c]);
@@ -860,7 +860,7 @@ HOSTDEV static void add_connections_config
 #     else
       { for (c = 0; (k = cn[c].w) >= 0; c+=4)
         { j = cn[c].d;
-          double sj = s[j];
+          net_value sj = s[j];
           i = cn[c].s; 
           sj += v[i] * w[k];
           i = cn[c+1].s; k = cn[c+1].w; 

@@ -13,6 +13,6 @@
  * application.  All use of these programs is entirely at the user's own risk.
  */
 
-#if (USE_SIMD_INTRINSICS || USE_SLEEF) && __AVX__
+#if (USE_SIMD_INTRINSICS || USE_SLEEF) && __SSE2__
 # include  <immintrin.h>
 #endif

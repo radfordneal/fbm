@@ -103,7 +103,7 @@ HOSTDEV void net_back
     {
       net_value const* vh = v->h[l];
 
-#     if USE_SIMD_INTRINSICS && __AVX__ && 0  /* disabled, since doesn't help */
+#     if FP64 && USE_SIMD_INTRINSICS && __AVX__ && 0 /* disabled: not faster */
       { __m256d ONE = _mm256_set1_pd(1.0);
         i = 3;
         while (i<N_hidden)
@@ -142,7 +142,7 @@ HOSTDEV void net_back
     { 
       net_value const* vs = v->s[l];
 
-#     if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
+#     if FP64 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
       { __m256d ONE = _mm256_set1_pd(1.0);
         i = 3;
         while (i<N_hidden)
@@ -167,7 +167,7 @@ HOSTDEV void net_back
         { ds[i] = dh[i] / (1+exp(-vs[i]));
         }
       }
-#     elif USE_SIMD_INTRINSICS && __AVX__
+#     elif FP64 && USE_SIMD_INTRINSICS && __AVX__
       { __m256d ONE = _mm256_set1_pd(1.0);
         i = 3;
         while (i<N_hidden)
@@ -249,7 +249,7 @@ do \
 { net_value tv; \
   int i, j; \
   if (nd==1) \
-  { double d0 = dd[0]; \
+  { net_value d0 = dd[0]; \
     i = 3; \
     while (i<ns) \
     { if (!(omit)) ds[i-3] += *w++ * d0; \
@@ -287,7 +287,7 @@ do \
   } \
 } while (0)
 
-#if USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA &&__FMA__
+#if FP64 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA &&__FMA__
 
 #define SUM_DERIVATIVES0 \
 do \
@@ -371,7 +371,7 @@ do \
   } \
 } while (0)
 
-#elif USE_SIMD_INTRINSICS && __AVX__
+#elif FP64 && USE_SIMD_INTRINSICS && __AVX__
 
 #define SUM_DERIVATIVES0 \
 do \
@@ -464,7 +464,7 @@ do \
 { net_value tv; \
   int i, j; \
   if (nd==1) \
-  { double d0 = dd[0]; \
+  { net_value d0 = dd[0]; \
     i = 3; \
     while (i<ns) \
     { ds[i-3] += w[i-3] * d0; \
@@ -538,7 +538,7 @@ HOSTDEV static void sum_derivatives_config
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w;
-#   if USE_SIMD_INTRINSICS && __AVX__
+#   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { for (c = 0; (k = cn[c].w) >= 0; c++)
       { i = cn[c].s; j = cn[c].d;
         __m256d P = _mm256_mul_pd (_mm256_loadu_pd(dd+j),
@@ -563,7 +563,7 @@ HOSTDEV static void sum_derivatives_config
     cn = cf->single4_s;
     for (c = 0; (k = cn[c].w) >= 0; c+=4)
     { i = cn[c].s;
-      double dsi = ds[i];
+      net_value dsi = ds[i];
       j = cn[c].d;
       dsi += dd[j] * w[k];
       j = cn[c+1].d; k = cn[c+1].w; 
@@ -577,7 +577,7 @@ HOSTDEV static void sum_derivatives_config
 
     cn = cf->single4_d;
     for (c = 0; (k = cn[c].w) >= 0; c+=4)
-    { double ddj = dd[cn[c].d];
+    { net_value ddj = dd[cn[c].d];
       i = cn[c].s;
       ds[i] += ddj * w[k];
       i = cn[c+1].s; k = cn[c+1].w; 

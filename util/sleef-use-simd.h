@@ -22,5 +22,9 @@
 # elif USE_SIMD_INTRINSICS && __AVX__
 #   include "../sleef-include/sleefinline_sse4.h"
 #   include "../sleef-include/sleefinline_avx.h"
+# elif USE_SIMD_INTRINSICS && __SSE4_2__
+#   include "../sleef-include/sleefinline_sse4.h"
+# elif USE_SIMD_INTRINSICS && __SSE2__
+#   include "../sleef-include/sleefinline_sse2.h"
 # endif
 #endif

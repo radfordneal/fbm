@@ -198,8 +198,11 @@ void mc_app_initialize
 
   if (!initialize_done)
   {
-    if (0) fprintf (stderr, "sizeof(net_param): %d, sizeof(net_value): %d\n",
-                             (int)sizeof(net_param), (int)sizeof(net_value));
+    if (1)
+    { fprintf (stderr, 
+        "sizeof(net_param): %d, sizeof(net_value): %d, FP64: %d, FP32: %d\n",
+         (int)sizeof(net_param), (int)sizeof(net_value), FP64, FP32);
+    }
 
     if (sizeof(mc_value) != sizeof(net_param))
     { fprintf(stderr,
@@ -1823,7 +1826,23 @@ void mc_app_energy
 
             if (gr)
             { net_params *np = thread_grad;
-#             if USE_SIMD_INTRINSICS && __AVX__
+#             if FP32 && USE_SIMD_INTRINSICS && __SSE2__
+              { for (j = 0; j<blks; j++)
+                { unsigned k;
+                  unsigned e = grad.total_params & ~(unsigned)0x3;
+                  for (k = 0; k < e; k += 4)
+                  { _mm_storeu_ps (grad.param_block+k, 
+                                   _mm_add_ps (
+                                     _mm_loadu_ps (grad.param_block+k),
+                                     _mm_loadu_ps (np->param_block+k)));
+                  }
+                  for (; k < grad.total_params; k++)
+                  { grad.param_block[k] += np->param_block[k];
+                  }
+                  np += blksize;
+                }
+              }
+#             elif FP64 && USE_SIMD_INTRINSICS && __AVX__
               { for (j = 0; j<blks; j++)
                 { unsigned k;
                   unsigned e = grad.total_params & ~(unsigned)0x3;

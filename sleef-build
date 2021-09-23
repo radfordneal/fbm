@@ -15,7 +15,9 @@ cd include
 mkdir -p ../../../sleef-include
 cp sleefinline_purec_scalar.h     ../../../sleef-include
 cp sleefinline_purecfma_scalar.h  ../../../sleef-include
+cp sleefinline_sse2.h             ../../../sleef-include
 cp sleefinline_sse4.h             ../../../sleef-include
 cp sleefinline_avx2128.h          ../../../sleef-include
 cp sleefinline_avx.h              ../../../sleef-include
 cp sleefinline_avx2.h             ../../../sleef-include
+cp sleefinline_cuda.h             ../../../sleef-include

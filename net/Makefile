@@ -23,7 +23,10 @@ PREC_FLAGS = -Ddata_value=$(NET_PRECISION) \
              -Dmc_value=$(NET_PRECISION) \
              -Dnet_param=$(NET_PRECISION) \
              -Dnet_sigma=$(NET_PRECISION) \
-             -Dnet_value=$(NET_PRECISION)
+             -Dnet_value=$(NET_PRECISION) \
+             -DFP64=`echo $(NET_PRECISION) | sed -e s/double/1/ -e s/float/0/` \
+             -DFP32=`echo $(NET_PRECISION) | sed -e s/float/1/ -e s/double/0/`
+
 
 CFLAGS += $(PREC_FLAGS)
 NVCC_OPTIONS += $(PREC_FLAGS)

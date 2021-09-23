@@ -1,5 +1,0 @@
-
-(cd net;  echo " "; echo "Making GPU programs in net directory"; 
- echo " "; make gpu)
-
-echo " "; echo "Done making GPU programs"; echo " "

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export NET_PRECISION=double
+# export NET_PRECISION=float   # Uncomment to have net models use FP32
 
 (cd util; echo " "; echo "Making programs in util directory"; echo " "; make)
 (cd mc;   echo " "; echo "Making programs in mc directory"; echo " "; make)
@@ -13,4 +13,8 @@ export NET_PRECISION=double
 (cd src;  echo " "; echo "Making programs in src directory"; echo " "; make)
 (cd mol;  echo " "; echo "Making programs in mol directory"; echo " "; make)
 
-echo " "; echo "Done making programs in all directories"; echo " "
+# Uncomment line below to make GPU versions of net programs:
+
+# (cd net;  echo " "; echo "Making GPU net programs"; echo " "; make gpu)
+
+echo " "; echo "Done making programs"; echo " "

@@ -80,13 +80,16 @@ net/net-approx
 net/net-display
 net/net-dvar
 net/net-eval
+net/net-eval-gpu
 net/net-gd
 net/net-gen
 net/net-genp
 net/net-grad-test
+net/net-grad-test-gpu
 net/net-his
 net/net-hist
 net/net-mc
+net/net-mc-gpu
 net/net-plt
 net/net-pred
 net/net-rej

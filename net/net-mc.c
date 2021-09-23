@@ -198,7 +198,7 @@ void mc_app_initialize
 
   if (!initialize_done)
   {
-    if (1) fprintf (stderr, "sizeof(net_param): %d, sizeof(net_value): %d\n",
+    if (0) fprintf (stderr, "sizeof(net_param): %d, sizeof(net_value): %d\n",
                              (int)sizeof(net_param), (int)sizeof(net_value));
 
     if (sizeof(mc_value) != sizeof(net_param))
@@ -325,8 +325,8 @@ void mc_app_initialize
     /* Set up stepsize structure. */
   
     stepsizes.total_params = params.total_params;
-    stepsizes.param_block = 
-      (net_param *) chk_alloc (params.total_params, sizeof (net_param));
+    stepsizes.param_block = (net_param *) chk_alloc
+     (params.total_params, sizeof *stepsizes.param_block);
   
     net_setup_param_pointers (&stepsizes, arch, flgs);
 
@@ -1713,14 +1713,14 @@ void mc_app_energy
                                 : blksize*numblks;
         if (energy && thread_energy==0)
         { thread_energy = (double *) 
-                            managed_alloc (max_threads, sizeof (double));
+                            managed_alloc (max_threads, sizeof *thread_energy);
         }
         if (gr && thread_grad==0)
         { thread_grad = (net_params *) 
-                          managed_alloc (max_threads, sizeof (net_params));
+                          managed_alloc (max_threads, sizeof *thread_grad);
           thread_grad->total_params = grad.total_params;
-          thread_grad->param_block = (net_param *) 
-            managed_alloc (max_threads * grad.total_params, sizeof (net_param));
+          thread_grad->param_block = (net_param *) managed_alloc
+	   (max_threads * grad.total_params, sizeof *thread_grad->param_block);
           net_setup_param_pointers (thread_grad, arch, flgs);
           net_replicate_param_pointers (thread_grad, arch, max_threads);
         }

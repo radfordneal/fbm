@@ -94,7 +94,7 @@ void pred_app_init (void)
 
   net_data_read (0, 1, a, m, sv);
 
-  test_inputs = chk_alloc (data_spec->N_inputs*N_test, sizeof (double));
+  test_inputs = chk_alloc (data_spec->N_inputs*N_test, sizeof *test_inputs);
 
   t = test_inputs;
   for (i = 0; i<N_test; i++)

@@ -280,7 +280,7 @@ double *model_values
 
   if (t==0 || tn!=n)
   { if (t!=0) free (t);
-    t = chk_alloc(n,sizeof(double));
+    t = chk_alloc (n, sizeof *t);
     tn = n;
   }
 

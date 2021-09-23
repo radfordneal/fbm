@@ -109,12 +109,13 @@ int main
   /* Gather differences. */
 
   for (i = 0; i<ds.dim; i++)
-  { double t;
+  { mc_value t;
     t = ds.q[i];
     ds.q[i] = t + delta/2;
     mc_app_energy (&ds, 1, 1, &EF[i], 0);
     ds.q[i] = t - delta/2;
     mc_app_energy (&ds, 1, 1, &EB[i], 0);
+    // printf("%d: %.12g %.12g\n",i,EF[i],EB[i]);
     ds.q[i] = t;
   }
 

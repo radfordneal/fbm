@@ -333,8 +333,8 @@ int main
   {
     /* Allocate space for error accumulators. */
   
-    test_log_prob  = chk_alloc (N_test, sizeof (double));
-    log_prob       = chk_alloc (N_test, sizeof (double));
+    test_log_prob  = chk_alloc (N_test, sizeof *test_log_prob);
+    log_prob       = chk_alloc (N_test, sizeof *log_prob);
 
     if (!Ponly)
     { sum_targets    = chk_alloc (M_targets*N_test, sizeof *sum_targets);

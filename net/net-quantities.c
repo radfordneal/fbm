@@ -45,7 +45,7 @@ static net_params grad;
 static net_values deriv;
 
 static int M_targets;
-static double *target_guess;
+static net_value *target_guess;
 
 static char test_inputs_spec[100];
 static char test_targets_spec[100];
@@ -144,7 +144,7 @@ void net_initialize
 
     M_targets = arch->N_outputs;
 
-    target_guess = (double *) chk_alloc (M_targets, sizeof *target_guess);
+    target_guess = (net_value *) chk_alloc (M_targets, sizeof *target_guess);
   }
 }
 
@@ -329,7 +329,7 @@ void net_evaluate
 
   int mod, low, high;
   net_values *cases;
-  double *targets;
+  net_value *targets;
   int N_cases;
   int ev_train, ev_test;
   char letter;
@@ -451,7 +451,8 @@ void net_evaluate
           { 
             if (model_type=='V' && surv->hazard_type=='P')
             { 
-              double ot, ft, t0, t1, lp;
+              double ot, t0, t1, lp;
+              net_value ft;
               int censored;
               int w;
 

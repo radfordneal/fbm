@@ -125,13 +125,15 @@ int main
 
   net_param *wts;
   if (from_stdin)
-  { int i;
+  { double d;
+    int i;
     wts = chk_alloc (w->total_params, sizeof (net_param));
     for (i = 0; i<w->total_params; i++)
-    { if (scanf("%lf",&wts[i]) != 1) 
+    { if (scanf("%lf",&d) != 1) 
       { fprintf(stderr,"Error reading weights: %d of %d\n",i+1,w->total_params);
         exit(2);
       }
+      wts[i] = d;
     }
     char junk = 0;
     if (scanf(" %c",&junk) != 0 && junk != 0) 

@@ -166,7 +166,9 @@ typedef struct
 
    Stored in log files under type 'S'.  Changes may invalidate old log files. */
 
-typedef double net_sigma; /* Precision of sigma values */
+#ifndef net_sigma         /* May be defined by a compiler option */
+typedef double net_sigma;   /* Precision of sigma values */
+#endif
 
 typedef struct
 { 
@@ -207,7 +209,9 @@ typedef struct
 
    Stored in log files under type 'W'.  Changes may invalidate old log files. */
 
-typedef double net_param; /* Precision of weights, baises, and offsets */
+#ifndef net_param       /* May be defined by a compiler option */
+typedef double net_param;  /* Precision of weights, baises, and offsets */
+#endif
 
 typedef struct
 { 
@@ -233,7 +237,9 @@ typedef struct
    input or hidden unit does not include the offset; instead this is added 
    in whenever the value is used. */
 
-typedef double net_value; /* Precision of unit values */
+#ifndef net_value       /* May be defined by a compiler option */
+typedef double net_value;  /* Precision of unit values */
+#endif
 
 typedef struct
 { 
@@ -281,7 +287,8 @@ HOSTDEV void net_grad (net_params *restrict, net_params const*,
                        net_values const*, net_values const*, net_arch const*, 
                        net_flags const*);
 
-HOSTDEV void net_model_prob (net_values const*, double const*, double *restrict,
+HOSTDEV void net_model_prob (net_values const*, net_value const*, 
+                             double *restrict,
                              net_values *restrict, net_arch const*,
                              model_specification const*, model_survival const*,
                              net_sigmas const*, int);
@@ -291,7 +298,7 @@ void net_model_check (model_specification const*);
 void net_model_max_second (net_value *, net_arch *, model_specification *,
                            model_survival *, net_sigmas *);
 
-void net_model_guess (net_values *, double *, net_arch *, net_flags *,
+void net_model_guess (net_values *, net_value *, net_arch *, net_flags *,
                       model_specification *, model_survival *, net_params *,
                       net_sigmas *, int);
 

@@ -186,6 +186,8 @@ static net_values *read_inputs
                               input_block+arch->N_inputs*i);
   }
 
+  double ind[N_inputs];
+
   for (i = 0; i<N_cases; i++) 
   { if (model!=0 && model->type=='V' && surv->hazard_type!='C')
     { values[i].i[0] = 0;
@@ -194,10 +196,9 @@ static net_values *read_inputs
     else
     { j0 = 0;
     }
-    numin_read(ns,values[i].i+j0);
+    numin_read(ns,ind);
     for (j = j0; j<arch->N_inputs; j++)
-    { values[i].i[j] 
-        = data_trans (values[i].i[j], data_spec->trans[j-j0]);
+    { values[i].i[j] = data_trans (ind[j-j0], data_spec->trans[j-j0]);
     }
   }
 
@@ -240,13 +241,14 @@ static net_value *read_targets
     (net_value *) managed_alloc (N_targets*N_cases, sizeof *tg)
       : (net_value *) chk_alloc (N_targets*N_cases, sizeof *tg);
 
+  double tgd[N_targets];
+
   for (i = 0; i<N_cases; i++)
   { 
-    numin_read(ns,tg+N_targets*i);
+    numin_read(ns,tgd);
 
     for (j = 0; j<N_targets; j++)
-    { tg[N_targets*i+j] = data_trans (tg[N_targets*i+j], 
-                                      data_spec->trans[N_inputs+j]);
+    { tg[N_targets*i+j] = data_trans (tgd[j], data_spec->trans[N_inputs+j]);
     }
   }
 

@@ -87,7 +87,7 @@ int main
   int lindex, hindex, index_mod;
   int ng;
 
-  double targets[Max_targets];
+  net_value targets[Max_targets];
   int gen_targets;
   int layer;
   int N_targets;

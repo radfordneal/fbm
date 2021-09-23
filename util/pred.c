@@ -68,8 +68,8 @@ data_transformation *tr;
 
 int M_targets;
 
-double *test_targ_pred;
-double *test_targ_med;
+data_value *test_targ_pred;
+data_value *test_targ_med;
 double *test_log_prob;
 
 float ***median_sample;
@@ -337,22 +337,22 @@ int main
     log_prob       = chk_alloc (N_test, sizeof (double));
 
     if (!Ponly)
-    { sum_targets    = chk_alloc (M_targets*N_test, sizeof (double));
-      sum_targets_med= chk_alloc (M_targets*N_test, sizeof (double));
-      test_targ_pred = chk_alloc (M_targets*N_test, sizeof (double));
-      test_targ_med  = chk_alloc (M_targets*N_test, sizeof (double));
-      sq_error       = chk_alloc (M_targets, sizeof (double));
-      E_sq_error     = chk_alloc (M_targets, sizeof (double));
-      sq_error_sq    = chk_alloc (M_targets, sizeof (double));
-      guess          = chk_alloc (M_targets, sizeof (double));
-      error          = chk_alloc (M_targets, sizeof (double));
-      E_error        = chk_alloc (M_targets, sizeof (double));
-      abs_error      = chk_alloc (data_spec->N_targets, sizeof (double));
-      E_abs_error    = chk_alloc (data_spec->N_targets, sizeof (double));
-      wrong          = chk_alloc (data_spec->N_targets, sizeof (double));
-      E_wrong        = chk_alloc (data_spec->N_targets, sizeof (double));
-      abs_error_sq   = chk_alloc (data_spec->N_targets, sizeof (double));
-      wrong_sq       = chk_alloc (data_spec->N_targets, sizeof (double));
+    { sum_targets    = chk_alloc (M_targets*N_test, sizeof *sum_targets);
+      sum_targets_med= chk_alloc (M_targets*N_test, sizeof *sum_targets_med);
+      test_targ_pred = chk_alloc (M_targets*N_test, sizeof *test_targ_pred);
+      test_targ_med  = chk_alloc (M_targets*N_test, sizeof *test_targ_med);
+      sq_error       = chk_alloc (M_targets, sizeof *sq_error);
+      E_sq_error     = chk_alloc (M_targets, sizeof *E_sq_error);
+      sq_error_sq    = chk_alloc (M_targets, sizeof *sq_error_sq);
+      guess          = chk_alloc (M_targets, sizeof *guess);
+      error          = chk_alloc (M_targets, sizeof *error);
+      E_error        = chk_alloc (M_targets, sizeof *E_error);
+      abs_error      = chk_alloc (data_spec->N_targets, sizeof *abs_error);
+      E_abs_error    = chk_alloc (data_spec->N_targets, sizeof *E_abs_error);
+      wrong          = chk_alloc (data_spec->N_targets, sizeof *wrong);
+      E_wrong        = chk_alloc (data_spec->N_targets, sizeof *E_wrong);
+      abs_error_sq   = chk_alloc (data_spec->N_targets, sizeof *abs_error_sq);
+      wrong_sq       = chk_alloc (data_spec->N_targets, sizeof *wrong_sq);
     }
 
     if (op_d || op_q || op_Q)
@@ -865,7 +865,7 @@ int main
       for (j = 0; j<M_targets; j++)
       { guess[j] = sum_targets[M_targets*i+j] / sum_weights;
         if (have_targets && !op_R)
-        { double val, diff;
+        { data_value val, diff;
           val = m!=0 && m->type=='C' ? j==test_targets[i]
                                      : test_targets[data_spec->N_targets*i+j];
           if (op_r) 

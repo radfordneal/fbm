@@ -238,7 +238,9 @@ typedef struct
    (useful to avoid unnecessary recomputation).  The inverse temperature
    used in simulated tempering is also stored here. */
 
-typedef double mc_value;/* Type of position and momentum values */
+#ifndef mc_value        /* May be defined by a compiler option */
+typedef double mc_value;  /* Type of position and momentum values */
+#endif
 
 typedef struct
 { 

@@ -74,7 +74,7 @@ void net_model_check (model_specification const*m)
 
 HOSTDEV void net_model_prob
 ( net_values const*v,	/* Values for units in network */
-  double const*t,	/* Target values, fudged for piecewise const hazard */
+  net_value const*t,	/* Target values, fudged for piecewise const hazard */
   double *restrict pr,	/* Place to store log probability, zero if not wanted */
   net_values *restrict dp,/* Place to store log probability derivatives, or 0 */
   net_arch const*a,	/* Network architecture */
@@ -397,7 +397,7 @@ void net_model_max_second
 
 void net_model_guess
 ( net_values *v,	/* Values for units in network */
-  double *t,		/* Place to store guesses at targets */
+  net_value *t,		/* Place to store guesses at targets */
   net_arch *a,		/* Network architecture */
   net_flags *flgs,	/* Network flags, null if none */
   model_specification *m, /* Data model */

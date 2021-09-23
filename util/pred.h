@@ -1,6 +1,6 @@
 /* PRED.H - Interface between pred program skeleton and application. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -19,6 +19,13 @@
 extern char *pred_app_name;	/* Name of application (eg, "net" or "gp") */
 
 
+/* PRECISION OF INPUTS AND TARGETS. */
+
+#ifndef data_value        /* May be defined by a compiler option */
+typedef double data_value;   /* Precision of data values */
+#endif
+
+
 /* SOME CONSTANTS. */
 
 #define Median_sample 101	/* Size of median sample per iteration, should
@@ -34,8 +41,8 @@ extern data_specifications *data_spec; /* Specifications of data sets */
 
 extern int N_test;		/* Number of test cases */
 
-extern double *test_inputs;	/* Inputs for test cases */
-extern double *test_targets;	/* True targets for test cases */
+extern data_value *test_inputs;	 /* Inputs for test cases */
+extern data_value *test_targets; /* True targets for test cases */
 
 
 /* SHARED VARIABLES SET BY SKELETON MODULE OF PRED PROGRAM.  Looked at by
@@ -72,13 +79,13 @@ extern int alt_mean;		/* Use alternate mean computation in gp-pred? */
 
 /* SHARED VARIABLES SET BY THE PRED_APP_USE_INDEX PROCEDURE. */
 
-extern double *test_targ_pred;	/* Mean predictions for test cases at this 
-				   iteration; array of size M_targets*N_test */
+extern data_value *test_targ_pred;/* Mean predictions for test cases at this 
+				     iteration; array of size M_targets*N_test*/
 
-extern double *test_targ_med;	/* Median predictions for test cases at this 
-				   iteration; array of size M_targets*N_test */
+extern data_value *test_targ_med; /* Median predictions for test cases at this 
+				     iteration; array of size M_targets*N_test*/
 
-extern double *test_log_prob;	/* Log probabilities of test cases based on this
+extern double *test_log_prob;   /* Log prob. of test cases based on this
 				   iteration - array with N_test entries */
 
 extern float ***median_sample;	/* Holds random sample used to estimate median:

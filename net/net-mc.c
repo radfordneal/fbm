@@ -198,6 +198,21 @@ void mc_app_initialize
 
   if (!initialize_done)
   {
+    if (1) fprintf (stderr, "sizeof(net_param): %d, sizeof(net_value): %d\n",
+                             (int)sizeof(net_param), (int)sizeof(net_value));
+
+    if (sizeof(mc_value) != sizeof(net_param))
+    { fprintf(stderr,
+      "Size of Monte Carlo values doesn't match size of network parameters!\n");
+      exit(1);
+    }
+
+    if (sizeof(data_value) != sizeof(net_value))
+    { fprintf(stderr,
+      "Size of data values doesn't match size of network values!\n");
+      exit(1);
+    }
+
 #   if __CUDACC__
     {
       char *e =  getenv("SHOW_GPU");
@@ -1500,7 +1515,9 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
     {
       net_func (&train_values[i], 0, arch, flgs, &params);
       
-      double fudged_target = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
+      net_value fudged_target 
+                  = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
+
       double log_prob;
   
       net_model_prob(&train_values[i], &fudged_target,

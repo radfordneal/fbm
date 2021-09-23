@@ -14,6 +14,21 @@
 
 include ../make.include
 
+
+# Set mc_value, net_param, and net_value according to the definition of
+# NET_PRECISION ('double' or 'float'), with 'double' the default.
+
+NET_PRECISION ?= double
+PREC_FLAGS = -Ddata_value=$(NET_PRECISION) \
+             -Dmc_value=$(NET_PRECISION) \
+             -Dnet_param=$(NET_PRECISION) \
+             -Dnet_sigma=$(NET_PRECISION) \
+             -Dnet_value=$(NET_PRECISION)
+
+CFLAGS += $(PREC_FLAGS)
+NVCC_OPTIONS += $(PREC_FLAGS)
+
+
 programs:	net-spec net-gen net-rej net-eval net-display net-pred net-mc \
 		net-gd net-plt net-tbl net-hist net-dvar \
 		net-grad-test net-stepsizes net-genp net-approx net-his

@@ -1,6 +1,6 @@
 /* NET-PRED.C - Make predictions for for test cases using neural networks. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -38,7 +38,7 @@ char *pred_app_name = "net";
 
 /* SHARED VARIABLE. */
 
-double *test_inputs;
+data_value *test_inputs;
 
 
 /* LOCAL VARIABLES. */
@@ -64,7 +64,7 @@ void pred_app_record_sizes (void)
 
 void pred_app_init (void)
 {
-  double *t;
+  data_value *t;
   int i, j;
 
   if (op_p && m==0)
@@ -156,7 +156,8 @@ int pred_app_use_index (void)
     { 
       if (op_p && m!=0 && m->type=='V' && sv->hazard_type!='C')
       {
-        double ot, ft, t0, t1, lp;
+        double ot, t0, t1, lp;
+        net_value ft;
         int censored;
         int x;
         

@@ -20,7 +20,7 @@
 
 
 /* WEIGHT CONFIGURATION.  Records network weight configuration set up for a 
-   group of connections with an input-config or hidden-config flag.  Note that
+   group of connections with a cfg-b, cfg-i, or cfg-h flag.  Note that
    the stored indexes start at zero, though they are 1-based in the file. 
 
    There are also derived arrays of connections for faster computation. */

@@ -15,6 +15,11 @@ set -e   # Exit on any error
 NET_PRECISION=double  # The default, may be changed to 'float'
 GPU=no                # The default, may be changed to 'yes'
 
+if [ x$3 != x ]; then
+  echo 'Usage:  make-all [ "flt" | "dbl" ] [ "gpu " ]'
+  exit 1
+fi
+
 if [ x$1 == xdbl ]; then
   NET_PRECISION=double
 elif [ x$1 == xflt ]; then
@@ -33,22 +38,20 @@ elif [ x$2 != x ]; then
   exit 1
 fi
 
-if [ x$3 != x ]; then
-  echo 'Usage:  make-all [ "flt" | "dbl" ] [ "gpu " ]'
-  exit 1
-fi
-
 
 # Remove programs in 'bin' if not for the precision we're compiling for.
 
-if ! (echo $NET_PRECISION | cmp --quiet - bin/precision); then 
+touch bin-fbm/precision
+if ! (echo $NET_PRECISION | cmp --quiet - bin-fbm/precision); then 
   make-clean
 fi
 
-echo $NET_PRECISION >bin/precision
+echo $NET_PRECISION >bin-fbm/precision
 
 
 # Build all modules.
+
+export NET_PRECISION
 
 (cd util; echo " "; echo "Making programs in util directory"; echo " "; make)
 (cd mc;   echo " "; echo "Making programs in mc directory";   echo " "; make)
@@ -61,7 +64,7 @@ echo $NET_PRECISION >bin/precision
 (cd src;  echo " "; echo "Making programs in src directory";  echo " "; make)
 (cd mol;  echo " "; echo "Making programs in mol directory";  echo " "; make)
 
-if [ x$GPU == xgpu ]; then
+if [ x$GPU == xyes ]; then
   (cd net;  echo " "; echo "Making GPU net programs"; echo " "; make gpu)
 fi
 
@@ -73,5 +76,5 @@ echo " "; echo "Done making programs"; echo " "
 if [ x$1 != x ]; then
   echo "Copying programs to bin-$1"
   mkdir -p bin-$1
-  cp bin/* bin-$1
+  cp bin-fbm/* bin-$1
 fi

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+if [ x$1 == x ]; then echo "No first argument for with"; exit 1; done
+if [ x$2 == x ]; then echo "No second argument for with"; exit 1; done
+
+export PATH=`echo $PATH | sed s/bin-fbm/bin-$1/`
+
+shift
+
+exec $@

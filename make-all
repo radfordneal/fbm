@@ -1,20 +1,77 @@
 #!/bin/bash
 
-#export NET_PRECISION=float   # Uncomment to have net models use FP32
+# Compile the FBM programs.  Must be run in the main FBM directory.  
+# 
+#   Usage:  make-all [ "flt" | "dbl" ] [ "gpu " ]
+#
+# If flt or dbl are specified, the compiled programs are copied to bin-flt
+# or bin-dbl.
+
+set -e   # Exit on any error
+
+# Determine what floating point precision to use (where both implemented),
+# and whether to compile GPU versions of the programs.
+
+NET_PRECISION=double  # The default, may be changed to 'float'
+GPU=no                # The default, may be changed to 'yes'
+
+if [ x$1 == xdbl ]; then
+  NET_PRECISION=double
+elif [ x$1 == xflt ]; then
+  NET_PRECISION=float
+elif [ x$1 == xgpu ]; then
+  GPU=yes
+elif [ x$1 != x ]; then
+  echo "invalid precision (should be dbl, flt, or absent)"
+  exit 1
+fi
+
+if [ x$2 == xgpu ]; then
+  GPU=yes
+elif [ x$2 != x ]; then
+  echo "invalid second argument (should be gpu or absent)"
+  exit 1
+fi
+
+if [ x$3 != x ]; then
+  echo 'Usage:  make-all [ "flt" | "dbl" ] [ "gpu " ]'
+  exit 1
+fi
+
+
+# Remove programs in 'bin' if not for the precision we're compiling for.
+
+if ! (echo $NET_PRECISION | cmp --quiet - bin/precision); then 
+  make-clean
+fi
+
+echo $NET_PRECISION >bin/precision
+
+
+# Build all modules.
 
 (cd util; echo " "; echo "Making programs in util directory"; echo " "; make)
-(cd mc;   echo " "; echo "Making programs in mc directory"; echo " "; make)
+(cd mc;   echo " "; echo "Making programs in mc directory";   echo " "; make)
 (cd dist; echo " "; echo "Making programs in dist directory"; echo " "; make)
-(cd bvg;  echo " "; echo "Making programs in bvg directory"; echo " "; make)
-(cd net;  echo " "; echo "Making programs in net directory"; echo " "; make)
-(cd gp;   echo " "; echo "Making programs in gp directory"; echo " "; make)
-(cd mix;  echo " "; echo "Making programs in mix directory"; echo " "; make)
-(cd dft;  echo " "; echo "Making programs in dft directory"; echo " "; make)
-(cd src;  echo " "; echo "Making programs in src directory"; echo " "; make)
-(cd mol;  echo " "; echo "Making programs in mol directory"; echo " "; make)
+(cd bvg;  echo " "; echo "Making programs in bvg directory";  echo " "; make)
+(cd net;  echo " "; echo "Making programs in net directory";  echo " "; make)
+(cd gp;   echo " "; echo "Making programs in gp directory";   echo " "; make)
+(cd mix;  echo " "; echo "Making programs in mix directory";  echo " "; make)
+(cd dft;  echo " "; echo "Making programs in dft directory";  echo " "; make)
+(cd src;  echo " "; echo "Making programs in src directory";  echo " "; make)
+(cd mol;  echo " "; echo "Making programs in mol directory";  echo " "; make)
 
-# Uncomment line below to make GPU versions of net programs:
-
-(cd net;  echo " "; echo "Making GPU net programs"; echo " "; make gpu)
+if [ x$GPU == xgpu ]; then
+  (cd net;  echo " "; echo "Making GPU net programs"; echo " "; make gpu)
+fi
 
 echo " "; echo "Done making programs"; echo " "
+
+
+# Copy programs to the bin-dbl or bin-flt directory if for specified precision.
+
+if [ x$1 != x ]; then
+  echo "Copying programs to bin-$1"
+  mkdir -p bin-$1
+  cp bin/* bin-$1
+fi

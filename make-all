@@ -10,10 +10,11 @@
 
 set -e   # Exit on any error
 
+
 # Determine what floating point precision to use (where both implemented),
 # and whether to compile GPU versions of the programs.
 
-	NET_PRECISION=double   # The default, may be either 'float' or 'double'
+NET_PRECISION=double   # The default, may be either 'float' or 'double'
 
 if [ x$3 != x ]; then
   echo 'Usage:  make-all [ "flt" | "dbl" ] [ "gpu " ]'
@@ -41,7 +42,9 @@ elif [ x$2 != x ]; then
 fi
 
 
-# Remove programs in 'bin' if not for the precision we're compiling for.
+# Remove programs (and .o files) in the various module sub-directories if 
+# were not compiled for the precision we're compiling for now.  (The 
+# file "precision" in bin-fbm records the last precision compiled for.)
 
 touch bin-fbm/precision
 if ! (echo $NET_PRECISION | cmp --quiet - bin-fbm/precision); then 
@@ -73,8 +76,8 @@ fi
 echo " "; echo "Done making programs"; echo " "
 
 
-# Copy programs to the bin-dbl or bin-flt directory if for an explicitly
-# specified precision.
+# Copy programs to the bin-dbl or bin-flt directory if the precision was
+# specified explicitly (with a dbl or flt argument).
 
 if [ x$1 != xgpu ]; then
   if [ x$1 != x ]; then

@@ -7,11 +7,11 @@
 # of the SLEEF inline vectorized math functions for some operations,
 # which will use SIMD and FMA instructions if available given -march.
 #
-# The NVCC_OPTIONS are used only if you do make-gpu to make a version
-# of some programs that use a GPU via CUDA.  Setting the --gpu-architecture
-# option to a later architecture may improve performance when running on
-# such a GPU.  The compute capability 3.5 setting below is the earliest
-# supported (though deprecated) by CUDA-11.
+# The NVCC_OPTIONS are used only if you do make-all with a "gpu" argument,
+# to make a version of some programs that use a GPU via CUDA.  Setting 
+# the --gpu-architecture option to a later architecture may improve 
+# performance when running on such a GPU.  The compute capability 3.5
+# setting below is the earliest supported (though deprecated) by CUDA-11.
 
 CC = gcc               # C compiler to use
 

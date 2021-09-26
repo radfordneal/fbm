@@ -16,7 +16,7 @@ For more information, see the files in the 'doc' directory.   The
 file 'index.html' in 'doc' has links to all the documentation, which
 is easily perused with a web browser.  Note: You must access 'index.html' 
 in the 'doc' directory, not copy it somewhere else, since the links are 
-relative.
+relative.  (Or, you can copy the entire directory elsewhere.)
 
 This software can be found on Radford Neal's web page and in the 
 repository at https://gitlab.com/radfordneal/fbm

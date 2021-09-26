@@ -76,7 +76,7 @@ Here are some reasons that you might need to customize things:
 
   1) The programs are written in C as defined by the C99 standard.  If
      you compiler defaults to some other idea of what C is, you should
-     try to persuade it otherwise
+     try to persuade it otherwise (eg, with a --std=c99 option).
 
   2) The programs were written with IEEE floating-point in mind, and
      therefore may occasionally perform operations that result in
@@ -88,14 +88,23 @@ Here are some reasons that you might need to customize things:
      vector instructions on some machines, as described in comments
      in make.include.
 
-  4) The 'util' directory contains a file of 100,000 natural random
+  4) If compiling versions of (some of) the programs to use a GPU, 
+     you may want to modify the --gpu-architecture option for nvcc,
+     as explained in make.include. 
+
+  5) You might want to change the default for whether floating-point
+     arithmetic (in some modules) is performed in 32-bit (float) or
+     64-bit (double) precision, by modifying the default in make-all
+     (initially set to double).
+
+  6) The 'util' directory contains a file of 100,000 natural random
      bytes, which are used in combination with pseudo-random numbers
      This file is accessed by many of the programs, using a path 
      name that by default points into this 'util' directory.  If you 
      plan on moving this file elsewhere, you will need to change the 
      compilation command for rand.c at the end of 'util/util.make'.
 
-  5) If you are rather short of memory, you might want to reduce the
+  7) If you are rather short of memory, you might want to reduce the
      size of the Max_optional_memory constant defined in gp/gp-mc.c.
      This will save memory at the cost of some time.
 
@@ -111,35 +120,58 @@ are used; this is intentional.
 
 It is possible that these compilation commands will fail for some
 reason, in which case you'll have to figure out what's wrong and fix
-it.  Note that the 'make-all' command just moves into each of the
-directories and does a 'make' there.  You can do this manually for
-each directory to see where the problem is.  For these makes to work
-correctly, the programs MUST be kept in separate 'util', 'mc', 'dist',
-'bvg', 'net', 'gp', and 'mix' sub-directories, with these names.
+it.  You might want to start by looking at the make-all shell script.
+
+You can pass one or two arguments to make-all.  A final argument of
+"gpu" causes versions of some programs that make use of a GPU to be
+compiled.  This requires that a suitable GPU be present, and that
+suitable software be installed.  A first argument of "dbl" or "flt"
+specifies the precision for arithmetic (in some modules) for the
+version of the programs compiled.
 
 
 Using the programs.
 
 Once you have successfully compiled the programs, you should put the
-'bin' directory (within the main directory for this software) in your
-search path.  How this is done depends on the shell program you are
-using.  This directory contains symbolic links to all the programs
-making up this software.  Subsequent instructions assume that you have
-this 'bin' directory in your search path.
+'bin-fbm' directory (within the main directory for this software) in
+your search path (the PATH environment variable).  How this is done
+depends on the shell program you are using.  This directory contains
+symbolic links to all the programs making up this software.
 
-The above is the simple version of how to use the programs.  However,
-if you want to use the programs on more than one type of machine, you
-will need to compile them several times, once for each machine
-architecture (do a 'make-clean', as described below, before
-re-compiling for a new architecture).  You will also need to set your
-search path to a directory that contains the versions of the programs
-compiled for the machine you are currently using.  By convention,
-these directories should be called "bin.ARCH", where ARCH is the name
-of the machine architecture.  The shell file install-arch creates such
-a directory (if necessary) and copies the programs from the "bin"
-directory to the "bin.ARCH" directory for the current architecture.
-It is assumed that a program called 'arch' exists that returns the
-name of the architecture.
+Once this is done, you can run the versions of the programs you last
+compiled by just invoking the program by name (eg, net-spec).  This
+runs the version of the program that runs on the CPU.  To run the GPU
+version, you should invoke the program in the bin-gpu directory (most
+easily done as described below).  You may have compiled versions for
+both "flt" and "dbl" precisions by running make-all more than once
+with these arguments.  The programs for each explicitly-specified
+precision are copied to (or linked to) in the bin-flt, bin-dbl,
+bin-flt-gpu, and bin-dbl-gpu directories.
+
+The "using" script (in bin-fbm) allows the programs for a particular
+precision, and optionally for the GPU, to be run easily.  Assuming
+that the bin-fbm directory is in your PATH, you can run a particular
+verions of a program as illustrated below:
+
+    using dbl-gpu net-mc log 100
+
+This runs the version of net-mc compiled to use double-precision
+arithmetic on a GPU.  Note that the program run may be a shell script,
+which then runs several programs, for all of which the specified
+version will be used.
+
+If you want to use the programs on more than one type of machine
+(sharing the file system you are using), you will need to compile them
+several times, once for each machine architecture (do a 'make-clean',
+as described below, before re-compiling for a new architecture).  You
+will also need to set your search path to a directory that contains
+the versions of the programs compiled for the machine you are
+currently using.  By convention, these directories should be called
+"bin.ARCH", where ARCH is the name of the machine architecture.  The
+shell file install-arch creates such a directory (if necessary) and
+copies the programs from the "bin" directory to the "bin.ARCH"
+directory for the current architecture.  It is assumed that a program
+called 'arch' exists that returns the name of the architecture.
 
 
 Cleaning things up.
@@ -150,10 +182,15 @@ issuing the command
     rm */*.o
 
 when you are in the main directory.  You can get rid of the compiled
-programs by using the command
+programs (and .o files) by using the command
 
     make-clean
 
 when in the main directory.  Of course, you then won't be able to use
 the programs until you do another make-all to recompile them, unless
-you had copied them to a "bin.ARCH" directory.
+you made then with an explicitly-specified precision (and you run them
+as such), or you had copied them to a "bin.ARCH" directory.
+
+You can get rid of the copies of programs for a particular precision
+using "rm bin-dbl/*" or "rm bin-flt/*" (do not remove things from
+bin-dbl-gpu or bin-flt-gpu, which contain only links).

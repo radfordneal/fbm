@@ -4,7 +4,7 @@
 
 NOTES ON THE VERSION UNDER DEVELOPMENT
 
-Changes in this version.
+Documentation changes in this version.
 
 1) Detailed documentation on the neural network models is now provided
    in doc/<A HREF="net-models.PDF">net-models.PDF</A>.  Some references to the models and Markov
@@ -14,7 +14,9 @@ Changes in this version.
    given for a modern processor, with some plots now supplied as PNG 
    files, and with other updates and minor fixes.
 
-3) For neural network models, the configuration of the connections and
+Feature changes in the version:
+
+1) For neural network models, the configuration of the connections and
    their weights into a hidden layer, from the input layer or the
    previous hidden layer, as well as the hidden unit biases, may now
    be set up explicitly, rather than (as previously) layers always
@@ -23,53 +25,66 @@ Changes in this version.
    <A HREF="net-spec.html">net-spec.doc</A> and <A HREF="net-config.html">net-config.doc</A> for details, as well as the
    tutorial example in <A HREF="Ex-image.html">Ex-image.doc</A>.
 
-4) The 'softplus' activation function, h(u) = log(1+exp(u)), has been
+2) The 'softplus' activation function, h(u) = log(1+exp(u)), has been
    implemented.  It may be specified as documented in <A HREF="net-spec.html">net-spec.doc</A>.
    Note that the stepsize heuristics may not work as well for this 
    activation function as for tanh.
 
-5) The sample-hyper operation for neural network models can now take
+3) The sample-hyper operation for neural network models can now take
    an argument in order to restrict the updates to the hyperparameters
    controlling a single group of parameters.  This may be useful in
    the initial stages of sampling, to avoid some hyperparameters
    taking on bad values when the data has not yet been fit well.
 
-6) The net-eval program can now optionally display the values of
+4) The net-eval program can now optionally display the values of
    hidden units in some layer, instead of the final output.
 
-7) Forward / backward / gradient computations for neural networks have
+5) The data-spec command now has an optional -e argument that causes
+   the training and test inputs and targets read to be echoed to
+   standard output.  This can be useful in checking that the data
+   source is specified correctly.
+
+6) New C0, C1, and Cn for n&gt;1 quantities are now defined, to help assess
+   how well metropolis and hybrid updates are exploring the distribution.
+   (But note that these are masked for mixture models, where they have
+   another meaning.)
+
+7) The net-gen program has been extended to allow parameters to be set
+   from standard input, rather than being set to zero, or randomly,
+
+8) The xxx-tbl commands can now take a -f argument, causes them to
+   continually follow iterations being added to the last log file
+   specified, rather than finishing when EOF is encountered.  This is
+   useful if the output is piped to a plotting program that is capable
+   of following continuing input, updating the plot in real time.
+
+9) The maximum number of hidden layers in a neural network is now 15
+   (up from 7 before).
+
+10) The maximum number of iterations that can be used when making
+    predictions with the median has been increased from 200 to 1000.
+
+Performance changes in this version:
+
+1) Forward / backward / gradient computations for neural networks have
    been sped up, by rewriting the portable code to encourage the
    compiler to use vector instructions, and by (optionally) using
    specially-written code to exploit AVX instructions (with or without
    FMA), when available.
 
-8) Computations for neural networks have also been sped up by using
+2) Computations for neural networks have also been sped up by using
    the SLEEF library for vectorized mathematical functions (eg, tanh).
 
-9) The data-spec command now has an optional -e argument that causes
-   the training and test inputs and targets read to be echoed to
-   standard output.  This can be useful in checking that the data
-   source is specified correctly.
+3) The precisons for parameter and unit values in neural network
+   models may now be either double (FP64), as previously, or float
+   (FP32).  Using lower precision will typically speed up the
+   computations (but with some effect on the results).
 
-10) New C0, C1, and Cn for n&gt;1 quantities are now defined, to help assess
-    how well metropolis and hybrid updates are exploring the distribution.
-    (But note that these are masked for mixture models, where they have
-    another meaning.)
-
-11) The net-gen program has been extended to allow parameters to be set
-    from standard input, rather than being set to zero, or randomly,
-
-12) The xxx-tbl commands can now take a -f argument, causes them to
-    continually follow iterations being added to the last log file
-    specified, rather than finishing when EOF is encountered.  This is
-    useful if the output is piped to a plotting program that is capable
-    of following continuing input, updating the plot in real time.
-
-13) The maximum number of hidden layers in a neural network is now 15
-    (up from 7 before).
-
-14) The maximum number of iterations that can be used when making
-    predictions with the median has been increased from 200 to 1000.
+4) Computations for neural network models may now be (partially) done
+   on a GPU (one that support CUDA with compute capability 3.5 or
+   later).  See <A HREF="Install.html">Install.doc</A> for how to do this.  Note that for
+   networks with few parameters, or that are trained on a small data
+   set, the GPU version will not necessarily be faster.
 
 Bug fixes.
 

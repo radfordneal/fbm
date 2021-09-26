@@ -3,6 +3,8 @@
 *.aux
 *.log
 bin-fbm/precision
+bin-flt
+bin-dbl
 bvg/bvg-grad-test
 bvg/bvg-hist
 bvg/bvg-initial

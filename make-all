@@ -5,20 +5,22 @@
 #   Usage:  make-all [ "flt" | "dbl" ] [ "gpu " ]
 #
 # If flt or dbl are specified, the compiled programs are copied to bin-flt
-# or bin-dbl.
+# or bin-dbl.  If gpu is specified, the programs include those compiled to
+# run on a GPU.
 
 set -e   # Exit on any error
 
 # Determine what floating point precision to use (where both implemented),
 # and whether to compile GPU versions of the programs.
 
-NET_PRECISION=double  # The default, may be changed to 'float'
-GPU=no                # The default, may be changed to 'yes'
+	NET_PRECISION=double   # The default, may be either 'float' or 'double'
 
 if [ x$3 != x ]; then
   echo 'Usage:  make-all [ "flt" | "dbl" ] [ "gpu " ]'
   exit 1
 fi
+
+GPU=no
 
 if [ x$1 == xdbl ]; then
   NET_PRECISION=double
@@ -71,10 +73,13 @@ fi
 echo " "; echo "Done making programs"; echo " "
 
 
-# Copy programs to the bin-dbl or bin-flt directory if for specified precision.
+# Copy programs to the bin-dbl or bin-flt directory if for an explicitly
+# specified precision.
 
-if [ x$1 != x ]; then
-  echo "Copying programs to bin-$1"
-  mkdir -p bin-$1
-  cp bin-fbm/* bin-$1
+if [ x$1 != xgpu ]; then
+  if [ x$1 != x ]; then
+    echo "Copying programs to bin-$1"
+    mkdir -p bin-$1
+    cp bin-fbm/* bin-$1
+  fi
 fi

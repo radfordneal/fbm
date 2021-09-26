@@ -198,40 +198,58 @@ void mc_app_initialize
 
   if (!initialize_done)
   {
-    if (1)
-    { fprintf (stderr, 
-        "sizeof(net_param): %d, sizeof(net_value): %d, FP64: %d, FP32: %d\n",
-         (int)sizeof(net_param), (int)sizeof(net_value), FP64, FP32);
+    if (FP32!=0 && FP32!=1 || FP64!=0 && FP64 !=1 || FP32!=!FP64)
+    { fprintf (stderr, "Invalid FP32/FP64 setting!\n");
+      exit(1);
     }
-
-    if (sizeof(mc_value) != sizeof(net_param))
-    { fprintf(stderr,
-      "Size of Monte Carlo values doesn't match size of network parameters!\n");
+  
+    if (FP64 ? sizeof(mc_value)!=8 || sizeof(net_param)!=8 
+                 || sizeof(net_value)!=8 || sizeof(data_value)!=8
+             : sizeof(mc_value)!=4 || sizeof(net_param)!=4 
+                 || sizeof(net_value)!=4 || sizeof(data_value)!=4)
+    { fprintf (stderr, "Sizes don't match FP32/FP64 setting!\n");
       exit(1);
     }
 
-    if (sizeof(data_value) != sizeof(net_value))
-    { fprintf(stderr,
-      "Size of data values doesn't match size of network values!\n");
-      exit(1);
+    char *e =  getenv("SHOW_INFO");
+    int show_info = e!=0 && strcmp(e,"false")!=0
+                         && strcmp(e,"FALSE")!=0
+                         && strcmp(e,"0")!=0;
+
+    if (show_info)
+    { fprintf (stderr, "Precision: %s, SIMD features: %s\n",
+               FP32 ? "FP32" : "FP64",
+#              if __AVX2__ && __FMA__
+                 "SSE SSE2 SSE4.2 AVX AVX2 FMA");
+#              elif __AVX2__
+                 "SSE SSE2 SSE4.2 AVX AVX2");
+#              elif __AVX__
+                 "SSE SSE2 SSE4.2 AVX");
+#              elif __SSE4_2__
+                 "SSE SSE2 SSE4.2");
+#              elif __SSE2__
+                 "SSE SSE2");
+#              elif __SSE2__
+                 "SSE SSE2");
+#              elif __SSE__
+                 "SSE");
+#              else
+                 "none");
+#              endif
     }
 
 #   if __CUDACC__
     {
-      char *e =  getenv("SHOW_GPU");
-      int show_gpu = e!=0 && strcmp(e,"false")!=0
-                          && strcmp(e,"FALSE")!=0
-                          && strcmp(e,"0")!=0;
-
-      struct cudaDeviceProp cuda_prop;
-      check_cuda_error(cudaGetDeviceProperties(&cuda_prop,0), "Get properties");
-
-      if (show_gpu)
-      {  printf("%s%s, Compute Capability %d.%d, %d processors, %.1f GBytes\n",
-                cuda_prop.name, cuda_prop.ECCEnabled ? " ECC" : "",
-                cuda_prop.major, cuda_prop.minor,
-                cuda_prop.multiProcessorCount, 
-                (double)cuda_prop.totalGlobalMem/1024/1024/1024);
+      if (show_info)
+      { struct cudaDeviceProp cuda_prop;
+        check_cuda_error (cudaGetDeviceProperties(&cuda_prop,0),
+                          "Get properties");
+        fprintf (stderr,
+          "%s, Compute Capability %d.%d, %d processors, %.1f GBytes%s\n",
+          cuda_prop.name, cuda_prop.major, cuda_prop.minor,
+          cuda_prop.multiProcessorCount, 
+          (double)cuda_prop.totalGlobalMem/1024/1024/1024,
+          cuda_prop.ECCEnabled ? " ECC" : "");
       }
 
       char *cuda_sizes = getenv("CUDA_SIZES");
@@ -253,7 +271,7 @@ void mc_app_initialize
         numblks = n;
       }
 
-      if (show_gpu)
+      if (show_info)
       { printf (
   "Computing with %d cases per thread, %d threads per block, %d blocks max\n",
          perthrd, blksize, numblks);

@@ -675,6 +675,108 @@ do \
   } \
 } while (0)
 
+#elif FP32 && USE_SIMD_INTRINSICS && __SSE4_2__
+
+#define ADD_CONNECTIONS00 \
+do \
+{ int i, j; \
+  __m128 Z = _mm_setzero_ps(); \
+  if (nd==1) \
+  { __m128 SV = Z; \
+    i = 3; \
+    while (i<ns) \
+    { SV = _mm_add_ps (SV, _mm_mul_ps (_mm_loadu_ps(v+i-3), \
+                                       _mm_loadu_ps(w+i-3))); \
+      i += 4; \
+    } \
+    __m128 S; \
+    S = _mm_add_ps (SV, _mm_movehl_ps(SV,SV)); \
+    i -= 2; \
+    if (i<ns) \
+    { S = _mm_add_ps (S, _mm_mul_ps (_mm_loadl_pi (Z, (__m64 *)(v+i-1)), \
+                                     _mm_loadl_pi (Z, (__m64 *)(w+i-1)))); \
+      i += 2; \
+    } \
+    S = _mm_hadd_ps(S,S); \
+    if (i<=ns) \
+    { S = _mm_add_ss (S, _mm_mul_ss (_mm_load_ss(v+i-1), _mm_load_ss(w+i-1))); \
+    } \
+    S = _mm_add_ss (_mm_load_ss(s), S); \
+    _mm_store_ss (s, S); \
+  } \
+  else \
+  { __m128 TV, TV2; \
+    i = 0; \
+    for (;;) \
+    { for (;;) \
+      { if (i==ns) goto done; \
+        TV = _mm_set1_ps (*(v+i)); \
+        if (_mm_ucomineq_ss (TV, Z)) \
+        { break; \
+        } \
+        i += 1; \
+        w += nd; \
+      } \
+      net_param const*w2 = w+nd; \
+      i += 1; \
+      for (;;) \
+      { if (i==ns) goto one_more; \
+        TV2 = _mm_set1_ps (*(v+i)); \
+        if (_mm_ucomineq_ss (TV2, Z)) \
+        { break; \
+        } \
+        i += 1; \
+        w2 += nd; \
+      } \
+      j = 3; \
+      while (j<nd) \
+      { __m128 S = _mm_loadu_ps(s+j-3); \
+        S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadu_ps(w+j-3))); \
+        S = _mm_add_ps (S, _mm_mul_ps (TV2, _mm_loadu_ps(w2+j-3))); \
+        _mm_storeu_ps (s+j-3, S); \
+        j += 4; \
+      } \
+      j -= 2; \
+      if (j<nd) \
+      { __m128 S = _mm_loadl_pi (Z, (__m64 *)(s+j-1)); \
+        S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadl_pi(Z,(__m64 *)(w+j-1)))); \
+        S = _mm_add_ps (S, _mm_mul_ps (TV2,_mm_loadl_pi(Z,(__m64*)(w2+j-1)))); \
+        _mm_storel_pi ((__m64 *)(s+j-1), S); \
+        j += 2; \
+      } \
+      if (j<=nd) \
+      { __m128 S = _mm_load_ss(s+j-1); \
+        S = _mm_add_ss (S, _mm_mul_ss (TV, _mm_load_ss(w+j-1))); \
+        S = _mm_add_ss (S, _mm_mul_ss (TV2, _mm_load_ss(w2+j-1))); \
+        _mm_store_ss (s+j-1, S); \
+      } \
+      i += 1; \
+      w = w2+nd; \
+    } \
+  one_more: \
+    j = 3; \
+    while (j<nd) \
+    { __m128 S = _mm_loadu_ps(s+j-3); \
+      S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadu_ps(w+j-3))); \
+      _mm_storeu_ps (s+j-3, S); \
+      j += 4; \
+    } \
+    j -= 2; \
+    if (j<nd) \
+    { __m128 S = _mm_loadl_pi (Z, (__m64 *)(s+j-1)); \
+      S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadl_pi (Z, (__m64 *)(w+j-1)))); \
+      _mm_storel_pi ((__m64 *)(s+j-1), S); \
+      j += 2; \
+    } \
+    if (j<=nd) \
+    { __m128 S = _mm_load_ss(s+j-1); \
+      S = _mm_add_ss (S, _mm_mul_ss (TV, _mm_load_ss(w+j-1))); \
+      _mm_store_ss (s+j-1, S); \
+    } \
+  done: ; \
+  } \
+} while (0)
+
 #else
 
 #define ADD_CONNECTIONS00 ADD_CONNECTIONS(0,0)

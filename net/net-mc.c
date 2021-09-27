@@ -1690,6 +1690,7 @@ __global__ void many_cases
       for (stride = 1; stride < blockDim.x; stride <<= 1)
       { __syncthreads();
         if ((threadIdx.x & (2*stride-1)) == 0 
+              && threadIdx.x + stride < blockDim.x
               && j + cases_per_thread*stride < const_N_train)
         { if (thread_energy)
           { *threi += threi[stride];
@@ -1824,8 +1825,12 @@ void mc_app_energy
             int blks = (thrds + blksize - 1) / blksize;
 
             if (0)
-            { printf("Launching with <<<%d,%d>>>, %d cases per thread\n",
-                      blks,blksize,perthrd);
+            { static int first = 1;
+              if (first)
+              { printf("Launching with <<<%d,%d>>>, %d cases per thread\n",
+                        blks,blksize,perthrd);
+                first = 0;
+              }
             }
 
             check_cuda_error (cudaGetLastError(), 

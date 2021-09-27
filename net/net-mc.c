@@ -1852,7 +1852,30 @@ void mc_app_energy
 
             if (gr)
             { net_params *np = thread_grad;
-#             if FP32 && USE_SIMD_INTRINSICS && __SSE2__
+#             if FP32 && USE_SIMD_INTRINSICS && __AVX__
+              { for (j = 0; j<blks; j++)
+                { unsigned k;
+                  unsigned e = grad.total_params & ~(unsigned)0x7;
+                  for (k = 0; k < e; k += 8)
+                  { _mm256_storeu_ps (grad.param_block+k, 
+                                      _mm256_add_ps (
+                                        _mm256_loadu_ps (grad.param_block+k),
+                                        _mm256_loadu_ps (np->param_block+k)));
+                  }
+                  if (k < (grad.total_params & ~(unsigned)0x3))
+                  { _mm_storeu_ps (grad.param_block+k, 
+                                   _mm_add_ps (
+                                     _mm_loadu_ps (grad.param_block+k),
+                                     _mm_loadu_ps (np->param_block+k)));
+                    k += 4;
+                  }
+                  for (; k < grad.total_params; k++)
+                  { grad.param_block[k] += np->param_block[k];
+                  }
+                  np += blksize;
+                }
+              }
+#             elif FP32 && USE_SIMD_INTRINSICS && __SSE__
               { for (j = 0; j<blks; j++)
                 { unsigned k;
                   unsigned e = grad.total_params & ~(unsigned)0x3;

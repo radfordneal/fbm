@@ -256,9 +256,6 @@ intended to help you understand the models, priors, and computational
 methods, so that you can devise an appropriate way of handling
 whatever problem you are interested in.
 
-The 'bin' directory contains links to all the programs.  The 'doc'
-directory contains all the documentation.
-
 
 Portability of the software.
 

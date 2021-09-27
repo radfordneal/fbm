@@ -1,0 +1,108 @@
+<html>
+<body>
+<pre>
+
+
+USING THE SOFTWARE
+
+Once you have installed the software, as described in <A HREF="Install.html">Install.doc</A>, you
+can start using it to fit models to data and make predictions.  See
+<A HREF="Overiew.html">Overiew.doc</A> for an overview of the facilities provided.  Here, I
+describe how you should go about running the programs, and accessing
+the documentation on them.
+
+
+Reading the documentation.
+
+You'll need to read the documentation on the various commands, and
+you'll probably also want to look at the tutorial examples.  These are
+in the directory 'doc'.  The source for the documentation is in the
+various .doc files, which are text files that can be read directly.
+
+Files in 'doc'of the form 'Release.YYYY-MM-DD.doc' contain information
+on current and past releases.  These may be of interest if you are
+upgrading from an older version of the software.
+
+The documentation is most conveniently accessed via a web browser,
+starting with the file 'index.html' in the 'doc' directory.  The
+various .doc files have .html versions (automatically created), which
+are linked to from index.html.
+
+
+Doing stuff by running programs.
+
+The software is designed to be usable interactively by typing commands
+to run the various programs to the Unix/Linux shell.  These programs
+may create or modify files that hold the results.  You will usually
+want to create a directory for each project you are working on, and
+change to that directory before issuing these commands, so that the
+files pertaining to that project will be separate.
+
+Since I've gotten e-mail from people who were quite confused by the
+simplicity of this concept, let me say again: YOU USE THE SOFTWARE BY
+TYPING UNIX/LINUX COMMANDS TO RUN THE VARIOUS PROGRAMS.  There is NO
+master program that you run and type commands to - or to put it
+another way, that master program is the Unix command interpreter (the
+shell).
+
+If you're doing serious work, you will probably want to create Unix
+command files holding the commands that do your data analysis, so that
+you won't forget what you did.  Interactively invoking programs is
+still very useful, for things like producing plots to monitor whether
+an MCMC run is sampling well.
+
+
+Plotting.
+
+Some of the programs produce numeric output meant to be plotted
+(though one can also just look at the numbers).  Various plotting
+programs could be used to do this.  One can, for example, save the
+output to a file, then plot it with statistical software such as R.
+
+For interactive use, however, it is most convenient to use the 'graph'
+program from my version of the GNU 'plotutils' package, which is
+available at github.com/radfordneal/plotutils, since it allows the
+output of a plotting command to be piped into the 'graph' program in a
+command typed to the shell.  It's best to use the 'graph' program with
+the "-n" option to enable the new set of defaults.
+
+See <A HREF="Ex-intro.html">Ex-intro.doc</A> for more information.
+
+
+Setting up to run the programs.
+
+Once you have successfully compiled the programs, you should put the
+'bin-fbm' directory (within the main directory for this software) in
+your search path (the PATH environment variable).  How this is done
+depends on the shell program you are using.  For the commonly-used
+'bash' shell, you might put the command
+
+    export PATH=&lt;path-to-where-you-put-fbm&gt;/bin-fbm:$PATH
+
+in the .bashrc or .profile file in your home directory.
+
+Once this is done, you can run the versions of the programs you last
+compiled by just invoking the program by name (eg, net-spec).  This
+runs the version of the program that runs on the CPU.  To run the GPU
+version, you should invoke the program in the bin-gpu directory rather
+than the bin-fbm directory - this is most easily done as described
+below.  You may have compiled versions for both "flt" and "dbl"
+precisions by running make-all more than once with these arguments.
+The programs for each explicitly-specified precision are copied to (or
+linked to) in the bin-flt, bin-dbl, bin-flt-gpu, and bin-dbl-gpu
+directories.
+
+The "using" script (in bin-fbm) allows the programs for a particular
+precision, and optionally for the GPU, to be run easily.  Assuming
+that the bin-fbm directory is in your PATH, you can run a particular
+verion of a program as illustrated below:
+
+    using dbl-gpu net-mc log 100
+
+This runs the version of net-mc compiled to use double-precision
+arithmetic on a GPU (with "log" and "100" as its arguments).  The
+program run may be a shell script, which then runs several programs,
+for all of which the specified version will be used.
+</pre>
+</body>
+</html>

@@ -37,20 +37,6 @@ since the programs look for a file of random numbers in the directory
 under the name it had when they were compiled.
 
 
-Looking at the documentation.
-
-The directory 'doc' contains all the documentation files, or links to
-them.  The source for the documentation is in the various .doc files.
-Files of the form 'Release.YYYY-MM-DD.doc' contain information on
-current and past releases.  These may be of interest if you are
-upgrading from an older version of the software.
-
-The documentation is most conveniently access via a web browser,
-starting with the file 'index.html' in the 'doc' directory.  The
-various .doc files have .html versions (automatically created),
-which are linked to from index.html.
-
-
 Compiling the programs.
 
 Compling the programs requires a C development environment.  On a
@@ -127,10 +113,11 @@ it.  You might want to start by looking at the make-all shell script.
 
 You can pass one or two arguments to make-all.  A final argument of
 "gpu" causes versions of some programs that make use of a GPU to be
-compiled.  This requires that a suitable GPU be present, and that
-suitable software be installed.  A first argument of "dbl" or "flt"
-specifies the precision for arithmetic (in some modules) for the
-version of the programs compiled.
+compiled (in addition to the versions that use only the CPU).  This
+requires that a suitable GPU be present, and that suitable software be
+installed.  A first argument of "dbl" or "flt" specifies the precision
+used for arithmetic (in some modules) for the version of the programs
+compiled.
 
 
 Using the programs.
@@ -141,27 +128,13 @@ your search path (the PATH environment variable).  How this is done
 depends on the shell program you are using.  This directory contains
 symbolic links to all the programs making up this software.
 
-Once this is done, you can run the versions of the programs you last
-compiled by just invoking the program by name (eg, net-spec).  This
-runs the version of the program that runs on the CPU.  To run the GPU
-version, you should invoke the program in the bin-gpu directory (most
-easily done as described below).  You may have compiled versions for
-both "flt" and "dbl" precisions by running make-all more than once
-with these arguments.  The programs for each explicitly-specified
-precision are copied to (or linked to) in the bin-flt, bin-dbl,
-bin-flt-gpu, and bin-dbl-gpu directories.
+See <A HREF="Using.html">Using.doc</A> for more information on how to use the programs once you
+have installed them, including on how to switch between versions that
+use a GPU or not, or that use 32-bit or 64-bit floating-point
+arithmetic.
 
-The "using" script (in bin-fbm) allows the programs for a particular
-precision, and optionally for the GPU, to be run easily.  Assuming
-that the bin-fbm directory is in your PATH, you can run a particular
-verions of a program as illustrated below:
 
-    using dbl-gpu net-mc log 100
-
-This runs the version of net-mc compiled to use double-precision
-arithmetic on a GPU.  Note that the program run may be a shell script,
-which then runs several programs, for all of which the specified
-version will be used.
+Multiple architectures.
 
 If you want to use the programs on more than one type of machine
 (sharing the file system you are using), you will need to compile them
@@ -185,7 +158,7 @@ issuing the command
     rm */*.o
 
 when you are in the main directory.  You can get rid of the compiled
-programs (and .o files) by using the command
+programs (and the .o files) by using the command
 
     make-clean
 
@@ -195,8 +168,8 @@ you made then with an explicitly-specified precision (and you run them
 as such), or you had copied them to a "bin.ARCH" directory.
 
 You can get rid of the copies of programs for a particular precision
-using "rm bin-dbl/*" or "rm bin-flt/*" (do not remove things from
-bin-dbl-gpu or bin-flt-gpu, which contain only links).
+using "rm bin-dbl/*" or "rm bin-flt/*".  Do not remove things from
+bin-dbl-gpu or bin-flt-gpu, which contain only links.
 </pre>
 </body>
 </html>

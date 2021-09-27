@@ -1673,9 +1673,12 @@ __global__ void many_cases
           { *threi += threi[h];
           }
           if (thread_grad)
-          { unsigned k;
-            for (k = 0; k < thrgi->total_params; k++)
-            { thrgi->param_block[k] += thrgi[h].param_block[k];
+          { net_param *p = thrgi[h].param_block;
+            net_param *q = thrgi->param_block;
+            unsigned t = thrgi->total_params;
+            unsigned k;
+            for (k = 0; k < t; k++)
+            { q[k] += p[k];
             }
           }
         }
@@ -1686,7 +1689,7 @@ __global__ void many_cases
       int stride;
       for (stride = 1; stride < blockDim.x; stride <<= 1)
       { __syncthreads();
-        if ((i & (2*stride-1)) == 0 
+        if ((threadIdx.x & (2*stride-1)) == 0 
               && j + cases_per_thread*stride < const_N_train)
         { if (thread_energy)
           { *threi += threi[stride];

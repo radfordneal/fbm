@@ -34,24 +34,27 @@
 
 data_specifications *data_spec;	/* Specifications of data sets */
 
-__managed__ int N_train;	/* Number of training cases */
-__managed__ int N_inputs;	/* Number of input values, as in data_spec */
-__managed__ int N_targets;	/* Number of target values, as in data_spec */
+int N_train;			/* Number of training cases */
+int N_inputs;			/* Number of input values, as in data_spec */
+int N_targets;			/* Number of target values, as in data_spec */
 
-__managed__ net_values *train_values;  /* Values for training cases */
-__managed__ net_value *train_targets;  /* True training case targets */
+net_values *train_values;	/* Values for training cases */
+net_value *train_iblock;	/* Block of input values for training cases */
+net_value *train_targets;	/* True training case targets */
 
 int N_test;			/* Number of test cases */
 
 net_values *test_values;	/* Values associated with test cases */
+net_value *test_iblock;		/* Block of input values for test cases */
 net_value *test_targets;	/* True targets for test cases */
 
 
 /* PROCEDURES. */
 
-static net_value *read_targets  (numin_source *, int,   net_arch *, int);
+static net_value *read_targets  (numin_source *, int,   net_arch *);
 static net_values *read_inputs  (numin_source *, int *, net_arch *, 
-                                 model_specification *, model_survival *, int);
+                                 model_specification *, model_survival *,
+                                 net_value **);
 
 
 /* FREE SPACE OCCUPIED BY DATA.  Also useful as a way to reset when the
@@ -60,13 +63,13 @@ static net_values *read_inputs  (numin_source *, int *, net_arch *,
 void net_data_free (void)
 {
   if (train_values!=0)
-  { managed_free(train_values);  /* doesn't free what's pointed to yet... */
+  { free(train_values);  /* doesn't free what's pointed to yet... */
     train_values = 0;
     N_train = 0;
   }
 
   if (train_targets!=0)
-  { managed_free(train_targets);
+  { free(train_targets);
     train_targets = 0;
   }
 
@@ -125,21 +128,21 @@ void net_data_read
   { 
     numin_spec (&ns, "data@1,0",1);
     numin_spec (&ns, data_spec->train_inputs, N_inputs);
-    train_values = read_inputs (&ns, &N_train, arch, model, surv, 1);
+    train_values = read_inputs(&ns, &N_train, arch, model, surv, &train_iblock);
 
     numin_spec (&ns, data_spec->train_targets, N_targets);
-    train_targets = read_targets (&ns, N_train, arch, 1);
+    train_targets = read_targets (&ns, N_train, arch);
   }
 
   if (want_test && data_spec->test_inputs[0]!=0)
   {
     numin_spec (&ns, "data@1,0",1);
     numin_spec (&ns, data_spec->test_inputs, N_inputs);
-    test_values = read_inputs (&ns, &N_test, arch, model, surv, 0);
+    test_values = read_inputs (&ns, &N_test, arch, model, surv, &test_iblock);
 
     if (data_spec->test_targets[0]!=0)
     { numin_spec (&ns, data_spec->test_targets, N_targets);
-      test_targets = read_targets (&ns, N_test, arch, 0);
+      test_targets = read_targets (&ns, N_test, arch);
     }
   }
 }
@@ -153,10 +156,9 @@ static net_values *read_inputs
   net_arch *arch,
   model_specification *model, 
   model_survival *surv,
-  int managed
+  net_value **input_block
 )
 {
-  net_value *input_block;
   net_value *value_block;
   net_values *values;
   int value_count;
@@ -169,21 +171,18 @@ static net_values *read_inputs
 
   value_count -= arch->N_inputs;  /* Keep inputs separate, as read-only block */
 
-  value_block = managed ? 
-    (net_value *) managed_alloc (value_count*N_cases, sizeof *value_block)
-     : (net_value *) chk_alloc (value_count*N_cases, sizeof *value_block);
+  value_block = 
+    (net_value *) chk_alloc (value_count*N_cases, sizeof *value_block);
 
-  input_block = managed ?
-    (net_value *) managed_alloc (arch->N_inputs*N_cases, sizeof *input_block)
-     : (net_value *) chk_alloc (arch->N_inputs*N_cases, sizeof *input_block);
+  *input_block = 
+    (net_value *) chk_alloc (arch->N_inputs*N_cases, sizeof **input_block);
 
-  values = managed ?
-    (net_values *) managed_alloc (N_cases, sizeof *values)
-     : (net_values *) chk_alloc (N_cases, sizeof *values);
+  values = 
+    (net_values *) chk_alloc (N_cases, sizeof *values);
 
   for (i = 0; i<N_cases; i++) 
   { net_setup_value_pointers (&values[i], value_block+value_count*i, arch, 
-                              input_block+arch->N_inputs*i);
+                              (*input_block)+arch->N_inputs*i);
   }
 
   double ind[N_inputs];
@@ -202,24 +201,6 @@ static net_values *read_inputs
     }
   }
 
-# if __CUDACC__
-  { if (managed)
-    { 
-      check_cuda_error (cudaMemAdvise (input_block, 
-                           arch->N_inputs * N_cases * sizeof *input_block, 
-                           cudaMemAdviseSetReadMostly, 0),
-                        "Memory advice for input_block");
-
-      if (0)  /* Seems to make things slower... */
-      { check_cuda_error (cudaMemAdvise (value_block,
-                            value_count * N_cases * sizeof *value_block,
-                            cudaMemAdviseSetPreferredLocation, 0),
-                          "Memory advice for value_block");
-      }
-    }
-  }
-# endif
-
   numin_close(ns);
 
   *N_cases_ptr = N_cases;
@@ -233,8 +214,7 @@ static net_values *read_inputs
 static net_value *read_targets
 ( numin_source *ns,
   int N_cases,
-  net_arch *arch,
-  int managed
+  net_arch *arch
 )
 {
   net_value *tg;
@@ -246,9 +226,7 @@ static net_value *read_targets
     exit(1);
   }
 
-  tg = managed ?
-    (net_value *) managed_alloc (N_targets*N_cases, sizeof *tg)
-      : (net_value *) chk_alloc (N_targets*N_cases, sizeof *tg);
+  tg = (net_value *) chk_alloc (N_targets*N_cases, sizeof *tg);
 
   double tgd[N_targets];
 
@@ -260,15 +238,6 @@ static net_value *read_targets
     { tg[N_targets*i+j] = data_trans (tgd[j], data_spec->trans[N_inputs+j]);
     }
   }
-
-# if __CUDACC__
-  { if (managed)
-    { check_cuda_error (cudaMemAdvise (tg,
-        N_targets * N_cases * sizeof *tg, cudaMemAdviseSetReadMostly, 0),
-        "Memory advice for input_block");
-    }
-  }
-# endif
 
   numin_close(ns);
 

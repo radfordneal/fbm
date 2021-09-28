@@ -107,10 +107,16 @@ static net_values typical;	/* Typical squared values for hidden units */
 
 static net_params grad;		/* Pointers to gradient for network parameters*/
 
-/* Values used or computed by threads, in managed or constant memory.  
+/* Values used or computed by threads, in managed, device, or constant memory.  
    Sometimes, pointers are in constant memory, but what they point to is not. */
 
 #if __CUDACC__
+
+static double *thread_energy;	/* Energies computed by concurrent threads */
+static net_params *thread_grad;	/* Gradients computed by concurrent threads */
+
+static net_value *dev_train_targets; /* Copy of train_targets in GPU memory */
+static net_values *dev_train_values; /* Value structures in GPU memory */
 
 __constant__ int const_N_train;    /* Copy of N_train in constant memory */
 __constant__ int const_N_inputs;   /* Copy of N_inputs in constant memory */
@@ -129,9 +135,6 @@ __constant__ net_params const_params; /* Copy of params in constant memory */
 __constant__ net_values *const_deriv;  /* Copy of deriv ptr in constant memory*/
 __constant__ net_values *const_train_values; /* Const copy of train_values ptr*/
 __constant__ net_value *const_train_targets; /* Const copy of train_targets */
-
-static double *thread_energy;	/* Energies computed by concurrent threads */
-static net_params *thread_grad;	/* Gradients computed by concurrent threads */
 
 #endif
 
@@ -393,7 +396,7 @@ void mc_app_initialize
         (net_value *) managed_alloc (value_count*N_train, sizeof *value_block);
     
       for (i = 0; i<N_train; i++) 
-      { net_setup_value_pointers (&deriv[i], value_block+value_count*i, arch, 0);
+      { net_setup_value_pointers(&deriv[i], value_block+value_count*i, arch, 0);
       }
     
       for (j = 0; j<arch->N_inputs; j++)
@@ -483,7 +486,53 @@ void mc_app_initialize
       }
     }
 
-    /* Copy some data to constant memory in the GPU, if using CUDA. */
+    /* Copy training inputs and training targets to GPU memory, and allocate
+       space on GPU for values in all training cases, with pointers set up. */
+
+#   if __CUDACC__
+    { 
+      size_t sz;
+      int i;
+
+      check_cuda_error (cudaGetLastError(), "Before copying to data to GPU");
+
+      net_value *iblk, *vblk;
+      int value_count = net_setup_value_count(arch) - N_inputs;
+
+      sz = N_inputs * N_train * sizeof *iblk;
+      check_cuda_error (cudaMalloc (&iblk, sz), "cudaMalloc of iblk");
+      check_cuda_error (cudaMemcpy 
+          (iblk, train_iblock, sz, cudaMemcpyHostToDevice),
+        "copy to iblk");
+
+      sz = value_count * N_train * sizeof *vblk;
+      check_cuda_error (cudaMalloc (&vblk, sz), "cudaMalloc of vblk");
+
+      net_values *tmp_values = 
+        (net_values *) chk_alloc (N_train, sizeof *tmp_values);
+      for (i = 0; i<N_train; i++) 
+      { net_setup_value_pointers (&tmp_values[i], vblk+value_count*i, arch, 
+                                  iblk+N_inputs*i);
+      }
+      sz = N_train * sizeof *dev_train_values;
+      check_cuda_error (cudaMalloc (&dev_train_values, sz), 
+                        "cudaMalloc of dev_train_values");
+      check_cuda_error (cudaMemcpy 
+          (dev_train_values, tmp_values, sz, cudaMemcpyHostToDevice),
+        "copy to dev_train_values");
+      free(tmp_values);
+      
+      sz = N_targets * N_train * sizeof *dev_train_targets;
+      check_cuda_error (cudaMalloc (&dev_train_targets, sz),
+                        "cudaMalloc of dev_train_targets");
+      check_cuda_error (cudaMemcpy
+          (dev_train_targets, train_targets, sz, cudaMemcpyHostToDevice),
+        "copy to dev_train_targets");
+    }
+#   endif
+
+    /* Copy some data to constant memory in the GPU, if using CUDA. 
+       Constant memory is limited, so nothing that could be large. */
 
 #   if __CUDACC__
     { check_cuda_error (cudaGetLastError(), 
@@ -529,11 +578,11 @@ void mc_app_initialize
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_deriv");
       cudaMemcpyToSymbol
-        (const_train_values, &train_values, sizeof train_values);
+        (const_train_values, &dev_train_values, sizeof dev_train_values);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_train_values");
       cudaMemcpyToSymbol
-        (const_train_targets, &train_targets, sizeof train_targets);
+        (const_train_targets, &dev_train_targets, sizeof dev_train_targets);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_train_targets");
     }
@@ -1511,6 +1560,8 @@ static void gibbs_adjustments
 
 #endif
 
+#define DEBUG_ONE_CASE 0
+
 HOSTDEV static void one_case  /* Energy and gradient from one training case */
 ( 
   double *energy,	/* Place to increment energy, null if not required */
@@ -1521,6 +1572,10 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
 )
 {
   int k;
+
+  if (DEBUG_ONE_CASE)
+  { printf("Starting one_case, for case %d\n",i);
+  }
 
   if (model->type=='V'          /* Handle piecewise-constant hazard    */
    && surv->hazard_type=='P')   /*   model specially                   */
@@ -1589,12 +1644,26 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
   
   else /* Everything except piecewise-constant hazard model */
   { 
+
+    if (DEBUG_ONE_CASE)
+    { printf("train_values[%d]->i[0] = %f\n",i,train_values[i].i[0]);
+      printf("train_values[%d]->i[1] = %f\n",i,train_values[i].i[1]);
+    }
+
     net_func (&train_values[i], 0, arch, flgs, &params);
+
+    if (DEBUG_ONE_CASE)
+    { printf("train_values[%d]->o[0] = %f\n",i,train_values[i].o[0]);
+    }
 
     double log_prob;
     net_model_prob(&train_values[i], train_targets+N_targets*i,
                    &log_prob, grd ? &deriv[i] : 0, arch, model, surv,
                    &sigmas, Cheap_energy);
+
+    if (DEBUG_ONE_CASE)
+    { printf("log_prob = %f\n",log_prob);
+    }
     
     if (energy)
     { *energy -= en_weight * log_prob;

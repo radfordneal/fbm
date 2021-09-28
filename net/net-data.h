@@ -14,27 +14,24 @@
  */
 
 
-#ifndef __managed__
-#define __managed__  /* don't declare some variables as "managed" by CUDA */
-#endif
-
-
 /* VARIABLES HOLDING TRAINING AND/OR TEST DATA.  When the values or targets
    aren't known, the pointers are null. */
 
 extern data_specifications *data_spec; /* data set specifications */
 
-__managed__ extern int N_train;	  /* Number of training cases */
-__managed__ extern int N_inputs;  /* Number of input values, as in data_spec */
-__managed__ extern int N_targets; /* Number of target values, as in data_spec */
+extern int N_train;		  /* Number of training cases */
+extern int N_inputs;		  /* Number of input values, as in data_spec */
+extern int N_targets;		  /* Number of target values, as in data_spec */
 
-__managed__ extern net_values *train_values;  /* Values for training cases */
-__managed__ extern net_value *train_targets;  /* True training case targets */
+extern net_values *train_values;  /* Values for training cases */
+extern net_value *train_iblock;   /* Block of input values for training cases */
+extern net_value *train_targets;  /* True training case targets */
 
-extern int N_test;		 /* Number of test cases */
+extern int N_test;		  /* Number of test cases */
 
-extern net_values *test_values;	 /* Values associated with test cases */
-extern net_value *test_targets;  /* True targets for test cases */
+extern net_values *test_values;	  /* Values associated with test cases */
+extern net_value *test_iblock;    /* Block of input values for test cases */
+extern net_value *test_targets;   /* True targets for test cases */
 
 
 /* PROCEDURES. */

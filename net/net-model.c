@@ -84,10 +84,8 @@ HOSTDEV void net_model_prob
   int op		/* Can we ignore some factors? */
 )
 {
-  extern double lgamma(double);
-
-  static double alpha_saved=0.0;/* Constant is already computed for this alpha*/
-  static double cnst;		/* Saved value of this constant */
+  static double alpha_saved=0.0;/* Constant already computed for this alpha */
+  static double cnst;		/* Saved value for normalizing constant */
 
   int N_outputs = a->N_outputs;
   int i;
@@ -185,15 +183,16 @@ HOSTDEV void net_model_prob
             if (pr && op<1) *pr += 0.5 * Log2pi;  /* undo what was done above */
             continue;
           }
-          double d = (v->o[i] - t[i]) / s->noise[i];
+          net_value rn = 1 / (net_value) s->noise[i];
+          net_value d = (v->o[i] - t[i]) * rn;
           if (d<-1e10) d = -1e10;
           if (d>+1e10) d = +1e10;
           if (pr) 
-          { *pr -= 0.5*d*d;
-            if (op<2) *pr -= log(s->noise[i]);
+          { *pr -= (net_value)0.5 * (d*d);
+            if (op<2) *pr += prec_log(rn);
           }
           if (dp)
-          { dp->o[i] = d / s->noise[i];
+          { dp->o[i] = d * rn;
           }
         }
       }
@@ -216,18 +215,19 @@ HOSTDEV void net_model_prob
             if (pr && op<1) *pr -= cnst;
             continue;
           }
-          double d = (v->o[i] - t[i]) / s->noise[i];
+          net_value rn = 1 / (net_value) s->noise[i];
+          net_value d = (v->o[i] - t[i]) * rn;
           if (d<-1e10) d = -1e10;
           if (d>+1e10) d = +1e10;
-          double x = 1 + d*d/alpha;
+          net_value x = 1 + d*d/(net_value)alpha;
           if (pr) 
-          { *pr -= ((alpha+1)/2) * log(x);
+          { *pr -= ((alpha+1)/2) * prec_log(x);
             if (op<2) 
-            { *pr -= log(s->noise[i]);
+            { *pr += log(rn);
             }
           }
           if (dp)
-          { dp->o[i] = ((alpha+1)/alpha) * (d/s->noise[i]) / x;
+          { dp->o[i] = (net_value)((alpha+1)/alpha) * (d*rn) / x;
           }
         }
       }

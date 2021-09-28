@@ -108,7 +108,7 @@ static net_values typical;	/* Typical squared values for hidden units */
 static net_params grad;		/* Pointers to gradient for network parameters*/
 
 /* Values used or computed by threads, in managed or constant memory.  
-   Sometimes the pointers are in constant memory, but they point to is not. */
+   Sometimes, pointers are in constant memory, but what they point to is not. */
 
 #if __CUDACC__
 
@@ -123,10 +123,12 @@ __constant__ int const_has_flgs;   /* Are flags present in const_flgs? */
 __constant__ model_specification const_model;  /* Constant copy of model */
 __constant__ model_survival const_surv;  /* Constant copy of surv */
 
-__constant__ net_sigmas const_sigmas;  /* Copy of sigmas in constant memory */
-__constant__ net_params const_params;  /* Copy of params in constant memory */
+__constant__ net_sigmas const_sigmas; /* Copy of sigmas in constant memory */
+__constant__ net_params const_params; /* Copy of params in constant memory */
 
 __constant__ net_values *const_deriv;  /* Copy of deriv ptr in constant memory*/
+__constant__ net_values *const_train_values; /* Const copy of train_values ptr*/
+__constant__ net_value *const_train_targets; /* Const copy of train_targets */
 
 static double *thread_energy;	/* Energies computed by concurrent threads */
 static net_params *thread_grad;	/* Gradients computed by concurrent threads */
@@ -526,6 +528,14 @@ void mc_app_initialize
       cudaMemcpyToSymbol (const_deriv, &deriv, sizeof deriv);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_deriv");
+      cudaMemcpyToSymbol
+        (const_train_values, &train_values, sizeof train_values);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_train_values");
+      cudaMemcpyToSymbol
+        (const_train_targets, &train_targets, sizeof train_targets);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_train_targets");
     }
 #   endif
 
@@ -1496,6 +1506,8 @@ static void gibbs_adjustments
 #define sigmas		const_sigmas
 #define params		const_params
 #define deriv		const_deriv
+#define train_values	const_train_values
+#define train_targets	const_train_targets
 
 #endif
 
@@ -1613,6 +1625,8 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
 #undef sigmas
 #undef params
 #undef deriv
+#undef train_values
+#undef train_targets
 
 #endif
 

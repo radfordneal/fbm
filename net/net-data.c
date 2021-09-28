@@ -204,9 +204,18 @@ static net_values *read_inputs
 
 # if __CUDACC__
   { if (managed)
-    { check_cuda_error (cudaMemAdvise (input_block, 
-        arch->N_inputs * sizeof *input_block, cudaMemAdviseSetReadMostly, 0),
-        "Memory advice for input_block");
+    { 
+      check_cuda_error (cudaMemAdvise (input_block, 
+                           arch->N_inputs * N_cases * sizeof *input_block, 
+                           cudaMemAdviseSetReadMostly, 0),
+                        "Memory advice for input_block");
+
+      if (0)  /* Seems to make things slower... */
+      { check_cuda_error (cudaMemAdvise (value_block,
+                            value_count * N_cases * sizeof *value_block,
+                            cudaMemAdviseSetPreferredLocation, 0),
+                          "Memory advice for value_block");
+      }
     }
   }
 # endif

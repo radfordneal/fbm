@@ -52,8 +52,16 @@
 
 static int perthrd = DEFAULT_PERTHRD;	/* Number of cases for a CUDA thread */
 static int blksize = DEFAULT_BLKSIZE;	/* Number of threads per block */
-static int numblks = DEFAULT_NUMBLKS;	/* Number of blocks per kernel */
+static int numblks = DEFAULT_NUMBLKS;	/* Max number of blocks per kernel */
 
+static int n_launches;			/* Number of launches needed to 
+                                           handle all training cases */
+static int max_cases_per_launch;        /* Largest number of cases handled by
+					   one CUDA kernel launch */
+static int max_blocks_per_launch;	/* Largest number of blocks for one
+                                           CUDA kernel launch */
+static int max_threads_per_launch;	/* Largest number of threads for one
+                                           CUDA kernel launch */
 #endif
 
 
@@ -114,6 +122,9 @@ static net_params grad;		/* Pointers to gradient for network parameters*/
 
 static double *thread_energy;	/* Energies computed by concurrent threads */
 static net_params *thread_grad;	/* Gradients computed by concurrent threads */
+
+STAMAN double *block_energy;	/* Energies computed by thread blocks */
+STAMAN net_params *block_grad;	/* Gradients computed by thread blocks */
 
 static net_value *dev_train_targets; /* Copy of train_targets in GPU memory */
 static net_values *dev_train_values; /* Value structures in GPU memory */
@@ -280,8 +291,8 @@ void mc_app_initialize
 
       if (show_info)
       { printf (
-  "Computing with %d cases per thread, %d threads per block, %d blocks max\n",
-         perthrd, blksize, numblks);
+         "Specified %d cases per thread, %d threads per block, %d blocks max\n",
+          perthrd, blksize, numblks);
       }
     }
 #   endif
@@ -605,6 +616,25 @@ void mc_app_initialize
         (const_train_targets, &dev_train_targets, sizeof dev_train_targets);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_train_targets");
+    }
+#   endif
+
+    /* Figure out stuff about blocksizes and numbers of blocks for
+       launching of CUDA kernels. */
+
+#   if __CUDACC__
+    { n_launches 
+        = (N_train + perthrd*blksize*numblks - 1) / (perthrd*blksize*numblks);
+      max_cases_per_launch 
+        = (N_train + n_launches - 1) / n_launches;
+      max_blocks_per_launch 
+        = (max_cases_per_launch + perthrd*blksize - 1) / (perthrd*blksize);
+      max_threads_per_launch = max_blocks_per_launch * blksize;
+      max_cases_per_launch = max_threads_per_launch * perthrd;
+      if (show_info)
+      { printf ("With %d cases, need %d launches, max %d blocks/launch\n",
+                N_train, n_launches, max_blocks_per_launch);
+      }
     }
 #   endif
 
@@ -1741,12 +1771,12 @@ __global__ void many_cases
     net_params *thrgi;
     
     if (thread_energy)
-    { threi = thread_energy + i;
+    { threi = threadIdx.x==0 ? block_energy + blockIdx.x : thread_energy + i;
       *threi = 0;
     }
 
     if (thread_grad)
-    { thrgi = thread_grad + i;
+    { thrgi = threadIdx.x==0 ? block_grad + blockIdx.x : thread_grad + i;
       if (0)  /* seems to be slower */
       { memset(thrgi->param_block, 0, thrgi->total_params * sizeof (net_param));
       }
@@ -1766,46 +1796,22 @@ __global__ void many_cases
                 h, en_weight, gr_weight);
     }
 
-    if (0)  /* Linear-time reduction */
+    int stride;
+    for (stride = 1; stride < blockDim.x; stride <<= 1)
     { __syncthreads();
-      if (threadIdx.x==0)
-      { for (h = 1; 
-             h<blockDim.x && start + cases_per_thread * (i+h) < const_N_train;
-             h++)
-        { if (thread_energy)
-          { *threi += threi[h];
-          }
-          if (thread_grad)
-          { net_param *p = thrgi[h].param_block;
-            net_param *q = thrgi->param_block;
-            unsigned t = thrgi->total_params;
-            unsigned k;
-            for (k = 0; k < t; k++)
-            { q[k] += p[k];
-            }
-          }
+      if ((threadIdx.x & (2*stride-1)) == 0 
+            && threadIdx.x + stride < blockDim.x
+            && j + cases_per_thread*stride < const_N_train)
+      { if (thread_energy)
+        { *threi += threi[stride];
         }
-      }
-    }
-    else  /* Logarithmic-time reduction */
-    {
-      int stride;
-      for (stride = 1; stride < blockDim.x; stride <<= 1)
-      { __syncthreads();
-        if ((threadIdx.x & (2*stride-1)) == 0 
-              && threadIdx.x + stride < blockDim.x
-              && j + cases_per_thread*stride < const_N_train)
-        { if (thread_energy)
-          { *threi += threi[stride];
-          }
-          if (thread_grad)
-          { net_param *p = thrgi[stride].param_block;
-            net_param *q = thrgi->param_block;
-            unsigned t = thrgi->total_params;
-            unsigned k;
-            for (k = 0; k < t; k++)
-            { q[k] += p[k];
-            }
+        if (thread_grad)
+        { net_param *p = thrgi[stride].param_block;
+          net_param *q = thrgi->param_block;
+          unsigned t = thrgi->total_params;
+          unsigned k;
+          for (k = 0; k < t; k++)
+          { q[k] += p[k];
           }
         }
       }
@@ -1834,27 +1840,35 @@ void mc_app_energy
     net_setup_param_pointers (&grad, arch, flgs);
   }
 
-#   if __CUDACC__
-    { if (N_train>0)
-      { unsigned max_threads = blksize*numblks*perthrd > N_train 
-                                ? (N_train + perthrd -1) / perthrd
-                                : blksize*numblks;
-        if (energy && thread_energy==0)
-        { thread_energy = (double *) 
-                            managed_alloc (max_threads, sizeof *thread_energy);
-        }
-        if (gr && thread_grad==0)
-        { thread_grad = (net_params *) 
-                          managed_alloc (max_threads, sizeof *thread_grad);
-          thread_grad->total_params = grad.total_params;
-          thread_grad->param_block = (net_param *) managed_alloc
-	   (max_threads * grad.total_params, sizeof *thread_grad->param_block);
-          net_setup_param_pointers (thread_grad, arch, flgs);
-          net_replicate_param_pointers (thread_grad, arch, max_threads);
-        }
+# if __CUDACC__
+  { if (N_train>0)
+    { if (energy && thread_energy==0)
+      { thread_energy = (double *) 
+          managed_alloc (max_threads_per_launch, sizeof *thread_energy);
+        block_energy = (double *) 
+          managed_alloc (max_blocks_per_launch, sizeof *block_energy);
+      }
+      if (gr && thread_grad==0)
+      { thread_grad = (net_params *) 
+          managed_alloc (max_threads_per_launch, sizeof *thread_grad);
+        thread_grad->total_params = grad.total_params;
+        thread_grad->param_block = (net_param *) managed_alloc
+          (max_threads_per_launch * grad.total_params, 
+           sizeof *thread_grad->param_block);
+        net_setup_param_pointers (thread_grad, arch, flgs);
+        net_replicate_param_pointers(thread_grad, arch, max_threads_per_launch);
+        block_grad = (net_params *) 
+          managed_alloc (max_blocks_per_launch, sizeof *block_grad);
+        block_grad->total_params = grad.total_params;
+        block_grad->param_block = (net_param *) managed_alloc
+          (max_blocks_per_launch * grad.total_params, 
+           sizeof *block_grad->param_block);
+        net_setup_param_pointers (block_grad, arch, flgs);
+        net_replicate_param_pointers(block_grad, arch, max_blocks_per_launch);
       }
     }
-#   endif
+  }
+# endif
 
   if (inv_temp>=0)
   { net_prior_prob (&params, &sigmas, &log_prob, gr ? &grad : 0, 
@@ -1916,8 +1930,6 @@ void mc_app_energy
       {
 #       if __CUDACC__
         { 
-          int max_cases_per_launch = perthrd*blksize*numblks;
-
           i = 0;
           while (i < N_train)
           { 
@@ -1949,14 +1961,14 @@ void mc_app_energy
 
             if (energy)
             { for (j = 0; j<blks; j++)
-              { *energy += thread_energy[j*blksize];
+              { *energy += block_energy[j];
               }
             }
 
             if (gr)
-            { net_params *np = thread_grad;
-#             if FP32 && USE_SIMD_INTRINSICS && __AVX__
-              { for (j = 0; j<blks; j++)
+            { net_params *np = block_grad;
+              for (j = 0; j<blks; j++)
+#             { if FP32 && USE_SIMD_INTRINSICS && __AVX__
                 { unsigned k;
                   unsigned e = grad.total_params & ~(unsigned)0x7;
                   for (k = 0; k < e; k += 8)
@@ -1975,11 +1987,8 @@ void mc_app_energy
                   for (; k < grad.total_params; k++)
                   { grad.param_block[k] += np->param_block[k];
                   }
-                  np += blksize;
                 }
-              }
-#             elif FP32 && USE_SIMD_INTRINSICS && __SSE__
-              { for (j = 0; j<blks; j++)
+#               elif FP32 && USE_SIMD_INTRINSICS && __SSE__
                 { unsigned k;
                   unsigned e = grad.total_params & ~(unsigned)0x3;
                   for (k = 0; k < e; k += 4)
@@ -1991,11 +2000,8 @@ void mc_app_energy
                   for (; k < grad.total_params; k++)
                   { grad.param_block[k] += np->param_block[k];
                   }
-                  np += blksize;
                 }
-              }
-#             elif FP64 && USE_SIMD_INTRINSICS && __AVX__
-              { for (j = 0; j<blks; j++)
+#               elif FP64 && USE_SIMD_INTRINSICS && __AVX__
                 { unsigned k;
                   unsigned e = grad.total_params & ~(unsigned)0x3;
                   for (k = 0; k < e; k += 4)
@@ -2007,19 +2013,16 @@ void mc_app_energy
                   for (; k < grad.total_params; k++)
                   { grad.param_block[k] += np->param_block[k];
                   }
-                  np += blksize;
                 }
-              }
-#             else
-              { for (j = 0; j<blks; j++)
+#               else
                 { unsigned k;
                   for (k = 0; k < grad.total_params; k++)
                   { grad.param_block[k] += np->param_block[k];
                   }
-                  np += blksize;
                 }
+#               endif
+                np += 1;
               }
-#             endif
             }
 
             i += c;

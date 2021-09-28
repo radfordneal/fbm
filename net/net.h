@@ -19,6 +19,27 @@
 #endif
 
 
+/* FUNCTIONS WITH SPECIFIED PRECISION. */
+
+#if FP32
+# define prec_exp expf
+# define prec_log logf
+# define prec_sin sinf
+# define prec_cos cosf
+# define prec_tanh tanhf
+# define prec_fabs fabsf
+# define prec_copysign copysignf
+#else
+# define prec_exp exp
+# define prec_log log
+# define prec_sin sin
+# define prec_cos cos
+# define prec_tanh tanh
+# define prec_fabs fabs
+# define prec_copysign copysign
+#endif
+
+
 /* WEIGHT CONFIGURATION.  Records network weight configuration set up for a 
    group of connections with a cfg-b, cfg-i, or cfg-h flag.  Note that
    the stored indexes start at zero, though they are 1-based in the file. 

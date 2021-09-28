@@ -135,7 +135,7 @@ HOSTDEV void net_back
     else if (flgs->layer_type[l]==Sin_type)
     { net_value const* vs = v->s[l];
       for (i = 0; i<N_hidden; i++)
-      { ds[i] = 2 * cos(vs[i]*sqrt_2) * dh[i];
+      { ds[i] = 2 * prec_cos(vs[i]*sqrt_2) * dh[i];
       }
     }
     else if (flgs->layer_type[l]==Softplus_type)
@@ -164,7 +164,7 @@ HOSTDEV void net_back
           i += 2;
         }
         if (i<=N_hidden)
-        { ds[i] = dh[i] / (1+exp(-vs[i]));
+        { ds[i] = dh[i] / (1+prec_exp(-vs[i]));
         }
       }
 #     elif FP64 && USE_SIMD_INTRINSICS && __AVX__
@@ -189,12 +189,12 @@ HOSTDEV void net_back
           i += 2;
         }
         if (i<=N_hidden)
-        { ds[i] = dh[i] / (1+exp(-vs[i]));
+        { ds[i] = dh[i] / (1+prec_exp(-vs[i]));
         }
       }
 #     else
       { for (i = 0; i<N_hidden; i++)
-        { ds[i] = dh[i] / (1+exp(-vs[i]));
+        { ds[i] = dh[i] / (1+prec_exp(-vs[i]));
         }
       }
 #     endif

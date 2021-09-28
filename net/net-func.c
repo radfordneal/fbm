@@ -36,14 +36,14 @@
 #if USE_QUICK_AND_DIRTY_TANH
 # define TANH(x) quick_and_dirty_tanh(x)
 #else
-# define TANH(x) tanh(x)
+# define TANH(x) prec_tanh(x)
 #endif
 
 
 /* COMPUTE TANH QUICKLY, BUT NOT VERY ACCURATELY.  Loses accuracy for
    x near zero, but that shouldn't matter much for neural network use. */
 
-#define quick_and_dirty_tanh(x) (1 - 2 / (1+exp(2*(x))))
+#define quick_and_dirty_tanh(x) (1 - 2 / (1+prec_exp(2*(x))))
 
 
 /* This module calculates the values of the output units in a network, given 
@@ -241,7 +241,7 @@ HOSTDEV void net_func
     }
     else if (flgs->layer_type[l]==Sin_type)
     { for (j = 0; j<N_hidden; j++)
-      { vh[j] = sqrt_2*sin(sh[j]*sqrt_2);
+      { vh[j] = sqrt_2 * prec_sin(sh[j]*sqrt_2);
       }
     }
     else if (flgs->layer_type[l]==Softplus_type)
@@ -313,7 +313,8 @@ HOSTDEV void net_func
         }
         if (j<=N_hidden)
         { net_value a = sh[j-1];
-          net_value v = log (1 + exp(-fabs(a)));  /* avoid overflow */
+          net_value v = 
+            prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
           if (a>0) v += a;
           vh[j-1] = v;
         }
@@ -321,7 +322,8 @@ HOSTDEV void net_func
 #     else
       { for (j = 0; j<N_hidden; j++)
         { net_value a = sh[j];
-          net_value v = log (1 + exp(-fabs(a)));  /* avoid overflow */
+          net_value v = 
+            prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
           if (a>0) v += a;
           vh[j] = v;
         }

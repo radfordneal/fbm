@@ -90,7 +90,6 @@ HOSTDEV void net_model_prob
   static double cnst;		/* Saved value of this constant */
 
   int N_outputs = a->N_outputs;
-  double d, x, alpha;
   int i;
 
   switch (m->type)
@@ -106,16 +105,16 @@ HOSTDEV void net_model_prob
           continue;
         }
 
-        double oi = v->o[i];
-        double sign_oi = copysign(1.0,oi);
-        double abs_oi = fabs(oi);
+        net_value oi = v->o[i];
+        net_value sign_oi = prec_copysign((net_value)1.0,oi);
+        net_value abs_oi = prec_fabs(oi);
 
         /* Note: The exp computation below never overflows. */
 
-        double ep1 = exp (-abs_oi) + 1;
+        net_value ep1 = prec_exp (-abs_oi) + 1;
 
         if (pr)  /* find log probability */
-        { double log_ep1 = log (ep1);
+        { net_value log_ep1 = prec_log (ep1);
           *pr += (t[i] - 0.5*(sign_oi+1)) * oi - log_ep1;
         }
 
@@ -129,7 +128,7 @@ HOSTDEV void net_model_prob
 
     case 'C':  /* Single class with multiple possible values */
     {
-      double m, e, s;
+      net_value m, e, s;
 
       if (isnan(*t))  /* target not observed */
       { if (pr) *pr = 0;
@@ -148,13 +147,13 @@ HOSTDEV void net_model_prob
 
       s = 0;
       for (i = 0; i<N_outputs; i++)
-      { e = exp (v->o[i] - m);
+      { e = prec_exp (v->o[i] - m);
         if (dp) dp->o[i] = e;
         s += e;
       }
 
       if (pr) 
-      { *pr = v->o[(int)*t] - m - log(s);
+      { *pr = v->o[(int)*t] - m - prec_log(s);
       }
 
       if (dp)
@@ -170,7 +169,7 @@ HOSTDEV void net_model_prob
   
     case 'R':  /* Real-valued target */
     { 
-      alpha = m->noise.alpha[2];
+      double alpha = m->noise.alpha[2];
 
       if (alpha==0) /* Gaussian distribution for noise */
       { 
@@ -186,7 +185,7 @@ HOSTDEV void net_model_prob
             if (pr && op<1) *pr += 0.5 * Log2pi;  /* undo what was done above */
             continue;
           }
-          d = (v->o[i] - t[i]) / s->noise[i];
+          double d = (v->o[i] - t[i]) / s->noise[i];
           if (d<-1e10) d = -1e10;
           if (d>+1e10) d = +1e10;
           if (pr) 
@@ -217,10 +216,10 @@ HOSTDEV void net_model_prob
             if (pr && op<1) *pr -= cnst;
             continue;
           }
-          d = (v->o[i] - t[i]) / s->noise[i];
+          double d = (v->o[i] - t[i]) / s->noise[i];
           if (d<-1e10) d = -1e10;
           if (d>+1e10) d = +1e10;
-          x = 1 + d*d/alpha;
+          double x = 1 + d*d/alpha;
           if (pr) 
           { *pr -= ((alpha+1)/2) * log(x);
             if (op<2) 
@@ -259,13 +258,13 @@ HOSTDEV void net_model_prob
       m = v->o[0]+log(ot);
 
       if (m>200.0)
-      { ho = exp(200.0);
+      { ho = prec_exp(200.0);
         if (pr) *pr = - ho;
         if (dp) dp->o[0] = 0;
       }
       else
       { 
-        ho = exp(m);
+        ho = prec_exp(m);
 
         if (pr) *pr = - ho;
         if (dp) dp->o[0] = ho;

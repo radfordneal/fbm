@@ -118,6 +118,8 @@ static net_params *thread_grad;	/* Gradients computed by concurrent threads */
 static net_value *dev_train_targets; /* Copy of train_targets in GPU memory */
 static net_values *dev_train_values; /* Value structures in GPU memory */
 
+static net_values *dev_deriv;	/* GPU copy  of derivatives for training cases*/
+
 __constant__ int const_N_train;    /* Copy of N_train in constant memory */
 __constant__ int const_N_inputs;   /* Copy of N_inputs in constant memory */
 __constant__ int const_N_targets;  /* Copy of N_targets in constant memory */
@@ -390,10 +392,10 @@ void mc_app_initialize
     { 
       net_data_read (1, 0, arch, model, surv);
     
-      deriv = (net_values *) managed_alloc (N_train, sizeof *deriv);
+      deriv = (net_values *) chk_alloc (N_train, sizeof *deriv);
     
       value_block = 
-        (net_value *) managed_alloc (value_count*N_train, sizeof *value_block);
+        (net_value *) chk_alloc (value_count*N_train, sizeof *value_block);
     
       for (i = 0; i<N_train; i++) 
       { net_setup_value_pointers(&deriv[i], value_block+value_count*i, arch, 0);
@@ -494,10 +496,13 @@ void mc_app_initialize
       size_t sz;
       int i;
 
-      check_cuda_error (cudaGetLastError(), "Before copying to data to GPU");
+      net_values *tmp_values;
+      tmp_values = (net_values *) chk_alloc (N_train, sizeof *tmp_values);
 
-      net_value *iblk, *vblk;
       int value_count = net_setup_value_count(arch) - N_inputs;
+      net_value *iblk, *vblk;
+
+      check_cuda_error (cudaGetLastError(), "Before copying to data to GPU");
 
       sz = N_inputs * N_train * sizeof *iblk;
       check_cuda_error (cudaMalloc (&iblk, sz), "cudaMalloc of iblk");
@@ -506,21 +511,19 @@ void mc_app_initialize
         "copy to iblk");
 
       sz = value_count * N_train * sizeof *vblk;
-      check_cuda_error (cudaMalloc (&vblk, sz), "cudaMalloc of vblk");
+      check_cuda_error (cudaMalloc (&vblk, sz), "cudaMalloc of vblk for train");
 
-      net_values *tmp_values = 
-        (net_values *) chk_alloc (N_train, sizeof *tmp_values);
       for (i = 0; i<N_train; i++) 
       { net_setup_value_pointers (&tmp_values[i], vblk+value_count*i, arch, 
                                   iblk+N_inputs*i);
       }
+
       sz = N_train * sizeof *dev_train_values;
       check_cuda_error (cudaMalloc (&dev_train_values, sz), 
                         "cudaMalloc of dev_train_values");
       check_cuda_error (cudaMemcpy 
           (dev_train_values, tmp_values, sz, cudaMemcpyHostToDevice),
         "copy to dev_train_values");
-      free(tmp_values);
       
       sz = N_targets * N_train * sizeof *dev_train_targets;
       check_cuda_error (cudaMalloc (&dev_train_targets, sz),
@@ -528,6 +531,23 @@ void mc_app_initialize
       check_cuda_error (cudaMemcpy
           (dev_train_targets, train_targets, sz, cudaMemcpyHostToDevice),
         "copy to dev_train_targets");
+
+      sz = value_count * N_train * sizeof *vblk;
+      check_cuda_error (cudaMalloc (&vblk, sz), "cudaMalloc of vblk for deriv");
+
+      for (i = 0; i<N_train; i++) 
+      { net_setup_value_pointers (&tmp_values[i], vblk+value_count*i, arch, 
+                                  iblk+N_inputs*i);
+      }
+
+      sz = N_train * sizeof *dev_deriv;
+      check_cuda_error (cudaMalloc (&dev_deriv, sz),
+                        "cudaMalloc of dev_deriv");
+      check_cuda_error (cudaMemcpy 
+          (dev_deriv, tmp_values, sz, cudaMemcpyHostToDevice),
+        "copy to dev_deriv");
+
+      free(tmp_values);
     }
 #   endif
 
@@ -574,7 +594,7 @@ void mc_app_initialize
       cudaMemcpyToSymbol (const_params, &params, sizeof params);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_params");
-      cudaMemcpyToSymbol (const_deriv, &deriv, sizeof deriv);
+      cudaMemcpyToSymbol (const_deriv, &dev_deriv, sizeof deriv);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_deriv");
       cudaMemcpyToSymbol

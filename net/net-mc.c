@@ -1803,10 +1803,10 @@ __global__ void many_cases
             && threadIdx.x + stride < blockDim.x
             && j + cases_per_thread*stride < const_N_train)
       { if (thread_energy)
-        { *threi += threi[stride];
+        { *threi += thread_energy[i+stride];
         }
         if (thread_grad)
-        { net_param *p = thrgi[stride].param_block;
+        { net_param *p = thread_grad[i+stride].param_block;
           net_param *q = thrgi->param_block;
           unsigned t = thrgi->total_params;
           unsigned k;
@@ -1842,14 +1842,17 @@ void mc_app_energy
 
 # if __CUDACC__
   { if (N_train>0)
-    { if (energy && thread_energy==0)
+    { 
+      if (energy && thread_energy==0)
       { thread_energy = (double *) 
           managed_alloc (max_threads_per_launch, sizeof *thread_energy);
         block_energy = (double *) 
           managed_alloc (max_blocks_per_launch, sizeof *block_energy);
       }
+
       if (gr && thread_grad==0)
-      { thread_grad = (net_params *) 
+      { 
+        thread_grad = (net_params *) 
           managed_alloc (max_threads_per_launch, sizeof *thread_grad);
         thread_grad->total_params = grad.total_params;
         thread_grad->param_block = (net_param *) managed_alloc
@@ -1857,6 +1860,7 @@ void mc_app_energy
            sizeof *thread_grad->param_block);
         net_setup_param_pointers (thread_grad, arch, flgs);
         net_replicate_param_pointers(thread_grad, arch, max_threads_per_launch);
+
         block_grad = (net_params *) 
           managed_alloc (max_blocks_per_launch, sizeof *block_grad);
         block_grad->total_params = grad.total_params;
@@ -1864,7 +1868,7 @@ void mc_app_energy
           (max_blocks_per_launch * grad.total_params, 
            sizeof *block_grad->param_block);
         net_setup_param_pointers (block_grad, arch, flgs);
-        net_replicate_param_pointers(block_grad, arch, max_blocks_per_launch);
+        net_replicate_param_pointers (block_grad, arch, max_blocks_per_launch);
       }
     }
   }

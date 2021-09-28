@@ -1967,10 +1967,11 @@ void mc_app_energy
 
             if (gr)
             { net_params *np = block_grad;
+              unsigned k;
               for (j = 0; j<blks; j++)
-#             { if FP32 && USE_SIMD_INTRINSICS && __AVX__
-                { unsigned k;
-                  unsigned e = grad.total_params & ~(unsigned)0x7;
+              { 
+#               if FP32 && USE_SIMD_INTRINSICS && __AVX__
+                { unsigned e = grad.total_params & ~(unsigned)0x7;
                   for (k = 0; k < e; k += 8)
                   { _mm256_storeu_ps (grad.param_block+k, 
                                       _mm256_add_ps (
@@ -1989,8 +1990,7 @@ void mc_app_energy
                   }
                 }
 #               elif FP32 && USE_SIMD_INTRINSICS && __SSE__
-                { unsigned k;
-                  unsigned e = grad.total_params & ~(unsigned)0x3;
+                { unsigned e = grad.total_params & ~(unsigned)0x3;
                   for (k = 0; k < e; k += 4)
                   { _mm_storeu_ps (grad.param_block+k, 
                                    _mm_add_ps (
@@ -2002,8 +2002,7 @@ void mc_app_energy
                   }
                 }
 #               elif FP64 && USE_SIMD_INTRINSICS && __AVX__
-                { unsigned k;
-                  unsigned e = grad.total_params & ~(unsigned)0x3;
+                { unsigned e = grad.total_params & ~(unsigned)0x3;
                   for (k = 0; k < e; k += 4)
                   { _mm256_storeu_pd (grad.param_block+k, 
                                       _mm256_add_pd (
@@ -2015,8 +2014,7 @@ void mc_app_energy
                   }
                 }
 #               else
-                { unsigned k;
-                  for (k = 0; k < grad.total_params; k++)
+                { for (k = 0; k < grad.total_params; k++)
                   { grad.param_block[k] += np->param_block[k];
                   }
                 }

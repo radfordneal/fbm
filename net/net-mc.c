@@ -65,6 +65,8 @@ static int max_threads_per_launch;	/* Largest number of threads for one
 #endif
 
 
+/* FORWARD DECLARATION OF CUDA KERNEL. */
+
 #if __CUDACC__
 
 __global__ void many_cases 
@@ -164,7 +166,9 @@ __constant__ model_specification const_model;  /* Constant copy of model */
 __constant__ model_survival const_surv;  /* Constant copy of surv */
 
 __constant__ net_sigmas const_sigmas; /* Copy of sigmas in constant memory */
-__constant__ net_params const_params; /* Copy of params in constant memory */
+
+__constant__ net_params const_params; /* version of params in GPU */
+static net_param *dev_param_block;    /* parameter block in const_params */
 
 __constant__ net_values *const_deriv;  /* Copy of deriv ptr in constant memory*/
 __constant__ net_values *const_train_values; /* Const copy of train_values ptr*/
@@ -350,7 +354,7 @@ void mc_app_initialize
     sigmas.sigma_block = (net_sigma *) 
                           make_managed (logg->data['S'],logg->actual_size['S']);
     params.param_block = (net_param *) 
-                          make_managed (logg->data['W'],logg->actual_size['W']);
+                          logg->data['W'],logg->actual_size['W'];
   
     grad.total_params = params.total_params;
   
@@ -368,7 +372,7 @@ void mc_app_initialize
       { fprintf(stderr,"Bad size for network record\n");
         exit(1);
       }
-  
+
       net_setup_sigma_pointers (&sigmas, arch, flgs, model);
       net_setup_param_pointers (&params, arch, flgs);
     }
@@ -376,14 +380,31 @@ void mc_app_initialize
     {
       sigmas.sigma_block = 
         (net_sigma *) managed_alloc (sigmas.total_sigmas, sizeof (net_sigma));
+
       params.param_block = 
-        (net_param *) managed_alloc (params.total_params, sizeof (net_param));
-  
+        (net_param *) chk_alloc (params.total_params, sizeof (net_param));
+
       net_setup_sigma_pointers (&sigmas, arch, flgs, model);
       net_setup_param_pointers (&params, arch, flgs);
    
       net_prior_generate (&params, &sigmas, arch, flgs, model, priors, 1, 0, 0);
     }
+
+    /* Set up 'params' structure in GPU memory. */
+
+#   if __CUDACC__
+    { net_params tmp_params;
+      tmp_params.total_params = params.total_params;
+      check_cuda_error (cudaMalloc (&dev_param_block,
+                          params.total_params * sizeof *tmp_params.param_block),
+                        "alloc of params block for GPU");
+      tmp_params.param_block = dev_param_block;
+      net_setup_param_pointers (&tmp_params, arch, flgs);
+      check_cuda_error (cudaMemcpyToSymbol 
+                          (const_params, &tmp_params, sizeof tmp_params),
+                        "copy to const_params");
+    }
+#   endif
 
     /* Set up stepsize structure. */
   
@@ -626,9 +647,6 @@ void mc_app_initialize
       cudaMemcpyToSymbol (const_sigmas, &sigmas, sizeof sigmas);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_sigmas");
-      cudaMemcpyToSymbol (const_params, &params, sizeof params);
-      check_cuda_error (cudaGetLastError(), 
-                        "After copying to const_params");
       cudaMemcpyToSymbol (const_deriv, &dev_deriv, sizeof deriv);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_deriv");
@@ -1804,14 +1822,17 @@ __global__ void many_cases
     net_params *thrgi;
     
     if (thread_energy)
-    { threi = threadIdx.x==0 ? const_block_energy + blockIdx.x 
+    { 
+      threi = threadIdx.x==0 ? const_block_energy + blockIdx.x 
                              : thread_energy + i;
       *threi = 0;
     }
 
     if (thread_grad)
-    { thrgi = threadIdx.x==0 ? const_block_grad + blockIdx.x 
+    { 
+      thrgi = threadIdx.x==0 ? const_block_grad + blockIdx.x 
                              : thread_grad + i;
+
       if (0)  /* seems to be slower */
       { memset(thrgi->param_block, 0, total_params * sizeof (net_param));
       }
@@ -2019,6 +2040,11 @@ void mc_app_energy
       {
 #       if __CUDACC__
         { 
+          check_cuda_error (cudaMemcpy (dev_param_block, params.param_block,
+                              params.total_params * sizeof *params.param_block,
+                              cudaMemcpyHostToDevice),
+                            "Copying parameters to GPU");
+
           i = 0;
           while (i < N_train)
           { 

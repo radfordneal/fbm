@@ -120,8 +120,10 @@ static net_params grad;		/* Pointers to gradient for network parameters*/
 
 #if __CUDACC__
 
-static double *thread_energy;	/* Energies computed by concurrent threads */
-static net_params *thread_grad;	/* Gradients computed by concurrent threads */
+static double *thread_energy;	/* Energies computed by concurrent threads,
+                                   points to GPU memory */
+static net_params *thread_grad;	/* Gradients computed by concurrent threads,
+                                   points to GPU memory */
 
 STAMAN double *block_energy;	/* Energies computed by thread blocks */
 STAMAN net_params *block_grad;	/* Gradients computed by thread blocks */
@@ -1844,22 +1846,32 @@ void mc_app_energy
   { if (N_train>0)
     { 
       if (energy && thread_energy==0)
-      { thread_energy = (double *) 
-          managed_alloc (max_threads_per_launch, sizeof *thread_energy);
+      { check_cuda_error (cudaMalloc (&thread_energy,
+                            max_threads_per_launch * sizeof *thread_energy),
+                          "alloc thread_energy");
         block_energy = (double *) 
           managed_alloc (max_blocks_per_launch, sizeof *block_energy);
       }
 
       if (gr && thread_grad==0)
       { 
-        thread_grad = (net_params *) 
-          managed_alloc (max_threads_per_launch, sizeof *thread_grad);
-        thread_grad->total_params = grad.total_params;
-        thread_grad->param_block = (net_param *) managed_alloc
-          (max_threads_per_launch * grad.total_params, 
-           sizeof *thread_grad->param_block);
-        net_setup_param_pointers (thread_grad, arch, flgs);
-        net_replicate_param_pointers(thread_grad, arch, max_threads_per_launch);
+        net_params *tmp_grad;
+        tmp_grad = (net_params *) 
+          chk_alloc (max_threads_per_launch, sizeof *tmp_grad);
+        tmp_grad->total_params = grad.total_params;
+        check_cuda_error (cudaMalloc 
+           (&tmp_grad->param_block, max_threads_per_launch * grad.total_params
+                                     * sizeof *tmp_grad->param_block),
+         "alloc tmp_grad param block");
+        net_setup_param_pointers (tmp_grad, arch, flgs);
+        net_replicate_param_pointers(tmp_grad, arch, max_threads_per_launch);
+        check_cuda_error (cudaMalloc (&thread_grad,
+                            max_threads_per_launch * sizeof *thread_grad),
+                          "alloc thread_grad");
+        check_cuda_error (cudaMemcpy (thread_grad, tmp_grad,
+                            max_threads_per_launch * sizeof *thread_grad,
+                            cudaMemcpyHostToDevice),
+                          "cudaMemcpy to thread_grad");
 
         block_grad = (net_params *) 
           managed_alloc (max_blocks_per_launch, sizeof *block_grad);

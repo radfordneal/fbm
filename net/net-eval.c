@@ -18,8 +18,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "cuda-use.h"
-
 #include "misc.h"
 #include "log.h"
 #include "prior.h"
@@ -28,31 +26,6 @@
 #include "net.h"
 
 static void usage(void);
-
-
-/* FUNCTION EVALUATION IN A CUDA KERNEL.  This is primarily meant for testing
-   the CUDA implementation.  It probably isn't faster than using the CPU. 
-
-   Accordingly, the net-eval-gpu program should probably not be linked to
-   in bin-gpu (since running the CPU-only net-eval is probably faster). */
-
-#if __CUDACC__
-
-__global__ void eval 
-( net_values *v, 
-  net_arch *a, 
-  net_flags *flgs, 
-  net_params *w
-)
-{ net_func (v, 0, a, flgs, w);
-}
-
-#endif
-
-
-static net_sigmas sigmas;
-STAMAN net_params params;
-STAMAN net_values values;
 
 
 /* MAIN PROGRAM. */
@@ -67,12 +40,11 @@ int main
   model_specification *m;
   model_survival *sv;
 
-  net_sigmas *s = &sigmas;
-  net_params *w = &params;
-  net_values *v = &values;
+  net_sigmas sigmas, *s = &sigmas;
+  net_params params, *w = &params;
+  net_values values, *v = &values;
 
   net_value *value_block;
-
   int value_count;
 
   static net_value grid_low[Max_inputs];
@@ -154,10 +126,10 @@ int main
   { log_gobble(&logf,&logg);
   }
 
-  a = (net_arch *) make_managed (logg.data['A'],logg.actual_size['A']);
-  flgs = (net_flags *) make_managed (logg.data['F'],logg.actual_size['F']);
-  m = (model_specification *) logg.data['M'];
-  sv = (model_survival *) logg.data['V'];
+  a = logg.data['A'];
+  flgs = logg.data['F'];
+  m = logg.data['M'];
+  sv = logg.data['V'];
 
   if (a==0)
   { fprintf(stderr,"No architecture specification in log file\n");
@@ -206,7 +178,7 @@ int main
   /* Allocate space for values in network. */
 
   value_count = net_setup_value_count(a);
-  value_block = (net_value *) managed_alloc (value_count, sizeof *value_block);
+  value_block = chk_alloc (value_count, sizeof *value_block);
 
   net_setup_value_pointers (v, value_block, a, 0);
 
@@ -240,8 +212,7 @@ int main
       exit(1);
     }
   
-    w->param_block = 
-      (net_param *) make_managed (logg.data['W'],logg.actual_size['W']);
+    w->param_block = logg.data['W'];
     net_setup_param_pointers (w, a, flgs);
   
     if (gen_targets) 
@@ -252,7 +223,7 @@ int main
         exit(1);
       }
   
-      s->sigma_block = (net_sigma *) logg.data['S'];
+      s->sigma_block = logg.data['S'];
       net_setup_sigma_pointers (s, a, flgs, m);
     }
   
@@ -273,19 +244,7 @@ int main
   
     for (;;)
     {
-#     if __CUDACC__
-      { check_cuda_error (cudaGetLastError(), 
-                          "Before launching eval");
-        eval<<<1,1>>> (v, a, flgs, w);
-        check_cuda_error (cudaDeviceSynchronize(), 
-                          "Synchronizing after launching eval");
-        check_cuda_error (cudaGetLastError(), 
-                          "After synchronizing with eval");
-      }
-#     else
-      { net_func (v, 0, a, flgs, w);
-      }
-#     endif
+      net_func (v, 0, a, flgs, w);
   
       for (i = 0; i<a->N_inputs; i++) printf(" %8.5f",v->i[i]);
   

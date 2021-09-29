@@ -39,14 +39,14 @@ programs:	net-spec net-gen net-rej net-eval net-display net-pred net-mc \
 # GPU versions of some programs.  Note that the GPU version of net-eval 
 # is primarily for testing.  It is probably slower than the CPU version.
 
-gpu:		net-mc-gpu net-grad-test-gpu net-eval-gpu
+gpu:		net-mc-gpu net-grad-test-gpu
 
 clean:
 	rm -f *.o *.exe \
 		  net-spec net-gen net-rej net-eval net-display net-pred net-mc\
 	          net-gd net-plt net-tbl net-hist net-dvar \
 	          net-grad-test net-stepsizes net-genp net-approx net-his \
-	          net-mc-gpu net-eval-gpu net-grad-test-gpu
+	          net-mc-gpu net-grad-test-gpu
 
 
 include ../util/util.make
@@ -308,22 +308,6 @@ net-plt.o:	net-plt.c	misc.h log.h quantities.h mc.h \
 
 
 # GPU versions.
-
-net-eval-gpu:	net-eval-gpu.o prior.o net-prior.o \
-		  model.o misc.o log.o rand.o ars.o \
-		  net-setup-gpu.o net-util-gpu.o net-config-gpu.o \
-		  net-func-gpu.o net-model-gpu.o
-		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets \
-		  net-eval-gpu.o prior.o net-prior.o \
-		  model.o misc.o log.o rand.o ars.o \
-		  net-setup-gpu.o net-util-gpu.o net-config-gpu.o \
-		  net-func-gpu.o net-model-gpu.o \
-		  -lm -o net-eval-gpu
-
-net-eval-gpu.o:	net-eval.c misc.h prior.h model.h net.h data.h log.h \
-		  cuda-use.h
-		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
-		  net-eval.c -o net-eval-gpu.o
 
 net-mc-gpu:	mc.o net-mc-gpu.o \
 		  ars.o misc.o log.o rand.o numin.o prior.o \

@@ -65,6 +65,21 @@ static int max_threads_per_launch;	/* Largest number of threads for one
 #endif
 
 
+#if __CUDACC__
+
+__global__ void many_cases 
+(
+  double *thread_energy,   /* Places to store energy, null if not required */
+  net_params *thread_grad, /* Places to store gradient, null if not required */
+  int start,		/* Start of cases to look at */
+  int cases_per_thread,	/* Number of case to handle in one thread */
+  double en_weight,	/* Weight for this case for energy */
+  double gr_weight	/* Weight for this case for gradient */
+);
+
+#endif
+
+
 /* FUNCTION TO SQUARE ITS ARGUMENT. */
 
 static inline net_value sq (net_value x) { return x*x; }
@@ -645,6 +660,14 @@ void mc_app_initialize
                 N_train, n_launches, max_blocks_per_launch);
       }
     }
+
+    /* Set GPU to use memory for L1 cache rather than for shared memory when
+       executing the many_cases kernel (which doesn't use shared memory). */
+
+    check_cuda_error (
+      cudaFuncSetCacheConfig (many_cases, cudaFuncCachePreferL1),
+      "Set cache config");
+
 #   endif
 
     /* Make sure we don't do all this again. */

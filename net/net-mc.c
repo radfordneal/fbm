@@ -1770,6 +1770,7 @@ __global__ void many_cases
   double gr_weight	/* Weight for this case for gradient */
 )
 { 
+  unsigned total_params = const_params.total_params;
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = start + cases_per_thread * i;
 
@@ -1787,13 +1788,13 @@ __global__ void many_cases
     if (thread_grad)
     { thrgi = threadIdx.x==0 ? block_grad + blockIdx.x : thread_grad + i;
       if (0)  /* seems to be slower */
-      { memset(thrgi->param_block, 0, thrgi->total_params * sizeof (net_param));
+      { memset(thrgi->param_block, 0, total_params * sizeof (net_param));
       }
       else
-      { unsigned t = thrgi->total_params;
-        unsigned k;
-        for (k = 0; k < t; k++)
-        { thrgi->param_block[k] = 0;
+      { unsigned k;
+        net_param *q = thrgi->param_block;
+        for (k = 0; k < total_params; k++)
+        { q[k] = 0;
         }
       }
     }
@@ -1815,11 +1816,10 @@ __global__ void many_cases
         { *threi += thread_energy[i+stride];
         }
         if (thread_grad)
-        { net_param *p = thread_grad[i+stride].param_block;
-          net_param *q = thrgi->param_block;
-          unsigned t = thrgi->total_params;
+        { net_param *restrict p = thread_grad[i+stride].param_block;
+          net_param *restrict q = thrgi->param_block;
           unsigned k;
-          for (k = 0; k < t; k++)
+          for (k = 0; k < total_params; k++)
           { q[k] += p[k];
           }
         }

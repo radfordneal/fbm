@@ -125,7 +125,9 @@ static double *thread_energy;	/* Energies computed by concurrent threads,
 static net_params *thread_grad;	/* Gradients computed by concurrent threads,
                                    points to GPU memory */
 
-STAMAN double *block_energy;	/* Energies computed by thread blocks */
+static double *block_energy;	/* Energies computed by thread blocks (CPU) */
+static double *dev_block_energy;/*   - version in GPU */
+
 STAMAN net_params *block_grad;	/* Gradients computed by thread blocks */
 
 static net_value *dev_train_targets; /* Copy of train_targets in GPU memory */
@@ -150,6 +152,8 @@ __constant__ net_params const_params; /* Copy of params in constant memory */
 __constant__ net_values *const_deriv;  /* Copy of deriv ptr in constant memory*/
 __constant__ net_values *const_train_values; /* Const copy of train_values ptr*/
 __constant__ net_value *const_train_targets; /* Const copy of train_targets */
+
+__constant__ double *const_block_energy; /* Copy of dev_block_energy */
 
 #endif
 
@@ -1609,6 +1613,7 @@ static void gibbs_adjustments
 #define deriv		const_deriv
 #define train_values	const_train_values
 #define train_targets	const_train_targets
+#define block_energy	const_block_energy
 
 #endif
 
@@ -1748,6 +1753,7 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
 #undef deriv
 #undef train_values
 #undef train_targets
+#undef block_energy
 
 #endif
 
@@ -1773,7 +1779,8 @@ __global__ void many_cases
     net_params *thrgi;
     
     if (thread_energy)
-    { threi = threadIdx.x==0 ? block_energy + blockIdx.x : thread_energy + i;
+    { threi = threadIdx.x==0 ? const_block_energy + blockIdx.x 
+                             : thread_energy + i;
       *threi = 0;
     }
 
@@ -1850,7 +1857,14 @@ void mc_app_energy
                             max_threads_per_launch * sizeof *thread_energy),
                           "alloc thread_energy");
         block_energy = (double *) 
-          managed_alloc (max_blocks_per_launch, sizeof *block_energy);
+          chk_alloc (max_blocks_per_launch, sizeof *block_energy);
+        check_cuda_error (cudaMalloc (&dev_block_energy,
+                             max_blocks_per_launch * sizeof *dev_block_energy),
+                          "alloc of dev_block_energy");
+        cudaMemcpyToSymbol
+          (const_block_energy, &dev_block_energy, sizeof dev_block_energy);
+        check_cuda_error (cudaGetLastError(), 
+                          "After copying to const_block_energy");
       }
 
       if (gr && thread_grad==0)
@@ -1976,7 +1990,11 @@ void mc_app_energy
                               "After synchronizing with many_cases");
 
             if (energy)
-            { for (j = 0; j<blks; j++)
+            { check_cuda_error (cudaMemcpy (block_energy, dev_block_energy,
+                                            blks * sizeof *block_energy,
+                                            cudaMemcpyDeviceToHost),
+                                "copy to block_energy");
+              for (j = 0; j<blks; j++)
               { *energy += block_energy[j];
               }
             }

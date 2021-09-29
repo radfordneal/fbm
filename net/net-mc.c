@@ -126,9 +126,11 @@ static net_params *thread_grad;	/* Gradients computed by concurrent threads,
                                    points to GPU memory */
 
 static double *block_energy;	/* Energies computed by thread blocks (CPU) */
-static double *dev_block_energy;/*   - version in GPU */
+static double *dev_block_energy;/*    - version in GPU */
 
-STAMAN net_params *block_grad;	/* Gradients computed by thread blocks */
+static net_params *block_grad;	/* Gradients computed by thread blocks */
+static net_params *dev_block_grad; /* - version in GPU */
+static net_param *dev_block_grad_params; /* Parameter block of dev_block_grad */
 
 static net_value *dev_train_targets; /* Copy of train_targets in GPU memory */
 static net_values *dev_train_values; /* Value structures in GPU memory */
@@ -153,7 +155,8 @@ __constant__ net_values *const_deriv;  /* Copy of deriv ptr in constant memory*/
 __constant__ net_values *const_train_values; /* Const copy of train_values ptr*/
 __constant__ net_value *const_train_targets; /* Const copy of train_targets */
 
-__constant__ double *const_block_energy; /* Copy of dev_block_energy */
+__constant__ double *const_block_energy;   /* Copy of dev_block_energy ptr */
+__constant__ net_params *const_block_grad; /* Copy of dev_block_grad ptr */
 
 #endif
 
@@ -1613,7 +1616,6 @@ static void gibbs_adjustments
 #define deriv		const_deriv
 #define train_values	const_train_values
 #define train_targets	const_train_targets
-#define block_energy	const_block_energy
 
 #endif
 
@@ -1753,7 +1755,6 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
 #undef deriv
 #undef train_values
 #undef train_targets
-#undef block_energy
 
 #endif
 
@@ -1786,7 +1787,8 @@ __global__ void many_cases
     }
 
     if (thread_grad)
-    { thrgi = threadIdx.x==0 ? block_grad + blockIdx.x : thread_grad + i;
+    { thrgi = threadIdx.x==0 ? const_block_grad + blockIdx.x 
+                             : thread_grad + i;
       if (0)  /* seems to be slower */
       { memset(thrgi->param_block, 0, total_params * sizeof (net_param));
       }
@@ -1870,13 +1872,16 @@ void mc_app_energy
       if (gr && thread_grad==0)
       { 
         net_params *tmp_grad;
+
+        /* Create thread_grad array on GPU. */
+
         tmp_grad = (net_params *) 
           chk_alloc (max_threads_per_launch, sizeof *tmp_grad);
         tmp_grad->total_params = grad.total_params;
         check_cuda_error (cudaMalloc 
            (&tmp_grad->param_block, max_threads_per_launch * grad.total_params
                                      * sizeof *tmp_grad->param_block),
-         "alloc tmp_grad param block");
+         "alloc tmp_grad param block for thread_grad");
         net_setup_param_pointers (tmp_grad, arch, flgs);
         net_replicate_param_pointers(tmp_grad, arch, max_threads_per_launch);
         check_cuda_error (cudaMalloc (&thread_grad,
@@ -1886,15 +1891,46 @@ void mc_app_energy
                             max_threads_per_launch * sizeof *thread_grad,
                             cudaMemcpyHostToDevice),
                           "cudaMemcpy to thread_grad");
+        free(tmp_grad);
+
+        /* Create block_grad array on CPU. */
 
         block_grad = (net_params *) 
-          managed_alloc (max_blocks_per_launch, sizeof *block_grad);
+          chk_alloc (max_blocks_per_launch, sizeof *block_grad);
         block_grad->total_params = grad.total_params;
-        block_grad->param_block = (net_param *) managed_alloc
-          (max_blocks_per_launch * grad.total_params, 
-           sizeof *block_grad->param_block);
+        block_grad->param_block = (net_param *) 
+          chk_alloc (max_blocks_per_launch * grad.total_params, 
+                     sizeof *block_grad->param_block);
         net_setup_param_pointers (block_grad, arch, flgs);
         net_replicate_param_pointers (block_grad, arch, max_blocks_per_launch);
+
+        /* Create dev_block_grad array on GPU. */
+
+        tmp_grad = (net_params *) 
+          chk_alloc (max_blocks_per_launch, sizeof *tmp_grad);
+        tmp_grad->total_params = grad.total_params;
+        check_cuda_error (cudaMalloc 
+           (&dev_block_grad_params, max_blocks_per_launch * grad.total_params
+                                     * sizeof *tmp_grad->param_block),
+         "alloc for dev_block_grad_params");
+        tmp_grad->param_block = dev_block_grad_params;
+        net_setup_param_pointers (tmp_grad, arch, flgs);
+        net_replicate_param_pointers(tmp_grad, arch, max_blocks_per_launch);
+        check_cuda_error (cudaMalloc (&dev_block_grad,
+                            max_blocks_per_launch * sizeof *dev_block_grad),
+                          "alloc dev_block_grad");
+        check_cuda_error (cudaMemcpy (dev_block_grad, tmp_grad,
+                            max_blocks_per_launch * sizeof *dev_block_grad,
+                            cudaMemcpyHostToDevice),
+                          "cudaMemcpy to dev_block_grad");
+        free(tmp_grad);
+
+        /* Put pointer to dev_block_grad array in constant GPU memory. */
+
+        cudaMemcpyToSymbol
+          (const_block_grad, &dev_block_grad, sizeof dev_block_grad);
+        check_cuda_error (cudaGetLastError(), 
+                          "After copying to const_block_grad");
       }
     }
   }
@@ -2000,10 +2036,17 @@ void mc_app_energy
             }
 
             if (gr)
-            { net_params *np = block_grad;
-              unsigned k;
+            { 
+              check_cuda_error (cudaMemcpy (
+                 block_grad->param_block, dev_block_grad_params, blks *
+                   block_grad->total_params * sizeof *block_grad->param_block,
+                 cudaMemcpyDeviceToHost),
+               "copy from GPU to block_grad");
+
+              net_params *np = block_grad;
+
               for (j = 0; j<blks; j++)
-              { 
+              { unsigned k;
 #               if FP32 && USE_SIMD_INTRINSICS && __AVX__
                 { unsigned e = grad.total_params & ~(unsigned)0x7;
                   for (k = 0; k < e; k += 8)

@@ -681,8 +681,8 @@ HOSTDEV static void add_grad2_config
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m128 SI = _mm_set1_ps (s[cn[c].s]);
           j = cn[c].d;
-          _mm_store_ps (g+k, _mm_add_ps (_mm_loadu_ps(g+k),
-                                         _mm_mul_ps (SI, _mm_loadu_ps(d+j))));
+          _mm_storeu_ps (g+k, _mm_add_ps (_mm_loadu_ps(g+k),
+                                          _mm_mul_ps (SI, _mm_loadu_ps(d+j))));
         }
       }
     }

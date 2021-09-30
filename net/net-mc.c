@@ -112,6 +112,7 @@ static model_survival *surv;	/* Hazard type for survival model */
 
 static net_sigmas sigmas;	/* Hyperparameters for network, auxiliary state
 				   for Monte Carlo.  Includes noise std. dev. */
+static net_sigma *noise;	/* Just the noise hyperparameters in sigmas */
 
 static net_params params;	/* Pointers to parameters, which are position
 				   coordinates for dynamical Monte Carlo */
@@ -165,7 +166,8 @@ __constant__ int const_has_flgs;   /* Are flags present in const_flgs? */
 __constant__ model_specification const_model;  /* Constant copy of model */
 __constant__ model_survival const_surv;  /* Constant copy of surv */
 
-__constant__ net_sigmas const_sigmas; /* Copy of sigmas in constant memory */
+static net_sigma *dev_noise;          /* GPU copy of noise sigmas */
+__constant__ net_sigma *const_noise;  /* Pointer to GPU copy of noise sigmas */
 
 __constant__ net_params const_params; /* version of params in GPU */
 static net_param *dev_param_block;    /* parameter block in const_params */
@@ -351,10 +353,8 @@ void mc_app_initialize
     sigmas.total_sigmas = net_setup_sigma_count(arch,flgs,model);
     params.total_params = net_setup_param_count(arch,flgs);
   
-    sigmas.sigma_block = (net_sigma *) 
-                          make_managed (logg->data['S'],logg->actual_size['S']);
-    params.param_block = (net_param *) 
-                          logg->data['W'],logg->actual_size['W'];
+    sigmas.sigma_block = (net_sigma *) logg->data['S'];
+    params.param_block = (net_param *) logg->data['W'];
   
     grad.total_params = params.total_params;
   
@@ -379,7 +379,7 @@ void mc_app_initialize
     else
     {
       sigmas.sigma_block = 
-        (net_sigma *) managed_alloc (sigmas.total_sigmas, sizeof (net_sigma));
+        (net_sigma *) chk_alloc (sigmas.total_sigmas, sizeof (net_sigma));
 
       params.param_block = 
         (net_param *) chk_alloc (params.total_params, sizeof (net_param));
@@ -389,6 +389,19 @@ void mc_app_initialize
    
       net_prior_generate (&params, &sigmas, arch, flgs, model, priors, 1, 0, 0);
     }
+
+    /* Set up noise sigmas in CPU and GPU memory. */
+
+    noise = sigmas.noise;
+
+#   if __CUDACC__
+    { if (sigmas.noise != 0)
+      { check_cuda_error (cudaMalloc (&dev_noise, 
+                                      arch->N_outputs * sizeof *dev_noise),
+                          "alloc of dev_noise");
+      }
+    }
+#   endif    
 
     /* Set up 'params' structure in GPU memory. */
 
@@ -644,9 +657,9 @@ void mc_app_initialize
         check_cuda_error (cudaGetLastError(), 
                           "After copying to const_surv");
       }
-      cudaMemcpyToSymbol (const_sigmas, &sigmas, sizeof sigmas);
+      cudaMemcpyToSymbol (const_noise, &dev_noise, sizeof dev_noise);
       check_cuda_error (cudaGetLastError(), 
-                        "After copying to const_sigmas");
+                        "After copying to const_noise");
       cudaMemcpyToSymbol (const_deriv, &dev_deriv, sizeof deriv);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_deriv");
@@ -1652,7 +1665,7 @@ static void gibbs_adjustments
 #define flgs		(const_has_flgs ? &const_flgs : 0)
 #define model		(&const_model)
 #define surv		(&const_surv)
-#define sigmas		const_sigmas
+#define noise		const_noise
 #define params		const_params
 #define deriv		const_deriv
 #define train_values	const_train_values
@@ -1710,7 +1723,7 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
   
       net_model_prob(&train_values[i], &fudged_target,
                      &log_prob, grd ? &deriv[i] : 0, arch, model, surv, 
-                     sigmas.noise, Cheap_energy);
+                     noise, Cheap_energy);
   
       if (energy) *energy -= en_weight * log_prob;
   
@@ -1759,7 +1772,7 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
     double log_prob;
     net_model_prob(&train_values[i], train_targets+N_targets*i,
                    &log_prob, grd ? &deriv[i] : 0, arch, model, surv,
-                   sigmas.noise, Cheap_energy);
+                   noise, Cheap_energy);
 
     if (DEBUG_ONE_CASE)
     { printf("log_prob = %f\n",log_prob);
@@ -1791,7 +1804,7 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
 #undef flgs
 #undef model
 #undef surv
-#undef sigmas
+#undef noise
 #undef params
 #undef deriv
 #undef train_values
@@ -2044,6 +2057,13 @@ void mc_app_energy
                               params.total_params * sizeof *params.param_block,
                               cudaMemcpyHostToDevice),
                             "Copying parameters to GPU");
+
+          if (sigmas.noise != 0)
+          { check_cuda_error (cudaMemcpy (dev_noise, sigmas.noise,
+                                arch->N_outputs * sizeof *dev_noise,
+                                cudaMemcpyHostToDevice),
+                              "Copying noise sigmas to GPU");
+          }
 
           i = 0;
           while (i < N_train)

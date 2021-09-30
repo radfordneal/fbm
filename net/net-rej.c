@@ -1,6 +1,6 @@
 /* NET-REJ.C - Generate networks from posterior by rejection sampling. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2021 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -171,7 +171,7 @@ int main
           net_model_check (m);    
           net_model_prob (&train_values[i], 
                           train_targets + data_spec->N_targets*i,
-                          &lp, 0, a, m, sv, s, 2);
+                          &lp, 0, a, m, sv, s->noise, 2);
           log_prob += lp;
         }
       }

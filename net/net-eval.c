@@ -252,7 +252,7 @@ int main
       { for (j = 0; j<a->N_hidden[layer]; j++) printf(" %+.6e",v->h[layer][j]);
       }
       else if (gen_targets)
-      { net_model_guess (v, targets, a, flgs, m, sv, w, s, 1);
+      { net_model_guess (v, targets, a, flgs, m, sv, w, s->noise, 1);
         for (j = 0; j<N_targets; j++) printf(" %+.6e",targets[j]);
       }
       else

@@ -356,7 +356,7 @@ int main
       net_model_check (model);    
       net_model_prob (&train_values[i], 
                       train_targets + data_spec->N_targets*i,
-                      0, deriv, arch, model, surv, &sigmas, 2);
+                      0, deriv, arch, model, surv, sigmas.noise, 2);
   
       net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
                 arch, flgs, &params);
@@ -385,7 +385,7 @@ int main
           net_model_check (model);    
           net_model_prob (&train_values[i], 
                           train_targets + data_spec->N_targets*i,
-                          0, deriv, arch, model, surv, &sigmas, 2);
+                          0, deriv, arch, model, surv, sigmas.noise, 2);
   
           net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
                     arch, flgs, &params);
@@ -460,7 +460,7 @@ int main
           net_model_check (model);    
           net_model_prob (&train_values[i], 
                          train_targets + data_spec->N_targets*i,
-                         0, deriv, arch, model, surv, &sigmas, 2);
+                         0, deriv, arch, model, surv, sigmas.noise, 2);
   
           net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
                     arch, flgs, &params);

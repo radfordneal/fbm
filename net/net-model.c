@@ -80,7 +80,7 @@ HOSTDEV void net_model_prob
   net_arch const*a,	/* Network architecture */
   model_specification const*m, /* Data model */
   model_survival const*sv,/* Type of hazard function for survival model, or 0 */
-  net_sigmas const*s,	/* Hyperparameters, including noise sigmas */
+  net_sigma const*noise,/* Noise sigmas, or null */
   int op		/* Can we ignore some factors? */
 )
 {
@@ -183,7 +183,7 @@ HOSTDEV void net_model_prob
             if (pr && op<1) *pr += 0.5 * Log2pi;  /* undo what was done above */
             continue;
           }
-          net_value rn = 1 / (net_value) s->noise[i];
+          net_sigma rn = 1 / noise[i];
           net_value d = (v->o[i] - t[i]) * rn;
           if (d<-1e10) d = -1e10;
           if (d>+1e10) d = +1e10;
@@ -215,7 +215,7 @@ HOSTDEV void net_model_prob
             if (pr && op<1) *pr -= cnst;
             continue;
           }
-          net_value rn = 1 / (net_value) s->noise[i];
+          net_sigma rn = 1 / noise[i];
           net_value d = (v->o[i] - t[i]) * rn;
           if (d<-1e10) d = -1e10;
           if (d>+1e10) d = +1e10;
@@ -301,7 +301,7 @@ void net_model_max_second
   net_arch *a,		/* Network architecture */
   model_specification *m, /* Data model */
   model_survival *sv,	/* Type of hazard function for survival model, or null*/
-  net_sigmas *s		/* Hyperparameters, including noise sigmas */
+  net_sigma *noise	/* Noise sigmas, or null */
 )
 {
   int N_outputs = a->N_outputs;
@@ -333,8 +333,8 @@ void net_model_max_second
       alpha = m->noise.alpha[2];
 
       for (i = 0; i<N_outputs; i++)
-      { msd[i] = alpha==0 ? 1 / (s->noise[i] * s->noise[i])
-                          : (alpha+1) / (alpha * s->noise[i] * s->noise[i]);
+      { msd[i] = alpha==0 ? 1 / (noise[i] * noise[i])
+                          : (alpha+1) / (alpha * noise[i] * noise[i]);
       }
 
       break;
@@ -402,12 +402,12 @@ void net_model_guess
   model_specification *m, /* Data model */
   model_survival *sv,	/* Type of hazard function for survival model, or null*/
   net_params *params,	/* Network parameters (used only for pw-const-hazard) */
-  net_sigmas *s,	/* Hyperparameters, including noise sigmas */
+  net_sigma *noise,	/* Noise sigmas, or null */
   int type		/* 0=mean, 1=random, 2=median */
 )
 {
   int N_outputs = a->N_outputs;
-  double z, pr, r, noise, alpha;
+  double z, pr, r, noi, alpha;
   int i;
 
   switch (m->type)
@@ -461,12 +461,12 @@ void net_model_guess
       for (i = 0; i<N_outputs; i++)
       { t[i] = v->o[i];
         if (type==1 && m->type!=0)
-        { noise = s->noise[i];
+        { noi = noise[i];
           alpha = m->noise.alpha[2];
           if (alpha!=0)
-          { noise /= sqrt (rand_gamma(alpha/2) / (alpha/2));
+          { noi /= sqrt (rand_gamma(alpha/2) / (alpha/2));
           }
-          t[i] += noise * rand_gaussian();
+          t[i] += noi * rand_gaussian();
         }
       }
 

@@ -54,9 +54,6 @@
 
 # define make_managed(p,sz) (p)
 
-# define ask_show_gpu() 0
-# define show_gpu() do {} while(0)
-
 #endif
 
 

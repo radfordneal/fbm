@@ -404,7 +404,7 @@ void net_evaluate
         case 'y': case 'Y':
         { for (i = low; i<=high; i++)
           { net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
-                             &params, &sigmas, 0);
+                             &params, sigmas.noise, 0);
             qh->value[v][i-low] = target_guess[mod];
           }
           qh->updated[v] = 1;
@@ -414,7 +414,7 @@ void net_evaluate
         case 'g': case 'G':                                
         { for (i = low; i<=high; i++)
           { net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
-                             &params, &sigmas, 1);
+                             &params, sigmas.noise, 1);
             qh->value[v][i-low] = target_guess[mod];
           }
           qh->updated[v] = 1;
@@ -481,7 +481,7 @@ void net_evaluate
 
                 net_model_check (model);    
                 net_model_prob(&cases[i], &ft, &lp, 0, arch, model, surv, 
-                               &sigmas, 2);
+                               sigmas.noise, 2);
                 p1 += lp;
 
                 if (ot<=t1) break;
@@ -504,7 +504,7 @@ void net_evaluate
             else
             { net_model_check (model);    
               net_model_prob (&cases[i], targets + data_spec->N_targets*i,
-                              &p1, 0, arch, model, surv, &sigmas, 0);
+                              &p1, 0, arch, model, surv, sigmas.noise, 0);
             }
 
             if (low==-1)
@@ -534,7 +534,7 @@ void net_evaluate
           for (i = (low==-1 ? 0 : low); i <= (low==-1 ? N_cases-1 : high); i++)
           { 
             net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
-                             &params, &sigmas, 0);
+                             &params, sigmas.noise, 0);
 
             if (low!=-1) 
             { qh->value[v][i-low] = 0;
@@ -572,7 +572,7 @@ void net_evaluate
           for (i = (low==-1 ? 0 : low); i <= (low==-1 ? N_cases-1 : high); i++)
           { 
             net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
-                             &params, &sigmas, 0);
+                             &params, sigmas.noise, 0);
 
             if (low!=-1) 
             { qh->value[v][i-low] = 0;
@@ -610,7 +610,7 @@ void net_evaluate
           for (i = 0; i<N_cases; i++)
           { 
             net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
-                             &params, &sigmas, 0);
+                             &params, sigmas.noise, 0);
 
             p = qd[v].modifier==-1 ? target_guess[0] 
                                    : target_guess[0]+target_guess[1];
@@ -654,7 +654,7 @@ void net_evaluate
             net_model_check (model);    
             net_model_prob (&train_values[i], 
                             train_targets + data_spec->N_targets*i,
-                            0, &deriv, arch, model, surv, &sigmas, 2);
+                            0, &deriv, arch, model, surv, sigmas.noise, 2);
   
             net_back (&train_values[i], &deriv, arch->has_ti ? -1 : 0,
                       arch, flgs, &params);
@@ -701,7 +701,7 @@ void net_evaluate
             net_model_check (model);    
             net_model_prob (&train_values[i], 
                             train_targets + data_spec->N_targets*i,
-                            0, &deriv, arch, model, surv, &sigmas, 2);
+                            0, &deriv, arch, model, surv, sigmas.noise, 2);
   
             net_back (&train_values[i], &deriv, arch->has_ti ? -1 : 0,
                       arch, flgs, &params);
@@ -814,7 +814,7 @@ void net_evaluate
             for (i = 0; i<N_cases; i++)
             { 
               net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
-                               &params, &sigmas, 0);
+                               &params, sigmas.noise, 0);
   
               for (c = 0; c<arch->N_outputs; c++)
               { e -= target_guess[c]==0 ? 0 

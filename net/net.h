@@ -312,16 +312,16 @@ HOSTDEV void net_model_prob (net_values const*, net_value const*,
                              double *restrict,
                              net_values *restrict, net_arch const*,
                              model_specification const*, model_survival const*,
-                             net_sigmas const*, int);
+                             net_sigma const*, int);
 
 void net_model_check (model_specification const*);
 
 void net_model_max_second (net_value *, net_arch *, model_specification *,
-                           model_survival *, net_sigmas *);
+                           model_survival *, net_sigma *);
 
 void net_model_guess (net_values *, net_value *, net_arch *, net_flags *,
                       model_specification *, model_survival *, net_params *,
-                      net_sigmas *, int);
+                      net_sigma *, int);
 
 void net_print_params (net_params *, net_sigmas *, net_arch *, net_flags *,
                        model_specification *);

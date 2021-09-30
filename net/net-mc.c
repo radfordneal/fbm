@@ -1710,7 +1710,7 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
   
       net_model_prob(&train_values[i], &fudged_target,
                      &log_prob, grd ? &deriv[i] : 0, arch, model, surv, 
-                     &sigmas, Cheap_energy);
+                     sigmas.noise, Cheap_energy);
   
       if (energy) *energy -= en_weight * log_prob;
   
@@ -1759,7 +1759,7 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
     double log_prob;
     net_model_prob(&train_values[i], train_targets+N_targets*i,
                    &log_prob, grd ? &deriv[i] : 0, arch, model, surv,
-                   &sigmas, Cheap_energy);
+                   sigmas.noise, Cheap_energy);
 
     if (DEBUG_ONE_CASE)
     { printf("log_prob = %f\n",log_prob);
@@ -2331,7 +2331,7 @@ void mc_app_stepsizes
   /* Compute estimated second derivatives of minus log likelihood for
      unit values. */
 
-  net_model_max_second (seconds.o, arch, model, surv, &sigmas);
+  net_model_max_second (seconds.o, arch, model, surv, sigmas.noise);
 
   if (inv_temp!=1)
   { for (i = 0; i<arch->N_outputs; i++)

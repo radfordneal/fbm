@@ -185,7 +185,7 @@ int pred_app_use_index (void)
 
           net_model_check (m);    
           net_model_prob(&test_values[i], &ft,
-                         &lp, 0, a, m, sv, s, 0);
+                         &lp, 0, a, m, sv, s->noise, 0);
 
           test_log_prob[i] += lp;
 
@@ -211,7 +211,7 @@ int pred_app_use_index (void)
         net_model_prob (&test_values[i], 
                         test_targets + data_spec->N_targets * i, 
                         &test_log_prob[i],
-                        0, a, m, sv, s, 0);
+                        0, a, m, sv, s->noise, 0);
       }
 
       if (op_r)
@@ -227,11 +227,11 @@ int pred_app_use_index (void)
     }
     
     net_model_guess (&test_values[i], test_targ_pred + i*M_targets, 
-                     a, flgs, m, sv, w, s, 0);
+                     a, flgs, m, sv, w, s->noise, 0);
 
     if (op_D)
     { net_model_guess (&test_values[i], test_targ_med + i*M_targets, 
-                       a, flgs, m, sv, w, s, 2);
+                       a, flgs, m, sv, w, s->noise, 2);
     }
 
     for (j = 0; j<M_targets; j++)
@@ -262,7 +262,7 @@ int pred_app_use_index (void)
       for (k = 0; k<Median_sample; k++)
       {
         net_model_guess (&test_values[i], curr_targets, 
-                         a, flgs, m, sv, w, s, 1);
+                         a, flgs, m, sv, w, s->noise, 1);
 
         for (j = 0; j<M_targets; j++)
         { if (op_r)

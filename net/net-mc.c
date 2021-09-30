@@ -1757,22 +1757,23 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
   
   else /* Everything except piecewise-constant hazard model */
   { 
+    net_values *train_vals_i = train_values+i;
+    net_values *deriv_i = grd ? deriv+i : 0;
 
     if (DEBUG_ONE_CASE)
-    { printf("train_values[%d]->i[0] = %f\n",i,train_values[i].i[0]);
-      printf("train_values[%d]->i[1] = %f\n",i,train_values[i].i[1]);
+    { printf("train_values[%d]->i[0] = %f\n",i,train_vals_i->i[0]);
+      // printf("train_values[%d]->i[1] = %f\n",i,train_vals_i->i[1]);
     }
 
-    net_func (&train_values[i], 0, arch, flgs, &params);
+    net_func (train_vals_i, 0, arch, flgs, &params);
 
     if (DEBUG_ONE_CASE)
-    { printf("train_values[%d]->o[0] = %f\n",i,train_values[i].o[0]);
+    { printf("train_values[%d]->o[0] = %f\n",i,train_vals_i->o[0]);
     }
 
     double log_prob;
-    net_model_prob(&train_values[i], train_targets+N_targets*i,
-                   &log_prob, grd ? &deriv[i] : 0, arch, model, surv,
-                   noise, Cheap_energy);
+    net_model_prob (train_vals_i, train_targets+N_targets*i, &log_prob, 
+                    deriv_i, arch, model, surv, noise, Cheap_energy);
 
     if (DEBUG_ONE_CASE)
     { printf("log_prob = %f\n",log_prob);
@@ -1783,16 +1784,17 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
     }
 
     if (grd)
-    { if (gr_weight!=1)
+    { 
+      if (gr_weight!=1)
       { for (k = 0; k<arch->N_outputs; k++)
-        { deriv[i].o[k] *= gr_weight;
+        { deriv_i->o[k] *= gr_weight;
         }
       }
 
-      net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
+      net_back (train_vals_i, deriv_i, arch->has_ti ? -1 : 0,
                 arch, flgs, &params);
 
-      net_grad (grd, &params, &train_values[i], &deriv[i], arch, flgs);
+      net_grad (grd, &params, train_vals_i, deriv_i, arch, flgs);
     }
   }
 }
@@ -1831,8 +1833,8 @@ __global__ void many_cases
 
   if (j < const_N_train) 
   { 
-    double *threi;
-    net_params *thrgi;
+    double *restrict threi;
+    net_params *restrict thrgi;
     
     if (thread_energy)
     { 
@@ -1858,28 +1860,29 @@ __global__ void many_cases
       }
     }
 
-    int h;
-    for (h = j; h < j+cases_per_thread && h < const_N_train; h++)
+    for (int h = j; h < j+cases_per_thread && h < const_N_train; h++)
     { one_case (thread_energy ? threi : 0, 
                 thread_grad ? thrgi : 0, 
                 h, en_weight, gr_weight);
     }
 
-    int stride;
-    for (stride = 1; stride < blockDim.x; stride <<= 1)
-    { __syncthreads();
-      if ((threadIdx.x & (2*stride-1)) == 0 
-            && threadIdx.x + stride < blockDim.x
-            && j + cases_per_thread*stride < const_N_train)
-      { if (thread_energy)
-        { *threi += thread_energy[i+stride];
-        }
-        if (thread_grad)
-        { net_param *restrict p = thread_grad[i+stride].param_block;
-          net_param *restrict q = thrgi->param_block;
-          unsigned k;
-          for (k = 0; k < total_params; k++)
-          { q[k] += p[k];
+    { int stride;
+      net_param *restrict q;
+      if (thread_grad) q = thrgi->param_block;
+      for (stride = 1; stride < blockDim.x; stride <<= 1)
+      { __syncthreads();
+        if ((threadIdx.x & (2*stride-1)) == 0 
+              && threadIdx.x + stride < blockDim.x
+              && j + cases_per_thread*stride < const_N_train)
+        { if (thread_energy)
+          { *threi += thread_energy[i+stride];
+          }
+          if (thread_grad)
+          { net_param *restrict p = thread_grad[i+stride].param_block;
+            unsigned k;
+            for (k = 0; k < total_params; k++)
+            { q[k] += p[k];
+            }
           }
         }
       }
@@ -2106,9 +2109,11 @@ void mc_app_energy
                                             blks * sizeof *block_energy,
                                             cudaMemcpyDeviceToHost),
                                 "copy to block_energy");
+              double e = *energy;
               for (j = 0; j<blks; j++)
-              { *energy += block_energy[j];
+              { e += block_energy[j];
               }
+              *energy = e;
             }
 
             if (gr)
@@ -2122,24 +2127,25 @@ void mc_app_energy
               net_params *np = block_grad;
 
               for (j = 0; j<blks; j++)
-              { unsigned k;
+              { net_param *restrict npb = np->param_block;
+                unsigned k;
 #               if FP32 && USE_SIMD_INTRINSICS && __AVX__
                 { unsigned e = grad.total_params & ~(unsigned)0x7;
                   for (k = 0; k < e; k += 8)
                   { _mm256_storeu_ps (grad.param_block+k, 
                                       _mm256_add_ps (
                                         _mm256_loadu_ps (grad.param_block+k),
-                                        _mm256_loadu_ps (np->param_block+k)));
+                                        _mm256_loadu_ps (npb+k)));
                   }
                   if (k < (grad.total_params & ~(unsigned)0x3))
                   { _mm_storeu_ps (grad.param_block+k, 
                                    _mm_add_ps (
                                      _mm_loadu_ps (grad.param_block+k),
-                                     _mm_loadu_ps (np->param_block+k)));
+                                     _mm_loadu_ps (npb+k)));
                     k += 4;
                   }
                   for (; k < grad.total_params; k++)
-                  { grad.param_block[k] += np->param_block[k];
+                  { grad.param_block[k] += npb[k];
                   }
                 }
 #               elif FP32 && USE_SIMD_INTRINSICS && __SSE__
@@ -2148,10 +2154,10 @@ void mc_app_energy
                   { _mm_storeu_ps (grad.param_block+k, 
                                    _mm_add_ps (
                                      _mm_loadu_ps (grad.param_block+k),
-                                     _mm_loadu_ps (np->param_block+k)));
+                                     _mm_loadu_ps (npb+k)));
                   }
                   for (; k < grad.total_params; k++)
-                  { grad.param_block[k] += np->param_block[k];
+                  { grad.param_block[k] += npb[k];
                   }
                 }
 #               elif FP64 && USE_SIMD_INTRINSICS && __AVX__
@@ -2160,15 +2166,15 @@ void mc_app_energy
                   { _mm256_storeu_pd (grad.param_block+k, 
                                       _mm256_add_pd (
                                         _mm256_loadu_pd (grad.param_block+k),
-                                        _mm256_loadu_pd (np->param_block+k)));
+                                        _mm256_loadu_pd (npb+k)));
                   }
                   for (; k < grad.total_params; k++)
-                  { grad.param_block[k] += np->param_block[k];
+                  { grad.param_block[k] += npb[k];
                   }
                 }
 #               else
                 { for (k = 0; k < grad.total_params; k++)
-                  { grad.param_block[k] += np->param_block[k];
+                  { grad.param_block[k] += npb[k];
                   }
                 }
 #               endif

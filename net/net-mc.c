@@ -269,19 +269,17 @@ void mc_app_initialize
     { fprintf (stderr, "Precision: %s, SIMD features: %s\n",
                FP32 ? "FP32" : "FP64",
 #              if __AVX2__ && __FMA__
-                 "SSE SSE2 SSE4.2 AVX AVX2 FMA");
+                 "SSE2 SSE4.2 AVX AVX2 FMA");
 #              elif __AVX2__
-                 "SSE SSE2 SSE4.2 AVX AVX2");
+                 "SSE2 SSE4.2 AVX AVX2");
 #              elif __AVX__
-                 "SSE SSE2 SSE4.2 AVX");
+                 "SSE2 SSE4.2 AVX");
 #              elif __SSE4_2__
-                 "SSE SSE2 SSE4.2");
+                 "SSE2 SSE4.2");
 #              elif __SSE2__
-                 "SSE SSE2");
+                 "SSE2");
 #              elif __SSE2__
-                 "SSE SSE2");
-#              elif __SSE__
-                 "SSE");
+                 "SSE2");
 #              else
                  "none");
 #              endif
@@ -2171,7 +2169,7 @@ void mc_app_energy
                   { grad.param_block[k] += npb[k];
                   }
                 }
-#               elif FP32 && USE_SIMD_INTRINSICS && __SSE__
+#               elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
                 { unsigned e = grad.total_params & ~(unsigned)0x7;
                   for (k = 0; k < e; k += 8)
                   { _mm_storeu_ps (grad.param_block+k, 
@@ -2232,7 +2230,7 @@ void mc_app_energy
                   { grad.param_block[k] += npb[k];
                   }
                 }
-#               elif FP64 && USE_SIMD_INTRINSICS && __SSE__
+#               elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
                 { unsigned e = grad.total_params & ~(unsigned)0x3;
                   for (k = 0; k < e; k += 4)
                   { _mm_storeu_pd (grad.param_block+k, 

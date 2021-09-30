@@ -2130,12 +2130,23 @@ void mc_app_energy
               { net_param *restrict npb = np->param_block;
                 unsigned k;
 #               if FP32 && USE_SIMD_INTRINSICS && __AVX__
-                { unsigned e = grad.total_params & ~(unsigned)0x7;
-                  for (k = 0; k < e; k += 8)
+                { unsigned e = grad.total_params & ~(unsigned)0xf;
+                  for (k = 0; k < e; k += 16)
                   { _mm256_storeu_ps (grad.param_block+k, 
                                       _mm256_add_ps (
                                         _mm256_loadu_ps (grad.param_block+k),
                                         _mm256_loadu_ps (npb+k)));
+                    _mm256_storeu_ps (grad.param_block+k+8, 
+                                      _mm256_add_ps (
+                                        _mm256_loadu_ps (grad.param_block+k+8),
+                                        _mm256_loadu_ps (npb+k+8)));
+                  }
+                  if (k < (grad.total_params & ~(unsigned)0x7))
+                  { _mm256_storeu_ps (grad.param_block+k, 
+                                      _mm256_add_ps (
+                                        _mm256_loadu_ps (grad.param_block+k),
+                                        _mm256_loadu_ps (npb+k)));
+                    k += 8;
                   }
                   if (k < (grad.total_params & ~(unsigned)0x3))
                   { _mm_storeu_ps (grad.param_block+k, 
@@ -2188,12 +2199,23 @@ void mc_app_energy
                   }
                 }
 #               elif FP64 && USE_SIMD_INTRINSICS && __AVX__
-                { unsigned e = grad.total_params & ~(unsigned)0x3;
-                  for (k = 0; k < e; k += 4)
+                { unsigned e = grad.total_params & ~(unsigned)0x7;
+                  for (k = 0; k < e; k += 8)
                   { _mm256_storeu_pd (grad.param_block+k, 
                                       _mm256_add_pd (
                                         _mm256_loadu_pd (grad.param_block+k),
                                         _mm256_loadu_pd (npb+k)));
+                    _mm256_storeu_pd (grad.param_block+k+4, 
+                                      _mm256_add_pd (
+                                        _mm256_loadu_pd (grad.param_block+k+4),
+                                        _mm256_loadu_pd (npb+k+4)));
+                  }
+                  if (k < (grad.total_params & ~(unsigned)0x3))
+                  { _mm256_storeu_pd (grad.param_block+k, 
+                                      _mm256_add_pd (
+                                        _mm256_loadu_pd (grad.param_block+k),
+                                        _mm256_loadu_pd (npb+k)));
+                    k += 4;
                   }
                   if (k < (grad.total_params & ~(unsigned)0x1))
                   { _mm_storeu_pd (grad.param_block+k, 

@@ -1,0 +1,17 @@
+# Configuration for weights from convolutional layer units to outputs for
+# model of test images.
+
+D=6  # image width and height
+P=3  # patch width and height
+F=5  # number of filters
+C=4  # number of classes
+
+D-P+1(  # Loop over vertical positions of patch
+  D-P+1(  # Loop over horizontal positions of patch
+    [ = 0 0 ]
+    F(          # Loop over filters
+      [ + 0 = ]
+      C( = + + )  # Loop over classes
+    )
+  )
+)

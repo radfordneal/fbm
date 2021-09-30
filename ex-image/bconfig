@@ -1,0 +1,11 @@
+# Configuration for convolutional layer biases for model of test images.
+
+D=6  # image width and height
+P=3  # patch width and height
+F=5  # number of filters
+
+D-P+1(  # Loop over vertical positions of patch
+  D-P+1(  # Loop over horizontal positions of patch
+    + 1   F-1( + + )  # biases for all filters
+  )
+)

@@ -1,0 +1,16 @@
+# Configuration for hidden-hidden connections for model of test images.
+
+D=6  # image width and height
+P=3  # patch width and height
+F=5  # number of filters
+U=16 # number of units in second hidden layer
+
+D-P+1(  # Loop over vertical positions of patch
+  D-P+1(  # Loop over horizontal positions of patch
+    [ = 0 0 ]
+    F(          # Loop over filters
+      [ + 0 = ]
+      U( = + + )  # Loop over units in next hidden layer
+    )
+  )
+)

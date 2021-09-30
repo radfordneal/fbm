@@ -280,7 +280,7 @@ unsigned net_setup_param_count (net_arch *, net_flags *);
 void net_setup_sigma_pointers (net_sigmas *, net_arch *, net_flags *, 
                                model_specification *);
 void net_setup_param_pointers (net_params *, net_arch *, net_flags *);
-void net_replicate_param_pointers (net_params *, net_arch *, int);
+void net_replicate_param_pointers (net_params *, net_arch *, int, unsigned);
 
 int net_setup_hyper_group (net_arch *, net_flags *, int, int *, int *, int *);
 int net_setup_param_group 

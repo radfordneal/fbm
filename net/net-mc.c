@@ -149,6 +149,7 @@ static double *dev_block_energy;/*    - version in GPU */
 static net_params *block_grad;	/* Gradients computed by thread blocks */
 static net_params *dev_block_grad; /* - version in GPU */
 static net_param *dev_block_grad_params; /* Parameter block of dev_block_grad */
+static unsigned block_aligned_total;     /* Aligned size for each case */
 
 static net_value *dev_train_targets; /* Copy of train_targets in GPU memory */
 static net_values *dev_train_values; /* Value structures in GPU memory */
@@ -1945,7 +1946,8 @@ void mc_app_energy
                                      * sizeof *tmp_grad->param_block),
          "alloc tmp_grad param block for thread_grad");
         net_setup_param_pointers (tmp_grad, arch, flgs);
-        net_replicate_param_pointers(tmp_grad, arch, max_threads_per_launch);
+        net_replicate_param_pointers(tmp_grad, arch, max_threads_per_launch,
+                                     tmp_grad->total_params);
         check_cuda_error (cudaMalloc (&thread_grad,
                             max_threads_per_launch * sizeof *thread_grad),
                           "alloc thread_grad");
@@ -1955,29 +1957,31 @@ void mc_app_energy
                           "cudaMemcpy to thread_grad");
         free(tmp_grad);
 
-        /* Create block_grad array on CPU. */
+        /* Create block_grad array on CPU and on GPU. */
+
+        block_aligned_total = (grad.total_params + 0x3f) & ~0x3f;
 
         block_grad = (net_params *) 
           chk_alloc (max_blocks_per_launch, sizeof *block_grad);
         block_grad->total_params = grad.total_params;
         block_grad->param_block = (net_param *) 
-          chk_alloc (max_blocks_per_launch * grad.total_params, 
+          chk_alloc (max_blocks_per_launch * block_aligned_total, 
                      sizeof *block_grad->param_block);
         net_setup_param_pointers (block_grad, arch, flgs);
-        net_replicate_param_pointers (block_grad, arch, max_blocks_per_launch);
-
-        /* Create dev_block_grad array on GPU. */
+        net_replicate_param_pointers (block_grad, arch, max_blocks_per_launch,
+                                      block_aligned_total);
 
         tmp_grad = (net_params *) 
           chk_alloc (max_blocks_per_launch, sizeof *tmp_grad);
         tmp_grad->total_params = grad.total_params;
         check_cuda_error (cudaMalloc 
-           (&dev_block_grad_params, max_blocks_per_launch * grad.total_params
+           (&dev_block_grad_params, max_blocks_per_launch * block_aligned_total
                                      * sizeof *tmp_grad->param_block),
          "alloc for dev_block_grad_params");
         tmp_grad->param_block = dev_block_grad_params;
         net_setup_param_pointers (tmp_grad, arch, flgs);
-        net_replicate_param_pointers(tmp_grad, arch, max_blocks_per_launch);
+        net_replicate_param_pointers(tmp_grad, arch, max_blocks_per_launch,
+                                     block_aligned_total);
         check_cuda_error (cudaMalloc (&dev_block_grad,
                             max_blocks_per_launch * sizeof *dev_block_grad),
                           "alloc dev_block_grad");
@@ -2119,8 +2123,8 @@ void mc_app_energy
             if (gr)
             { 
               check_cuda_error (cudaMemcpy (
-                 block_grad->param_block, dev_block_grad_params, blks *
-                   block_grad->total_params * sizeof *block_grad->param_block,
+                 block_grad->param_block, dev_block_grad_params, 
+                   blks * block_aligned_total * sizeof *block_grad->param_block,
                  cudaMemcpyDeviceToHost),
                "copy from GPU to block_grad");
 

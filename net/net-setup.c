@@ -377,15 +377,17 @@ void net_setup_param_pointers
 /* REPLICATE POINTERS TO NETWORK PARAMETERS.  Given a pointer to a
    net_params structure, this procedure replicates that structure n-1
    times in structures that follow, offsetting the param_block pointer
-   and pointers to parts by total_params for each replication. */
+   and pointers to parts by 'offset' for each replication.  The 'offset'
+   parameter might be set to the w->total_params, or to some larger
+   value (for alignment purposes). */
 
 void net_replicate_param_pointers
 ( net_params *w,	/* The array of structures to replicate the first of */
   net_arch *a,		/* Network architecture */
-  int n			/* Number of structures to end up with */
+  int n,		/* Number of structures to end up with */
+  unsigned offset	/* Offset to get to next section of param_block */
 )
 {
-  int offset = w->total_params;
   net_params *w1, *w2;
   int i, l;
 

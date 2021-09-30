@@ -2144,19 +2144,46 @@ void mc_app_energy
                                      _mm_loadu_ps (npb+k)));
                     k += 4;
                   }
-                  for (; k < grad.total_params; k++)
+                  if (k < (grad.total_params & ~(unsigned)0x1))
+                  { __m128 Z = _mm_setzero_ps();
+                    _mm_storel_pi ((__m64 *)(grad.param_block+k), 
+                              _mm_add_ps (
+                                _mm_loadl_pi (Z, (__m64 *)(grad.param_block+k)),
+                                _mm_loadl_pi (Z, (__m64 *)(npb+k))));
+                    k += 2;
+                  }
+                  if (k < grad.total_params)
                   { grad.param_block[k] += npb[k];
                   }
                 }
 #               elif FP32 && USE_SIMD_INTRINSICS && __SSE__
-                { unsigned e = grad.total_params & ~(unsigned)0x3;
-                  for (k = 0; k < e; k += 4)
+                { unsigned e = grad.total_params & ~(unsigned)0x7;
+                  for (k = 0; k < e; k += 8)
                   { _mm_storeu_ps (grad.param_block+k, 
                                    _mm_add_ps (
                                      _mm_loadu_ps (grad.param_block+k),
                                      _mm_loadu_ps (npb+k)));
+                    _mm_storeu_ps (grad.param_block+k+4, 
+                                   _mm_add_ps (
+                                     _mm_loadu_ps (grad.param_block+k+4),
+                                     _mm_loadu_ps (npb+k+4)));
                   }
-                  for (; k < grad.total_params; k++)
+                  if (k < (grad.total_params & ~(unsigned)0x3))
+                  { _mm_storeu_ps (grad.param_block+k, 
+                                   _mm_add_ps (
+                                     _mm_loadu_ps (grad.param_block+k),
+                                     _mm_loadu_ps (npb+k)));
+                    k += 4;
+                  }
+                  if (k < (grad.total_params & ~(unsigned)0x1))
+                  { __m128 Z = _mm_setzero_ps();
+                    _mm_storel_pi ((__m64 *)(grad.param_block+k), 
+                              _mm_add_ps (
+                                _mm_loadl_pi (Z, (__m64 *)(grad.param_block+k)),
+                                _mm_loadl_pi (Z, (__m64 *)(npb+k))));
+                    k += 2;
+                  }
+                  if (k < grad.total_params)
                   { grad.param_block[k] += npb[k];
                   }
                 }
@@ -2168,7 +2195,37 @@ void mc_app_energy
                                         _mm256_loadu_pd (grad.param_block+k),
                                         _mm256_loadu_pd (npb+k)));
                   }
-                  for (; k < grad.total_params; k++)
+                  if (k < (grad.total_params & ~(unsigned)0x1))
+                  { _mm_storeu_pd (grad.param_block+k, 
+                                   _mm_add_pd (
+                                     _mm_loadu_pd (grad.param_block+k),
+                                     _mm_loadu_pd (npb+k)));
+                    k += 2;
+                  }
+                  if (k < grad.total_params)
+                  { grad.param_block[k] += npb[k];
+                  }
+                }
+#               elif FP64 && USE_SIMD_INTRINSICS && __SSE__
+                { unsigned e = grad.total_params & ~(unsigned)0x3;
+                  for (k = 0; k < e; k += 4)
+                  { _mm_storeu_pd (grad.param_block+k, 
+                                   _mm_add_pd (
+                                     _mm_loadu_pd (grad.param_block+k),
+                                     _mm_loadu_pd (npb+k)));
+                    _mm_storeu_pd (grad.param_block+k+2, 
+                                   _mm_add_pd (
+                                     _mm_loadu_pd (grad.param_block+k+2),
+                                     _mm_loadu_pd (npb+k+2)));
+                  }
+                  if (k < (grad.total_params & ~(unsigned)0x1))
+                  { _mm_storeu_pd (grad.param_block+k, 
+                                   _mm_add_pd (
+                                     _mm_loadu_pd (grad.param_block+k),
+                                     _mm_loadu_pd (npb+k)));
+                    k += 2;
+                  }
+                  if (k < grad.total_params)
                   { grad.param_block[k] += npb[k];
                   }
                 }

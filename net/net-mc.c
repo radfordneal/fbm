@@ -1901,6 +1901,8 @@ void mc_app_energy
   double log_prob, inv_temp;
   int i, j, low, high;
 
+  if (energy==0 && gr==0) return;  /* Nothing being returned -> nothing to do */
+
   inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
 
   if (gr && grad.param_block!=gr)
@@ -2089,10 +2091,15 @@ void mc_app_energy
                        (energy ? thread_energy : 0, 
                         gr ? thread_grad : 0, 
                         i, perthrd, inv_temp, inv_temp);
-            check_cuda_error (cudaDeviceSynchronize(), 
-                              "Synchronizing after launching many_cases");
-            check_cuda_error (cudaGetLastError(), 
-                              "After synchronizing with many_cases");
+
+#           if MANAGED_MEMORY_USED
+            { 
+              check_cuda_error (cudaDeviceSynchronize(), 
+                                "Synchronizing after launching many_cases");
+              check_cuda_error (cudaGetLastError(), 
+                                "After synchronizing with many_cases");
+            }
+#           endif
 
             if (energy)
             { check_cuda_error (cudaMemcpy (block_energy, dev_block_energy,

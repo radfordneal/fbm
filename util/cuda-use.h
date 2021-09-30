@@ -13,6 +13,8 @@
  * application.  All use of these programs is entirely at the user's own risk.
  */
 
+#define MANAGED_MEMORY_USED 1    /* Set to 1 if 'managed' CPU/GPU memory used */
+
 #if __CUDACC__  /* USING CUDA */
 
 # define restrict __restrict__
@@ -22,24 +24,33 @@
     { printf ("%s: CUDA error: %s\n", where, cudaGetErrorString(err));
       abort();
     }
- }
-
-  static void *managed_alloc (unsigned n, unsigned size)
-  { size_t sz = (size_t)n*size;
-    void *p;
-    if (0) printf("Allocating %.0f bytes of managed memory\n",(double)sz);
-    check_cuda_error (cudaMallocManaged (&p, sz), "Alloc failed");
-    return p;
   }
 
-# define managed_free cudaFree
+# if MANAGED_MEMORY_USED
 
-  static void *make_managed (void *p, unsigned sz)
-  { if (p==0) return p;
-    void *q = managed_alloc (1, sz);
-    memcpy (q, p, sz);
-    return q;
-  }
+    static void *managed_alloc (unsigned n, unsigned size)
+    { size_t sz = (size_t)n*size;
+      void *p;
+      if (0) printf("Allocating %.0f bytes of managed memory\n",(double)sz);
+      check_cuda_error (cudaMallocManaged (&p, sz), "Alloc failed");
+      return p;
+    }
+
+#   define managed_free cudaFree
+
+    static void *make_managed (void *p, unsigned sz)
+    { if (p==0) return p;
+      void *q = managed_alloc (1, sz);
+      memcpy (q, p, sz);
+      return q;
+    }
+
+# else  /* not using managed memory */
+
+#   define __managed__   __this_is_an_error__
+#   define managed_alloc __this_is_an_error__
+
+# endif
 
 #else  /* NOT USING CUDA */
 

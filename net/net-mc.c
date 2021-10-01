@@ -1853,11 +1853,13 @@ __global__ void many_cases
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = start + cases_per_thread * i;
 
+  /* Do computations for case handled by this thread. */
+
+  double *restrict threi;
+  net_params *restrict thrgi;
+
   if (j < const_N_train) 
   { 
-    double *restrict threi;
-    net_params *restrict thrgi;
-    
     if (thread_energy)
     { 
       threi = threadIdx.x==0 ? const_block_energy + blockIdx.x 
@@ -1887,25 +1889,33 @@ __global__ void many_cases
                 thread_grad ? thrgi : 0, 
                 h, en_weight, gr_weight);
     }
+  }
 
-    { int stride;
-      net_param *restrict q;
-      if (thread_grad) q = thrgi->param_block;
-      for (stride = 1; stride < blockDim.x; stride <<= 1)
-      { __syncthreads();
-        if ((threadIdx.x & (2*stride-1)) == 0 
-              && threadIdx.x + stride < blockDim.x
-              && j + cases_per_thread*stride < const_N_train)
-        { if (thread_energy)
-          { *threi += thread_energy[i+stride];
+  /* Reduction of all threads to single gradient.  Done using all threads
+     in block. */
+
+  { int stride;
+    for (stride = 1; stride < blockDim.x; stride <<= 1)
+    { __syncthreads();
+      int mask = 2*stride - 1;
+      int base = threadIdx.x & ~mask;
+      int offset = threadIdx.x - base;
+      int w = i - offset + stride;
+      if (base + stride < blockDim.x 
+       && start + cases_per_thread*w < const_N_train)
+      { 
+        if (thread_grad && offset==0)
+        { net_param *restrict p = thread_grad[w].param_block;
+          net_param *restrict q = 
+              base==0 ? const_block_grad[blockIdx.x].param_block
+                      : thread_grad[w-stride].param_block;
+          unsigned k;
+          for (k = offset; k < total_params; k++)
+          { q[k] += p[k];
           }
-          if (thread_grad)
-          { net_param *restrict p = thread_grad[i+stride].param_block;
-            unsigned k;
-            for (k = 0; k < total_params; k++)
-            { q[k] += p[k];
-            }
-          }
+        }
+        if (thread_energy && offset==0)
+        { *threi += thread_energy[w];
         }
       }
     }

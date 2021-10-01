@@ -2095,63 +2095,56 @@ void mc_app_energy
                               "Copying noise sigmas to GPU");
           }
 
-          i = 0;
-          while (i < N_train)
+          int prev_blks = 0;  /* Number of blocks waiting to be reduced */
+          i = 0;              /* Number of cases handled so far */
+
+          while (i < N_train || prev_blks > 0)
           { 
-            int c = N_train-i < max_cases_per_launch ? N_train-i
-                     : max_cases_per_launch;
+            int thrds, blks, c;
 
-            int thrds = (c + perthrd - 1) / perthrd;
-            int blks = (thrds + blksize - 1) / blksize;
+            /* Launch kernel to do computations for next batch of cases. */
 
-            if (0)
-            { static int first = 1;
-              if (first)
-              { printf("Launching with <<<%d,%d>>>, %d cases per thread\n",
-                        blks,blksize,perthrd);
-                first = 0;
+            if (i < N_train)
+            {
+              c = N_train-i < max_cases_per_launch ? N_train-i
+                   : max_cases_per_launch;
+
+              thrds = (c + perthrd - 1) / perthrd;
+              blks = (thrds + blksize - 1) / blksize;
+
+              if (0)
+              { static int first = 1;
+                if (first)
+                { printf("Launching with <<<%d,%d>>>, %d cases per thread\n",
+                          blks,blksize,perthrd);
+                  first = 0;
+                }
               }
-            }
 
-            check_cuda_error (cudaGetLastError(), 
-                              "Before launching many_cases");
-            many_cases <<<blks, blksize>>> 
-                       (energy ? thread_energy : 0, 
-                        gr ? thread_grad : 0, 
-                        i, perthrd, inv_temp, inv_temp);
-
-#           if MANAGED_MEMORY_USED
-            { 
-              check_cuda_error (cudaDeviceSynchronize(), 
-                                "Synchronizing after launching many_cases");
               check_cuda_error (cudaGetLastError(), 
-                                "After synchronizing with many_cases");
+                                "Before launching many_cases");
+              many_cases <<<blks, blksize>>> 
+                         (energy ? thread_energy : 0, 
+                          gr ? thread_grad : 0, 
+                          i, perthrd, inv_temp, inv_temp);
             }
-#           endif
 
-            if (energy)
-            { check_cuda_error (cudaMemcpy (block_energy, dev_block_energy,
-                                            blks * sizeof *block_energy,
-                                            cudaMemcpyDeviceToHost),
-                                "copy to block_energy");
-              double e = *energy;
-              for (j = 0; j<blks; j++)
+            /* Do reduction of parts of gradient computed previously, while
+               the GPU works on the next batch. */
+
+            if (energy && prev_blks>0)
+            { double e = *energy;
+              for (j = 0; j<prev_blks; j++)
               { e += block_energy[j];
               }
               *energy = e;
             }
 
-            if (gr)
+            if (gr && prev_blks>0)
             { 
-              check_cuda_error (cudaMemcpy (
-                 block_grad->param_block, dev_block_grad_params, 
-                   blks * block_aligned_total * sizeof *block_grad->param_block,
-                 cudaMemcpyDeviceToHost),
-               "copy from GPU to block_grad");
-
               net_params *np = block_grad;
 
-              for (j = 0; j<blks; j++)
+              for (j = 0; j<prev_blks; j++)
               { net_param *restrict npb = np->param_block;
                 unsigned k;
 #               if FP32 && USE_SIMD_INTRINSICS && __AVX__
@@ -2286,7 +2279,40 @@ void mc_app_energy
               }
             }
 
-            i += c;
+            prev_blks = 0;
+
+            /* Wait for GPU to finish, then copy results from it. */
+
+            if (i < N_train)
+            {
+#             if MANAGED_MEMORY_USED
+              { 
+                check_cuda_error (cudaDeviceSynchronize(), 
+                                  "Synchronizing after launching many_cases");
+                check_cuda_error (cudaGetLastError(), 
+                                  "After synchronizing with many_cases");
+              }
+#             endif
+
+              if (energy)
+              { check_cuda_error (cudaMemcpy (block_energy, dev_block_energy,
+                                              blks * sizeof *block_energy,
+                                              cudaMemcpyDeviceToHost),
+                                  "copy to block_energy");
+              }
+
+              if (gr)
+              { check_cuda_error (cudaMemcpy (
+                   block_grad->param_block, dev_block_grad_params, 
+                     blks*block_aligned_total * sizeof *block_grad->param_block,
+                   cudaMemcpyDeviceToHost),
+                 "copy from GPU to block_grad");
+              }
+
+              prev_blks = blks;
+
+              i += c;
+            }
           }
         }
 #       else

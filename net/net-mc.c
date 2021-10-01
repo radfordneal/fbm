@@ -1891,8 +1891,8 @@ __global__ void many_cases
     }
   }
 
-  /* Reduction of all threads to single gradient.  Done using all threads
-     in block. */
+  /* Reduction of all threads to single gradient.  May be done using all 
+     threads in the block (including ones not used above). */
 
   { int stride;
     for (stride = 1; stride < blockDim.x; stride <<= 1)
@@ -1904,13 +1904,15 @@ __global__ void many_cases
       if (base + stride < blockDim.x 
        && start + cases_per_thread*w < const_N_train)
       { 
-        if (thread_grad && offset==0)
+        if (thread_grad)
         { net_param *restrict p = thread_grad[w].param_block;
           net_param *restrict q = 
               base==0 ? const_block_grad[blockIdx.x].param_block
                       : thread_grad[w-stride].param_block;
+          unsigned skip = 2*stride;
+          if (base+skip > blockDim.x) skip = blockDim.x - base;
           unsigned k;
-          for (k = offset; k < total_params; k++)
+          for (k = offset; k < total_params; k += skip)
           { q[k] += p[k];
           }
         }

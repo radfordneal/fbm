@@ -13,7 +13,7 @@
  * application.  All use of these programs is entirely at the user's own risk.
  */
 
-#define MANAGED_MEMORY_USED 1    /* Set to 1 if 'managed' CPU/GPU memory used */
+#define MANAGED_MEMORY_USED 0    /* Set to 1 if 'managed' CPU/GPU memory used */
 
 #if __CUDACC__  /* USING CUDA */
 
@@ -47,6 +47,7 @@
 
 # else  /* not using managed memory */
 
+#   undef __managed__
 #   define __managed__   __this_is_an_error__
 #   define managed_alloc __this_is_an_error__
 

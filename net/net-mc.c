@@ -138,7 +138,7 @@ static net_params grad;		/* Pointers to gradient for network parameters*/
 
 #if __CUDACC__
 
-static net_arch *dev_arch;	/* Architecture with GPU config pointers. */
+static net_arch dev_arch;	/* Copy of arch with GPU config pointers */
 
 static double *thread_energy;	/* Energies computed by concurrent threads,
                                    points to GPU memory */
@@ -162,7 +162,7 @@ __constant__ int const_N_train;    /* Copy of N_train in constant memory */
 __constant__ int const_N_inputs;   /* Copy of N_inputs in constant memory */
 __constant__ int const_N_targets;  /* Copy of N_targets in constant memory */
 
-__constant__ net_arch const_arch;  /* Copy of arch in constant memory */
+__constant__ net_arch const_arch;  /* Copy of dev_arch in constant memory */
 __constant__ net_flags const_flgs; /* Copy of flgs in constant memory */
 __constant__ int const_has_flgs;   /* Are flags present in const_flgs? */
 
@@ -352,7 +352,7 @@ void mc_app_initialize
     /* Locate existing network, if one exists. */
   
     sigmas.total_sigmas = net_setup_sigma_count(arch,flgs,model);
-    params.total_params = net_setup_param_count(arch,flgs);
+    params.total_params = net_setup_param_count(arch,flgs);  /* also config */
   
     sigmas.sigma_block = (net_sigma *) logg->data['S'];
     params.param_block = (net_param *) logg->data['W'];
@@ -390,6 +390,27 @@ void mc_app_initialize
    
       net_prior_generate (&params, &sigmas, arch, flgs, model, priors, 1, 0, 0);
     }
+
+    /* Make copy of architecture with config pointers going to GPU memory. */
+
+#   if __CUDACC__
+    { int l;
+      dev_arch = *arch;
+      for (l = 0; l<=arch->N_layers; l++)
+      { if (arch->input_config[l])
+        { dev_arch.input_config[l] = net_config_to_gpu (arch->input_config[l]);
+        }
+        if (arch->bias_config[l])
+        { dev_arch.bias_config[l] = net_config_to_gpu (arch->bias_config[l]);
+        }
+      }
+      for (l = 1; l<2*arch->N_layers; l++)
+      { if (arch->hidden_config[l])
+        { dev_arch.hidden_config[l] = net_config_to_gpu(arch->hidden_config[l]);
+        }
+      }
+    }
+#   endif    
 
     /* Set up noise sigmas in CPU and GPU memory. */
 
@@ -636,7 +657,7 @@ void mc_app_initialize
       cudaMemcpyToSymbol (const_N_targets, &N_targets, sizeof N_targets);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_N_targets");
-      cudaMemcpyToSymbol (const_arch, arch, sizeof *arch);
+      cudaMemcpyToSymbol (const_arch, &dev_arch, sizeof dev_arch);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_arch");
       int has_flgs = flgs != 0;

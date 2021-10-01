@@ -37,6 +37,9 @@ static int lasts, lastd, lastw;   /* Previous source, dest., weight indexes */
 static int at_index;              /* Index for output from "@" item */
 
 
+static void net_config_sort (net_config *cf);
+
+
 /* READ ITEMS, AS CHARACTER STRINGS.  Returns a pointer to an array of
    pointers to null-terminated strings, with NULL after the last. */
 
@@ -401,7 +404,7 @@ static int cmp_s_wmd_d (const void *a0, const void *b0)
   return r;
 }
 
-void net_config_sort (net_config *cf)
+static void net_config_sort (net_config *cf)
 { 
   int n = cf->N_conn;
 
@@ -566,6 +569,11 @@ void net_config_sort (net_config *cf)
   cf->single = all+a;
   all[a+r].w = -1;
 
+  /* Record the block all the sorted versions came from, in config structure. */
+
+  cf->all = all;
+  cf->all_length = a+r+1;
+
   free(tmp);
   free(rem);
 
@@ -590,3 +598,47 @@ void net_config_sort (net_config *cf)
     }
   }
 }
+
+
+/* MAKE COPY OF CONFIG IN GPU MEMORY.  Returns a pointer to a structure 
+   in GPU memory with pointers to GPU memory set up, copied from the 
+   structure passed. */
+
+#if __CUDACC__
+
+net_config *net_config_to_gpu (net_config *cf)
+{ 
+  net_config dcf;
+
+  dcf = *cf;
+
+  check_cuda_error (cudaMalloc (&dcf.conn, (dcf.N_conn+1) * sizeof *dcf.conn),
+                    "alloc of dev config conn");
+  check_cuda_error (cudaMemcpy (dcf.conn, cf->conn, 
+                               (dcf.N_conn+1) * sizeof *dcf.conn,
+                               cudaMemcpyHostToDevice),
+                    "copy to dev config conn");
+
+  check_cuda_error (cudaMalloc (&dcf.all, dcf.all_length * sizeof *dcf.all),
+                    "alloc of dev config all");
+  check_cuda_error (cudaMemcpy (dcf.all, cf->all, 
+                                dcf.all_length * sizeof *dcf.all,
+                                cudaMemcpyHostToDevice),
+                    "copy to dev config all");
+
+  dcf.single = dcf.all + (cf->single - cf->all);
+  dcf.single4_s = dcf.all + (cf->single4_s - cf->all);
+  dcf.single4_d = dcf.all + (cf->single4_d - cf->all);
+  dcf.quad_s_4d_4w = dcf.all + (cf->quad_s_4d_4w - cf->all);
+
+  net_config *dev_dcf;
+  check_cuda_error (cudaMalloc (&dev_dcf, sizeof *dev_dcf),
+                    "alloc of dev config struct");
+  check_cuda_error (cudaMemcpy (dev_dcf, &dcf, sizeof dcf,
+                                cudaMemcpyHostToDevice),
+                    "copy to dev config struct");
+  
+  return dev_dcf;
+}
+
+#endif

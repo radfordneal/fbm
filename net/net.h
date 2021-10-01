@@ -70,11 +70,15 @@ typedef struct
 typedef struct
 { int N_wts;			/* Number of weights */
   int N_conn;			/* Number of connections */
+
   net_connection *conn;		/* Array of connections, in original order */
+
   net_connection *single;	/* Single connections, taken one-at-a-time */
   net_connection *single4_s;	/* Single connections, in groups of 4, same s */
   net_connection *single4_d;	/* Single connections, in groups of 4, same d */
   net_connection *quad_s_4d_4w;	/* Four connections, same s, sequential d & w */
+  net_connection *all;		/* Pointer to block with items above */
+  int all_length;		/* Length of 'all' block in use */
 } net_config;
 
 
@@ -333,4 +337,4 @@ void net_check_specs_present (net_arch *, net_priors *, int,
                               model_specification *, model_survival *);
 
 net_config *net_config_read (char *, int, int);
-void net_config_sort (net_config *cf);
+net_config *net_config_to_gpu (net_config *);

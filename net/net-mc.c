@@ -138,6 +138,8 @@ static net_params grad;		/* Pointers to gradient for network parameters*/
 
 #if __CUDACC__
 
+static net_arch *dev_arch;	/* Architecture with GPU config pointers. */
+
 static double *thread_energy;	/* Energies computed by concurrent threads,
                                    points to GPU memory */
 static net_params *thread_grad;	/* Gradients computed by concurrent threads,

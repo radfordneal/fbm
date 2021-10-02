@@ -16,3 +16,6 @@
 #if (USE_SIMD_INTRINSICS || USE_SLEEF) && __SSE2__
 # include  <immintrin.h>
 #endif
+
+#define cast128d(x) (_mm256_castpd256_pd128(x))
+#define cast128f(x) (_mm256_castps256_ps128(x))

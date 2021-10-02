@@ -116,13 +116,13 @@ HOSTDEV void net_back
         if (i<N_hidden)
         { __m128d VH = _mm_loadu_pd(vh+i-1);
           _mm_storeu_pd (ds+i-1, _mm_mul_pd (_mm_loadu_pd(dh+i-1),
-           _mm_sub_pd (_mm256_castpd256_pd128(ONE), _mm_mul_pd(VH,VH))));
+           _mm_sub_pd (cast128d(ONE), _mm_mul_pd(VH,VH))));
           i += 2;
         }
         if (i<=N_hidden)
         { __m128d VH = _mm_load_sd(vh+i-1);
           _mm_store_sd (ds+i-1, _mm_mul_sd (_mm_load_sd(dh+i-1),
-           _mm_sub_sd (_mm256_castpd256_pd128(ONE), _mm_mul_sd(VH,VH))));
+           _mm_sub_sd (cast128d(ONE), _mm_mul_sd(VH,VH))));
         }
       }
 #     else
@@ -159,7 +159,7 @@ HOSTDEV void net_back
                                     _mm_loadu_pd(vs+i-1));
           _mm_storeu_pd (ds+i-1, 
                          _mm_div_pd (_mm_loadu_pd(dh+i-1),
-                         _mm_add_pd (_mm256_castpd256_pd128(ONE), 
+                         _mm_add_pd (cast128d(ONE), 
                                      Sleef_expd2_u10avx2128(NVS))));
           i += 2;
         }
@@ -184,7 +184,7 @@ HOSTDEV void net_back
                                     _mm_loadu_pd(vs+i-1));
           _mm_storeu_pd (ds+i-1, 
                          _mm_div_pd (_mm_loadu_pd(dh+i-1),
-                         _mm_add_pd (_mm256_castpd256_pd128(ONE), 
+                         _mm_add_pd (cast128d(ONE), 
                                      Sleef_expd2_u10sse4(NVS))));
           i += 2;
         }
@@ -303,12 +303,12 @@ do \
     } \
     i -= 2; \
     if (i<ns) \
-    { _mm_storeu_pd (ds+i-1, _mm_fmadd_pd (_mm256_castpd256_pd128(D0), \
+    { _mm_storeu_pd (ds+i-1, _mm_fmadd_pd (cast128d(D0), \
                               _mm_loadu_pd(w+i-1), _mm_loadu_pd(ds+i-1))); \
       i += 2; \
     } \
     if (i<=ns) \
-    { _mm_store_sd (ds+i-1, _mm_fmadd_sd (_mm256_castpd256_pd128(D0), \
+    { _mm_store_sd (ds+i-1, _mm_fmadd_sd (cast128d(D0), \
                              _mm_load_sd(w+i-1), _mm_load_sd(ds+i-1))); \
     } \
   } \
@@ -326,9 +326,9 @@ do \
         j += 4; \
       } \
       __m128d T, T2; \
-      T = _mm_add_pd (_mm256_castpd256_pd128(TV), \
+      T = _mm_add_pd (cast128d(TV), \
                       _mm256_extractf128_pd(TV,1)); \
-      T2 = _mm_add_pd (_mm256_castpd256_pd128(TV2), \
+      T2 = _mm_add_pd (cast128d(TV2), \
                        _mm256_extractf128_pd(TV2,1)); \
       j -= 2; \
       if (j<nd) \
@@ -355,7 +355,7 @@ do \
         j += 4; \
       } \
       __m128d T; \
-      T = _mm_add_pd (_mm256_castpd256_pd128(TV), \
+      T = _mm_add_pd (cast128d(TV), \
                       _mm256_extractf128_pd(TV,1)); \
       j -= 2; \
       if (j<nd) \
@@ -388,12 +388,12 @@ do \
     i -= 2; \
     if (i<ns) \
     { _mm_storeu_pd (ds+i-1, _mm_add_pd (_mm_loadu_pd(ds+i-1), \
-         _mm_mul_pd (_mm256_castpd256_pd128(D0), _mm_loadu_pd(w+i-1)))); \
+         _mm_mul_pd (cast128d(D0), _mm_loadu_pd(w+i-1)))); \
       i += 2; \
     } \
     if (i<=ns) \
     { _mm_store_sd (ds+i-1, _mm_add_sd (_mm_load_sd(ds+i-1), \
-         _mm_mul_sd (_mm256_castpd256_pd128(D0), _mm_load_sd(w+i-1)))); \
+         _mm_mul_sd (cast128d(D0), _mm_load_sd(w+i-1)))); \
     } \
   } \
   else \
@@ -410,9 +410,9 @@ do \
         j += 4; \
       } \
       __m128d T, T2; \
-      T = _mm_add_pd (_mm256_castpd256_pd128(TV), \
+      T = _mm_add_pd (cast128d(TV), \
                       _mm256_extractf128_pd(TV,1)); \
-      T2 = _mm_add_pd (_mm256_castpd256_pd128(TV2), \
+      T2 = _mm_add_pd (cast128d(TV2), \
                        _mm256_extractf128_pd(TV2,1)); \
       j -= 2; \
       if (j<nd) \
@@ -439,7 +439,7 @@ do \
         j += 4; \
       } \
       __m128d T; \
-      T = _mm_add_pd (_mm256_castpd256_pd128(TV), \
+      T = _mm_add_pd (cast128d(TV), \
                       _mm256_extractf128_pd(TV,1)); \
       j -= 2; \
       if (j<nd) \
@@ -544,7 +544,7 @@ HOSTDEV static void sum_derivatives_config
         __m256d P = _mm256_mul_pd (_mm256_loadu_pd(dd+j),
                                    _mm256_loadu_pd(w+k));
         __m128d S = _mm_add_pd (_mm256_extractf128_pd(P,1),
-                                _mm256_castpd256_pd128(P));
+                                cast128d(P));
         _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
       }
     }

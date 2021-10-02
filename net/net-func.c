@@ -153,9 +153,8 @@ HOSTDEV void net_func
           { __m128d x = _mm_loadu_pd(sh+j-1);
             x = _mm_add_pd(x,x);
             x = Sleef_expd2_u10avx2128(x);
-            x = _mm_sub_pd (_mm256_castpd256_pd128(one), 
-                   _mm_div_pd (_mm256_castpd256_pd128(two),
-                     _mm_add_pd (_mm256_castpd256_pd128(one), x)));
+            x = _mm_sub_pd (cast128d(one), 
+                   _mm_div_pd (cast128d(two), _mm_add_pd (cast128d(one), x)));
             _mm_storeu_pd (vh+j-1, x);
             j += 2;
           }
@@ -180,9 +179,8 @@ HOSTDEV void net_func
           { __m128d x = _mm_loadu_pd(sh+j-1);
             x = _mm_add_pd(x,x);
             x = Sleef_expd2_u10sse4(x);
-            x = _mm_sub_pd (_mm256_castpd256_pd128(one), 
-                   _mm_div_pd (_mm256_castpd256_pd128(two),
-                     _mm_add_pd (_mm256_castpd256_pd128(one), x)));
+            x = _mm_sub_pd (cast128d(one), 
+                   _mm_div_pd (cast128d(two), _mm_add_pd (cast128d(one), x)));
             _mm_storeu_pd (vh+j-1, x);
             j += 2;
           }
@@ -266,12 +264,12 @@ HOSTDEV void net_func
         j -= 2;
         if (j<N_hidden)
         { __m128d a = _mm_loadu_pd(sh+j-1);
-          __m128d v = _mm_or_pd(a,_mm256_castpd256_pd128(mask));
+          __m128d v = _mm_or_pd(a,cast128d(mask));
           v = Sleef_expd2_u10avx2128(v);
-          v = _mm_add_pd(_mm256_castpd256_pd128(one),v);
+          v = _mm_add_pd(cast128d(one),v);
           v = Sleef_logd2_u10avx2128(v);
           v = _mm_add_pd (v, _mm_and_pd (a, 
-                _mm_cmp_pd (a, _mm256_castpd256_pd128(zero), _CMP_GT_OQ)));
+                _mm_cmp_pd (a, cast128d(zero), _CMP_GT_OQ)));
           _mm_storeu_pd (vh+j-1, v);
           j += 2;
         }
@@ -302,12 +300,12 @@ HOSTDEV void net_func
         j -= 2;
         if (j<N_hidden)
         { __m128d a = _mm_loadu_pd(sh+j-1);
-          __m128d v = _mm_or_pd(a,_mm256_castpd256_pd128(mask));
+          __m128d v = _mm_or_pd(a,cast128d(mask));
           v = Sleef_expd2_u10sse4(v);
-          v = _mm_add_pd(_mm256_castpd256_pd128(one),v);
+          v = _mm_add_pd(cast128d(one),v);
           v = Sleef_logd2_u10sse4(v);
           v = _mm_add_pd (v, _mm_and_pd (a, 
-                _mm_cmp_pd (a, _mm256_castpd256_pd128(zero), _CMP_GT_OQ)));
+                _mm_cmp_pd (a, cast128d(zero), _CMP_GT_OQ)));
           _mm_storeu_pd (vh+j-1, v);
           j += 2;
         }
@@ -481,8 +479,7 @@ do \
       i += 4; \
     } \
     __m128d S; \
-    S = _mm_add_pd (_mm256_castpd256_pd128(SV), \
-                    _mm256_extractf128_pd(SV,1)); \
+    S = _mm_add_pd (cast128d(SV), _mm256_extractf128_pd(SV,1)); \
     i -= 2; \
     if (i<ns) \
     { S = _mm_fmadd_pd (_mm_loadu_pd(v+i-1), _mm_loadu_pd(w+i-1), S); \
@@ -502,7 +499,7 @@ do \
     { for (;;) \
       { if (i==ns) goto done; \
         TV = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (_mm256_castpd256_pd128(TV), _mm_setzero_pd())) \
+        if (_mm_ucomineq_sd (cast128d(TV), _mm_setzero_pd())) \
         { break; \
         } \
         i += 1; \
@@ -513,7 +510,7 @@ do \
       for (;;) \
       { if (i==ns) goto one_more; \
         TV2 = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (_mm256_castpd256_pd128(TV2), _mm_setzero_pd())) \
+        if (_mm_ucomineq_sd (cast128d(TV2), _mm_setzero_pd())) \
         { break; \
         } \
         i += 1; \
@@ -530,16 +527,16 @@ do \
       j -= 2; \
       if (j<nd) \
       { __m128d S = _mm_loadu_pd(s+j-1); \
-        S = _mm_fmadd_pd (_mm256_castpd256_pd128(TV), _mm_loadu_pd(w+j-1), S); \
-        S = _mm_fmadd_pd (_mm256_castpd256_pd128(TV2), _mm_loadu_pd(w2+j-1), \
+        S = _mm_fmadd_pd (cast128d(TV), _mm_loadu_pd(w+j-1), S); \
+        S = _mm_fmadd_pd (cast128d(TV2), _mm_loadu_pd(w2+j-1), \
                           S); \
         _mm_storeu_pd (s+j-1, S); \
         j += 2; \
       } \
       if (j<=nd) \
       { __m128d S = _mm_load_sd(s+j-1); \
-        S = _mm_fmadd_sd (_mm256_castpd256_pd128(TV), _mm_load_sd(w+j-1), S); \
-        S = _mm_fmadd_sd (_mm256_castpd256_pd128(TV2), _mm_load_sd(w2+j-1), \
+        S = _mm_fmadd_sd (cast128d(TV), _mm_load_sd(w+j-1), S); \
+        S = _mm_fmadd_sd (cast128d(TV2), _mm_load_sd(w2+j-1), \
                           S); \
         _mm_store_sd (s+j-1, S); \
       } \
@@ -557,13 +554,13 @@ do \
     j -= 2; \
     if (j<nd) \
     { __m128d S = _mm_loadu_pd(s+j-1); \
-      S = _mm_fmadd_pd (_mm256_castpd256_pd128(TV), _mm_loadu_pd(w+j-1), S); \
+      S = _mm_fmadd_pd (cast128d(TV), _mm_loadu_pd(w+j-1), S); \
       _mm_storeu_pd (s+j-1, S); \
       j += 2; \
     } \
     if (j<=nd) \
     { __m128d S = _mm_load_sd(s+j-1); \
-      S = _mm_fmadd_sd (_mm256_castpd256_pd128(TV), _mm_load_sd(w+j-1), S); \
+      S = _mm_fmadd_sd (cast128d(TV), _mm_load_sd(w+j-1), S); \
       _mm_store_sd (s+j-1, S); \
     } \
   done: ; \
@@ -584,8 +581,7 @@ do \
       i += 4; \
     } \
     __m128d S; \
-    S = _mm_add_pd (_mm256_castpd256_pd128(SV), \
-                    _mm256_extractf128_pd(SV,1)); \
+    S = _mm_add_pd (cast128d(SV), _mm256_extractf128_pd(SV,1)); \
     i -= 2; \
     if (i<ns) \
     { S = _mm_add_pd (S, _mm_mul_pd(_mm_loadu_pd(v+i-1),_mm_loadu_pd(w+i-1))); \
@@ -605,7 +601,7 @@ do \
     { for (;;) \
       { if (i==ns) goto done; \
         TV = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (_mm256_castpd256_pd128(TV), _mm_setzero_pd())) \
+        if (_mm_ucomineq_sd (cast128d(TV), _mm_setzero_pd())) \
         { break; \
         } \
         i += 1; \
@@ -616,7 +612,7 @@ do \
       for (;;) \
       { if (i==ns) goto one_more; \
         TV2 = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (_mm256_castpd256_pd128(TV2), _mm_setzero_pd())) \
+        if (_mm_ucomineq_sd (cast128d(TV2), _mm_setzero_pd())) \
         { break; \
         } \
         i += 1; \
@@ -633,19 +629,15 @@ do \
       j -= 2; \
       if (j<nd) \
       { __m128d S = _mm_loadu_pd(s+j-1); \
-        S = _mm_add_pd (S, _mm_mul_pd (_mm256_castpd256_pd128(TV), \
-                                       _mm_loadu_pd(w+j-1))); \
-        S = _mm_add_pd (S, _mm_mul_pd (_mm256_castpd256_pd128(TV2), \
-                                       _mm_loadu_pd(w2+j-1))); \
+        S = _mm_add_pd (S, _mm_mul_pd (cast128d(TV), _mm_loadu_pd(w+j-1))); \
+        S = _mm_add_pd (S, _mm_mul_pd (cast128d(TV2), _mm_loadu_pd(w2+j-1))); \
         _mm_storeu_pd (s+j-1, S); \
         j += 2; \
       } \
       if (j<=nd) \
       { __m128d S = _mm_load_sd(s+j-1); \
-        S = _mm_add_sd (S, _mm_mul_sd (_mm256_castpd256_pd128(TV), \
-                                       _mm_load_sd(w+j-1))); \
-        S = _mm_add_sd (S, _mm_mul_sd (_mm256_castpd256_pd128(TV2), \
-                                       _mm_load_sd(w2+j-1))); \
+        S = _mm_add_sd (S, _mm_mul_sd (cast128d(TV), _mm_load_sd(w+j-1))); \
+        S = _mm_add_sd (S, _mm_mul_sd (cast128d(TV2), _mm_load_sd(w2+j-1))); \
         _mm_store_sd (s+j-1, S); \
       } \
       i += 1; \
@@ -662,16 +654,272 @@ do \
     j -= 2; \
     if (j<nd) \
     { __m128d S = _mm_loadu_pd(s+j-1); \
-      S = _mm_add_pd (S, _mm_mul_pd (_mm256_castpd256_pd128(TV), \
-                                     _mm_loadu_pd(w+j-1))); \
+      S = _mm_add_pd (S, _mm_mul_pd (cast128d(TV), _mm_loadu_pd(w+j-1))); \
       _mm_storeu_pd (s+j-1, S); \
       j += 2; \
     } \
     if (j<=nd) \
     { __m128d S = _mm_load_sd(s+j-1); \
-      S = _mm_add_sd (S, _mm_mul_sd (_mm256_castpd256_pd128(TV), \
-                                     _mm_load_sd(w+j-1))); \
+      S = _mm_add_sd (S, _mm_mul_sd (cast128d(TV), _mm_load_sd(w+j-1))); \
       _mm_store_sd (s+j-1, S); \
+    } \
+  done: ; \
+  } \
+} while (0)
+
+#elif FP32 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
+
+#define ADD_CONNECTIONS00 \
+do \
+{ int i, j; \
+  if (nd==1) /* this part same as SSE4.2 code, could be improved */ \
+  { __m128 Z = _mm_setzero_ps(); \
+    __m128 SV = Z; \
+    i = 7; \
+    while (i<ns) \
+    { SV = _mm_add_ps (SV, _mm_mul_ps (_mm_loadu_ps(v+i-7), \
+                                       _mm_loadu_ps(w+i-7))); \
+      SV = _mm_add_ps (SV, _mm_mul_ps (_mm_loadu_ps(v+i-3), \
+                                       _mm_loadu_ps(w+i-3))); \
+      i += 8; \
+    } \
+    i -= 4; \
+    if (i<ns) \
+    { SV = _mm_add_ps (SV, _mm_mul_ps (_mm_loadu_ps(v+i-3), \
+                                       _mm_loadu_ps(w+i-3))); \
+      i += 4; \
+    } \
+    __m128 S; \
+    S = _mm_add_ps (SV, _mm_movehl_ps(SV,SV)); \
+    i -= 2; \
+    if (i<ns) \
+    { S = _mm_add_ps (S, _mm_mul_ps (_mm_loadl_pi (Z, (__m64 *)(v+i-1)), \
+                                     _mm_loadl_pi (Z, (__m64 *)(w+i-1)))); \
+      i += 2; \
+    } \
+    S = _mm_hadd_ps(S,S); \
+    if (i<=ns) \
+    { S = _mm_add_ss (S, _mm_mul_ss (_mm_load_ss(v+i-1), _mm_load_ss(w+i-1))); \
+    } \
+    S = _mm_add_ss (_mm_load_ss(s), S); \
+    _mm_store_ss (s, S); \
+  } \
+  else \
+  { __m256 Z = _mm256_setzero_ps(); \
+    __m256 TV, TV2; \
+    i = 0; \
+    for (;;) \
+    { for (;;) \
+      { if (i==ns) goto done; \
+        TV = _mm256_set1_ps (*(v+i)); \
+        if (_mm_ucomineq_ss (cast128f(TV), cast128f(Z))) \
+        { break; \
+        } \
+        i += 1; \
+        w += nd; \
+      } \
+      net_param const*w2 = w+nd; \
+      i += 1; \
+      for (;;) \
+      { if (i==ns) goto one_more; \
+        TV2 = _mm256_set1_ps (*(v+i)); \
+        if (_mm_ucomineq_ss (cast128f(TV2), cast128f(Z))) \
+        { break; \
+        } \
+        i += 1; \
+        w2 += nd; \
+      } \
+      j = 7; \
+      while (j<nd) \
+      { __m256 S = _mm256_loadu_ps(s+j-7); \
+        S = _mm256_fmadd_ps (TV, _mm256_loadu_ps(w+j-7), S); \
+        S = _mm256_fmadd_ps (TV2, _mm256_loadu_ps(w2+j-7), S); \
+        _mm256_storeu_ps (s+j-7, S); \
+        j += 8; \
+      } \
+      j -= 4; \
+      if (j<nd) \
+      { __m128 S = _mm_loadu_ps(s+j-3); \
+        S = _mm_fmadd_ps (cast128f(TV), _mm_loadu_ps(w+j-3), S); \
+        S = _mm_fmadd_ps (cast128f(TV2), _mm_loadu_ps(w2+j-3), S); \
+        _mm_storeu_ps (s+j-3, S); \
+        j += 4; \
+      } \
+      j -= 2; \
+      if (j<nd) \
+      { __m128 S = _mm_loadl_pi (cast128f(Z), (__m64 *)(s+j-1)); \
+        S = _mm_fmadd_ps (cast128f(TV), \
+                          _mm_loadl_pi(cast128f(Z),(__m64 *)(w+j-1)), S); \
+        S = _mm_fmadd_ps (cast128f(TV2), \
+                          _mm_loadl_pi(cast128f(Z),(__m64 *)(w2+j-1)), S); \
+        _mm_storel_pi ((__m64 *)(s+j-1), S); \
+        j += 2; \
+      } \
+      if (j<=nd) \
+      { __m128 S = _mm_load_ss(s+j-1); \
+        S = _mm_fmadd_ss (cast128f(TV), _mm_load_ss(w+j-1), S); \
+        S = _mm_fmadd_ss (cast128f(TV2), _mm_load_ss(w2+j-1), S); \
+        _mm_store_ss (s+j-1, S); \
+      } \
+      i += 1; \
+      w = w2+nd; \
+    } \
+  one_more: \
+    j = 7; \
+    while (j<nd) \
+    { __m256 S = _mm256_loadu_ps(s+j-7); \
+      S = _mm256_fmadd_ps (TV, _mm256_loadu_ps(w+j-7), S); \
+      _mm256_storeu_ps (s+j-7, S); \
+      j += 8; \
+    } \
+    j -= 4; \
+    if (j<nd) \
+    { __m128 S = _mm_loadu_ps(s+j-3); \
+      S = _mm_fmadd_ps (cast128f(TV), _mm_loadu_ps(w+j-3), S); \
+      _mm_storeu_ps (s+j-3, S); \
+      j += 4; \
+    } \
+    j -= 2; \
+    if (j<nd) \
+    { __m128 S = _mm_loadl_pi (cast128f(Z), (__m64 *)(s+j-1)); \
+      S = _mm_fmadd_ps (cast128f(TV), \
+                        _mm_loadl_pi(cast128f(Z),(__m64 *)(w+j-1)), S); \
+      _mm_storel_pi ((__m64 *)(s+j-1), S); \
+      j += 2; \
+    } \
+    if (j<=nd) \
+    { __m128 S = _mm_load_ss(s+j-1); \
+      S = _mm_fmadd_ss (cast128f(TV), _mm_load_ss(w+j-1), S); \
+      _mm_store_ss (s+j-1, S); \
+    } \
+  done: ; \
+  } \
+} while (0)
+
+#elif FP32 && USE_SIMD_INTRINSICS && __AVX__
+
+#define ADD_CONNECTIONS00 \
+do \
+{ int i, j; \
+  if (nd==1) /* this part same as SSE4.2 code, could be improved */ \
+  { __m128 Z = _mm_setzero_ps(); \
+    __m128 SV = Z; \
+    i = 7; \
+    while (i<ns) \
+    { SV = _mm_add_ps (SV, _mm_mul_ps (_mm_loadu_ps(v+i-7), \
+                                       _mm_loadu_ps(w+i-7))); \
+      SV = _mm_add_ps (SV, _mm_mul_ps (_mm_loadu_ps(v+i-3), \
+                                       _mm_loadu_ps(w+i-3))); \
+      i += 8; \
+    } \
+    i -= 4; \
+    if (i<ns) \
+    { SV = _mm_add_ps (SV, _mm_mul_ps (_mm_loadu_ps(v+i-3), \
+                                       _mm_loadu_ps(w+i-3))); \
+      i += 4; \
+    } \
+    __m128 S; \
+    S = _mm_add_ps (SV, _mm_movehl_ps(SV,SV)); \
+    i -= 2; \
+    if (i<ns) \
+    { S = _mm_add_ps (S, _mm_mul_ps (_mm_loadl_pi (Z, (__m64 *)(v+i-1)), \
+                                     _mm_loadl_pi (Z, (__m64 *)(w+i-1)))); \
+      i += 2; \
+    } \
+    S = _mm_hadd_ps(S,S); \
+    if (i<=ns) \
+    { S = _mm_add_ss (S, _mm_mul_ss (_mm_load_ss(v+i-1), _mm_load_ss(w+i-1))); \
+    } \
+    S = _mm_add_ss (_mm_load_ss(s), S); \
+    _mm_store_ss (s, S); \
+  } \
+  else \
+  { __m256 Z = _mm256_setzero_ps(); \
+    __m256 TV, TV2; \
+    i = 0; \
+    for (;;) \
+    { for (;;) \
+      { if (i==ns) goto done; \
+        TV = _mm256_set1_ps (*(v+i)); \
+        if (_mm_ucomineq_ss (cast128f(TV), cast128f(Z))) \
+        { break; \
+        } \
+        i += 1; \
+        w += nd; \
+      } \
+      net_param const*w2 = w+nd; \
+      i += 1; \
+      for (;;) \
+      { if (i==ns) goto one_more; \
+        TV2 = _mm256_set1_ps (*(v+i)); \
+        if (_mm_ucomineq_ss (cast128f(TV2), cast128f(Z))) \
+        { break; \
+        } \
+        i += 1; \
+        w2 += nd; \
+      } \
+      j = 7; \
+      while (j<nd) \
+      { __m256 S = _mm256_loadu_ps(s+j-7); \
+        S = _mm256_add_ps (S, _mm256_mul_ps (TV, _mm256_loadu_ps(w+j-7))); \
+        S = _mm256_add_ps (S, _mm256_mul_ps (TV2, _mm256_loadu_ps(w2+j-7))); \
+        _mm256_storeu_ps (s+j-7, S); \
+        j += 8; \
+      } \
+      j -= 4; \
+      if (j<nd) \
+      { __m128 S = _mm_loadu_ps(s+j-3); \
+        S = _mm_add_ps (S, _mm_mul_ps (cast128f(TV), _mm_loadu_ps(w+j-3))); \
+        S = _mm_add_ps (S, _mm_mul_ps (cast128f(TV2), _mm_loadu_ps(w2+j-3))); \
+        _mm_storeu_ps (s+j-3, S); \
+        j += 4; \
+      } \
+      j -= 2; \
+      if (j<nd) \
+      { __m128 S = _mm_loadl_pi (cast128f(Z), (__m64 *)(s+j-1)); \
+        S = _mm_add_ps (S, _mm_mul_ps (cast128f(TV), \
+                             _mm_loadl_pi(cast128f(Z),(__m64 *)(w+j-1)))); \
+        S = _mm_add_ps (S, _mm_mul_ps (cast128f(TV2), \
+                             _mm_loadl_pi(cast128f(Z),(__m64*)(w2+j-1)))); \
+        _mm_storel_pi ((__m64 *)(s+j-1), S); \
+        j += 2; \
+      } \
+      if (j<=nd) \
+      { __m128 S = _mm_load_ss(s+j-1); \
+        S = _mm_add_ss (S, _mm_mul_ss (cast128f(TV), _mm_load_ss(w+j-1))); \
+        S = _mm_add_ss (S, _mm_mul_ss (cast128f(TV2), _mm_load_ss(w2+j-1))); \
+        _mm_store_ss (s+j-1, S); \
+      } \
+      i += 1; \
+      w = w2+nd; \
+    } \
+  one_more: \
+    j = 7; \
+    while (j<nd) \
+    { __m256 S = _mm256_loadu_ps(s+j-7); \
+      S = _mm256_add_ps (S, _mm256_mul_ps (TV, _mm256_loadu_ps(w+j-7))); \
+      _mm256_storeu_ps (s+j-7, S); \
+      j += 8; \
+    } \
+    j -= 4; \
+    if (j<nd) \
+    { __m128 S = _mm_loadu_ps(s+j-3); \
+      S = _mm_add_ps (S, _mm_mul_ps (cast128f(TV), _mm_loadu_ps(w+j-3))); \
+      _mm_storeu_ps (s+j-3, S); \
+      j += 4; \
+    } \
+    j -= 2; \
+    if (j<nd) \
+    { __m128 S = _mm_loadl_pi (cast128f(Z), (__m64 *)(s+j-1)); \
+      S = _mm_add_ps (S, _mm_mul_ps (cast128f(TV), \
+                           _mm_loadl_pi (cast128f(Z), (__m64 *)(w+j-1)))); \
+      _mm_storel_pi ((__m64 *)(s+j-1), S); \
+      j += 2; \
+    } \
+    if (j<=nd) \
+    { __m128 S = _mm_load_ss(s+j-1); \
+      S = _mm_add_ss (S, _mm_mul_ss (cast128f(TV), _mm_load_ss(w+j-1))); \
+      _mm_store_ss (s+j-1, S); \
     } \
   done: ; \
   } \
@@ -986,7 +1234,7 @@ HOSTDEV static void add_connections_config
           j = (t >> 16) & 0xffff;
           __m128d SJ = _mm_load_sd(s+j);
           __m256d P = _mm256_mul_pd (VI, WK);
-          __m128d S = _mm_add_pd (_mm256_castpd256_pd128(P),
+          __m128d S = _mm_add_pd (cast128d(P),
                                   _mm256_extractf128_pd(P,1));
           _mm_store_sd (s+j, _mm_add_sd (SJ, _mm_hadd_pd(S,S)));
         }

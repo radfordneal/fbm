@@ -685,8 +685,16 @@ do \
   __m128 Z = _mm_setzero_ps(); \
   if (nd==1) \
   { __m128 SV = Z; \
-    i = 3; \
+    i = 7; \
     while (i<ns) \
+    { SV = _mm_add_ps (SV, _mm_mul_ps (_mm_loadu_ps(v+i-7), \
+                                       _mm_loadu_ps(w+i-7))); \
+      SV = _mm_add_ps (SV, _mm_mul_ps (_mm_loadu_ps(v+i-3), \
+                                       _mm_loadu_ps(w+i-3))); \
+      i += 8; \
+    } \
+    i -= 4; \
+    if (i<ns) \
     { SV = _mm_add_ps (SV, _mm_mul_ps (_mm_loadu_ps(v+i-3), \
                                        _mm_loadu_ps(w+i-3))); \
       i += 4; \
@@ -730,8 +738,20 @@ do \
         i += 1; \
         w2 += nd; \
       } \
-      j = 3; \
+      j = 7; \
       while (j<nd) \
+      { __m128 S = _mm_loadu_ps(s+j-7); \
+        S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadu_ps(w+j-7))); \
+        S = _mm_add_ps (S, _mm_mul_ps (TV2, _mm_loadu_ps(w2+j-7))); \
+        _mm_storeu_ps (s+j-7, S); \
+        S = _mm_loadu_ps(s+j-3); \
+        S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadu_ps(w+j-3))); \
+        S = _mm_add_ps (S, _mm_mul_ps (TV2, _mm_loadu_ps(w2+j-3))); \
+        _mm_storeu_ps (s+j-3, S); \
+        j += 8; \
+      } \
+      j -= 4; \
+      if (j<nd) \
       { __m128 S = _mm_loadu_ps(s+j-3); \
         S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadu_ps(w+j-3))); \
         S = _mm_add_ps (S, _mm_mul_ps (TV2, _mm_loadu_ps(w2+j-3))); \
@@ -756,8 +776,18 @@ do \
       w = w2+nd; \
     } \
   one_more: \
-    j = 3; \
+    j = 7; \
     while (j<nd) \
+    { __m128 S = _mm_loadu_ps(s+j-7); \
+      S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadu_ps(w+j-7))); \
+      _mm_storeu_ps (s+j-7, S); \
+      S = _mm_loadu_ps(s+j-3); \
+      S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadu_ps(w+j-3))); \
+      _mm_storeu_ps (s+j-3, S); \
+      j += 8; \
+    } \
+    j -= 4; \
+    if (j<nd) \
     { __m128 S = _mm_loadu_ps(s+j-3); \
       S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadu_ps(w+j-3))); \
       _mm_storeu_ps (s+j-3, S); \

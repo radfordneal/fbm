@@ -919,6 +919,24 @@ HOSTDEV static void add_grad2_config
         }
       }
     }
+#   elif F324 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m128 SI = _mm_set1_ps (s[cn[c].s] + off[cn[c].s]);
+          j = cn[c].d;
+          _mm_storeu_ps (g+k, _mm_fmadd_ps (SI, _mm_loadu_ps(d+j),
+                                            _mm_loadu_ps(g+k)));
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m128 SI = _mm_set1_ps (s[cn[c].s]);
+          j = cn[c].d;
+          _mm_storeu_ps (g+k, _mm_fmadd_ps (SI, _mm_loadu_ps(d+j),
+                                            _mm_loadu_ps(g+k)));
+        }
+      }
+    }
 #   elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)

@@ -541,17 +541,23 @@ HOSTDEV static void sum_derivatives_config
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { for (c = 0; (k = cn[c].w) >= 0; c++)
       { i = cn[c].s; j = cn[c].d;
-        __m256d P = _mm256_mul_pd (_mm256_loadu_pd(dd+j),
-                                   _mm256_loadu_pd(w+k));
-        __m128d S = _mm_add_pd (_mm256_extractf128_pd(P,1),
-                                cast128d(P));
+        __m256d P = _mm256_mul_pd (_mm256_loadu_pd(dd+j), _mm256_loadu_pd(w+k));
+        __m128d S = _mm_add_pd (_mm256_extractf128_pd(P,1), cast128d(P));
         _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
+      }
+    }
+#   elif FP32 && USE_SIMD_INTRINSICS && __SSE4_2__
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { i = cn[c].s; j = cn[c].d;
+        __m128 P = _mm_mul_ps (_mm_loadu_ps(dd+j), _mm_loadu_ps(w+k));
+        __m128 S = _mm_add_ps (_mm_movehl_ps(P,P), P);
+        _mm_store_ss (ds+i, _mm_add_ss (_mm_load_ss(ds+i), _mm_hadd_ps(S,S)));
       }
     }
 #   else
     { for (c = 0; (k = cn[c].w) >= 0; c++)
       { i = cn[c].s; j = cn[c].d;
-        ds[i] += (dd[j+0]*w[k+0] + dd[j+2]*w[k+2])      /* same order as AVX  */
+        ds[i] += (dd[j+0]*w[k+0] + dd[j+2]*w[k+2])      /* same order as SIMD */
                    + (dd[j+1]*w[k+1] + dd[j+3]*w[k+3]); /* instructions above */
       }
     }

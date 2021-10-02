@@ -659,7 +659,7 @@ void net_evaluate
             net_back (&train_values[i], &deriv, arch->has_ti ? -1 : 0,
                       arch, flgs, &params);
 
-            net_grad (&grad, &params, &train_values[i], &deriv, arch,flgs);
+            net_grad (&grad, &params, &train_values[i], &deriv, arch, flgs, 1);
           }
 
           u = 0;
@@ -706,7 +706,7 @@ void net_evaluate
             net_back (&train_values[i], &deriv, arch->has_ti ? -1 : 0,
                       arch, flgs, &params);
 
-            net_grad (&grad, &params, &train_values[i], &deriv, arch, flgs);
+            net_grad (&grad, &params, &train_values[i], &deriv, arch, flgs, 1);
 
             for (j = o; j<o+n; j++) 
             { u += grad.param_block[j] * grad.param_block[j];

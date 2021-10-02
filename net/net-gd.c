@@ -361,7 +361,7 @@ int main
       net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
                 arch, flgs, &params);
 
-      net_grad (&ograd, &params, &train_values[i], deriv, arch, flgs);
+      net_grad (&ograd, &params, &train_values[i], deriv, arch, flgs, 1);
     }
   }
 
@@ -390,7 +390,7 @@ int main
           net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
                     arch, flgs, &params);
 
-          net_grad (&grad, &params, &train_values[i], deriv, arch, flgs);
+          net_grad (&grad, &params, &train_values[i], deriv, arch, flgs, 1);
         }
 
         for (g = 0; g<n_groups; g++)
@@ -465,7 +465,7 @@ int main
           net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
                     arch, flgs, &params);
 
-          net_grad (&grad, &params, &train_values[i], deriv, arch, flgs);
+          net_grad (&grad, &params, &train_values[i], deriv, arch, flgs, 1);
 
           if (diff)
           { for (j = 0; j<np; j++) tgrad.param_block[j] += grad.param_block[j];

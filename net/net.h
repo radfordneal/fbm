@@ -310,7 +310,7 @@ HOSTDEV void net_back (net_values const*, net_values *restrict, int,
                        net_arch const*, net_flags const*, net_params const*);
 HOSTDEV void net_grad (net_params *restrict, net_params const*, 
                        net_values const*, net_values const*, net_arch const*, 
-                       net_flags const*);
+                       net_flags const*, int);
 
 HOSTDEV void net_model_prob (net_values const*, net_value const*, 
                              double *restrict,

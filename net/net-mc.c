@@ -1699,11 +1699,12 @@ static void gibbs_adjustments
 
 HOSTDEV static void one_case  /* Energy and gradient from one training case */
 ( 
-  double *energy,	/* Place to increment energy, null if not required */
-  net_params *grd,	/* Place to increment gradient, null if not required */
+  double *energy,	/* Place to store/increment energy, 0 if not required */
+  net_params *grd,	/* Place to store/increment gradient, 0 if not needed */
   int i,		/* Case to look at */
   double en_weight,	/* Weight for this case for energy */
-  double gr_weight	/* Weight for this case for gradient */
+  double gr_weight,	/* Weight for this case for gradient */
+  int increment		/* 1 = increment gradient, 0 = store over prev value */
 )
 {
   int k;
@@ -1747,7 +1748,14 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
                      &log_prob, grd ? &deriv[i] : 0, arch, model, surv, 
                      noise, Cheap_energy);
   
-      if (energy) *energy -= en_weight * log_prob;
+      if (energy)
+      { if (increment)
+        { *energy -= en_weight * log_prob;
+        }
+        else
+        { *energy = - en_weight * log_prob;
+        }
+      }
   
       if (grd)
       { if (gr_weight!=1)
@@ -1757,7 +1765,8 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
         }
         net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
                   arch, flgs, &params);
-        net_grad (grd, &params, &train_values[i], &deriv[i], arch, flgs);
+        net_grad (grd, &params, &train_values[i], &deriv[i], arch, flgs,
+                  increment);
       }
   
       if (ot<=t1) break;
@@ -1802,7 +1811,12 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
     }
     
     if (energy)
-    { *energy -= en_weight * log_prob;
+    { if (increment)
+      { *energy -= en_weight * log_prob;
+      }
+      else
+      { *energy = - en_weight * log_prob;
+      }
     }
 
     if (grd)
@@ -1816,7 +1830,7 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
       net_back (train_vals_i, deriv_i, arch->has_ti ? -1 : 0,
                 arch, flgs, &params);
 
-      net_grad (grd, &params, train_vals_i, deriv_i, arch, flgs);
+      net_grad (grd, &params, train_vals_i, deriv_i, arch, flgs, increment);
     }
   }
 }
@@ -1887,7 +1901,7 @@ __global__ void many_cases
     for (int h = j; h < j+cases_per_thread && h < const_N_train; h++)
     { one_case (thread_energy ? threi : 0, 
                 thread_grad ? thrgi : 0, 
-                h, en_weight, gr_weight);
+                h, en_weight, gr_weight, 1);
     }
   }
 
@@ -2329,7 +2343,7 @@ void mc_app_energy
         }
 #       else
         { for (i = 0; i<N_train; i++)
-          { one_case (energy, gr ? &grad : 0, i, inv_temp, inv_temp);
+          { one_case (energy, gr ? &grad : 0, i, inv_temp, inv_temp, 1);
           }
         }
 #       endif
@@ -2343,12 +2357,13 @@ void mc_app_energy
 
           for (j = low; j<high; j++)
           { i = approx_case[j] - 1;
-            one_case(0, &grad, i, 1, (double)inv_temp*N_approx/approx_times[i]);
+            one_case (0, &grad, i, 1, 
+                     (double)inv_temp*N_approx/approx_times[i], 1);
           }
 
           if (energy)
           { for (i = 0; i<N_train; i++)
-            { one_case (energy, 0, i, inv_temp, 1);
+            { one_case (energy, 0, i, inv_temp, 1, 1);
             }
           }
         }
@@ -2359,17 +2374,17 @@ void mc_app_energy
 
           if (energy)    
           { for (i = 0; i<low; i++)
-            { one_case (energy, 0, i, inv_temp, 1);
+            { one_case (energy, 0, i, inv_temp, 1, 1);
             }
           }
 
           for (i = low; i<high; i++)
-          { one_case (energy, &grad, i, inv_temp, inv_temp*N_approx);
+          { one_case (energy, &grad, i, inv_temp, inv_temp*N_approx, 1);
           }
 
           if (energy)    
           { for (i = high; i<N_train; i++)
-            { one_case (energy, 0, i, inv_temp, 1);
+            { one_case (energy, 0, i, inv_temp, 1, 1);
             }
           }
         }

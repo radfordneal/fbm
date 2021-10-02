@@ -220,6 +220,31 @@ HOSTDEV void net_func
           { vh[j-1] = TANH (sh[j-1]);
           }
         }
+#       elif FP32 && USE_SLEEF && __AVX2__ && USE_FMA && __FMA__  /* IMPROVE */
+        { __m128 one = _mm_set1_ps(1.0f);
+          __m128 two = _mm_set1_ps(2.0f);
+          j = 3;
+          while (j<N_hidden)
+          { __m128 x = _mm_loadu_ps(sh+j-3);
+            x = _mm_add_ps(x,x);
+            x = Sleef_expf4_u10avx2128(x);
+            x = _mm_sub_ps(one, _mm_div_ps (two, _mm_add_ps (one, x)));
+            _mm_storeu_ps (vh+j-3, x);
+            j += 4;
+          }
+          j -= 2;
+          if (j<N_hidden)
+          { __m128 x = _mm_loadl_pi (_mm_setzero_ps(), (__m64 *)(sh+j-1));
+            x = _mm_add_ps(x,x);
+            x = Sleef_expf4_u10avx2128(x);
+            x = _mm_sub_ps (one, _mm_div_ps (two, _mm_add_ps (one, x)));
+            _mm_storeu_ps (vh+j-1, x);
+            j += 2;
+          }
+          if (j<=N_hidden)
+          { vh[j-1] = TANH (sh[j-1]);
+          }
+        }
 #       elif FP32 && USE_SLEEF && __SSE4_2__
         { __m128 one = _mm_set1_ps(1.0f);
           __m128 two = _mm_set1_ps(2.0f);

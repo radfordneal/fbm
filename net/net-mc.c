@@ -1875,33 +1875,22 @@ __global__ void many_cases
   if (j < const_N_train) 
   { 
     if (thread_energy)
-    { 
-      threi = threadIdx.x==0 ? const_block_energy + blockIdx.x 
+    { threi = threadIdx.x==0 ? const_block_energy + blockIdx.x 
                              : thread_energy + i;
-      *threi = 0;
     }
 
     if (thread_grad)
-    { 
-      thrgi = threadIdx.x==0 ? const_block_grad + blockIdx.x 
+    { thrgi = threadIdx.x==0 ? const_block_grad + blockIdx.x 
                              : thread_grad + i;
-
-      if (0)  /* seems to be slower */
-      { memset(thrgi->param_block, 0, total_params * sizeof (net_param));
-      }
-      else
-      { unsigned k;
-        net_param *q = thrgi->param_block;
-        for (k = 0; k < total_params; k++)
-        { q[k] = 0;
-        }
-      }
     }
 
-    for (int h = j; h < j+cases_per_thread && h < const_N_train; h++)
+    int increment = 0;
+    int h;
+    for (h = j; h < j+cases_per_thread && h < const_N_train; h++)
     { one_case (thread_energy ? threi : 0, 
                 thread_grad ? thrgi : 0, 
-                h, en_weight, gr_weight, 1);
+                h, en_weight, gr_weight, increment);
+      increment = 1;
     }
   }
 

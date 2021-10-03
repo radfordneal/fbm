@@ -346,7 +346,7 @@ HOSTDEV void net_func
       { __m256d zero = _mm256_setzero_pd();
         __m256d one = _mm256_set1_pd(1.0);
         __m256d mask = 
-                 _mm256_castsi256_pd (_mm256_set1_epi64x ((long long)1<<63));
+          _mm256_castsi256_pd (_mm256_set1_epi64x ((unsigned long long)1<<63));
         j = 3;
         while (j<N_hidden)
         { __m256d a = _mm256_loadu_pd(sh+j-3);
@@ -369,6 +369,40 @@ HOSTDEV void net_func
           v = _mm_add_pd (v, _mm_and_pd (a, 
                 _mm_cmp_pd (a, cast128d(zero), _CMP_GT_OQ)));
           _mm_storeu_pd (vh+j-1, v);
+          j += 2;
+        }
+        if (j<=N_hidden)
+        { net_value a = sh[j-1];
+          net_value v = 
+            prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
+          if (a>0) v += a;
+          vh[j-1] = v;
+        }
+      }
+#     elif FP32 && USE_SLEEF && __SSE2__
+      { __m128 zero = _mm_setzero_ps();
+        __m128 one = _mm_set1_ps(1.0f);
+        __m128 mask = _mm_castsi128_ps (_mm_set1_epi32((unsigned)1<<31));
+        j = 3;
+        while (j<N_hidden)
+        { __m128 a = _mm_loadu_ps(sh+j-3);
+          __m128 v = _mm_or_ps(a,mask);  /* compute -fabs(a) */
+          v = sleef_expf4(v);
+          v = _mm_add_ps(one,v);
+          v = sleef_logf4(v);
+          v = _mm_add_ps (v, _mm_and_ps (a, _mm_cmp_ps (a, zero, _CMP_GT_OQ)));
+          _mm_storeu_ps (vh+j-3, v);
+          j += 4;
+        }
+        j -= 2;
+        if (j<N_hidden)
+        { __m128 a = _mm_loadl_pi (zero, (__m64 *)(sh+j-1));
+          __m128 v = _mm_or_ps(a,mask);
+          v = sleef_expf4(v);
+          v = _mm_add_ps(one,v);
+          v = sleef_logf4(v);
+          v = _mm_add_ps (v, _mm_and_ps (a, _mm_cmp_ps (a, zero, _CMP_GT_OQ)));
+          _mm_storel_pi ((__m64 *)(vh+j-1), v);
           j += 2;
         }
         if (j<=N_hidden)

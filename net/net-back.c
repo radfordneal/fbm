@@ -125,6 +125,37 @@ HOSTDEV void net_back
            _mm_sub_sd (cast128d(ONE), _mm_mul_sd(VH,VH))));
         }
       }
+#     elif FP32 && USE_SIMD_INTRINSICS && __AVX__
+      { __m256 ONE = _mm256_set1_ps(1.0f);
+        i = 7;
+        while (i<N_hidden)
+        { __m256 VH = _mm256_loadu_ps(vh+i-7);
+          _mm256_storeu_ps (ds+i-7, _mm256_mul_ps (_mm256_loadu_ps(dh+i-7),
+                                      _mm256_sub_ps(ONE,_mm256_mul_ps(VH,VH))));
+          i += 4;
+        }
+        i -= 4;
+        if (i<N_hidden)
+        { __m128 VH = _mm_loadu_ps(vh+i-3);
+          _mm_storeu_ps (ds+i-3, _mm_mul_ps (_mm_loadu_ps(dh+i-3),
+                             _mm_sub_ps (cast128f(ONE), _mm_mul_ps(VH,VH))));
+          i += 4;
+        }
+        i -= 2;
+        if (i<N_hidden)
+        { __m128 Z = _mm_setzero_ps();
+          __m128 VH = _mm_loadl_pi(Z, (__m64 *)(vh+i-1));
+          _mm_storel_pi ((__m64 *)(ds+i-1), 
+                         _mm_mul_ps (_mm_loadl_pi(Z, (__m64 *)(dh+i-1)),
+                           _mm_sub_ps (cast128f(ONE), _mm_mul_ps(VH,VH))));
+          i += 2;
+        }
+        if (i<=N_hidden)
+        { __m128 VH = _mm_load_ss(vh+i-1);
+          _mm_store_ss (ds+i-1, _mm_mul_ss (_mm_load_ss(dh+i-1),
+               _mm_sub_ss (cast128f(ONE), _mm_mul_ss(VH,VH))));
+        }
+      }
 #     else
       { for (i = 0; i<N_hidden; i++)
         { ds[i] = (1 - vh[i]*vh[i]) * dh[i];

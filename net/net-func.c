@@ -28,7 +28,7 @@
 #include "net.h"
 
 #include "intrinsics-use.h"
-#include "sleef-use-simd.h"
+#include "sleef-use.h"
 
 
 #define USE_QUICK_AND_DIRTY_TANH 1  /* Whether to use the faster tanh below */

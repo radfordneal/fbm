@@ -46,8 +46,8 @@ phi.h:
 intrinsics-use.h:
 	ln -s ../util/intrinsics-use.h
 
-sleef-use-simd.h:
-	ln -s ../util/sleef-use-simd.h
+sleef-use.h:
+	ln -s ../util/sleef-use.h
 
 cuda-use.h:
 	ln -s ../util/cuda-use.h

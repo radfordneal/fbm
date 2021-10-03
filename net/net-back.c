@@ -28,7 +28,7 @@
 #include "net.h"
 
 #include "intrinsics-use.h"
-#include "sleef-use-simd.h"
+#include "sleef-use.h"
 
 
 /* This module finds the derivative of the "error" for a particular case

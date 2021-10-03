@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "../net/intrinsics-use.h"
-#include "../net/sleef-use-simd.h"
+#include "../net/sleef-use.h"
 
 #if USE_SLEEF && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
 

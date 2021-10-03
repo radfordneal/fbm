@@ -670,6 +670,105 @@ do \
   } \
 } while (0)
 
+#elif FP32 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__ /*IMPROVE*/
+
+#define ADD_GRAD2_00 \
+do \
+{ int i, j; \
+  if (nd==1) \
+  { __m128 D0 = _mm_set1_ps(*d); \
+    i = 3; \
+    while (i<nv) \
+    { _mm_storeu_ps (g+i-3, \
+        _mm_fmadd_ps (D0, _mm_loadu_ps(v+i-3), _mm_loadu_ps(g+i-3))); \
+      i += 4; \
+    } \
+    i -= 2; \
+    if (i<nv) \
+    { __m128 Z = _mm_setzero_ps(); \
+      _mm_storel_pi ((__m64 *)(g+i-1), \
+        _mm_fmadd_ps (D0, _mm_loadl_pi (Z, (__m64 const*) (v+i-1)), \
+                      _mm_loadl_pi(Z, (__m64 const*) (g+i-1)))); \
+      i += 2; \
+    } \
+    if (i<=nv) \
+    { _mm_store_ss (g+i-1, _mm_add_ss (_mm_load_ss(g+i-1), \
+                             _mm_mul_ss (D0, _mm_load_ss(v+i-1)))); \
+    } \
+  } \
+  else \
+  { __m128 TV, TV2; \
+    i = 0; \
+    for (;;) \
+    { for (;;) \
+      { if (i==nv) goto done; \
+        TV = _mm_set1_ps (*(v+i)); \
+        if (_mm_ucomineq_ss (TV, _mm_setzero_ps())) \
+        { break; \
+        } \
+        i += 1; \
+        g += nd; \
+      } \
+      net_value *g2 = g+nd; \
+      i += 1; \
+      for (;;) \
+      { if (i==nv) goto one_more; \
+        TV2 = _mm_set1_ps (*(v+i)); \
+        if (_mm_ucomineq_ss (TV2, _mm_setzero_ps())) \
+        { break; \
+        } \
+        i += 1; \
+        g2 += nd; \
+      } \
+      j = 3; \
+      while (j<nd) \
+      { __m128 D = _mm_loadu_ps(d+j-3); \
+        _mm_storeu_ps (g+j-3, _mm_fmadd_ps (TV, D, _mm_loadu_ps(g+j-3))); \
+        _mm_storeu_ps (g2+j-3, _mm_fmadd_ps (TV2, D, _mm_loadu_ps(g2+j-3))); \
+        j += 4; \
+      } \
+      j -= 2; \
+      if (j<nd) \
+      { __m128 Z = _mm_setzero_ps(); \
+        __m128 D = _mm_loadl_pi (Z, (__m64 const*) (d+j-1)); \
+        _mm_storel_pi ((__m64 *)(g+j-1), \
+           _mm_fmadd_ps (TV, D, _mm_loadl_pi (Z, (__m64 const*) (g+j-1)))); \
+        _mm_storel_pi ((__m64 *)(g2+j-1), \
+           _mm_fmadd_ps (TV2, D, _mm_loadl_pi(Z, (__m64 const*) (g2+j-1)))); \
+        j += 2; \
+      } \
+      if (j<=nd) \
+      { __m128 D = _mm_load_ss(d+j-1); \
+        _mm_store_ss (g+j-1, _mm_fmadd_ss (TV, D, _mm_load_ss(g+j-1))); \
+        _mm_store_ss (g2+j-1, _mm_fmadd_ss (TV2, D, _mm_load_ss(g2+j-1))); \
+      } \
+      i += 1; \
+      g = g2+nd; \
+    } \
+    goto done; \
+  one_more: \
+    j = 3; \
+    while (j<nd) \
+    { __m128 D = _mm_loadu_ps(d+j-3); \
+      _mm_storeu_ps (g+j-3, _mm_fmadd_ps (TV, D, _mm_loadu_ps(g+j-3)))); \
+      j += 4; \
+    } \
+    j -= 2; \
+    if (j<nd) \
+    { __m128 Z = _mm_setzero_ps(); \
+      __m128 D = _mm_loadl_pi (Z, (__m64 const*) (d+j-1)); \
+      _mm_storel_pi ((__m64 *)(g+j-1), \
+         _mm_fmadd_ps (TV, D, _mm_loadl_pi (Z, (__m64 const*) (g+j-1)))); \
+      j += 2; \
+    } \
+    if (j<=nd) \
+    { __m128 D = _mm_load_ss(d+j-1); \
+      _mm_store_ss (g+j-1, _mm_fmadd_ss (TV, D, _mm_load_ss(g+j-1)))); \
+    } \
+  done: ; \
+  } \
+} while (0)
+
 #else
 
 #define ADD_GRAD2_00 \

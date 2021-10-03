@@ -243,7 +243,7 @@ HOSTDEV void net_func
           }
           j -= 2;
           if (j<N_hidden)
-          { __m128 x = _mm_loadl_pi (_mm_setzero_ps(), sh+j-1);
+          { __m128 x = _mm_loadl_pi (_mm_setzero_ps(), (__m64 *)(sh+j-1));
             x = _mm_add_ps(x,x);
             x = sleef_expf4(x);
             x = _mm_sub_ps (one, _mm_div_ps (two, _mm_add_ps (one, x)));
@@ -382,7 +382,7 @@ HOSTDEV void net_func
 #     elif FP32 && USE_SLEEF && __SSE2__
       { __m128 zero = _mm_setzero_ps();
         __m128 one = _mm_set1_ps(1.0f);
-        __m128 mask = _mm_castsi128_ps (_mm_set1_epi32((unsigned)1<<31));
+        __m128 mask = _mm_castsi128_ps (_mm_set1_epi32(1<<31));
         j = 3;
         while (j<N_hidden)
         { __m128 a = _mm_loadu_ps(sh+j-3);
@@ -390,7 +390,7 @@ HOSTDEV void net_func
           v = sleef_expf4(v);
           v = _mm_add_ps(one,v);
           v = sleef_logf4(v);
-          v = _mm_add_ps (v, _mm_and_ps (a, _mm_cmp_ps (a, zero, _CMP_GT_OQ)));
+          v = _mm_add_ps (v, _mm_and_ps (a, _mm_cmpgt_ps (a, zero)));
           _mm_storeu_ps (vh+j-3, v);
           j += 4;
         }
@@ -401,7 +401,7 @@ HOSTDEV void net_func
           v = sleef_expf4(v);
           v = _mm_add_ps(one,v);
           v = sleef_logf4(v);
-          v = _mm_add_ps (v, _mm_and_ps (a, _mm_cmp_ps (a, zero, _CMP_GT_OQ)));
+          v = _mm_add_ps (v, _mm_and_ps (a, _mm_cmpgt_ps (a, zero)));
           _mm_storel_pi ((__m64 *)(vh+j-1), v);
           j += 2;
         }

@@ -143,7 +143,7 @@ HOSTDEV void net_func
           while (j<N_hidden)
           { __m256d x = _mm256_loadu_pd(sh+j-3);
             x = _mm256_add_pd(x,x);
-            x = Sleef_expd4_u10avx2(x);
+            x = sleef_expd4(x);
             x = _mm256_sub_pd(one, _mm256_div_pd (two, _mm256_add_pd (one, x)));
             _mm256_storeu_pd (vh+j-3, x);
             j += 4;
@@ -152,7 +152,7 @@ HOSTDEV void net_func
           if (j<N_hidden)
           { __m128d x = _mm_loadu_pd(sh+j-1);
             x = _mm_add_pd(x,x);
-            x = Sleef_expd2_u10avx2128(x);
+            x = sleef_expd2(x);
             x = _mm_sub_pd (cast128d(one), 
                    _mm_div_pd (cast128d(two), _mm_add_pd (cast128d(one), x)));
             _mm_storeu_pd (vh+j-1, x);
@@ -169,7 +169,7 @@ HOSTDEV void net_func
           while (j<N_hidden)
           { __m256d x = _mm256_loadu_pd(sh+j-3);
             x = _mm256_add_pd(x,x);
-            x = Sleef_expd4_u10avx(x);
+            x = sleef_expd4(x);
             x = _mm256_sub_pd(one, _mm256_div_pd (two, _mm256_add_pd (one, x)));
             _mm256_storeu_pd (vh+j-3, x);
             j += 4;
@@ -178,25 +178,9 @@ HOSTDEV void net_func
           if (j<N_hidden)
           { __m128d x = _mm_loadu_pd(sh+j-1);
             x = _mm_add_pd(x,x);
-            x = Sleef_expd2_u10sse4(x);
+            x = sleef_expd2(x);
             x = _mm_sub_pd (cast128d(one), 
                    _mm_div_pd (cast128d(two), _mm_add_pd (cast128d(one), x)));
-            _mm_storeu_pd (vh+j-1, x);
-            j += 2;
-          }
-          if (j<=N_hidden)
-          { vh[j-1] = TANH (sh[j-1]);
-          }
-        }
-#       elif FP64 && USE_SLEEF && __SSE4_2__
-        { __m128d one = _mm_set1_pd(1.0);
-          __m128d two = _mm_set1_pd(2.0);
-          j = 1;
-          while (j<N_hidden)
-          { __m128d x = _mm_loadu_pd(sh+j-1);
-            x = _mm_add_pd(x,x);
-            x = Sleef_expd2_u10sse4(x);
-            x = _mm_sub_pd (one, _mm_div_pd (two, _mm_add_pd (one, x)));
             _mm_storeu_pd (vh+j-1, x);
             j += 2;
           }
@@ -211,7 +195,7 @@ HOSTDEV void net_func
           while (j<N_hidden)
           { __m128d x = _mm_loadu_pd(sh+j-1);
             x = _mm_add_pd(x,x);
-            x = Sleef_expd2_u10sse2(x);
+            x = sleef_expd2(x);
             x = _mm_sub_pd (one, _mm_div_pd (two, _mm_add_pd (one, x)));
             _mm_storeu_pd (vh+j-1, x);
             j += 2;
@@ -227,7 +211,7 @@ HOSTDEV void net_func
           while (j<N_hidden)
           { __m128 x = _mm_loadu_ps(sh+j-3);
             x = _mm_add_ps(x,x);
-            x = Sleef_expf4_u10avx2128(x);
+            x = sleef_expf4(x);
             x = _mm_sub_ps(one, _mm_div_ps (two, _mm_add_ps (one, x)));
             _mm_storeu_ps (vh+j-3, x);
             j += 4;
@@ -236,32 +220,7 @@ HOSTDEV void net_func
           if (j<N_hidden)
           { __m128 x = _mm_loadl_pi (_mm_setzero_ps(), (__m64 *)(sh+j-1));
             x = _mm_add_ps(x,x);
-            x = Sleef_expf4_u10avx2128(x);
-            x = _mm_sub_ps (one, _mm_div_ps (two, _mm_add_ps (one, x)));
-            _mm_storeu_ps (vh+j-1, x);
-            j += 2;
-          }
-          if (j<=N_hidden)
-          { vh[j-1] = TANH (sh[j-1]);
-          }
-        }
-#       elif FP32 && USE_SLEEF && __SSE4_2__
-        { __m128 one = _mm_set1_ps(1.0f);
-          __m128 two = _mm_set1_ps(2.0f);
-          j = 3;
-          while (j<N_hidden)
-          { __m128 x = _mm_loadu_ps(sh+j-3);
-            x = _mm_add_ps(x,x);
-            x = Sleef_expf4_u10sse4(x);
-            x = _mm_sub_ps(one, _mm_div_ps (two, _mm_add_ps (one, x)));
-            _mm_storeu_ps (vh+j-3, x);
-            j += 4;
-          }
-          j -= 2;
-          if (j<N_hidden)
-          { __m128 x = _mm_loadl_pi (_mm_setzero_ps(), (__m64 *)(sh+j-1));
-            x = _mm_add_ps(x,x);
-            x = Sleef_expf4_u10sse4(x);
+            x = sleef_expf4(x);
             x = _mm_sub_ps (one, _mm_div_ps (two, _mm_add_ps (one, x)));
             _mm_storeu_ps (vh+j-1, x);
             j += 2;
@@ -277,7 +236,7 @@ HOSTDEV void net_func
           while (j<N_hidden)
           { __m128 x = _mm_loadu_ps(sh+j-3);
             x = _mm_add_ps(x,x);
-            x = Sleef_expf4_u10sse2(x);
+            x = sleef_expf4(x);
             x = _mm_sub_ps(one, _mm_div_ps (two, _mm_add_ps (one, x)));
             _mm_storeu_ps (vh+j-3, x);
             j += 4;
@@ -286,7 +245,7 @@ HOSTDEV void net_func
           if (j<N_hidden)
           { __m128 x = _mm_loadl_pi (_mm_setzero_ps(), sh+j-1);
             x = _mm_add_ps(x,x);
-            x = Sleef_expf4_u10sse2(x);
+            x = sleef_expf4(x);
             x = _mm_sub_ps (one, _mm_div_ps (two, _mm_add_ps (one, x)));
             _mm_storeu_ps (vh+j-1, x);
             j += 2;
@@ -305,14 +264,12 @@ HOSTDEV void net_func
 #       if FP64 && USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
         { j = 3;
           while (j<N_hidden)
-          { _mm256_storeu_pd (vh+j-3,  
-                              Sleef_tanhd4_u35avx2 (_mm256_loadu_pd(sh+j-3)));
+          { _mm256_storeu_pd (vh+j-3, sleef_tanhd4 (_mm256_loadu_pd(sh+j-3)));
             j += 4;
           }
           j -= 2;
           if (j<N_hidden)
-          { _mm_storeu_pd (vh+j-1,  
-                           Sleef_tanhd2_u35avx2128 (_mm_loadu_pd(sh+j-1)));
+          { _mm_storeu_pd (vh+j-1, sleef_tanhd2 (_mm_loadu_pd(sh+j-1)));
             j += 2;
           }
           if (j<=N_hidden)
@@ -322,14 +279,12 @@ HOSTDEV void net_func
 #       elif FP64 && USE_SLEEF && __AVX__
         { j = 3;
           while (j<N_hidden)
-          { _mm256_storeu_pd (vh+j-3,  
-                              Sleef_tanhd4_u35avx (_mm256_loadu_pd(sh+j-3)));
+          { _mm256_storeu_pd (vh+j-3, sleef_tanhd4 (_mm256_loadu_pd(sh+j-3)));
             j += 4;
           }
           j -= 2;
           if (j<N_hidden)
-          { _mm_storeu_pd (vh+j-1,  
-                           Sleef_tanhd2_u35sse4 (_mm_loadu_pd(sh+j-1)));
+          { _mm_storeu_pd (vh+j-1, sleef_tanhd2 (_mm_loadu_pd(sh+j-1)));
             j += 2;
           }
           if (j<=N_hidden)
@@ -360,9 +315,9 @@ HOSTDEV void net_func
         while (j<N_hidden)
         { __m256d a = _mm256_loadu_pd(sh+j-3);
           __m256d v = _mm256_or_pd(a,mask);  /* compute -fabs(a) */
-          v = Sleef_expd4_u10avx2(v);
+          v = sleef_expd4(v);
           v = _mm256_add_pd(one,v);
-          v = Sleef_logd4_u10avx2(v);
+          v = sleef_logd4(v);
           v = _mm256_add_pd (v, _mm256_and_pd (a, 
                                   _mm256_cmp_pd(a,zero,_CMP_GT_OQ)));
           _mm256_storeu_pd (vh+j-3, v);
@@ -372,9 +327,9 @@ HOSTDEV void net_func
         if (j<N_hidden)
         { __m128d a = _mm_loadu_pd(sh+j-1);
           __m128d v = _mm_or_pd(a,cast128d(mask));
-          v = Sleef_expd2_u10avx2128(v);
+          v = sleef_expd2(v);
           v = _mm_add_pd(cast128d(one),v);
-          v = Sleef_logd2_u10avx2128(v);
+          v = sleef_logd2(v);
           v = _mm_add_pd (v, _mm_and_pd (a, 
                 _mm_cmp_pd (a, cast128d(zero), _CMP_GT_OQ)));
           _mm_storeu_pd (vh+j-1, v);
@@ -396,9 +351,9 @@ HOSTDEV void net_func
         while (j<N_hidden)
         { __m256d a = _mm256_loadu_pd(sh+j-3);
           __m256d v = _mm256_or_pd(a,mask);  /* compute -fabs(a) */
-          v = Sleef_expd4_u10avx(v);
+          v = sleef_expd4(v);
           v = _mm256_add_pd(one,v);
-          v = Sleef_logd4_u10avx(v);
+          v = sleef_logd4(v);
           v = _mm256_add_pd (v, _mm256_and_pd (a, 
                                   _mm256_cmp_pd(a,zero,_CMP_GT_OQ)));
           _mm256_storeu_pd (vh+j-3, v);
@@ -408,9 +363,9 @@ HOSTDEV void net_func
         if (j<N_hidden)
         { __m128d a = _mm_loadu_pd(sh+j-1);
           __m128d v = _mm_or_pd(a,cast128d(mask));
-          v = Sleef_expd2_u10sse4(v);
+          v = sleef_expd2(v);
           v = _mm_add_pd(cast128d(one),v);
-          v = Sleef_logd2_u10sse4(v);
+          v = sleef_logd2(v);
           v = _mm_add_pd (v, _mm_and_pd (a, 
                 _mm_cmp_pd (a, cast128d(zero), _CMP_GT_OQ)));
           _mm_storeu_pd (vh+j-1, v);

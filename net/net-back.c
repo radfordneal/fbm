@@ -150,7 +150,7 @@ HOSTDEV void net_back
                                        _mm256_loadu_pd(vs+i-3));
           _mm256_storeu_pd (ds+i-3, 
                             _mm256_div_pd (_mm256_loadu_pd(dh+i-3),
-                              _mm256_add_pd (ONE, Sleef_expd4_u10avx2(NVS))));
+                              _mm256_add_pd (ONE, sleef_expd4(NVS))));
           i += 4;
         }
         i -= 2;
@@ -159,8 +159,7 @@ HOSTDEV void net_back
                                     _mm_loadu_pd(vs+i-1));
           _mm_storeu_pd (ds+i-1, 
                          _mm_div_pd (_mm_loadu_pd(dh+i-1),
-                         _mm_add_pd (cast128d(ONE), 
-                                     Sleef_expd2_u10avx2128(NVS))));
+                         _mm_add_pd (cast128d(ONE), sleef_expd2(NVS))));
           i += 2;
         }
         if (i<=N_hidden)
@@ -175,7 +174,7 @@ HOSTDEV void net_back
                                        _mm256_loadu_pd(vs+i-3));
           _mm256_storeu_pd (ds+i-3, 
                             _mm256_div_pd (_mm256_loadu_pd(dh+i-3),
-                              _mm256_add_pd (ONE, Sleef_expd4_u10avx(NVS))));
+                              _mm256_add_pd (ONE, sleef_expd4(NVS))));
           i += 4;
         }
         i -= 2;
@@ -184,8 +183,7 @@ HOSTDEV void net_back
                                     _mm_loadu_pd(vs+i-1));
           _mm_storeu_pd (ds+i-1, 
                          _mm_div_pd (_mm_loadu_pd(dh+i-1),
-                         _mm_add_pd (cast128d(ONE), 
-                                     Sleef_expd2_u10sse4(NVS))));
+                         _mm_add_pd (cast128d(ONE), sleef_expd2(NVS))));
           i += 2;
         }
         if (i<=N_hidden)

@@ -42,6 +42,11 @@
 
 #if __CUDACC__
 
+#define GRAD_ALIGN_BYTES 256	/* Alignment for gradient blocks in GPU, bytes
+                                     - must be a power of two, minimum of 8 */
+
+#define GRAD_ALIGN_ELEMENTS (GRAD_ALIGN_BYTES / 4 / (1+FP64))
+
 #define MAX_BLKSIZE 128		/* Limit on # of threads in a block, to avoid
 				   exceeding the per-block register use limit
 				   (max 255 reg/thread, min 32K reg/block) */
@@ -1995,7 +2000,8 @@ void mc_app_energy
 
         /* Create block_grad array on CPU and on GPU. */
 
-        block_aligned_total = (grad.total_params + 0x3f) & ~0x3f;
+        block_aligned_total = (grad.total_params + GRAD_ALIGN_ELEMENTS - 1)
+                                & ~(GRAD_ALIGN_ELEMENTS - 1);
 
         block_grad = (net_params *) 
           chk_alloc (max_blocks_per_launch, sizeof *block_grad);

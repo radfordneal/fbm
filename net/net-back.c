@@ -103,7 +103,7 @@ HOSTDEV void net_back
     {
       net_value const* vh = v->h[l];
 
-#     if FP64 && USE_SIMD_INTRINSICS && __AVX__ && 0 /* disabled: not faster */
+#     if FP64 && USE_SIMD_INTRINSICS && __AVX__
       { __m256d ONE = _mm256_set1_pd(1.0);
         i = 3;
         while (i<N_hidden)

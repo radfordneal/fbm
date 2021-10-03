@@ -1282,7 +1282,7 @@ HOSTDEV static void add_connections_config
       }
       else
       { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128 VOI = _mm128_set1_ps (v[cn[c].s]);
+        { __m128 VOI = _mm_set1_ps (v[cn[c].s]);
           j = cn[c].d;
           _mm_storeu_ps (s+j, _mm_add_ps (_mm_loadu_ps(s+j),
                               _mm_mul_ps (VOI, _mm_loadu_ps(w+k))));

@@ -590,12 +590,13 @@ do \
   } \
   else \
   { __m256d TV, TV2; \
+    __m128d Z128d = _mm_setzero_pd(); \
     i = 0; \
     for (;;) \
     { for (;;) \
       { if (i==ns) goto done; \
         TV = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (cast128d(TV), _mm_setzero_pd())) \
+        if (_mm_ucomineq_sd (cast128d(TV), Z128d)) \
         { break; \
         } \
         i += 1; \
@@ -606,7 +607,7 @@ do \
       for (;;) \
       { if (i==ns) goto one_more; \
         TV2 = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (cast128d(TV2), _mm_setzero_pd())) \
+        if (_mm_ucomineq_sd (cast128d(TV2), Z128d)) \
         { break; \
         } \
         i += 1; \

@@ -919,7 +919,7 @@ HOSTDEV static void add_grad2_config
         }
       }
     }
-#   elif F324 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
+#   elif F32 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m128 SI = _mm_set1_ps (s[cn[c].s] + off[cn[c].s]);

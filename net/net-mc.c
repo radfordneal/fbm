@@ -1873,7 +1873,7 @@ __global__ void many_cases
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = start + cases_per_thread * i;
 
-  /* Do computations for case handled by this thread. */
+  /* Do computations for case (or cases) handled by this thread. */
 
   double *restrict threi;
   net_params *restrict thrgi;
@@ -1884,18 +1884,22 @@ __global__ void many_cases
     { threi = threadIdx.x==0 ? const_block_energy + blockIdx.x 
                              : thread_energy + i;
     }
+    else
+    { threi = 0;
+    }
 
     if (thread_grad)
     { thrgi = threadIdx.x==0 ? const_block_grad + blockIdx.x 
                              : thread_grad + i;
     }
+    else
+    { thrgi = 0;
+    }
 
     int increment = 0;
     int h;
     for (h = j; h < j+cases_per_thread && h < const_N_train; h++)
-    { one_case (thread_energy ? threi : 0, 
-                thread_grad ? thrgi : 0, 
-                h, en_weight, gr_weight, increment);
+    { one_case (threi, thrgi, h, en_weight, gr_weight, increment);
       increment = 1;
     }
   }

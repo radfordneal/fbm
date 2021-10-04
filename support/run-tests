@@ -1,7 +1,8 @@
 #!/bin/bash
 
-for test in test-config test-sigmas test-adj test-dyn \
-            test-ti test-func test-func2 test-im; do
+for test in test-func3 test-func2 test-func \
+            test-config test-sigmas test-adj \
+            test-ti test-im test-dyn; do
   echo RUNNING $test
   $test >& $test.out
   diff $test.save $test.out 

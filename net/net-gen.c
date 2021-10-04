@@ -137,7 +137,8 @@ int main
     }
     char junk = 0;
     if (scanf(" %c",&junk) != 0 && junk != 0) 
-    { fprintf(stderr,"Junk present after weights: '%c'\n",junk);
+    { fprintf(stderr,"Junk present after weights (%d total): '%c'\n",
+              w->total_params, junk);
       exit(2);
     }
   }

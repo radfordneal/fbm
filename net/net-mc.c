@@ -1686,24 +1686,9 @@ static void gibbs_adjustments
 /* EVALUATE POTENTIAL ENERGY AND ITS GRADIENT DUE TO ONE TRAINING CASE. 
    Adds the results to the accumulators passed. */
 
-#if __CUDACC__ && __CUDA_ARCH__  /* Compiling for GPU */
-
-#define N_targets	const_N_targets
-#define arch		(&const_arch)
-#define flgs		(const_has_flgs ? &const_flgs : 0)
-#define model		(&const_model)
-#define surv		(&const_surv)
-#define noise		const_noise
-#define params		const_params
-#define deriv		const_deriv
-#define train_values	const_train_values
-#define train_targets	const_train_targets
-
-#endif
-
 #define DEBUG_ONE_CASE 0
 
-HOSTDEV static void one_case  /* Energy and gradient from one training case */
+static void one_case  /* Energy and gradient from one training case */
 ( 
   double *energy,	/* Place to store/increment energy, 0 if not required */
   net_params *grd,	/* Place to store/increment gradient, 0 if not needed */
@@ -1841,21 +1826,6 @@ HOSTDEV static void one_case  /* Energy and gradient from one training case */
   }
 }
 
-#if __CUDACC__ && __CUDA_ARCH__  /* Compiling for GPU */
-
-#undef N_targets
-#undef arch
-#undef flgs
-#undef model
-#undef surv
-#undef noise
-#undef params
-#undef deriv
-#undef train_values
-#undef train_targets
-
-#endif
-
 
 #if __CUDACC__
 
@@ -1875,6 +1845,7 @@ __global__ void many_cases
 
   /* Do computations for case (or cases) handled by this thread. */
 
+  net_flags *flgs = const_has_flgs ? &const_flgs : 0;
   double *restrict threi;
   net_params *restrict thrgi;
 
@@ -1899,7 +1870,42 @@ __global__ void many_cases
     int increment = 0;
     int h;
     for (h = j; h < j+cases_per_thread && h < const_N_train; h++)
-    { one_case (threi, thrgi, h, en_weight, gr_weight, increment);
+    { 
+      net_values *train_vals_h = const_train_values+h;
+      net_values *deriv_h = thrgi ? const_deriv+h : 0;
+      int k;
+
+      net_func (train_vals_h, 0, &const_arch, flgs, &const_params);
+
+      double log_prob;
+      net_model_prob (train_vals_h, const_train_targets+const_N_targets*h, 
+                      &log_prob, deriv_h, &const_arch, &const_model, 
+                      &const_surv, const_noise, Cheap_energy);
+
+      if (threi)
+      { if (increment)
+        { *threi -= en_weight * log_prob;
+        }
+        else
+        { *threi = - en_weight * log_prob;
+        }
+      }
+
+      if (thrgi)
+      {
+        if (gr_weight!=1)
+        { for (k = 0; k<const_arch.N_outputs; k++)
+          { deriv_h->o[k] *= gr_weight;
+          }
+        }
+
+        net_back (train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
+                  &const_arch, flgs, &const_params);
+
+        net_grad (thrgi, &const_params, train_vals_h, deriv_h, &const_arch, 
+                  flgs, increment);
+      }
+
       increment = 1;
     }
   }

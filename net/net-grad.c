@@ -303,13 +303,11 @@ HOSTDEV static void store_grad1_config
   net_value const* v,     /* Derivatives with respect to unit values */
   net_config const* cf    /* Configuration for biases */
 )
-{ net_connection *cn = cf->conn;
-  int c, j, k;
-
-  for (c = 0; (k = cn[c].w) >= 0; c++)
-  { j = cn[c].d;
-    g[k] = v[j];
+{ int k;
+  for (k = 0; k<cf->N_wts; k++)
+  { g[k] = 0;
   }
+  add_grad1_config (g, v, cf);
 }
 
 
@@ -1195,105 +1193,9 @@ HOSTDEV static void store_grad2_config
   net_value const* d,     /* Derivatives with respect to destination units */
   net_config const* cf    /* Configuration for connections and weights */
 )
-{
-  net_connection *cn;
-  int i, j, k, c;
-
-  if (CONFIG_QUAD_S_4D_4W)
-  { 
-    cn = cf->quad_s_4d_4w;
-    if (off)
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { net_value soi = s[cn[c].s] + off[cn[c].s];
-        j = cn[c].d;
-        g[k+0] = soi * d[j+0];
-        g[k+1] = soi * d[j+1];
-        g[k+2] = soi * d[j+2];
-        g[k+3] = soi * d[j+3];
-      }
-    }
-    else
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { net_value si = s[cn[c].s];
-        j = cn[c].d;
-        g[k+0] = si * d[j+0];
-        g[k+1] = si * d[j+1];
-        g[k+2] = si * d[j+2];
-        g[k+3] = si * d[j+3];
-      }
-    }
+{ int k;
+  for (k = 0; k<cf->N_wts; k++)
+  { g[k] = 0;
   }
-
-  if (CONFIG_SINGLE4)
-  { 
-    cn = cf->single4_s;
-    if (off)
-    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_value soi = s[cn[c].s] + off[cn[c].s];
-        j = cn[c].d;
-        g[k] = soi * d[j];
-        j = cn[c+1].d; k = cn[c+1].w; 
-        g[k] = soi * d[j];
-        j = cn[c+2].d; k = cn[c+2].w; 
-        g[k] = soi * d[j];
-        j = cn[c+3].d; k = cn[c+3].w; 
-        g[k] = soi * d[j];
-      }
-    }
-    else
-    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_value si = s[cn[c].s];
-        j = cn[c].d;
-        g[k] = si * d[j];
-        j = cn[c+1].d; k = cn[c+1].w; 
-        g[k] = si * d[j];
-        j = cn[c+2].d; k = cn[c+2].w; 
-        g[k] = si * d[j];
-        j = cn[c+3].d; k = cn[c+3].w; 
-        g[k] = si * d[j];
-      }
-    }
-
-    cn = cf->single4_d;
-    if (off)
-    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_value dj = d[cn[c].d];
-        i = cn[c].s;
-        g[k] = (s[i]+off[i]) * dj;
-        i = cn[c+1].s; k = cn[c+1].w; 
-        g[k] = (s[i]+off[i]) * dj;
-        i = cn[c+2].s; k = cn[c+2].w; 
-        g[k] = (s[i]+off[i]) * dj;
-        i = cn[c+3].s; k = cn[c+3].w; 
-        g[k] = (s[i]+off[i]) * dj;
-      }
-    }
-    else
-    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_value dj = d[cn[c].d];
-        i = cn[c].s;
-        g[k] = s[i] * dj;
-        i = cn[c+1].s; k = cn[c+1].w; 
-        g[k] = s[i] * dj;
-        i = cn[c+2].s; k = cn[c+2].w; 
-        g[k] = s[i] * dj;
-        i = cn[c+3].s; k = cn[c+3].w; 
-        g[k] = s[i] * dj;
-      }
-    }
-  }
-
-  cn = CONFIG_ORIGINAL ? cf->conn : cf->single;
-  if (off)
-  { for (c = 0; (k = cn[c].w) >= 0; c++)
-    { i = cn[c].s; j = cn[c].d;
-      g[k] = (s[i]+off[i]) * d[j];
-    }
-  }
-  else
-  { for (c = 0; (k = cn[c].w) >= 0; c++)
-    { i = cn[c].s; j = cn[c].d;
-      g[k] = s[i] * d[j];
-    }
-  }
+  add_grad2_config (g, s, off, d, cf);
 }

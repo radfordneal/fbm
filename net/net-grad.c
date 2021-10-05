@@ -315,7 +315,7 @@ HOSTDEV static void store_grad1_config
 
 #define ADD_GRAD2(offset,omit) \
 do \
-{ net_value tv, o; \
+{ net_value o; \
   int i, j; \
   if (nd==1) \
   { net_value d0 = d[0]; \
@@ -335,7 +335,8 @@ do \
   } \
   else \
   { for (i = 0; i<nv; i++) \
-    { o = (offset); \
+    { net_value tv; \
+      o = (offset); \
       if (omit) continue; \
       tv = v[i] + o; \
       if (tv!=0)  \
@@ -1199,3 +1200,462 @@ HOSTDEV static void store_grad2_config
   }
   add_grad2_config (g, s, off, d, cf);
 }
+
+
+/* STORE GRADIENT FROM A PAIR OF CASES, USING A PAIR OF THREADS. */
+
+#if __CUDACC__ 
+
+__device__ static void pair_grad1 
+        (int, net_param *restrict, net_value const*, net_value const*, int);
+__device__ static void pair_grad1_config 
+        (int, net_param *restrict, net_value const*, net_value const*,
+         net_config const*);
+__device__ static void pair_grad2 
+        (int, net_param *restrict, net_value const*,  net_value const*, 
+         net_param const*, int, net_value const*, net_value const*, int,
+         unsigned short const*, int);
+__device__ static void pair_grad2_config 
+        (int, net_param *restrict, net_value const*, net_value const*,
+         net_param const*, net_value const*, net_value const*,
+         net_config const*);
+
+__device__ void pair_grad
+( int th,		/* Which thread (0 or 1) */
+  net_params *restrict g, /* Gradient with respect to parameters to add to */
+  net_params const*w,	/* Network parameters (only offsets used) */
+  net_values const*v0,	/* Values for units in network for case 0 */
+  net_values const*v1,	/* Values for units in network for case 1 */
+  net_values const*d0,	/* Backpropagated derivatives for case 0 */
+  net_values const*d1,	/* Backpropagated derivatives for case 1 */
+  net_arch const*a,	/* Network architecture */
+  net_flags const*flgs 	/* Network flags, null if none */
+)
+{ 
+  int l;
+  if (a->has_ti) 
+  { pair_grad1 (th, g->ti, d0->i, d1->i, a->N_inputs);
+  }
+
+  for (l = 0; l<a->N_layers; l++)
+  { 
+    int N_hidden = a->N_hidden[l];
+
+    if (a->has_bh[l]) 
+    { if (a->bias_config[l])
+      { pair_grad1_config (th, g->bh[l], d0->s[l], d1->s[l], a->bias_config[l]);
+      }
+      else
+      { pair_grad1 (th, g->bh[l], d0->s[l], d1->s[l], N_hidden);
+      }
+    }
+
+    if (a->has_ih[l])
+    { if (a->input_config[l])
+      { pair_grad2_config (th, g->ih[l], v0->i, v1->i, a->has_ti ? w->ti : 0, 
+                           d0->s[l], d1->s[l], a->input_config[l]);
+      }
+      else
+      { pair_grad2 (th, g->ih[l], v0->i, v1->i, a->has_ti ? w->ti : 0, 
+                    a->N_inputs, d0->s[l], d1->s[l], N_hidden, 
+                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1));
+      }
+    }
+
+    if (l>0 && a->has_hh[l-1])
+    { if (a->hidden_config[l])
+      { pair_grad2_config
+           (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], 
+            a->has_th[l-1] ? w->th[l-1] : 0,
+            d0->s[l], d1->s[l], a->hidden_config[l]);
+      }
+      else
+      { pair_grad2 (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], 
+          a->has_th[l-1] ? w->th[l-1] : 0,
+          a->N_hidden[l-1], d0->s[l], d1->s[l], N_hidden,
+          (unsigned short *)0, 0);
+      }
+    }
+
+    if (a->has_th[l]) 
+    { pair_grad1 (th, g->th[l], d0->h[l], d1->h[l], N_hidden);
+    }
+
+    if (a->has_ho[l])
+    { int k = 2*a->N_layers-1-l;
+      if (a->hidden_config[k])
+      { pair_grad2_config (th, g->ho[l], v0->h[l], v1->h[l], 
+                           a->has_th[l] ? w->th[l] : 0,
+                           d0->o, d1->o, a->hidden_config[k]);
+      }
+      else
+      { pair_grad2 (th, g->ho[l], v0->h[l], v1->h[l], 
+                    a->has_th[l] ? w->th[l] : 0,
+                    N_hidden, d0->o, d1->o, a->N_outputs, 
+                    (unsigned short *) 0, 0);
+      }
+    }
+  }
+
+  if (a->has_io) 
+  { if (a->input_config[a->N_layers])
+    { pair_grad2_config (th, g->io, v0->i, v1->i, a->has_ti ? w->ti : 0, 
+                         d0->o, d1->o, a->input_config[a->N_layers]);
+    }
+    else
+    { pair_grad2 (th, g->io, v0->i, v1->i, a->has_ti ? w->ti : 0, a->N_inputs, 
+                  d0->o, d1->o, a->N_outputs, 
+                  flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1);
+    }
+  }
+
+  if (a->has_bo) 
+  { if (a->bias_config[a->N_layers])
+    { pair_grad1_config (th, g->bo, d0->o, d1->o, a->bias_config[a->N_layers]);
+    }
+    else
+    { pair_grad1 (th, g->bo, d0->o, d1->o, a->N_outputs);
+    }
+  }
+}
+
+
+__device__ static void pair_grad1
+( int th,		  /* Which thread (0 or 1) */
+  net_param *restrict g,  /* Array of derivatives to store to */
+  net_value const* v0,    /* Derivatives with respect to unit values, case 0 */
+  net_value const* v1,    /* Derivatives with respect to unit values, case 1 */
+  int n			  /* Number of units */
+)
+{ 
+  int i;
+  for (i = th; i<n; i+=2)
+  { g[i] = v0[i] + v1[i];
+  }
+}
+
+
+__device__ static void pair_grad1_config
+( int th,		  /* Which thread (0 or 1) */
+  net_param *restrict g,  /* Array of derivatives to store to */
+  net_value const* v0,    /* Derivatives with respect to unit values, case 0 */
+  net_value const* v1,    /* Derivatives with respect to unit values, case 1 */
+  net_config const* cf    /* Configuration for biases */
+)
+{ net_connection *cn = cf->conn;
+  int c, j, k;
+
+  for (k = th; k<cf->N_wts; k+=2)
+  { g[k] = 0;
+  }
+
+  if (th) return;  /* remainder done by a single thread */
+
+  for (c = 0; (k = cn[c].w) >= 0; c++)
+  { j = cn[c].d;
+    g[k] += v0[j] + v1[j];
+  }
+}
+
+
+#define PAIR_GRAD2(offset,omit) \
+do \
+{ net_value o; \
+  int i, j; \
+  if (nd==1) \
+  { net_value d00 = d0[0]; \
+    net_value d10 = d1[0]; \
+    if (th) \
+    { i = 3; \
+      while (i<nv) \
+      { o = (offset); if (!(omit)) *g++ = (v0[i-3]+o)*d00 +  (v1[i-3]+o)*d10; \
+        o = (offset); if (!(omit)) *g++ = (v0[i-2]+o)*d00 +  (v1[i-2]+o)*d10; \
+        o = (offset); if (!(omit)) *g++ = (v0[i-1]+o)*d00 +  (v1[i-1]+o)*d10; \
+        o = (offset); if (!(omit)) *g++ = (v0[i-0]+o)*d00 +  (v1[i-0]+o)*d10; \
+        i += 4; \
+      } \
+      i -= 3; \
+      while (i<nv) \
+      { o = (offset); if (!(omit)) *g++ = (v0[i]+o)*d00 +  (v1[i]+o)*d10; \
+        i += 1; \
+      } \
+    } \
+  } \
+  else \
+  { for (i = 0; i<nv; i++) \
+    { net_value tv0, tv1; \
+      o = (offset); \
+      if (omit) continue; \
+      tv0 = v0[i] + o; \
+      tv1 = v1[i] + o; \
+      if (tv0==0 && tv1==0) \
+      { continue; \
+      } \
+      if (tv1==0)  \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv0 * d0[j-th-2]; \
+          g[j-th-0] = tv0 * d0[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        while (j<nd) \
+        { if (th) g[j] = tv0 * d0[j]; \
+          j += 1; \
+        } \
+      } \
+      else if (tv0==0)  \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv1 * d1[j-th-2]; \
+          g[j-th-0] = tv1 * d1[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        while (j<nd) \
+        { if (th) g[j] = tv1 * d1[j]; \
+          j += 1; \
+        } \
+      } \
+      else \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv0 * d0[j-th-2] + tv1 * d1[j-th-2]; \
+          g[j-th-0] = tv0 * d0[j-th-0] + tv1 * d1[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        while (j<nd) \
+        { if (th) g[j] = tv0 * d0[j] + tv1 * d1[j]; \
+          j += 1; \
+        } \
+      } \
+      g += nd; \
+    } \
+  } \
+} while (0)
+
+#define PAIR_GRAD2_00 \
+do \
+{ int i, j; \
+  if (nd==1) \
+  { net_value d00 = d0[0]; \
+    net_value d10 = d1[0]; \
+    i = 3; \
+    while (i<nv) \
+    { g[i-th-2] = v0[i-th-2] * d00 + v1[i-th-2] * d10; \
+      g[i-th-0] = v0[i-th-0] * d00 + v1[i-th-0] * d10; \
+      i += 4; \
+    } \
+    i -= 3; \
+    while (i<nv) \
+    { if (th) g[i] = v0[i] * d00 + v1[i] * d10; \
+      i += 1; \
+    } \
+  } \
+  else \
+  { net_value tv0, tv1; \
+    for (i = 0; i<nv; i++) \
+    { tv0 = v0[i]; \
+      tv1 = v0[i]; \
+      if (tv0==0 && tv1==0) \
+      { continue; \
+      } \
+      if (tv1==0)  \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv0 * d0[j-th-2]; \
+          g[j-th-0] = tv0 * d0[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        while (j<nd) \
+        { if (th) g[j] = tv0 * d0[j]; \
+          j += 1; \
+        } \
+      } \
+      else if (tv0==0)  \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv1 * d1[j-th-2]; \
+          g[j-th-0] = tv1 * d1[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        while (j<nd) \
+        { if (th) g[j] = tv1 * d1[j]; \
+          j += 1; \
+        } \
+      } \
+      else \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv0 * d0[j-th-2] + tv1 * d1[j-th-2]; \
+          g[j-th-0] = tv0 * d0[j-th-0] + tv1 * d1[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        while (j<nd) \
+        { if (th) g[j] = tv0 * d0[j] + tv1 * d1[j]; \
+          j += 1; \
+        } \
+      } \
+      g += nd; \
+    } \
+  } \
+} while (0)
+
+__device__ static void pair_grad2
+( int th,		  /* Which thread (0 or 1) */
+  net_param *restrict g,  /* Array of derivatives to store to */
+  net_value const* v0,    /* Source unit values, case 0 */
+  net_value const* v1,    /* Source unit values, case 1 */
+  net_param const* off,   /* Offsets for source units, or zero if no offsets */
+  int nv,		  /* Number of source units */
+  net_value const* d0,    /* Derivatives with respect to destination units, 0 */
+  net_value const* d1,    /* Derivatives with respect to destination units, 1 */
+  int nd,		  /* Number of destination units */
+  unsigned short const* omit, /* Omit flags, null if not present */
+  int ob		  /* Bit to look at in omit flags */
+)
+{ 
+  if (omit==0)
+  { if (off==0)
+    { PAIR_GRAD2_00;
+    }
+    else
+    { PAIR_GRAD2(*off++,0);
+    }
+  }
+  else
+  { if (off==0)
+    { PAIR_GRAD2(0,(*omit++)&ob);
+    }
+    else
+    { PAIR_GRAD2(*off++,(*omit++)&ob);
+    }
+  }
+}
+
+
+__device__ static void pair_grad2_config
+( int th,		  /* Which thread (0 or 1) */
+  net_param *restrict g,  /* Array of derivatives to add to */
+  net_value const* s0,    /* Source unit values, case 0 */
+  net_value const* s1,    /* Source unit values, case 1 */
+  net_param const* off,   /* Offsets for source units, or zero if no offsets */
+  net_value const* d0,    /* Derivatives with respect to destination units, 0 */
+  net_value const* d1,    /* Derivatives with respect to destination units, 1 */
+  net_config const* cf    /* Configuration for connections and weights */
+)
+{
+  net_connection *cn;
+  int i, j, k, c;
+
+  for (k = th; k<cf->N_wts; k+=2)
+  { g[k] = 0;
+  }
+
+  if (CONFIG_QUAD_S_4D_4W)
+  { cn = cf->quad_s_4d_4w;
+    if (off)
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { net_value soi0 = s0[cn[c].s] + off[cn[c].s];
+        net_value soi1 = s1[cn[c].s] + off[cn[c].s];
+        j = cn[c].d;
+        g[k+th+0] += soi0 * d0[j+th+0] + soi1 * d1[j+th+0];
+        g[k+th+2] += soi0 * d0[j+th+2] + soi1 * d1[j+th+2];
+      }
+    }
+    else
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { net_value si0 = s0[cn[c].s];
+        net_value si1 = s1[cn[c].s];
+        j = cn[c].d;
+        g[k+th+0] += si0 * d0[j+th+0] + si1 * d1[j+th+0];
+        g[k+th+2] += si0 * d0[j+th+2] + si1 * d1[j+th+2];
+      }
+    }
+  }
+
+  if (th) return;  /* remainder done by a single thread */
+
+  if (CONFIG_SINGLE4)
+  { 
+    cn = cf->single4_s;
+    if (off)
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { net_value soi0 = s0[cn[c].s] + off[cn[c].s];
+        net_value soi1 = s0[cn[c].s] + off[cn[c].s];
+        j = cn[c].d;
+        g[k] += soi0 * d0[j] + soi1 * d1[j];
+        j = cn[c+1].d; k = cn[c+1].w; 
+        g[k] += soi0 * d0[j] + soi1 * d1[j];
+        j = cn[c+2].d; k = cn[c+2].w; 
+        g[k] += soi0 * d0[j] + soi1 * d1[j];
+        j = cn[c+3].d; k = cn[c+3].w; 
+        g[k] += soi0 * d0[j] + soi1 * d1[j];
+      }
+    }
+    else
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { net_value si0 = s0[cn[c].s];
+        net_value si1 = s1[cn[c].s];
+        j = cn[c].d;
+        g[k] += si0 * d0[j] + si1 * d1[j];
+        j = cn[c+1].d; k = cn[c+1].w; 
+        g[k] += si0 * d0[j] + si1 * d1[j];
+        j = cn[c+2].d; k = cn[c+2].w; 
+        g[k] += si0 * d0[j] + si1 * d1[j];
+        j = cn[c+3].d; k = cn[c+3].w; 
+        g[k] += si0 * d0[j] + si1 * d1[j];
+      }
+    }
+
+    cn = cf->single4_d;
+    if (off)
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { net_value dj0 = d0[cn[c].d];
+        net_value dj1 = d1[cn[c].d];
+        i = cn[c].s;
+        g[k] += (s0[i]+off[i]) *dj0 + (s1[i]+off[i]) * dj1;
+        i = cn[c+1].s; k = cn[c+1].w; 
+        g[k] += (s0[i]+off[i]) *dj0 + (s1[i]+off[i]) * dj1;
+        i = cn[c+2].s; k = cn[c+2].w; 
+        g[k] += (s0[i]+off[i]) *dj0 + (s1[i]+off[i]) * dj1;
+        i = cn[c+3].s; k = cn[c+3].w; 
+        g[k] += (s0[i]+off[i]) *dj0 + (s1[i]+off[i]) * dj1;
+      }
+    }
+    else
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { net_value dj0 = d0[cn[c].d];
+        net_value dj1 = d1[cn[c].d];
+        i = cn[c].s;
+        g[k] += s0[i] * dj0 + s1[i] * dj1;
+        i = cn[c+1].s; k = cn[c+1].w; 
+        g[k] += s0[i] * dj0 + s1[i] * dj1;
+        i = cn[c+2].s; k = cn[c+2].w; 
+        g[k] += s0[i] * dj0 + s1[i] * dj1;
+        i = cn[c+3].s; k = cn[c+3].w; 
+        g[k] += s0[i] * dj0 + s1[i] * dj1;
+      }
+    }
+  }
+
+  cn = CONFIG_ORIGINAL ? cf->conn : cf->single;
+  if (off)
+  { for (c = 0; (k = cn[c].w) >= 0; c++)
+    { i = cn[c].s; j = cn[c].d;
+      g[k] += (s0[i]+off[i]) * d0[j] + (s1[i]+off[i]) * d1[j];
+    }
+  }
+  else
+  { for (c = 0; (k = cn[c].w) >= 0; c++)
+    { i = cn[c].s; j = cn[c].d;
+      g[k] += s0[i] * d0[j] + s1[i] * d1[j];
+    }
+  }
+}
+
+#endif

@@ -15,7 +15,8 @@
 
 
 #ifndef HOSTDEV
-#define HOSTDEV  /* don't declare some procedures as __host__ __device__ */
+#define HOSTDEV  /* don't declare some procedures as __host__ or __device__ */
+#define __device__
 #endif
 
 
@@ -311,6 +312,11 @@ HOSTDEV void net_back (net_values const*, net_values *restrict, int,
 HOSTDEV void net_grad (net_params *restrict, net_params const*, 
                        net_values const*, net_values const*, net_arch const*, 
                        net_flags const*, int);
+
+__device__ void pair_grad (int, net_params *restrict, net_params const*,
+                           net_values const*, net_values const*,
+                           net_values const*, net_values const*,
+                           net_arch const*, net_flags const*);
 
 HOSTDEV void net_model_prob (net_values const*, net_value const*, 
                              double *restrict,

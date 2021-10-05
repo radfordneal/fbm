@@ -51,10 +51,11 @@
 				   exceeding the per-block register use limit
 				   (max 255 reg/thread, min 32K reg/block) */
 
-#define DEFAULT_PERTHRD 2 	/* Defaults, if not set by CUDA_SIZES  */
+#define DEFAULT_PERTHRD 1 	/* Defaults, if not set by CUDA_SIZES  */
 #define DEFAULT_BLKSIZE 64	/*   environment variable, which has   */
 #define DEFAULT_NUMBLKS	48	/*   the form PERTHRD:BLKSIZE:NUMBLKS  */
 
+static int use_pairs;                   /* Whether to use 1 case/thrd, paired */
 static int perthrd = DEFAULT_PERTHRD;	/* Number of cases for a CUDA thread */
 static int blksize = DEFAULT_BLKSIZE;	/* Number of threads per block */
 static int numblks = DEFAULT_NUMBLKS;	/* Max number of blocks per kernel */
@@ -79,7 +80,8 @@ __global__ void many_cases
   double *thread_energy,   /* Places to store energy, null if not required */
   net_params *thread_grad, /* Places to store gradient, null if not required */
   int start,		/* Start of cases to look at */
-  int cases_per_thread,	/* Number of case to handle in one thread */
+  int use_pairs,	/* Whether to do one case/thread, with pairs */
+  int cases_per_thread,	/* Number of case to handle in a thread */
   double en_weight,	/* Weight for this case for energy */
   double gr_weight	/* Weight for this case for gradient */
 );
@@ -312,7 +314,7 @@ void mc_app_initialize
       { int t, b, n;
         char junk;
         if (sscanf(cuda_sizes,"%d:%d:%d%c",&t,&b,&n,&junk)!=3 
-             || t<1 || b<1 || n<1)
+             || t<0 || b<1 || n<1)
         { fprintf(stderr,
            "Bad format for CUDA_SIZES: should be perthrd:blksize:numblks\n");
           exit(1);
@@ -326,10 +328,22 @@ void mc_app_initialize
         numblks = n;
       }
 
+      use_pairs = perthrd==0;
+      if (use_pairs)
+      { perthrd = 1;
+      }
+
       if (show_info)
-      { printf (
-         "Specified %d cases per thread, %d threads per block, %d blocks max\n",
-          perthrd, blksize, numblks);
+      { if (use_pairs)
+        { printf (
+           "Specified 1 case per thread (paired), %d threads per block, %d blocks max\n",
+           blksize, numblks);
+        }
+        else
+        { printf (
+           "Specified %d cases per thread, %d threads per block, %d blocks max\n",
+           perthrd, blksize, numblks);
+        }
       }
     }
 #   endif
@@ -1834,7 +1848,8 @@ __global__ void many_cases
   double *thread_energy,   /* Places to store energy, null if not required */
   net_params *thread_grad, /* Places to store gradient, null if not required */
   int start,		/* Start of cases to look at */
-  int cases_per_thread,	/* Number of case to handle in one thread */
+  int use_pairs,	/* Whether to do one case/thread, with pairs */
+  int cases_per_thread,	/* Number of case to handle in a thread */
   double en_weight,	/* Weight for this case for energy */
   double gr_weight	/* Weight for this case for gradient */
 )
@@ -1843,34 +1858,28 @@ __global__ void many_cases
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = start + cases_per_thread * i;
 
-  /* Do computations for case (or cases) handled by this thread. */
-
-  net_flags *flgs = const_has_flgs ? &const_flgs : 0;
   double *restrict threi;
   net_params *restrict thrgi;
 
+  /* Do computations for case (or cases) handled by this thread. */
+
   if (j < const_N_train) 
   { 
-    if (thread_energy)
-    { threi = threadIdx.x==0 ? const_block_energy + blockIdx.x 
+    net_flags *flgs = const_has_flgs ? &const_flgs : 0;
+
+    threi = thread_energy==0 ? 0 
+            : threadIdx.x==0 ? const_block_energy + blockIdx.x 
                              : thread_energy + i;
-    }
-    else
-    { threi = 0;
-    }
 
-    if (thread_grad)
-    { thrgi = threadIdx.x==0 ? const_block_grad + blockIdx.x 
-                             : thread_grad + i;
-    }
-    else
-    { thrgi = 0;
-    }
-
-    int increment = 0;
+    thrgi = thread_grad==0 ? 0 
+          : threadIdx.x==0 ? const_block_grad + blockIdx.x 
+                           : thread_grad + i;
     int h;
-    for (h = j; h < j+cases_per_thread && h < const_N_train; h++)
-    { 
+
+    if (use_pairs)
+    {
+      h = j;
+
       net_values *train_vals_h = const_train_values+h;
       net_values *deriv_h = thrgi ? const_deriv+h : 0;
       int k;
@@ -1883,12 +1892,7 @@ __global__ void many_cases
                       &const_surv, const_noise, Cheap_energy);
 
       if (threi)
-      { if (increment)
-        { *threi -= en_weight * log_prob;
-        }
-        else
-        { *threi = - en_weight * log_prob;
-        }
+      { *threi = - en_weight * log_prob;
       }
 
       if (thrgi)
@@ -1902,11 +1906,64 @@ __global__ void many_cases
         net_back (train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
                   &const_arch, flgs, &const_params);
 
-        net_grad (thrgi, &const_params, train_vals_h, deriv_h, &const_arch, 
-                  flgs, increment);
-      }
+        int th = threadIdx.x & 1;
 
-      increment = 1;
+        if (th==0 && h+1 == const_N_train)
+        { net_grad (thrgi, &const_params, train_vals_h, deriv_h, &const_arch, 
+                    flgs, 0);
+        }
+        else
+        { net_params *thrgb = threadIdx.x-th == 0 ? const_block_grad+blockIdx.x 
+                                                  : thrgi-th;
+          pair_grad (th, thrgb, &const_params, 
+                     train_vals_h - th, train_vals_h - th + 1,
+                     deriv_h - th, deriv_h - th + 1,
+                     &const_arch, flgs);
+        }
+      }
+    }
+    else
+    {
+      int increment = 0;
+      for (h = j; h < j+cases_per_thread && h < const_N_train; h++)
+      { 
+        net_values *train_vals_h = const_train_values+h;
+        net_values *deriv_h = thrgi ? const_deriv+h : 0;
+        int k;
+
+        net_func (train_vals_h, 0, &const_arch, flgs, &const_params);
+
+        double log_prob;
+        net_model_prob (train_vals_h, const_train_targets+const_N_targets*h, 
+                        &log_prob, deriv_h, &const_arch, &const_model, 
+                        &const_surv, const_noise, Cheap_energy);
+
+        if (threi)
+        { if (increment)
+          { *threi -= en_weight * log_prob;
+          }
+          else
+          { *threi = - en_weight * log_prob;
+          }
+        }
+
+        if (thrgi)
+        {
+          if (gr_weight!=1)
+          { for (k = 0; k<const_arch.N_outputs; k++)
+            { deriv_h->o[k] *= gr_weight;
+            }
+          }
+
+          net_back (train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
+                    &const_arch, flgs, &const_params);
+
+          net_grad (thrgi, &const_params, train_vals_h, deriv_h, &const_arch, 
+                    flgs, increment);
+        }
+
+        increment = 1;
+      }
     }
   }
 
@@ -1914,7 +1971,7 @@ __global__ void many_cases
      threads in the block (including ones not used above). */
 
   { int stride;
-    for (stride = 1; stride < blockDim.x; stride <<= 1)
+    for (stride = 1+use_pairs; stride < blockDim.x; stride <<= 1)
     { __syncthreads();
       int mask = 2*stride - 1;
       int base = threadIdx.x & ~mask;
@@ -1935,7 +1992,7 @@ __global__ void many_cases
           { q[k] += p[k];
           }
         }
-        if (thread_energy && offset==0)
+        if (threi && offset==0)
         { *threi += thread_energy[w];
         }
       }
@@ -2158,7 +2215,7 @@ void mc_app_energy
               many_cases <<<blks, blksize>>> 
                          (energy ? thread_energy : 0, 
                           gr ? thread_grad : 0, 
-                          i, perthrd, inv_temp, inv_temp);
+                          i, use_pairs, perthrd, inv_temp, inv_temp);
             }
 
             /* Do reduction of parts of gradient computed previously, while

@@ -1457,7 +1457,7 @@ do \
   { net_value tv0, tv1; \
     for (i = 0; i<nv; i++) \
     { tv0 = v0[i]; \
-      tv1 = v0[i]; \
+      tv1 = v1[i]; \
       if (tv0==0 && tv1==0) \
       { continue; \
       } \

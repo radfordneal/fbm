@@ -1905,7 +1905,6 @@ __global__ void many_cases
 
     if (threi)
     { *threi = - en_weight * log_prob;
-//printf("EN1: %f\n",*threi);
     }
   }
 
@@ -1916,9 +1915,6 @@ __global__ void many_cases
     if (j<const_N_train)
     {
       int th = threadIdx.x & 1;
-
-//printf("PAIRS: blockIdx %d, threadIdx %d, th %d, i %d, h %d, N_train %d\n",
-//blockIdx.x, threadIdx.x, th, i, h, const_N_train);
         
       if (th==0 && (h+1==const_N_train || threadIdx.x+1==blockDim.x))
       { if (thrgi)
@@ -1930,7 +1926,6 @@ __global__ void many_cases
       { if (threi && th==1)
         { double *threb = threadIdx.x-th == 0 ? const_block_energy+blockIdx.x 
                                               : threi-th;
-//printf("EN2: %f %f\n",*threb,*threi);
           *threb += *threi;
         }
         if (thrgi)
@@ -1969,7 +1964,6 @@ __global__ void many_cases
           else
           { *threi = - en_weight * log_prob;
           }
-//printf("EN1: %f\n",*threi);
         }
 
         if (thrgi)

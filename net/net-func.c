@@ -136,33 +136,7 @@ HOSTDEV void net_func
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     { 
 #     if USE_QUICK_AND_DIRTY_TANH
-#       if FP64 && USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
-        { __m256d one = _mm256_set1_pd(1.0);
-          __m256d two = _mm256_set1_pd(2.0);
-          j = 3;
-          while (j<N_hidden)
-          { __m256d x = _mm256_loadu_pd(sh+j-3);
-            x = _mm256_add_pd(x,x);
-            x = sleef_expd4(x);
-            x = _mm256_sub_pd(one, _mm256_div_pd (two, _mm256_add_pd (one, x)));
-            _mm256_storeu_pd (vh+j-3, x);
-            j += 4;
-          }
-          j -= 2;
-          if (j<N_hidden)
-          { __m128d x = _mm_loadu_pd(sh+j-1);
-            x = _mm_add_pd(x,x);
-            x = sleef_expd2(x);
-            x = _mm_sub_pd (cast128d(one), 
-                   _mm_div_pd (cast128d(two), _mm_add_pd (cast128d(one), x)));
-            _mm_storeu_pd (vh+j-1, x);
-            j += 2;
-          }
-          if (j<=N_hidden)
-          { vh[j-1] = TANH (sh[j-1]);
-          }
-        }
-#       elif FP64 && USE_SLEEF && __AVX__
+#       if FP64 && USE_SLEEF && __AVX__
         { __m256d one = _mm256_set1_pd(1.0);
           __m256d two = _mm256_set1_pd(2.0);
           j = 3;
@@ -204,7 +178,7 @@ HOSTDEV void net_func
           { vh[j-1] = TANH (sh[j-1]);
           }
         }
-#       elif FP32 && USE_SLEEF && __AVX2__ && USE_FMA && __FMA__  /* IMPROVE */
+#       elif FP32 && USE_SLEEF && __AVX__  /* IMPROVE */
         { __m128 one = _mm_set1_ps(1.0f);
           __m128 two = _mm_set1_ps(2.0f);
           j = 3;
@@ -260,7 +234,9 @@ HOSTDEV void net_func
           }
         }
 #       endif
-#     else
+
+#     else  /* Use actual tanh functions, not quick and dirty */
+
 #       if FP64 && USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
         { j = 3;
           while (j<N_hidden)
@@ -306,43 +282,7 @@ HOSTDEV void net_func
     }
     else if (flgs->layer_type[l]==Softplus_type)
     {
-#     if FP64 && USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
-      { __m256d zero = _mm256_setzero_pd();
-        __m256d one = _mm256_set1_pd(1.0);
-        __m256d mask = 
-                 _mm256_castsi256_pd (_mm256_set1_epi64x ((long long)1<<63));
-        j = 3;
-        while (j<N_hidden)
-        { __m256d a = _mm256_loadu_pd(sh+j-3);
-          __m256d v = _mm256_or_pd(a,mask);  /* compute -fabs(a) */
-          v = sleef_expd4(v);
-          v = _mm256_add_pd(one,v);
-          v = sleef_logd4(v);
-          v = _mm256_add_pd (v, _mm256_and_pd (a, 
-                                  _mm256_cmp_pd(a,zero,_CMP_GT_OQ)));
-          _mm256_storeu_pd (vh+j-3, v);
-          j += 4;
-        }
-        j -= 2;
-        if (j<N_hidden)
-        { __m128d a = _mm_loadu_pd(sh+j-1);
-          __m128d v = _mm_or_pd(a,cast128d(mask));
-          v = sleef_expd2(v);
-          v = _mm_add_pd(cast128d(one),v);
-          v = sleef_logd2(v);
-          v = _mm_add_pd (v, _mm_and_pd (a, 
-                _mm_cmp_pd (a, cast128d(zero), _CMP_GT_OQ)));
-          _mm_storeu_pd (vh+j-1, v);
-          j += 2;
-        }
-        if (j<=N_hidden)
-        { net_value a = sh[j-1];
-          net_value v = log (1 + exp(-fabs(a)));  /* avoid overflow */
-          if (a>0) v += a;
-          vh[j-1] = v;
-        }
-      }
-#     elif FP64 && USE_SLEEF && __AVX__
+#     if FP64 && USE_SLEEF && __AVX__
       { __m256d zero = _mm256_setzero_pd();
         __m256d one = _mm256_set1_pd(1.0);
         __m256d mask = 

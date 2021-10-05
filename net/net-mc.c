@@ -1857,15 +1857,17 @@ __global__ void many_cases
   unsigned total_params = const_params.total_params;
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = start + cases_per_thread * i;
+  int h;
 
   double *restrict threi;
   net_params *restrict thrgi;
+  net_flags *flgs;
+  net_values *train_vals_h;
+  net_values *deriv_h;
 
-  /* Do computations for case (or cases) handled by this thread. */
-
-  if (j < const_N_train) 
+  if (j<const_N_train) 
   { 
-    net_flags *flgs = const_has_flgs ? &const_flgs : 0;
+    flgs = const_has_flgs ? &const_flgs : 0;
 
     threi = thread_energy==0 ? 0 
             : threadIdx.x==0 ? const_block_energy + blockIdx.x 
@@ -1874,45 +1876,64 @@ __global__ void many_cases
     thrgi = thread_grad==0 ? 0 
           : threadIdx.x==0 ? const_block_grad + blockIdx.x 
                            : thread_grad + i;
-    int h;
+  }
 
-    if (use_pairs)
-    {
-      h = j;
+  if (j<const_N_train && use_pairs)
+  {
+    h = j;
 
-      net_values *train_vals_h = const_train_values+h;
-      net_values *deriv_h = thrgi ? const_deriv+h : 0;
-      int k;
+    train_vals_h = const_train_values+h;
+    deriv_h = thrgi ? const_deriv+h : 0;
+    int k;
 
-      net_func (train_vals_h, 0, &const_arch, flgs, &const_params);
+    net_func (train_vals_h, 0, &const_arch, flgs, &const_params);
 
-      double log_prob;
-      net_model_prob (train_vals_h, const_train_targets+const_N_targets*h, 
-                      &log_prob, deriv_h, &const_arch, &const_model, 
-                      &const_surv, const_noise, Cheap_energy);
+    double log_prob;
+    net_model_prob (train_vals_h, const_train_targets+const_N_targets*h, 
+                    &log_prob, deriv_h, &const_arch, &const_model, 
+                    &const_surv, const_noise, Cheap_energy);
 
-      if (threi)
-      { *threi = - en_weight * log_prob;
-      }
-
-      if (thrgi)
-      {
-        if (gr_weight!=1)
-        { for (k = 0; k<const_arch.N_outputs; k++)
-          { deriv_h->o[k] *= gr_weight;
-          }
+    if (thrgi)
+    { if (gr_weight!=1)
+      { for (k = 0; k<const_arch.N_outputs; k++)
+        { deriv_h->o[k] *= gr_weight;
         }
+      }
+      net_back (train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
+                &const_arch, flgs, &const_params);
+    }
 
-        net_back (train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
-                  &const_arch, flgs, &const_params);
+    if (threi)
+    { *threi = - en_weight * log_prob;
+//printf("EN1: %f\n",*threi);
+    }
+  }
 
-        int th = threadIdx.x & 1;
+  if (use_pairs) 
+  { 
+    __syncthreads();
 
-        if (th==0 && h+1 == const_N_train)
+    if (j<const_N_train)
+    {
+      int th = threadIdx.x & 1;
+
+//printf("PAIRS: blockIdx %d, threadIdx %d, th %d, i %d, h %d, N_train %d\n",
+//blockIdx.x, threadIdx.x, th, i, h, const_N_train);
+        
+      if (th==0 && (h+1==const_N_train || threadIdx.x+1==blockDim.x))
+      { if (thrgi)
         { net_grad (thrgi, &const_params, train_vals_h, deriv_h, &const_arch, 
                     flgs, 0);
         }
-        else
+      }
+      else
+      { if (threi && th==1)
+        { double *threb = threadIdx.x-th == 0 ? const_block_energy+blockIdx.x 
+                                              : threi-th;
+//printf("EN2: %f %f\n",*threb,*threi);
+          *threb += *threi;
+        }
+        if (thrgi)
         { net_params *thrgb = threadIdx.x-th == 0 ? const_block_grad+blockIdx.x 
                                                   : thrgi-th;
           pair_grad (th, thrgb, &const_params, 
@@ -1922,13 +1943,16 @@ __global__ void many_cases
         }
       }
     }
-    else
+  }
+  else  /* not using pair scheme */
+  { 
+    if (j<const_N_train)
     {
       int increment = 0;
       for (h = j; h < j+cases_per_thread && h < const_N_train; h++)
       { 
-        net_values *train_vals_h = const_train_values+h;
-        net_values *deriv_h = thrgi ? const_deriv+h : 0;
+        train_vals_h = const_train_values+h;
+        deriv_h = thrgi ? const_deriv+h : 0;
         int k;
 
         net_func (train_vals_h, 0, &const_arch, flgs, &const_params);
@@ -1945,6 +1969,7 @@ __global__ void many_cases
           else
           { *threi = - en_weight * log_prob;
           }
+//printf("EN1: %f\n",*threi);
         }
 
         if (thrgi)

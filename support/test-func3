@@ -1,9 +1,40 @@
 #!/bin/bash
 
-echo " "; echo "--- A"; echo " "
-
 # Set up so that, even in single precision, the arithmetic should be exact, so
 # results with all versions (flt, flt-gpu, dbl, dbl-gpu) should be identical.
+
+echo " "; echo "--- A"; echo " "
+
+net-spec log 1 1 / io=32
+data-spec log 1 1 / "%echo 3 37" .
+model-spec log real 1
+echo 10 | net-gen log fix -
+net-display log 0
+net-tbl o0@bE log 0
+net-grad-test log 0 0.5
+
+echo " "; echo "--- B"; echo " "
+
+net-spec log 1 1 / io=32 bo=32
+data-spec log 1 1 / "%echo 3 37" .
+model-spec log real 1
+echo 10 2 | net-gen log fix -
+net-display log 0
+net-tbl o0@bE log 0
+net-grad-test log 0 0.5
+
+echo " "; echo "--- C"; echo " "
+
+net-spec log 1 1 / io=32 bo=32
+(echo 3 37; echo 2 26) >data
+data-spec log 1 1 / data .
+model-spec log real 1
+echo 10 2 | net-gen log fix -
+net-display log 0
+net-tbl o0@bE log 0
+net-grad-test log 0 0.5
+
+echo " "; echo "--- D"; echo " "
 
 net-spec log 10 11 identity 9 identity 2 \
           / bh0=16 bh1=16 bo=16 ih0=16 ih1=16 io=16 hh=16 h1o=16 h0o=16 

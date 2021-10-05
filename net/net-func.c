@@ -319,6 +319,29 @@ HOSTDEV void net_func
           vh[j-1] = v;
         }
       }
+#     elif FP64 && USE_SLEEF && __SSE2__
+      { __m128d zero = _mm_setzero_pd();
+        __m128d one = _mm_set1_pd(1.0);
+        __m128d mask = _mm_castsi128_pd (_mm_set1_epi64x ((long long)1<<63));
+        j = 1;
+        while (j<N_hidden)
+        { __m128d a = _mm_loadu_pd(sh+j-1);
+          __m128d v = _mm_or_pd(a,mask);
+          v = sleef_expd2(v);
+          v = _mm_add_pd(one,v);
+          v = sleef_logd2(v);
+          v = _mm_add_pd (v, _mm_and_pd (a, _mm_cmpgt_pd (a, zero)));
+          _mm_storeu_pd (vh+j-1, v);
+          j += 2;
+        }
+        if (j<=N_hidden)
+        { net_value a = sh[j-1];
+          net_value v = 
+            prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
+          if (a>0) v += a;
+          vh[j-1] = v;
+        }
+      }
 #     elif FP32 && USE_SLEEF && __SSE2__
       { __m128 zero = _mm_setzero_ps();
         __m128 one = _mm_set1_ps(1.0f);
@@ -633,12 +656,13 @@ do \
   } \
   else \
   { __m256d TV, TV2; \
+    __m128d Z128d = _mm_setzero_pd(); \
     i = 0; \
     for (;;) \
     { for (;;) \
       { if (i==ns) goto done; \
         TV = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (cast128d(TV), _mm_setzero_pd())) \
+        if (_mm_ucomineq_sd (cast128d(TV), Z128d)) \
         { break; \
         } \
         i += 1; \
@@ -649,7 +673,7 @@ do \
       for (;;) \
       { if (i==ns) goto one_more; \
         TV2 = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (cast128d(TV2), _mm_setzero_pd())) \
+        if (_mm_ucomineq_sd (cast128d(TV2), Z128d)) \
         { break; \
         } \
         i += 1; \
@@ -742,14 +766,14 @@ do \
     _mm_store_ss (s, S); \
   } \
   else \
-  { __m256 Z = _mm256_setzero_ps(); \
+  { __m128 Z = _mm_setzero_ps(); \
     __m256 TV, TV2; \
     i = 0; \
     for (;;) \
     { for (;;) \
       { if (i==ns) goto done; \
         TV = _mm256_set1_ps (*(v+i)); \
-        if (_mm_ucomineq_ss (cast128f(TV), cast128f(Z))) \
+        if (_mm_ucomineq_ss (cast128f(TV), Z)) \
         { break; \
         } \
         i += 1; \
@@ -760,7 +784,7 @@ do \
       for (;;) \
       { if (i==ns) goto one_more; \
         TV2 = _mm256_set1_ps (*(v+i)); \
-        if (_mm_ucomineq_ss (cast128f(TV2), cast128f(Z))) \
+        if (_mm_ucomineq_ss (cast128f(TV2), Z)) \
         { break; \
         } \
         i += 1; \
@@ -784,11 +808,9 @@ do \
       } \
       j -= 2; \
       if (j<nd) \
-      { __m128 S = _mm_loadl_pi (cast128f(Z), (__m64 *)(s+j-1)); \
-        S = _mm_fmadd_ps (cast128f(TV), \
-                          _mm_loadl_pi(cast128f(Z),(__m64 *)(w+j-1)), S); \
-        S = _mm_fmadd_ps (cast128f(TV2), \
-                          _mm_loadl_pi(cast128f(Z),(__m64 *)(w2+j-1)), S); \
+      { __m128 S = _mm_loadl_pi (Z, (__m64 *)(s+j-1)); \
+        S = _mm_fmadd_ps (cast128f(TV), _mm_loadl_pi(Z,(__m64 *)(w+j-1)), S); \
+        S = _mm_fmadd_ps(cast128f(TV2), _mm_loadl_pi(Z,(__m64 *)(w2+j-1)), S); \
         _mm_storel_pi ((__m64 *)(s+j-1), S); \
         j += 2; \
       } \
@@ -818,9 +840,8 @@ do \
     } \
     j -= 2; \
     if (j<nd) \
-    { __m128 S = _mm_loadl_pi (cast128f(Z), (__m64 *)(s+j-1)); \
-      S = _mm_fmadd_ps (cast128f(TV), \
-                        _mm_loadl_pi(cast128f(Z),(__m64 *)(w+j-1)), S); \
+    { __m128 S = _mm_loadl_pi (Z, (__m64 *)(s+j-1)); \
+      S = _mm_fmadd_ps (cast128f(TV), _mm_loadl_pi(Z,(__m64 *)(w+j-1)), S); \
       _mm_storel_pi ((__m64 *)(s+j-1), S); \
       j += 2; \
     } \
@@ -838,9 +859,9 @@ do \
 #define ADD_CONNECTIONS00 \
 do \
 { int i, j; \
+  __m128 Z = _mm_setzero_ps(); \
   if (nd==1) /* this part same as SSE4.2 code, could be improved */ \
-  { __m128 Z = _mm_setzero_ps(); \
-    __m128 SV = Z; \
+  { __m128 SV = Z; \
     i = 7; \
     while (i<ns) \
     { SV = _mm_add_ps (SV, _mm_mul_ps (_mm_loadu_ps(v+i-7), \
@@ -871,8 +892,7 @@ do \
     _mm_store_ss (s, S); \
   } \
   else \
-  { __m256 Z = _mm256_setzero_ps(); \
-    __m256 TV, TV2; \
+  { __m256 TV, TV2; \
     i = 0; \
     for (;;) \
     { for (;;) \

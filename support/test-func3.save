@@ -1,6 +1,169 @@
  
 --- A
  
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Output Weights [1]
+
+32.00 32.00:+10.00
+
+Noise levels
+
+   1.00 -  1.00
+
+ 3.00000000e+01  4.90000000e+01  2.54677667e+01 
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.500000  Energy: 25.47
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0  +10.00   -4.9663e+00  -5.5288e+00   -2.0990e+01  -2.0990e+01     0.0000
+
+Largest absolute log ratio: 0.0000
+
+ 
+--- B
+ 
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Output Weights [1]
+
+32.00 32.00:+10.00
+
+Output Biases [2]
+
+     32.00: +2.00
+
+Noise levels
+
+   1.00 -  1.00
+
+ 3.20000000e+01  2.50000000e+01  1.34697198e+01 
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.500000  Energy: 13.47
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0  +10.00   -3.4663e+00  -4.0288e+00   -1.4990e+01  -1.4990e+01     0.0000
+     1   +2.00   -1.2182e+00  -1.2808e+00   -4.9980e+00  -4.9980e+00     0.0000
+
+Largest absolute log ratio: 0.0000
+
+ 
+--- C
+ 
+Number of training cases: 2
+
+Network in file "log" with index 0
+
+Input to Output Weights [1]
+
+32.00 32.00:+10.00
+
+Output Biases [2]
+
+     32.00: +2.00
+
+Noise levels
+
+   1.00 -  1.00
+
+ 3.20000000e+01  2.20000000e+01  2.05000000e+01  2.23886583e+01 
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.500000  Energy: 22.39
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0  +10.00   -5.3413e+00  -6.1538e+00   -2.2990e+01  -2.2990e+01     0.0000
+     1   +2.00   -2.1870e+00  -2.3120e+00   -8.9980e+00  -8.9980e+00     0.0000
+
+Largest absolute log ratio: 0.0000
+
+ 
+--- D
+ 
+Number of training cases: 3
+
+Network in file "log" with index 0
+
+Input to Output Weights [1]
+
+32.00 32.00:+10.00
+
+Output Biases [2]
+
+     32.00: +2.00
+
+Noise levels
+
+   1.00 -  1.00
+
+ 3.20000000e+01  2.20000000e+01  1.20000000e+01  1.66666667e+01  2.78075968e+01 
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.500000  Energy: 27.81
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0  +10.00   -4.5600e+00  -5.4351e+00   -1.9990e+01  -1.9990e+01     0.0000
+     1   +2.00   -1.4057e+00  -1.5933e+00   -5.9980e+00  -5.9980e+00     0.0000
+
+Largest absolute log ratio: 0.0000
+
+ 
+--- E
+ 
+Number of training cases: 3
+
+Network in file "log" with index 0
+
+Input to Output Weights [1]
+
+32.00 32.00:+10.00  +1.00
+
+      32.00: +3.00  -1.00
+
+Output Biases [2]
+
+     32.00: +2.00  +1.00
+
+Noise levels
+
+   1.00 -  1.00  1.00
+
+ 3.50000000e+01  2.80000000e+01  3.30000000e+01 
+ 3.00000000e+00  1.00000000e+00 -5.00000000e+00 
+ 4.50000000e+01  7.30702718e+01 
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.500000  Energy: 73.07
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0  +10.00   +9.3997e-01  +6.4911e-02   +2.0098e+00  +2.0098e+00     0.0000
+     1   +1.00   -4.0622e+00  -4.9373e+00   -1.7999e+01  -1.7999e+01     0.0000
+     2   +3.00   -5.8117e+00  -9.1868e+00   -2.9997e+01  -2.9997e+01     0.0000
+     3   -1.00   -6.8127e+00  -1.0188e+01   -3.4001e+01  -3.4001e+01     0.0000
+     4   +2.00   -1.5573e-01  -3.4329e-01   -9.9805e-01  -9.9805e-01     0.0000
+     5   +1.00   -2.4060e+00  -2.5935e+00   -9.9990e+00  -9.9990e+00     0.0000
+
+Largest absolute log ratio: 0.0000
+
+ 
+--- F
+ 
 Number of training cases: 2
 
 Network in file "log" with index 0

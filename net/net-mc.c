@@ -720,17 +720,20 @@ void mc_app_initialize
        launching of CUDA kernels. */
 
 #   if __CUDACC__
-    { n_launches 
-        = (N_train + perthrd*blksize*numblks - 1) / (perthrd*blksize*numblks);
-      max_cases_per_launch 
-        = (N_train + n_launches - 1) / n_launches;
-      max_blocks_per_launch 
-        = (max_cases_per_launch + perthrd*blksize - 1) / (perthrd*blksize);
-      max_threads_per_launch = max_blocks_per_launch * blksize;
-      max_cases_per_launch = max_threads_per_launch * perthrd;
-      if (show_info)
-      { printf ("With %d cases, need %d launches, max %d blocks/launch\n",
-                N_train, n_launches, max_blocks_per_launch);
+    { 
+      if (N_train>0)
+      { n_launches 
+          = (N_train + perthrd*blksize*numblks - 1) / (perthrd*blksize*numblks);
+        max_cases_per_launch 
+          = (N_train + n_launches - 1) / n_launches;
+        max_blocks_per_launch 
+          = (max_cases_per_launch + perthrd*blksize - 1) / (perthrd*blksize);
+        max_threads_per_launch = max_blocks_per_launch * blksize;
+        max_cases_per_launch = max_threads_per_launch * perthrd;
+        if (show_info)
+        { printf ("With %d cases, need %d launches, max %d blocks/launch\n",
+                  N_train, n_launches, max_blocks_per_launch);
+        }
       }
     }
 

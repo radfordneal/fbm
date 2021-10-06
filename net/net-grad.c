@@ -581,7 +581,7 @@ do \
     i = 3; \
     while (i<nv) \
     { _mm_storeu_ps (g+i-3, \
-                     FMA_ps (D0, _mm_loadu_ps(v+i-3), _mm_loadu_ps(g+i-3)); \
+                     FMA_ps (D0, _mm_loadu_ps(v+i-3), _mm_loadu_ps(g+i-3))); \
       i += 4; \
     } \
     i -= 2; \
@@ -589,11 +589,11 @@ do \
     { __m128 Z = _mm_setzero_ps(); \
       _mm_storel_pi ((__m64 *)(g+i-1), \
         FMA_ps (D0, _mm_loadl_pi (Z, (__m64 const*) (v+i-1)), \
-                    _mm_loadl_pi (Z, (__m64 const*) (g+i-1))); \
+                    _mm_loadl_pi (Z, (__m64 const*) (g+i-1)))); \
       i += 2; \
     } \
     if (i<=nv) \
-    { _mm_store_ss (g+i-1, FMA_ss(D0, _mm_load_ss(v+i-1), _mm_load_ss(g+i-1)); \
+    { _mm_store_ss(g+i-1, FMA_ss(D0, _mm_load_ss(v+i-1), _mm_load_ss(g+i-1))); \
     } \
   } \
   else \

@@ -249,7 +249,7 @@ HOSTDEV void net_func
             j += 2;
           }
           if (j<=N_hidden)
-          { vh[j-1] = tanh (sh[j-1]);
+          { vh[j-1] = TANH (sh[j-1]);
           }
         }
 #       elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
@@ -259,12 +259,49 @@ HOSTDEV void net_func
             j += 2;
           }
           if (j<=N_hidden)
-          { vh[j-1] = tanh (sh[j-1]);
+          { vh[j-1] = TANH (sh[j-1]);
+          }
+        }
+#       elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
+        { j = 7;
+          while (j<N_hidden)
+          { _mm256_storeu_ps (vh+j-7, sleef_tanhf8 (_mm256_loadu_ps(sh+j-7)));
+            j += 8;
+          }
+          j -= 4;
+          while (j<N_hidden)
+          { _mm_storeu_ps (vh+j-3, sleef_tanhf4 (_mm_loadu_ps(sh+j-3)));
+            j += 4;
+          }
+          j -= 2;
+          if (j<N_hidden)
+          { _mm_storel_pi ((__m64 *)(vh+j-1), 
+               sleef_tanhf4 (_mm_loadl_pi(_mm_setzero_ps(),(__m64 *)(sh+j-1))));
+            j += 2;
+          }
+          if (j<=N_hidden)
+          { vh[j-1] = TANH (sh[j-1]);
+          }
+        }
+#       elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
+        { j = 3;
+          while (j<N_hidden)
+          { _mm_storeu_ps (vh+j-3, sleef_tanhf4 (_mm_loadu_ps(sh+j-3)));
+            j += 4;
+          }
+          j -= 2;
+          if (j<N_hidden)
+          { _mm_storel_pi ((__m64 *)(vh+j-1), 
+               sleef_tanhf4 (_mm_loadl_pi(_mm_setzero_ps(),(__m64 *)(sh+j-1))));
+            j += 2;
+          }
+          if (j<=N_hidden)
+          { vh[j-1] = TANH (sh[j-1]);
           }
         }
 #       else
         { for (j = 0; j<N_hidden; j++)
-          { vh[j] = tanh (sh[j]);
+          { vh[j] = TANH (sh[j]);
           }
         }
 #       endif

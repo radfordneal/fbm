@@ -656,6 +656,84 @@ do \
   } \
 } while (0)
 
+#elif FP64 && USE_SIMD_INTRINSICS && __SSE4_2__
+
+#define ADD_CONNECTIONS00 \
+do \
+{ int i, j; \
+  if (nd==1) \
+  { __m128d S = _mm_setzero_pd(); \
+    i = 1; \
+    while (i<ns) \
+    { S = FMA_pd (_mm_loadu_pd(v+i-1), _mm_loadu_pd(w+i-1), S); \
+      i += 2; \
+    } \
+    S = _mm_hadd_pd(S,S); \
+    if (i<=ns) \
+    { S = FMA_sd (_mm_load_sd(v+i-1), _mm_load_sd(w+i-1), S); \
+    } \
+    S = _mm_add_sd (_mm_load_sd(s), S); \
+    _mm_store_sd (s, S); \
+  } \
+  else \
+  { __m128d TV, TV2; \
+    __m128d Z128d = _mm_setzero_pd(); \
+    i = 0; \
+    for (;;) \
+    { for (;;) \
+      { if (i==ns) goto done; \
+        TV = _mm_set1_pd (*(v+i)); \
+        if (_mm_ucomineq_sd (TV, Z128d)) \
+        { break; \
+        } \
+        i += 1; \
+        w += nd; \
+      } \
+      net_param const*w2 = w+nd; \
+      i += 1; \
+      for (;;) \
+      { if (i==ns) goto one_more; \
+        TV2 = _mm_set1_pd (*(v+i)); \
+        if (_mm_ucomineq_sd (TV2, Z128d)) \
+        { break; \
+        } \
+        i += 1; \
+        w2 += nd; \
+      } \
+      j = 1; \
+      while (j<nd) \
+      { __m128d S = _mm_loadu_pd(s+j-1); \
+        S = FMA_pd (TV, _mm_loadu_pd(w+j-1), S); \
+        S = FMA_pd (TV2, _mm_loadu_pd(w2+j-1), S); \
+        _mm_storeu_pd (s+j-1, S); \
+        j += 2; \
+      } \
+      if (j<=nd) \
+      { __m128d S = _mm_load_sd(s+j-1); \
+        S = FMA_sd (TV, _mm_load_sd(w+j-1), S); \
+        S = FMA_sd (TV2, _mm_load_sd(w2+j-1), S); \
+        _mm_store_sd (s+j-1, S); \
+      } \
+      i += 1; \
+      w = w2+nd; \
+    } \
+  one_more: \
+    j = 1; \
+    while (j<nd) \
+    { __m128d S = _mm_loadu_pd(s+j-1); \
+      S = FMA_pd (TV, _mm_loadu_pd(w+j-1), S); \
+      _mm_storeu_pd (s+j-1, S); \
+      j += 2; \
+    } \
+    if (j<=nd) \
+    { __m128d S = _mm_load_sd(s+j-1); \
+      S = FMA_sd (TV, _mm_load_sd(w+j-1), S); \
+      _mm_store_sd (s+j-1, S); \
+    } \
+  done: ; \
+  } \
+} while (0)
+
 #elif FP32 && USE_SIMD_INTRINSICS && __AVX__
 
 #define ADD_CONNECTIONS00 \

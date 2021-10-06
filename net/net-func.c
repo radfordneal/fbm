@@ -286,7 +286,7 @@ HOSTDEV void net_func
       { __m256d zero = _mm256_setzero_pd();
         __m256d one = _mm256_set1_pd(1.0);
         __m256d mask = 
-          _mm256_castsi256_pd (_mm256_set1_epi64x ((unsigned long long)1<<63));
+          _mm256_castsi256_pd (_mm256_set1_epi64x ((long long)1<<63));
         j = 3;
         while (j<N_hidden)
         { __m256d a = _mm256_loadu_pd(sh+j-3);

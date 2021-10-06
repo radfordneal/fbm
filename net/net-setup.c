@@ -420,8 +420,7 @@ void net_replicate_param_pointers
 /* SET UP POINTERS TO UNIT VALUES.  Sets the pointers in the net_values
    structure to point the appropriate places in the block of net_value
    values passed.  The size of this block must be as indicated by the
-   net_setup_value_count procedure, which count should be stored by
-   the caller in the total_values field.  However, the count will exclude
+   net_setup_value_count procedure, except that the count will exclude
    inputs if a separate 'inputs' argument is passed, indicating where 
    they are. */
 

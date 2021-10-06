@@ -607,10 +607,10 @@ void mc_app_initialize
       size_t sz;
       int i;
 
-      net_values *tmp_values;
-      tmp_values = (net_values *) chk_alloc (N_train, sizeof *tmp_values);
+      net_values *tmp_values
+                    = (net_values *) chk_alloc (N_train, sizeof *tmp_values);
 
-      int value_count = net_setup_value_count(arch) - N_inputs;
+      int value_count_noin = value_count - N_inputs;
       net_value *iblk, *vblk;
 
       check_cuda_error (cudaGetLastError(), "Before copying to data to GPU");
@@ -621,11 +621,11 @@ void mc_app_initialize
           (iblk, train_iblock, sz, cudaMemcpyHostToDevice),
         "copy to iblk");
 
-      sz = value_count * N_train * sizeof *vblk;
+      sz = value_count_noin * N_train * sizeof *vblk;
       check_cuda_error (cudaMalloc (&vblk, sz), "cudaMalloc of vblk for train");
 
       for (i = 0; i<N_train; i++) 
-      { net_setup_value_pointers (&tmp_values[i], vblk+value_count*i, arch, 
+      { net_setup_value_pointers (&tmp_values[i], vblk+value_count_noin*i, arch,
                                   iblk+N_inputs*i);
       }
 
@@ -647,8 +647,7 @@ void mc_app_initialize
       check_cuda_error (cudaMalloc (&vblk, sz), "cudaMalloc of vblk for deriv");
 
       for (i = 0; i<N_train; i++) 
-      { net_setup_value_pointers (&tmp_values[i], vblk+value_count*i, arch, 
-                                  iblk+N_inputs*i);
+      { net_setup_value_pointers (&tmp_values[i], vblk+value_count*i, arch, 0);
       }
 
       sz = N_train * sizeof *dev_deriv;
@@ -2173,7 +2172,9 @@ void mc_app_energy
     inv_temp = -inv_temp;
   }
 
-  if (energy) *energy = -log_prob;
+  if (energy) 
+  { *energy = -log_prob;
+  }
 
   if (-log_prob>=1e30)
   { if (energy) *energy = 1e30;

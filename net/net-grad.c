@@ -454,6 +454,106 @@ do \
   } \
 } while (0)
 
+#elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
+
+#define ADD_GRAD2_00 \
+do \
+{ int i, j; \
+  if (nd==1) \
+  { __m128d D0 = _mm_set1_pd(*d); \
+    i = 3; \
+    while (i<nv) \
+    { _mm_storeu_pd (g+i-3, FMA_pd (D0, _mm_loadu_pd(v+i-3), \
+                                        _mm_loadu_pd(g+i-3))); \
+      _mm_storeu_pd (g+i-1, FMA_pd (D0, _mm_loadu_pd(v+i-1), \
+                                        _mm_loadu_pd(g+i-1))); \
+      i += 4; \
+    } \
+    i -= 2; \
+    if (i<nv) \
+    { _mm_storeu_pd (g+i-1, FMA_pd (D0, _mm_loadu_pd(v+i-1), \
+                                        _mm_loadu_pd(g+i-1))); \
+      i += 2; \
+    } \
+    if (i<=nv) \
+    { _mm_store_sd (g+i-1, FMA_sd (D0, _mm_load_sd(v+i-1), \
+                                       _mm_load_sd(g+i-1))); \
+    } \
+  } \
+  else \
+  { __m128d TV, TV2, D; \
+    i = 0; \
+    for (;;) \
+    { __m128d Z = _mm_setzero_pd(); \
+      for (;;) \
+      { if (i==nv) goto done; \
+        TV = _mm_set1_pd (*(v+i)); \
+        if (_mm_ucomineq_sd (TV, Z)) \
+        { break; \
+        } \
+        i += 1; \
+        g += nd; \
+      } \
+      net_value *g2 = g+nd; \
+      i += 1; \
+      for (;;) \
+      { if (i==nv) goto one_more; \
+        TV2 = _mm_set1_pd (*(v+i)); \
+        if (_mm_ucomineq_sd (TV2, Z)) \
+        { break; \
+        } \
+        i += 1; \
+        g2 += nd; \
+      } \
+      j = 3; \
+      while (j<nd) \
+      {  D = _mm_loadu_pd(d+j-3); \
+        _mm_storeu_pd (g+j-3, FMA_pd (TV, D, _mm_loadu_pd(g+j-3))); \
+        _mm_storeu_pd (g2+j-3, FMA_pd (TV2, D, _mm_loadu_pd(g2+j-3))); \
+         D = _mm_loadu_pd(d+j-1); \
+        _mm_storeu_pd (g+j-1, FMA_pd (TV, D, _mm_loadu_pd(g+j-1))); \
+        _mm_storeu_pd (g2+j-1, FMA_pd (TV2, D, _mm_loadu_pd(g2+j-1))); \
+        j += 4; \
+      } \
+      j -= 2; \
+      if (j<nd) \
+      { D = _mm_loadu_pd(d+j-1); \
+        _mm_storeu_pd (g+j-1, FMA_pd (TV, D, _mm_loadu_pd(g+j-1))); \
+        _mm_storeu_pd (g2+j-1, FMA_pd(TV2, D,_mm_loadu_pd(g2+j-1))); \
+        j += 2; \
+      } \
+      if (j<=nd) \
+      { D = _mm_load_sd(d+j-1); \
+        _mm_store_sd (g+j-1, FMA_sd (TV, D, _mm_load_sd(g+j-1))); \
+        _mm_store_sd (g2+j-1, FMA_sd (TV2, D, _mm_load_sd(g2+j-1))); \
+      } \
+      i += 1; \
+      g = g2+nd; \
+    } \
+    goto done; \
+  one_more: \
+    j = 3; \
+    while (j<nd) \
+    {  D = _mm_loadu_pd(d+j-3); \
+      _mm_storeu_pd (g+j-3, FMA_pd (TV, D, _mm_loadu_pd(g+j-3))); \
+       D = _mm_loadu_pd(d+j-1); \
+      _mm_storeu_pd (g+j-1, FMA_pd (TV, D, _mm_loadu_pd(g+j-1))); \
+      j += 4; \
+    } \
+    j -= 2; \
+    if (j<nd) \
+    { D = _mm_loadu_pd(d+j-1); \
+      _mm_storeu_pd (g+j-1, FMA_pd (TV, D, _mm_loadu_pd(g+j-1))); \
+      j += 2; \
+    } \
+    if (j<=nd) \
+    { D = _mm_load_sd(d+j-1); \
+      _mm_store_sd (g+j-1, FMA_sd (TV, D, _mm_load_sd(g+j-1))); \
+    } \
+  done: ; \
+  } \
+} while (0)
+
 #elif FP32 && USE_SIMD_INTRINSICS && __AVX__
 
 #define ADD_GRAD2_00 \

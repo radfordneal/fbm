@@ -358,7 +358,7 @@ do \
   } \
 } while (0)
 
-#if FP64 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA &&__FMA__
+#if FP64 && USE_SIMD_INTRINSICS && __AVX__
 
 #define SUM_DERIVATIVES0 \
 do \
@@ -368,18 +368,18 @@ do \
   { __m256d D0 = _mm256_broadcast_sd(dd); \
     i = 3; \
     while (i<ns) \
-    { _mm256_storeu_pd (ds+i-3, _mm256_fmadd_pd (D0, \
-                         _mm256_loadu_pd(w+i-3), _mm256_loadu_pd(ds+i-3))); \
+    { _mm256_storeu_pd (ds+i-3, FMA256_pd (D0, _mm256_loadu_pd(w+i-3), \
+                                               _mm256_loadu_pd(ds+i-3))); \
       i += 4; \
     } \
     i -= 2; \
     if (i<ns) \
-    { _mm_storeu_pd (ds+i-1, _mm_fmadd_pd (cast128d(D0), \
-                              _mm_loadu_pd(w+i-1), _mm_loadu_pd(ds+i-1))); \
+    { _mm_storeu_pd (ds+i-1, FMA_pd (cast128d(D0), _mm_loadu_pd(w+i-1), \
+                                                     _mm_loadu_pd(ds+i-1))); \
       i += 2; \
     } \
     if (i<=ns) \
-    { _mm_store_sd (ds+i-1, _mm_fmadd_sd (cast128d(D0), \
+    { _mm_store_sd (ds+i-1, FMA_sd (cast128d(D0), \
                              _mm_load_sd(w+i-1), _mm_load_sd(ds+i-1))); \
     } \
   } \
@@ -392,8 +392,8 @@ do \
       j = 3; \
       while (j<nd) \
       { __m256d DD = _mm256_loadu_pd(dd+j-3); \
-        TV = _mm256_fmadd_pd (_mm256_loadu_pd(w+j-3), DD, TV); \
-        TV2 = _mm256_fmadd_pd (_mm256_loadu_pd(w2+j-3), DD, TV2); \
+        TV = FMA256_pd (_mm256_loadu_pd(w+j-3), DD, TV); \
+        TV2 = FMA256_pd (_mm256_loadu_pd(w2+j-3), DD, TV2); \
         j += 4; \
       } \
       __m128d T, T2; \
@@ -404,15 +404,15 @@ do \
       j -= 2; \
       if (j<nd) \
       { __m128d DD = _mm_loadu_pd(dd+j-1); \
-        T = _mm_fmadd_pd (_mm_loadu_pd(w+j-1), DD, T); \
-        T2 = _mm_fmadd_pd (_mm_loadu_pd(w2+j-1), DD, T2); \
+        T = FMA_pd (_mm_loadu_pd(w+j-1), DD, T); \
+        T2 = FMA_pd (_mm_loadu_pd(w2+j-1), DD, T2); \
         j += 2; \
       } \
       T = _mm_hadd_pd(T,T2); \
       if (j<=nd) \
       { __m128d DD = _mm_load_pd1(dd+j-1); \
         __m128d WW = _mm_loadh_pd (_mm_load_sd(w+j-1), w2+j-1); \
-        T = _mm_fmadd_pd (WW, DD, T); \
+        T = FMA_pd (WW, DD, T); \
       } \
       _mm_storeu_pd (ds+i-1, _mm_add_pd (_mm_loadu_pd(ds+i-1), T)); \
       w = w2+nd; \
@@ -421,8 +421,7 @@ do \
     { TV = _mm256_setzero_pd(); \
       j = 3; \
       while (j<nd) \
-      { TV = _mm256_fmadd_pd (_mm256_loadu_pd(w+j-3), \
-                              _mm256_loadu_pd(dd+j-3), TV); \
+      { TV = FMA256_pd (_mm256_loadu_pd(w+j-3), _mm256_loadu_pd(dd+j-3), TV); \
         j += 4; \
       } \
       __m128d T; \
@@ -430,98 +429,12 @@ do \
                       _mm256_extractf128_pd(TV,1)); \
       j -= 2; \
       if (j<nd) \
-      { T = _mm_fmadd_pd (_mm_loadu_pd(w+j-1), _mm_loadu_pd(dd+j-1), T); \
+      { T = FMA_pd (_mm_loadu_pd(w+j-1), _mm_loadu_pd(dd+j-1), T); \
         j += 2; \
       } \
       T = _mm_hadd_pd(T,T); \
       if (j<=nd) \
-      { T = _mm_fmadd_sd (_mm_load_sd(w+j-1), _mm_load_sd(dd+j-1), T); \
-      } \
-      _mm_store_sd (ds+i-1, _mm_add_sd(_mm_load_sd(ds+i-1), T)); \
-    } \
-  } \
-} while (0)
-
-#elif FP64 && USE_SIMD_INTRINSICS && __AVX__
-
-#define SUM_DERIVATIVES0 \
-do \
-{ net_value tv; \
-  int i, j; \
-  if (nd==1) \
-  { __m256d D0 = _mm256_broadcast_sd(dd); \
-    i = 3; \
-    while (i<ns) \
-    { _mm256_storeu_pd (ds+i-3, _mm256_add_pd (_mm256_loadu_pd(ds+i-3), \
-         _mm256_mul_pd (D0, _mm256_loadu_pd(w+i-3)))); \
-      i += 4; \
-    } \
-    i -= 2; \
-    if (i<ns) \
-    { _mm_storeu_pd (ds+i-1, _mm_add_pd (_mm_loadu_pd(ds+i-1), \
-         _mm_mul_pd (cast128d(D0), _mm_loadu_pd(w+i-1)))); \
-      i += 2; \
-    } \
-    if (i<=ns) \
-    { _mm_store_sd (ds+i-1, _mm_add_sd (_mm_load_sd(ds+i-1), \
-         _mm_mul_sd (cast128d(D0), _mm_load_sd(w+i-1)))); \
-    } \
-  } \
-  else \
-  { __m256d TV, TV2; \
-    for (i = 1; i<ns; i+=2) \
-    { net_param const*w2 = w+nd; \
-      TV = _mm256_setzero_pd(); \
-      TV2 = _mm256_setzero_pd(); \
-      j = 3; \
-      while (j<nd) \
-      { __m256d DD = _mm256_loadu_pd(dd+j-3); \
-        TV = _mm256_add_pd (TV, _mm256_mul_pd (_mm256_loadu_pd(w+j-3), DD)); \
-        TV2 = _mm256_add_pd (TV2, _mm256_mul_pd (_mm256_loadu_pd(w2+j-3),DD)); \
-        j += 4; \
-      } \
-      __m128d T, T2; \
-      T = _mm_add_pd (cast128d(TV), \
-                      _mm256_extractf128_pd(TV,1)); \
-      T2 = _mm_add_pd (cast128d(TV2), \
-                       _mm256_extractf128_pd(TV2,1)); \
-      j -= 2; \
-      if (j<nd) \
-      { __m128d DD = _mm_loadu_pd(dd+j-1); \
-        T = _mm_add_pd (T, _mm_mul_pd (_mm_loadu_pd(w+j-1), DD)); \
-        T2 = _mm_add_pd (T2, _mm_mul_pd (_mm_loadu_pd(w2+j-1), DD)); \
-        j += 2; \
-      } \
-      T = _mm_hadd_pd(T,T2); \
-      if (j<=nd) \
-      { __m128d DD = _mm_load_pd1(dd+j-1); \
-        __m128d WW = _mm_loadh_pd (_mm_load_sd(w+j-1), w2+j-1); \
-        T = _mm_add_pd (T, _mm_mul_pd (WW, DD)); \
-      } \
-      _mm_storeu_pd (ds+i-1, _mm_add_pd (_mm_loadu_pd(ds+i-1), T)); \
-      w = w2+nd; \
-    } \
-    if (i<=ns) \
-    { TV = _mm256_setzero_pd(); \
-      j = 3; \
-      while (j<nd) \
-      { TV = _mm256_add_pd (TV, _mm256_mul_pd (_mm256_loadu_pd(w+j-3), \
-                                               _mm256_loadu_pd(dd+j-3))); \
-        j += 4; \
-      } \
-      __m128d T; \
-      T = _mm_add_pd (cast128d(TV), \
-                      _mm256_extractf128_pd(TV,1)); \
-      j -= 2; \
-      if (j<nd) \
-      { T = _mm_add_pd (T, _mm_mul_pd (_mm_loadu_pd(w+j-1), \
-                                       _mm_loadu_pd(dd+j-1))); \
-        j += 2; \
-      } \
-      T = _mm_hadd_pd(T,T); \
-      if (j<=nd) \
-      { T = _mm_add_sd (T, _mm_mul_sd (_mm_load_sd(w+j-1), \
-                                       _mm_load_sd(dd+j-1))); \
+      { T = FMA_sd (_mm_load_sd(w+j-1), _mm_load_sd(dd+j-1), T); \
       } \
       _mm_store_sd (ds+i-1, _mm_add_sd(_mm_load_sd(ds+i-1), T)); \
     } \

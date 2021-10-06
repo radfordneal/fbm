@@ -19,3 +19,24 @@
 
 #define cast128d(x) (_mm256_castpd256_pd128(x))
 #define cast128f(x) (_mm256_castps256_ps128(x))
+
+#if USE_SIMD_INTRINSICS && USE_FMA && __AVX2__ && __FMA__
+# define FMA256_pd(a,b,c) _mm256_fmadd_pd(a,b,c)
+# define FMA256_ps(a,b,c) _mm256_fmadd_ps(a,b,c)
+# define FMA_pd(a,b,c)    _mm_fmadd_pd(a,b,c)
+# define FMA_ps(a,b,c)    _mm_fmadd_ps(a,b,c)
+# define FMA_sd(a,b,c)    _mm_fmadd_sd(a,b,c)
+# define FMA_ss(a,b,c)    _mm_fmadd_ss(a,b,c)
+#elif USE_SIMD_INTRINSICS && USE_FMA && __AVX__
+# define FMA256_pd(a,b,c) _mm256_add_pd(_mm256_mul_pd(a,b),c)
+# define FMA256_ps(a,b,c) _mm256_add_ps(_mm256_mul_ps(a,b),c)
+# define FMA_pd(a,b,c)    _mm_add_pd(_mm_mul_pd(a,b),c)
+# define FMA_ps(a,b,c)    _mm_add_ps(_mm_mul_ps(a,b),c)
+# define FMA_sd(a,b,c)    _mm_add_sd(_mm_mul_sd(a,b),c)
+# define FMA_ss(a,b,c)    _mm_add_ss(_mm_mul_ss(a,b),c)
+#elif USE_SIMD_INTRINSICS && __SSE2__
+# define FMA_pd(a,b,c)    _mm_add_pd(_mm_mul_pd(a,b),c)
+# define FMA_ps(a,b,c)    _mm_add_ps(_mm_mul_ps(a,b),c)
+# define FMA_sd(a,b,c)    _mm_add_sd(_mm_mul_sd(a,b),c)
+# define FMA_ss(a,b,c)    _mm_add_ss(_mm_mul_ss(a,b),c)
+#endif

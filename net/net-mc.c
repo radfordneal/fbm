@@ -646,8 +646,16 @@ void mc_app_initialize
       sz = value_count * N_train * sizeof *vblk;
       check_cuda_error (cudaMalloc (&vblk, sz), "cudaMalloc of vblk for deriv");
 
-      for (i = 0; i<N_train; i++) 
-      { net_setup_value_pointers (&tmp_values[i], vblk+value_count*i, arch, 0);
+      if (arch->has_ti)  /* Must allow for derivatives w.r.t. inputs */
+      { for (i = 0; i<N_train; i++) 
+        { net_setup_value_pointers(&tmp_values[i], vblk+value_count*i, arch, 0);
+        }
+      }
+      else  /* Derivatives w.r.t. inputs will not be taken */
+      { for (i = 0; i<N_train; i++) 
+        { net_setup_value_pointers (&tmp_values[i], vblk+value_count_noin*i, 
+            arch, iblk+N_inputs*i /* should not be used */);
+        }
       }
 
       sz = N_train * sizeof *dev_deriv;

@@ -136,7 +136,7 @@ HOSTDEV void net_func
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     { 
 #     if USE_QUICK_AND_DIRTY_TANH
-#       if FP64 && USE_SLEEF && __AVX__
+#       if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
         { __m256d one = _mm256_set1_pd(1.0);
           __m256d two = _mm256_set1_pd(2.0);
           j = 3;
@@ -162,7 +162,7 @@ HOSTDEV void net_func
           { vh[j-1] = TANH (sh[j-1]);
           }
         }
-#       elif FP64 && USE_SLEEF && __SSE2__
+#       elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
         { __m128d one = _mm_set1_pd(1.0);
           __m128d two = _mm_set1_pd(2.0);
           j = 1;
@@ -178,7 +178,7 @@ HOSTDEV void net_func
           { vh[j-1] = TANH (sh[j-1]);
           }
         }
-#       elif FP32 && USE_SLEEF && __AVX__  /* IMPROVE */
+#       elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__  /* IMPROVE */
         { __m128 one = _mm_set1_ps(1.0f);
           __m128 two = _mm_set1_ps(2.0f);
           j = 3;
@@ -203,7 +203,7 @@ HOSTDEV void net_func
           { vh[j-1] = TANH (sh[j-1]);
           }
         }
-#       elif FP32 && USE_SLEEF && __SSE2__
+#       elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
         { __m128 one = _mm_set1_ps(1.0f);
           __m128 two = _mm_set1_ps(2.0f);
           j = 3;
@@ -237,7 +237,7 @@ HOSTDEV void net_func
 
 #     else  /* Use actual tanh functions, not quick and dirty */
 
-#       if FP64 && USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
+#       if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX2__ && USE_FMA && __FMA__
         { j = 3;
           while (j<N_hidden)
           { _mm256_storeu_pd (vh+j-3, sleef_tanhd4 (_mm256_loadu_pd(sh+j-3)));
@@ -252,7 +252,7 @@ HOSTDEV void net_func
           { vh[j-1] = tanh (sh[j-1]);
           }
         }
-#       elif FP64 && USE_SLEEF && __AVX__
+#       elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
         { j = 3;
           while (j<N_hidden)
           { _mm256_storeu_pd (vh+j-3, sleef_tanhd4 (_mm256_loadu_pd(sh+j-3)));
@@ -282,7 +282,7 @@ HOSTDEV void net_func
     }
     else if (flgs->layer_type[l]==Softplus_type)
     {
-#     if FP64 && USE_SLEEF && __AVX__
+#     if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
       { __m256d zero = _mm256_setzero_pd();
         __m256d one = _mm256_set1_pd(1.0);
         __m256d mask = 
@@ -319,7 +319,7 @@ HOSTDEV void net_func
           vh[j-1] = v;
         }
       }
-#     elif FP64 && USE_SLEEF && __SSE2__
+#     elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
       { __m128d zero = _mm_setzero_pd();
         __m128d one = _mm_set1_pd(1.0);
         __m128d mask = _mm_castsi128_pd (_mm_set1_epi64x ((long long)1<<63));
@@ -342,7 +342,7 @@ HOSTDEV void net_func
           vh[j-1] = v;
         }
       }
-#     elif FP32 && USE_SLEEF && __SSE2__
+#     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
       { __m128 zero = _mm_setzero_ps();
         __m128 one = _mm_set1_ps(1.0f);
         __m128 mask = _mm_castsi128_ps (_mm_set1_epi32(1<<31));

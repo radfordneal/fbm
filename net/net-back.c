@@ -173,7 +173,7 @@ HOSTDEV void net_back
     { 
       net_value const* vs = v->s[l];
 
-#     if FP64 && USE_SIMD_INTRINSICS && __AVX__
+#     if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
       { __m256d ONE = _mm256_set1_pd(1.0);
         __m256d ZERO = _mm256_setzero_pd();
         i = 7;
@@ -208,7 +208,7 @@ HOSTDEV void net_back
         { ds[i] = dh[i] / (1+prec_exp(-vs[i]));
         }
       }
-#     elif FP32 && USE_SIMD_INTRINSICS && __AVX__
+#     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
       { __m256 ONE = _mm256_set1_ps(1.0f);
         __m256 ZERO = _mm256_setzero_ps();
         i = 7;
@@ -240,7 +240,7 @@ HOSTDEV void net_back
         { ds[i] = dh[i] / (1+prec_exp(-vs[i]));
         }
       }
-#     elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
+#     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
       { __m128 ONE = _mm_set1_ps(1.0f);
         __m128 ZERO = _mm_setzero_ps();
         i = 3;

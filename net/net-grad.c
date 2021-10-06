@@ -359,7 +359,7 @@ do \
   } \
 } while (0)
 
-#if FP64 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
+#if FP64 && USE_SIMD_INTRINSICS && __AVX__
 
 #define ADD_GRAD2_00 \
 do \
@@ -368,29 +368,30 @@ do \
   { __m256d D0 = _mm256_broadcast_sd(d); \
     i = 3; \
     while (i<nv) \
-    { _mm256_storeu_pd (g+i-3, _mm256_fmadd_pd (D0, _mm256_loadu_pd(v+i-3), \
-                                                    _mm256_loadu_pd(g+i-3))); \
+    { _mm256_storeu_pd (g+i-3, FMA256_pd (D0, _mm256_loadu_pd(v+i-3), \
+                                              _mm256_loadu_pd(g+i-3))); \
       i += 4; \
     } \
     i -= 2; \
     if (i<nv) \
-    { _mm_storeu_pd (g+i-1, _mm_fmadd_pd (cast128d(D0), \
-                               _mm_loadu_pd(v+i-1), _mm_loadu_pd(g+i-1))); \
+    { _mm_storeu_pd (g+i-1, FMA_pd (cast128d(D0), _mm_loadu_pd(v+i-1), \
+                                                  _mm_loadu_pd(g+i-1))); \
       i += 2; \
     } \
     if (i<=nv) \
-    { _mm_store_sd (g+i-1, _mm_fmadd_sd (cast128d(D0), \
-                              _mm_load_sd(v+i-1), _mm_load_sd(g+i-1))); \
+    { _mm_store_sd (g+i-1, FMA_sd (cast128d(D0), _mm_load_sd(v+i-1), \
+                                                 _mm_load_sd(g+i-1))); \
     } \
   } \
   else \
   { __m256d TV, TV2; \
     i = 0; \
     for (;;) \
-    { for (;;) \
+    { __m128d Z = _mm_setzero_pd(); \
+      for (;;) \
       { if (i==nv) goto done; \
         TV = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (cast128d(TV), _mm_setzero_pd())) \
+        if (_mm_ucomineq_sd (cast128d(TV), Z)) \
         { break; \
         } \
         i += 1; \
@@ -401,7 +402,7 @@ do \
       for (;;) \
       { if (i==nv) goto one_more; \
         TV2 = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (cast128d(TV2), _mm_setzero_pd())) \
+        if (_mm_ucomineq_sd (cast128d(TV2), Z)) \
         { break; \
         } \
         i += 1; \
@@ -410,27 +411,23 @@ do \
       j = 3; \
       while (j<nd) \
       { __m256d D = _mm256_loadu_pd(d+j-3); \
-        _mm256_storeu_pd (g+j-3, _mm256_fmadd_pd (TV, D, \
+        _mm256_storeu_pd (g+j-3, FMA256_pd (TV, D, \
                                                   _mm256_loadu_pd(g+j-3))); \
-        _mm256_storeu_pd (g2+j-3, _mm256_fmadd_pd (TV2, D, \
+        _mm256_storeu_pd (g2+j-3, FMA256_pd (TV2, D, \
                                                    _mm256_loadu_pd(g2+j-3))); \
         j += 4; \
       } \
       j -= 2; \
       if (j<nd) \
       { __m128d D = _mm_loadu_pd(d+j-1); \
-        _mm_storeu_pd (g+j-1, _mm_fmadd_pd (cast128d(TV), D, \
-                                             _mm_loadu_pd(g+j-1))); \
-        _mm_storeu_pd (g2+j-1, _mm_fmadd_pd (cast128d(TV2), D, \
-                                             _mm_loadu_pd(g2+j-1))); \
+        _mm_storeu_pd (g+j-1, FMA_pd (cast128d(TV), D, _mm_loadu_pd(g+j-1))); \
+        _mm_storeu_pd (g2+j-1, FMA_pd(cast128d(TV2), D,_mm_loadu_pd(g2+j-1))); \
         j += 2; \
       } \
       if (j<=nd) \
       { __m128d D = _mm_load_sd(d+j-1); \
-        _mm_store_sd (g+j-1, _mm_fmadd_sd (cast128d(TV), D, \
-                                            _mm_load_sd(g+j-1))); \
-        _mm_store_sd (g2+j-1, _mm_fmadd_sd (cast128d(TV2), D, \
-                                            _mm_load_sd(g2+j-1))); \
+        _mm_store_sd (g+j-1, FMA_sd (cast128d(TV), D, _mm_load_sd(g+j-1))); \
+        _mm_store_sd (g2+j-1, FMA_sd (cast128d(TV2), D, _mm_load_sd(g2+j-1))); \
       } \
       i += 1; \
       g = g2+nd; \
@@ -440,58 +437,64 @@ do \
     j = 3; \
     while (j<nd) \
     { __m256d D = _mm256_loadu_pd(d+j-3); \
-      _mm256_storeu_pd (g+j-3, _mm256_fmadd_pd (TV, D, \
-                                                _mm256_loadu_pd(g+j-3))); \
+      _mm256_storeu_pd (g+j-3, FMA256_pd (TV, D, _mm256_loadu_pd(g+j-3))); \
       j += 4; \
     } \
     j -= 2; \
     if (j<nd) \
     { __m128d D = _mm_loadu_pd(d+j-1); \
-      _mm_storeu_pd (g+j-1, _mm_fmadd_pd (cast128d(TV), D, \
-                                          _mm_loadu_pd(g+j-1))); \
+      _mm_storeu_pd (g+j-1, FMA_pd (cast128d(TV), D, _mm_loadu_pd(g+j-1))); \
       j += 2; \
     } \
     if (j<=nd) \
     { __m128d D = _mm_load_sd(d+j-1); \
-      _mm_store_sd (g+j-1, _mm_fmadd_sd (cast128d(TV), D, \
-                                         _mm_load_sd(g+j-1))); \
+      _mm_store_sd (g+j-1, FMA_sd (cast128d(TV), D, _mm_load_sd(g+j-1))); \
     } \
   done: ; \
   } \
 } while (0)
 
-#elif FP64 && USE_SIMD_INTRINSICS && __AVX__
+#elif FP32 && USE_SIMD_INTRINSICS && __AVX__
 
 #define ADD_GRAD2_00 \
 do \
 { int i, j; \
   if (nd==1) \
-  { __m256d D0 = _mm256_broadcast_sd(d); \
-    i = 3; \
+  { __m256 D0 = _mm256_set1_ps(*d); \
+    i = 7; \
     while (i<nv) \
-    { _mm256_storeu_pd (g+i-3, _mm256_add_pd (_mm256_loadu_pd(g+i-3), \
-         _mm256_mul_pd (D0, _mm256_loadu_pd(v+i-3)))); \
+    { _mm256_storeu_ps (g+i-7, \
+        FMA256_ps (D0, _mm256_loadu_ps(v+i-7), _mm256_loadu_ps(g+i-7))); \
+      i += 8; \
+    } \
+    i -= 4; \
+    if (i<nv) \
+    { _mm_storeu_ps (g+i-3, \
+        FMA_ps(cast128f(D0), _mm_loadu_ps(v+i-3), _mm_loadu_ps(g+i-3))); \
       i += 4; \
     } \
     i -= 2; \
     if (i<nv) \
-    { _mm_storeu_pd (g+i-1, _mm_add_pd (_mm_loadu_pd(g+i-1), \
-         _mm_mul_pd (cast128d(D0), _mm_loadu_pd(v+i-1)))); \
+    { __m128 Z = _mm_setzero_ps(); \
+      _mm_storel_pi ((__m64 *)(g+i-1), \
+        FMA_ps (cast128f(D0), _mm_loadl_pi (Z, (__m64 const*) (v+i-1)), \
+                      _mm_loadl_pi(Z, (__m64 const*) (g+i-1)))); \
       i += 2; \
     } \
     if (i<=nv) \
-    { _mm_store_sd (g+i-1, _mm_add_sd (_mm_load_sd(g+i-1), \
-         _mm_mul_sd (cast128d(D0), _mm_load_sd(v+i-1)))); \
+    { _mm_store_ss (g+i-1, FMA_ss (cast128f(D0), _mm_load_ss(v+i-1), \
+                                   _mm_load_ss(g+i-1))); \
     } \
   } \
   else \
-  { __m256d TV, TV2; \
+  { __m256 TV, TV2; \
+    __m128 Z = _mm_setzero_ps(); \
     i = 0; \
     for (;;) \
     { for (;;) \
       { if (i==nv) goto done; \
-        TV = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (cast128d(TV), _mm_setzero_pd())) \
+        TV = _mm256_set1_ps (*(v+i)); \
+        if (_mm_ucomineq_ss (cast128f(TV), Z)) \
         { break; \
         } \
         i += 1; \
@@ -501,61 +504,68 @@ do \
       i += 1; \
       for (;;) \
       { if (i==nv) goto one_more; \
-        TV2 = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (cast128d(TV2), _mm_setzero_pd())) \
+        TV2 = _mm256_set1_ps (*(v+i)); \
+        if (_mm_ucomineq_ss (cast128f(TV2), Z)) \
         { break; \
         } \
         i += 1; \
         g2 += nd; \
       } \
-      j = 3; \
+      j = 7; \
       while (j<nd) \
-      { __m256d D = _mm256_loadu_pd(d+j-3); \
-        _mm256_storeu_pd (g+j-3, _mm256_add_pd (_mm256_loadu_pd(g+j-3), \
-                                                _mm256_mul_pd (TV, D))); \
-        _mm256_storeu_pd (g2+j-3, _mm256_add_pd (_mm256_loadu_pd(g2+j-3), \
-                                                 _mm256_mul_pd (TV2, D))); \
+      { __m256 D = _mm256_loadu_ps(d+j-7); \
+        _mm256_storeu_ps (g+j-7, FMA256_ps (TV, D, _mm256_loadu_ps(g+j-7))); \
+        _mm256_storeu_ps (g2+j-7,FMA256_ps (TV2, D, _mm256_loadu_ps(g2+j-7))); \
+        j += 8; \
+      } \
+      j -= 4; \
+      if (j<nd) \
+      { __m128 D = _mm_loadu_ps(d+j-3); \
+        _mm_storeu_ps(g+j-3, FMA_ps (cast128f(TV), D, _mm_loadu_ps(g+j-3))); \
+        _mm_storeu_ps(g2+j-3,FMA_ps (cast128f(TV2), D, _mm_loadu_ps(g2+j-3))); \
         j += 4; \
       } \
       j -= 2; \
       if (j<nd) \
-      { __m128d D = _mm_loadu_pd(d+j-1); \
-        _mm_storeu_pd (g+j-1, _mm_add_pd (_mm_loadu_pd(g+j-1), \
-                               _mm_mul_pd (cast128d(TV), D))); \
-        _mm_storeu_pd (g2+j-1, _mm_add_pd (_mm_loadu_pd(g2+j-1), \
-                                _mm_mul_pd (cast128d(TV2), D))); \
+      { __m128 D = _mm_loadl_pi (Z, (__m64 const*) (d+j-1)); \
+        _mm_storel_pi ((__m64 *)(g+j-1), \
+           FMA_ps (cast128f(TV), D, _mm_loadl_pi(Z,(__m64 const*) (g+j-1)))); \
+        _mm_storel_pi ((__m64 *)(g2+j-1), \
+           FMA_ps (cast128f(TV2), D,_mm_loadl_pi(Z,(__m64 const*) (g2+j-1)))); \
         j += 2; \
       } \
       if (j<=nd) \
-      { __m128d D = _mm_load_sd(d+j-1); \
-        _mm_store_sd (g+j-1, _mm_add_sd (_mm_load_sd(g+j-1), \
-                              _mm_mul_sd (cast128d(TV), D))); \
-        _mm_store_sd (g2+j-1, _mm_add_sd (_mm_load_sd(g2+j-1), \
-                               _mm_mul_sd (cast128d(TV2), D))); \
+      { __m128 D = _mm_load_ss(d+j-1); \
+        _mm_store_ss (g+j-1, FMA_ss (cast128f(TV), D, _mm_load_ss(g+j-1))); \
+        _mm_store_ss (g2+j-1, FMA_ss (cast128f(TV2), D, _mm_load_ss(g2+j-1))); \
       } \
       i += 1; \
       g = g2+nd; \
     } \
     goto done; \
   one_more: \
-    j = 3; \
+    j = 7; \
     while (j<nd) \
-    { __m256d D = _mm256_loadu_pd(d+j-3); \
-      _mm256_storeu_pd (g+j-3, _mm256_add_pd (_mm256_loadu_pd(g+j-3), \
-                                              _mm256_mul_pd (TV, D))); \
+    { __m256 D = _mm256_loadu_ps(d+j-7); \
+      _mm256_storeu_ps (g+j-7, FMA256_ps (TV, D, _mm256_loadu_ps(g+j-7))); \
+      j += 8; \
+    } \
+    j -= 4; \
+    while (j<nd) \
+    { __m128 D = _mm_loadu_ps(d+j-3); \
+      _mm_storeu_ps (g+j-3, FMA_ps (cast128f(TV), D, _mm_loadu_ps(g+j-3))); \
       j += 4; \
     } \
     j -= 2; \
     if (j<nd) \
-    { __m128d D = _mm_loadu_pd(d+j-1); \
-      _mm_storeu_pd (g+j-1, _mm_add_pd (_mm_loadu_pd(g+j-1), \
-                             _mm_mul_pd (cast128d(TV), D))); \
+    { __m128 D = _mm_loadl_pi (Z, (__m64 const*) (d+j-1)); \
+      _mm_storel_pi ((__m64 *)(g+j-1), \
+         FMA_ps (cast128f(TV), D, _mm_loadl_pi (Z, (__m64 const*) (g+j-1)))); \
       j += 2; \
     } \
     if (j<=nd) \
-    { __m128d D = _mm_load_sd(d+j-1); \
-      _mm_store_sd (g+j-1, _mm_add_sd (_mm_load_sd(g+j-1), \
-                            _mm_mul_sd (cast128d(TV), D))); \
+    { __m128 D = _mm_load_ss(d+j-1); \
+      _mm_store_ss (g+j-1, FMA_ss (cast128f(TV), D, _mm_load_ss(g+j-1))); \
     } \
   done: ; \
   } \
@@ -570,31 +580,31 @@ do \
   { __m128 D0 = _mm_set1_ps(*d); \
     i = 3; \
     while (i<nv) \
-    { _mm_storeu_ps (g+i-3, _mm_add_ps (_mm_loadu_ps(g+i-3), \
-                              _mm_mul_ps (D0, _mm_loadu_ps(v+i-3)))); \
+    { _mm_storeu_ps (g+i-3, \
+                     FMA_ps (D0, _mm_loadu_ps(v+i-3), _mm_loadu_ps(g+i-3)); \
       i += 4; \
     } \
     i -= 2; \
     if (i<nv) \
     { __m128 Z = _mm_setzero_ps(); \
       _mm_storel_pi ((__m64 *)(g+i-1), \
-        _mm_add_ps (_mm_loadl_pi(Z, (__m64 const*) (g+i-1)), \
-         _mm_mul_ps (D0, _mm_loadl_pi (Z, (__m64 const*) (v+i-1))))); \
+        FMA_ps (D0, _mm_loadl_pi (Z, (__m64 const*) (v+i-1)), \
+                    _mm_loadl_pi (Z, (__m64 const*) (g+i-1))); \
       i += 2; \
     } \
     if (i<=nv) \
-    { _mm_store_ss (g+i-1, _mm_add_ss (_mm_load_ss(g+i-1), \
-                             _mm_mul_ss (D0, _mm_load_ss(v+i-1)))); \
+    { _mm_store_ss (g+i-1, FMA_ss(D0, _mm_load_ss(v+i-1), _mm_load_ss(g+i-1)); \
     } \
   } \
   else \
   { __m128 TV, TV2; \
+    __m128 Z = _mm_setzero_ps(); \
     i = 0; \
     for (;;) \
     { for (;;) \
       { if (i==nv) goto done; \
         TV = _mm_set1_ps (*(v+i)); \
-        if (_mm_ucomineq_ss (TV, _mm_setzero_ps())) \
+        if (_mm_ucomineq_ss (TV, Z)) \
         { break; \
         } \
         i += 1; \
@@ -605,7 +615,7 @@ do \
       for (;;) \
       { if (i==nv) goto one_more; \
         TV2 = _mm_set1_ps (*(v+i)); \
-        if (_mm_ucomineq_ss (TV2, _mm_setzero_ps())) \
+        if (_mm_ucomineq_ss (TV2, Z)) \
         { break; \
         } \
         i += 1; \
@@ -614,30 +624,23 @@ do \
       j = 3; \
       while (j<nd) \
       { __m128 D = _mm_loadu_ps(d+j-3); \
-        _mm_storeu_ps (g+j-3, _mm_add_ps (_mm_loadu_ps(g+j-3), \
-                                          _mm_mul_ps (TV, D))); \
-        _mm_storeu_ps (g2+j-3, _mm_add_ps (_mm_loadu_ps(g2+j-3), \
-                                           _mm_mul_ps (TV2, D))); \
+        _mm_storeu_ps (g+j-3, FMA_ps (TV, D, _mm_loadu_ps(g+j-3))); \
+        _mm_storeu_ps (g2+j-3, FMA_ps (TV2, D, _mm_loadu_ps(g2+j-3))); \
         j += 4; \
       } \
       j -= 2; \
       if (j<nd) \
-      { __m128 Z = _mm_setzero_ps(); \
-        __m128 D = _mm_loadl_pi (Z, (__m64 const*) (d+j-1)); \
+      { __m128 D = _mm_loadl_pi (Z, (__m64 const*) (d+j-1)); \
         _mm_storel_pi ((__m64 *)(g+j-1), \
-           _mm_add_ps (_mm_loadl_pi (Z, (__m64 const*) (g+j-1)), \
-                       _mm_mul_ps (TV, D))); \
+           FMA_ps (TV, D, _mm_loadl_pi (Z, (__m64 const*) (g+j-1)))); \
         _mm_storel_pi ((__m64 *)(g2+j-1), \
-           _mm_add_ps (_mm_loadl_pi(Z, (__m64 const*) (g2+j-1)),\
-                       _mm_mul_ps (TV2, D))); \
+           FMA_ps (TV2, D, _mm_loadl_pi(Z, (__m64 const*) (g2+j-1)))); \
         j += 2; \
       } \
       if (j<=nd) \
       { __m128 D = _mm_load_ss(d+j-1); \
-        _mm_store_ss (g+j-1, _mm_add_ss (_mm_load_ss(g+j-1), \
-                                         _mm_mul_ss (TV, D))); \
-        _mm_store_ss (g2+j-1, _mm_add_ss (_mm_load_ss(g2+j-1), \
-                                          _mm_mul_ss (TV2, D))); \
+        _mm_store_ss (g+j-1, FMA_ss (TV, D, _mm_load_ss(g+j-1))); \
+        _mm_store_ss (g2+j-1, FMA_ss (TV2, D, _mm_load_ss(g2+j-1))); \
       } \
       i += 1; \
       g = g2+nd; \
@@ -647,153 +650,19 @@ do \
     j = 3; \
     while (j<nd) \
     { __m128 D = _mm_loadu_ps(d+j-3); \
-      _mm_storeu_ps (g+j-3, _mm_add_ps (_mm_loadu_ps(g+j-3), \
-                                        _mm_mul_ps (TV, D))); \
+      _mm_storeu_ps (g+j-3, FMA_ps (TV, D, _mm_loadu_ps(g+j-3))); \
       j += 4; \
     } \
     j -= 2; \
     if (j<nd) \
-    { __m128 Z = _mm_setzero_ps(); \
-      __m128 D = _mm_loadl_pi (Z, (__m64 const*) (d+j-1)); \
+    { __m128 D = _mm_loadl_pi (Z, (__m64 const*) (d+j-1)); \
       _mm_storel_pi ((__m64 *)(g+j-1), \
-         _mm_add_ps (_mm_loadl_pi (Z, (__m64 const*) (g+j-1)), \
-                     _mm_mul_ps (TV, D))); \
+         FMA_ps (TV, D, _mm_loadl_pi (Z, (__m64 const*) (g+j-1)))); \
       j += 2; \
     } \
     if (j<=nd) \
     { __m128 D = _mm_load_ss(d+j-1); \
-      _mm_store_ss (g+j-1, _mm_add_ss (_mm_load_ss(g+j-1), \
-                                       _mm_mul_ss (TV, D))); \
-    } \
-  done: ; \
-  } \
-} while (0)
-
-#elif FP32 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
-
-#define ADD_GRAD2_00 \
-do \
-{ int i, j; \
-  if (nd==1) \
-  { __m256 D0 = _mm256_set1_ps(*d); \
-    i = 7; \
-    while (i<nv) \
-    { _mm256_storeu_ps (g+i-7, \
-        _mm256_fmadd_ps (D0, _mm256_loadu_ps(v+i-7), _mm256_loadu_ps(g+i-7))); \
-      i += 8; \
-    } \
-    i -= 4; \
-    if (i<nv) \
-    { _mm_storeu_ps (g+i-3, \
-        _mm_fmadd_ps(cast128f(D0), _mm_loadu_ps(v+i-3), _mm_loadu_ps(g+i-3))); \
-      i += 4; \
-    } \
-    i -= 2; \
-    if (i<nv) \
-    { __m128 Z = _mm_setzero_ps(); \
-      _mm_storel_pi ((__m64 *)(g+i-1), \
-        _mm_fmadd_ps (cast128f(D0), _mm_loadl_pi (Z, (__m64 const*) (v+i-1)), \
-                      _mm_loadl_pi(Z, (__m64 const*) (g+i-1)))); \
-      i += 2; \
-    } \
-    if (i<=nv) \
-    { _mm_store_ss (g+i-1, _mm_add_ss (_mm_load_ss(g+i-1), \
-                             _mm_mul_ss (cast128f(D0), _mm_load_ss(v+i-1)))); \
-    } \
-  } \
-  else \
-  { __m256 TV, TV2; \
-    i = 0; \
-    for (;;) \
-    { for (;;) \
-      { if (i==nv) goto done; \
-        TV = _mm256_set1_ps (*(v+i)); \
-        if (_mm_ucomineq_ss (TV, _mm_setzero_ps())) \
-        { break; \
-        } \
-        i += 1; \
-        g += nd; \
-      } \
-      net_value *g2 = g+nd; \
-      i += 1; \
-      for (;;) \
-      { if (i==nv) goto one_more; \
-        TV2 = _mm256_set1_ps (*(v+i)); \
-        if (_mm_ucomineq_ss (TV2, _mm_setzero_ps())) \
-        { break; \
-        } \
-        i += 1; \
-        g2 += nd; \
-      } \
-      j = 7; \
-      while (j<nd) \
-      { __m256 D = _mm256_loadu_ps(d+j-7); \
-        _mm256_storeu_ps (g+j-7, 
-           _mm256_fmadd_ps (TV, D, _mm256_loadu_ps(g+j-7))); \
-        _mm256_storeu_ps (g2+j-7, 
-           _mm256_fmadd_ps (TV2, D, _mm256_loadu_ps(g2+j-7))); \
-        j += 8; \
-      } \
-      j -= 4; \
-      if (j<nd) \
-      { __m128 D = _mm_loadu_ps(d+j-3); \
-        _mm_storeu_ps (g+j-3, 
-           _mm_fmadd_ps (cast128f(TV), D, _mm_loadu_ps(g+j-3))); \
-        _mm_storeu_ps (g2+j-3, 
-           _mm_fmadd_ps (cast128f(TV2), D, _mm_loadu_ps(g2+j-3))); \
-        j += 4; \
-      } \
-      j -= 2; \
-      if (j<nd) \
-      { __m128 Z = _mm_setzero_ps(); \
-        __m128 D = _mm_loadl_pi (Z, (__m64 const*) (d+j-1)); \
-        _mm_storel_pi ((__m64 *)(g+j-1), \
-           _mm_fmadd_ps (cast128f(TV), D, 
-                         _mm_loadl_pi (Z, (__m64 const*) (g+j-1)))); \
-        _mm_storel_pi ((__m64 *)(g2+j-1), \
-           _mm_fmadd_ps (cast128f(TV2), D, 
-                       _mm_loadl_pi(Z, (__m64 const*) (g2+j-1)))); \
-        j += 2; \
-      } \
-      if (j<=nd) \
-      { __m128 D = _mm_load_ss(d+j-1); \
-        _mm_store_ss (g+j-1, _mm_fmadd_ss (cast128f(TV), D,
-                                           _mm_load_ss(g+j-1))); \
-        _mm_store_ss (g2+j-1, _mm_fmadd_ss (cast128f(TV2), D, 
-                                            _mm_load_ss(g2+j-1))); \
-      } \
-      i += 1; \
-      g = g2+nd; \
-    } \
-    goto done; \
-  one_more: \
-    j = 7; \
-    while (j<nd) \
-    { __m256 D = _mm256_loadu_ps(d+j-7); \
-      _mm_storeu_ps (g+j-7, _mm_fmadd_ps (cast128f(TV), D, 
-                                          _mm_loadu_ps(g+j-7)))); \
-      j += 8; \
-    } \
-    j -= 4; \
-    while (j<nd) \
-    { __m128 D = _mm_loadu_ps(d+j-3); \
-      _mm_storeu_ps (g+j-3, _mm_fmadd_ps (cast128f(TV), D, 
-                                          _mm_loadu_ps(g+j-3)))); \
-      j += 4; \
-    } \
-    j -= 2; \
-    if (j<nd) \
-    { __m128 Z = _mm_setzero_ps(); \
-      __m128 D = _mm_loadl_pi (Z, (__m64 const*) (d+j-1)); \
-      _mm_storel_pi ((__m64 *)(g+j-1), \
-         _mm_fmadd_ps (cast128f(TV), D, 
-                       _mm_loadl_pi (Z, (__m64 const*) (g+j-1)))); \
-      j += 2; \
-    } \
-    if (j<=nd) \
-    { __m128 D = _mm_load_ss(d+j-1); \
-      _mm_store_ss (g+j-1, _mm_fmadd_ss (cast128f(TV), D, 
-                                         _mm_load_ss(g+j-1)))); \
+      _mm_store_ss (g+j-1, FMA_ss (TV, D, _mm_load_ss(g+j-1))); \
     } \
   done: ; \
   } \
@@ -1012,75 +881,37 @@ HOSTDEV static void add_grad2_config
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w;
-#   if FP64 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
+#   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m256d SI = _mm256_set1_pd (s[cn[c].s] + off[cn[c].s]);
           j = cn[c].d;
-          _mm256_storeu_pd (g+k, _mm256_fmadd_pd (SI, _mm256_loadu_pd(d+j),
-                                                      _mm256_loadu_pd(g+k)));
+          _mm256_storeu_pd (g+k, FMA256_pd (SI, _mm256_loadu_pd(d+j),
+                                                _mm256_loadu_pd(g+k)));
         }
       }
       else
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m256d SI = _mm256_set1_pd (s[cn[c].s]);
           j = cn[c].d;
-          _mm256_storeu_pd (g+k, _mm256_fmadd_pd (SI, _mm256_loadu_pd(d+j),
-                                                      _mm256_loadu_pd(g+k)));
+          _mm256_storeu_pd (g+k, FMA256_pd (SI, _mm256_loadu_pd(d+j),
+                                                _mm256_loadu_pd(g+k)));
         }
       }
     }
-#   elif FP64 && USE_SIMD_INTRINSICS && __AVX__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m256d SI = _mm256_set1_pd (s[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm256_storeu_pd (g+k, _mm256_add_pd (_mm256_loadu_pd(g+k),
-                                   _mm256_mul_pd (SI, _mm256_loadu_pd(d+j))));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m256d SI = _mm256_set1_pd (s[cn[c].s]);
-          j = cn[c].d;
-          _mm256_storeu_pd (g+k, _mm256_add_pd (_mm256_loadu_pd(g+k),
-                                   _mm256_mul_pd (SI, _mm256_loadu_pd(d+j))));
-        }
-      }
-    }
-#   elif F32 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
+#   elif F32 && USE_SIMD_INTRINSICS && __AVX__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m128 SI = _mm_set1_ps (s[cn[c].s] + off[cn[c].s]);
           j = cn[c].d;
-          _mm_storeu_ps (g+k, _mm_fmadd_ps (SI, _mm_loadu_ps(d+j),
-                                            _mm_loadu_ps(g+k)));
+          _mm_storeu_ps (g+k, FMA_ps(SI, _mm_loadu_ps(d+j), _mm_loadu_ps(g+k)));
         }
       }
       else
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m128 SI = _mm_set1_ps (s[cn[c].s]);
           j = cn[c].d;
-          _mm_storeu_ps (g+k, _mm_fmadd_ps (SI, _mm_loadu_ps(d+j),
-                                            _mm_loadu_ps(g+k)));
-        }
-      }
-    }
-#   elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128 SI = _mm_set1_ps (s[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_ps (g+k, _mm_add_ps (_mm_loadu_ps(g+k),
-                                          _mm_mul_ps (SI, _mm_loadu_ps(d+j))));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128 SI = _mm_set1_ps (s[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_ps (g+k, _mm_add_ps (_mm_loadu_ps(g+k),
-                                          _mm_mul_ps (SI, _mm_loadu_ps(d+j))));
+          _mm_storeu_ps (g+k, FMA_ps(SI, _mm_loadu_ps(d+j), _mm_loadu_ps(g+k)));
         }
       }
     }

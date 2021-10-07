@@ -1045,7 +1045,7 @@ HOSTDEV static void add_connections_config
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w;
-#   if FP64 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
+#   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m256d VOI = _mm256_set1_pd (v[cn[c].s] + off[cn[c].s]);
@@ -1063,39 +1063,25 @@ HOSTDEV static void add_connections_config
         }
       }
     }
-#   elif FP64 && USE_SIMD_INTRINSICS && __AVX__
+#   elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m256d VOI = _mm256_set1_pd (v[cn[c].s] + off[cn[c].s]);
+        { __m128d VOI = _mm_set1_pd (v[cn[c].s] + off[cn[c].s]);
           j = cn[c].d;
-          _mm256_storeu_pd (s+j, _mm256_add_pd (_mm256_loadu_pd(s+j),
-                                   _mm256_mul_pd (VOI, _mm256_loadu_pd(w+k))));
+          _mm_storeu_pd (s+j, FMA_pd(VOI, _mm_loadu_pd(w+k), 
+                                          _mm_loadu_pd(s+j)));
+          _mm_storeu_pd (s+j+2, FMA_pd(VOI, _mm_loadu_pd(w+k+2), 
+                                            _mm_loadu_pd(s+j+2)));
         }
       }
       else
       { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m256d VOI = _mm256_set1_pd (v[cn[c].s]);
+        { __m128d VOI = _mm_set1_pd (v[cn[c].s]);
           j = cn[c].d;
-          _mm256_storeu_pd (s+j, _mm256_add_pd (_mm256_loadu_pd(s+j),
-                                   _mm256_mul_pd (VOI, _mm256_loadu_pd(w+k))));
-        }
-      }
-    }
-#   elif FP32 && USE_SIMD_INTRINSICS && __AVX2__ && USE_FMA && __FMA__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128 VOI = _mm_set1_ps (v[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_ps (s+j, FMA_ps (VOI, _mm_loadu_ps(w+k),
-                                                 _mm_loadu_ps(s+j)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128 VOI = _mm_set1_ps (v[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_ps (s+j, FMA_ps (VOI, _mm_loadu_ps(w+k),
-                                                 _mm_loadu_ps(s+j)));
+          _mm_storeu_pd (s+j, FMA_pd(VOI, _mm_loadu_pd(w+k), 
+                                          _mm_loadu_pd(s+j)));
+          _mm_storeu_pd (s+j+2, FMA_pd(VOI, _mm_loadu_pd(w+k+2),
+                                            _mm_loadu_pd(s+j+2)));
         }
       }
     }
@@ -1104,16 +1090,16 @@ HOSTDEV static void add_connections_config
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m128 VOI = _mm_set1_ps (v[cn[c].s] + off[cn[c].s]);
           j = cn[c].d;
-          _mm_storeu_ps (s+j, _mm_add_ps (_mm_loadu_ps(s+j),
-                              _mm_mul_ps (VOI, _mm_loadu_ps(w+k))));
+          _mm_storeu_ps (s+j, FMA_ps (VOI, _mm_loadu_ps(w+k),
+                                           _mm_loadu_ps(s+j)));
         }
       }
       else
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m128 VOI = _mm_set1_ps (v[cn[c].s]);
           j = cn[c].d;
-          _mm_storeu_ps (s+j, _mm_add_ps (_mm_loadu_ps(s+j),
-                              _mm_mul_ps (VOI, _mm_loadu_ps(w+k))));
+          _mm_storeu_ps (s+j, FMA_ps (VOI, _mm_loadu_ps(w+k),
+                                           _mm_loadu_ps(s+j)));
         }
       }
     }

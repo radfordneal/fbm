@@ -584,7 +584,7 @@ HOSTDEV static void sum_derivatives_config
         _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
       }
     }
-#   elif FP64 && USE_SIMD_INTRINSICS && __SSE4_2__
+#   elif FP64 && USE_SIMD_INTRINSICS && __SSE3__
     { for (c = 0; (k = cn[c].w) >= 0; c++)
       { i = cn[c].s; j = cn[c].d;
         __m128d S = _mm_add_pd (
@@ -593,7 +593,7 @@ HOSTDEV static void sum_derivatives_config
         _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
       }
     }
-#   elif FP32 && USE_SIMD_INTRINSICS && __SSE4_2__
+#   elif FP32 && USE_SIMD_INTRINSICS && __SSE3__
     { for (c = 0; (k = cn[c].w) >= 0; c++)
       { i = cn[c].s; j = cn[c].d;
         __m128 P = _mm_mul_ps (_mm_loadu_ps(dd+j), _mm_loadu_ps(w+k));

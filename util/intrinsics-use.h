@@ -27,7 +27,7 @@
 # define FMA_ps(a,b,c)    _mm_fmadd_ps(a,b,c)
 # define FMA_sd(a,b,c)    _mm_fmadd_sd(a,b,c)
 # define FMA_ss(a,b,c)    _mm_fmadd_ss(a,b,c)
-#elif USE_SIMD_INTRINSICS && USE_FMA && __AVX__
+#elif USE_SIMD_INTRINSICS && __AVX__
 # define FMA256_pd(a,b,c) _mm256_add_pd(_mm256_mul_pd(a,b),c)
 # define FMA256_ps(a,b,c) _mm256_add_ps(_mm256_mul_ps(a,b),c)
 # define FMA_pd(a,b,c)    _mm_add_pd(_mm_mul_pd(a,b),c)

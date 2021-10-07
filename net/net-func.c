@@ -667,7 +667,7 @@ do \
   } \
 } while (0)
 
-#elif FP64 && USE_SIMD_INTRINSICS && __SSE4_2__
+#elif FP64 && USE_SIMD_INTRINSICS && __SSE3__
 
 #define ADD_CONNECTIONS00 \
 do \
@@ -750,7 +750,7 @@ do \
 #define ADD_CONNECTIONS00 \
 do \
 { int i, j; \
-  if (nd==1) /* this part same as SSE4.2 code, could be improved */ \
+  if (nd==1) /* this part same as SSE3 code, could be improved */ \
   { __m128 Z = _mm_setzero_ps(); \
     __m128 SV = Z; \
     i = 7; \
@@ -871,7 +871,7 @@ do \
   } \
 } while (0)
 
-#elif FP32 && USE_SIMD_INTRINSICS && __SSE4_2__
+#elif FP32 && USE_SIMD_INTRINSICS && __SSE3__
 
 #define ADD_CONNECTIONS00 \
 do \

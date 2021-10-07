@@ -279,15 +279,15 @@ void mc_app_initialize
     { fprintf (stderr, "Precision: %s, SIMD features: %s\n",
                FP32 ? "FP32" : "FP64",
 #              if __AVX2__ && __FMA__
-                 "SSE2 SSE4.2 AVX AVX2 FMA");
+                 "SSE2 SSE3 SSE4.2 AVX AVX2 FMA");
 #              elif __AVX2__
-                 "SSE2 SSE4.2 AVX AVX2");
+                 "SSE2 SSE3 SSE4.2 AVX AVX2");
 #              elif __AVX__
-                 "SSE2 SSE4.2 AVX");
+                 "SSE2 SSE3 SSE4.2 AVX");
 #              elif __SSE4_2__
-                 "SSE2 SSE4.2");
-#              elif __SSE2__
-                 "SSE2");
+                 "SSE2 SSE3 SSE4.2");
+#              elif __SSE3__
+                 "SSE2 SSE3");
 #              elif __SSE2__
                  "SSE2");
 #              else

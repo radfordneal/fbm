@@ -183,11 +183,11 @@ HOSTDEV void net_func
           __m256 two = _mm256_set1_ps(2.0f);
           j = 7;
           while (j<N_hidden)
-          { __m256 x = _mm256_loadu_ps(sh+j-3);
+          { __m256 x = _mm256_loadu_ps(sh+j-7);
             x = _mm256_add_ps(x,x);
             x = sleef_expf8(x);
             x = _mm256_sub_ps(one, _mm256_div_ps (two, _mm256_add_ps (one, x)));
-            _mm256_storeu_ps (vh+j-3, x);
+            _mm256_storeu_ps (vh+j-7, x);
             j += 8;
           }
           j -= 4;

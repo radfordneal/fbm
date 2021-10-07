@@ -178,15 +178,25 @@ HOSTDEV void net_func
           { vh[j-1] = TANH (sh[j-1]);
           }
         }
-#       elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__  /* IMPROVE */
-        { __m128 one = _mm_set1_ps(1.0f);
-          __m128 two = _mm_set1_ps(2.0f);
-          j = 3;
+#       elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
+        { __m256 one = _mm256_set1_ps(1.0f);
+          __m256 two = _mm256_set1_ps(2.0f);
+          j = 7;
+          while (j<N_hidden)
+          { __m256 x = _mm256_loadu_ps(sh+j-3);
+            x = _mm256_add_ps(x,x);
+            x = sleef_expf8(x);
+            x = _mm256_sub_ps(one, _mm256_div_ps (two, _mm256_add_ps (one, x)));
+            _mm256_storeu_ps (vh+j-3, x);
+            j += 8;
+          }
+          j -= 4;
           while (j<N_hidden)
           { __m128 x = _mm_loadu_ps(sh+j-3);
             x = _mm_add_ps(x,x);
             x = sleef_expf4(x);
-            x = _mm_sub_ps(one, _mm_div_ps (two, _mm_add_ps (one, x)));
+            x = _mm_sub_ps (cast128f(one), 
+                    _mm_div_ps (caste128f(two), _mm_add_ps (cast128f(one), x)));
             _mm_storeu_ps (vh+j-3, x);
             j += 4;
           }
@@ -195,7 +205,8 @@ HOSTDEV void net_func
           { __m128 x = _mm_loadl_pi (_mm_setzero_ps(), (__m64 *)(sh+j-1));
             x = _mm_add_ps(x,x);
             x = sleef_expf4(x);
-            x = _mm_sub_ps (one, _mm_div_ps (two, _mm_add_ps (one, x)));
+            x = _mm_sub_ps (cast128f(one), 
+                    _mm_div_ps (caste128f(two), _mm_add_ps (cast128f(one), x)));
             _mm_storeu_ps (vh+j-1, x);
             j += 2;
           }

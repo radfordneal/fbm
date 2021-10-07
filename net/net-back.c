@@ -227,20 +227,8 @@ HOSTDEV void net_back
 #     if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
       { __m256d ONE = _mm256_set1_pd(1.0);
         __m256d ZERO = _mm256_setzero_pd();
-        i = 7;
+        i = 3;
         while (i<N_hidden)
-        { __m256d NVS = _mm256_sub_pd (ZERO, _mm256_loadu_pd(vs+i-7));
-          _mm256_storeu_pd (ds+i-7, 
-                            _mm256_div_pd (_mm256_loadu_pd(dh+i-7),
-                              _mm256_add_pd (ONE, sleef_expd4(NVS))));
-          NVS = _mm256_sub_pd (ZERO, _mm256_loadu_pd(vs+i-3));
-          _mm256_storeu_pd (ds+i-3, 
-                            _mm256_div_pd (_mm256_loadu_pd(dh+i-3),
-                              _mm256_add_pd (ONE, sleef_expd4(NVS))));
-          i += 8;
-        }
-        i -= 4;
-        if (i<N_hidden)
         { __m256d NVS = _mm256_sub_pd (ZERO, _mm256_loadu_pd(vs+i-3));
           _mm256_storeu_pd (ds+i-3, 
                             _mm256_div_pd (_mm256_loadu_pd(dh+i-3),
@@ -253,6 +241,21 @@ HOSTDEV void net_back
           _mm_storeu_pd (ds+i-1, 
                          _mm_div_pd (_mm_loadu_pd(dh+i-1),
                          _mm_add_pd (cast128d(ONE), sleef_expd2(NVS))));
+          i += 2;
+        }
+        if (i<=N_hidden)
+        { ds[i] = dh[i] / (1+prec_exp(-vs[i]));
+        }
+      }
+#     elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
+      { __m128d ONE = _mm_set1_pd(1.0);
+        __m128d ZERO = _mm_setzero_pd();
+        i = 1;
+        while (i<N_hidden)
+        { __m128d NVS = _mm_sub_pd (ZERO, _mm_loadu_pd(vs+i-1));
+          _mm_storeu_pd (ds+i-1, 
+                         _mm_div_pd (_mm_loadu_pd(dh+i-1),
+                         _mm_add_pd (ONE, sleef_expd2(NVS))));
           i += 2;
         }
         if (i<=N_hidden)

@@ -125,6 +125,32 @@ HOSTDEV void net_back
            _mm_sub_sd (cast128d(ONE), _mm_mul_sd(VH,VH))));
         }
       }
+#     elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
+      { __m128d ONE = _mm_set1_pd(1.0);
+        __m128d VH;
+        i = 3;
+        while (i<N_hidden)
+        { VH = _mm_loadu_pd(vh+i-3);
+          _mm_storeu_pd (ds+i-3, _mm_mul_pd(_mm_loadu_pd(dh+i-3),
+                                            _mm_sub_pd(ONE,_mm_mul_pd(VH,VH))));
+          VH = _mm_loadu_pd(vh+i-1);
+          _mm_storeu_pd (ds+i-1, _mm_mul_pd(_mm_loadu_pd(dh+i-1),
+                                            _mm_sub_pd(ONE,_mm_mul_pd(VH,VH))));
+          i += 4;
+        }
+        i -= 2;
+        if (i<N_hidden)
+        { VH = _mm_loadu_pd(vh+i-1);
+          _mm_storeu_pd (ds+i-1, _mm_mul_pd(_mm_loadu_pd(dh+i-1),
+                                            _mm_sub_pd(ONE,_mm_mul_pd(VH,VH))));
+          i += 2;
+        }
+        if (i<=N_hidden)
+        { VH = _mm_load_sd(vh+i-1);
+          _mm_store_sd (ds+i-1, _mm_mul_sd (_mm_load_sd(dh+i-1),
+                                            _mm_sub_sd(ONE,_mm_mul_sd(VH,VH))));
+        }
+      }
 #     elif FP32 && USE_SIMD_INTRINSICS && __AVX__
       { __m256 ONE = _mm256_set1_ps(1.0f);
         i = 7;
@@ -154,6 +180,31 @@ HOSTDEV void net_back
         { __m128 VH = _mm_load_ss(vh+i-1);
           _mm_store_ss (ds+i-1, _mm_mul_ss (_mm_load_ss(dh+i-1),
                _mm_sub_ss (cast128f(ONE), _mm_mul_ss(VH,VH))));
+        }
+      }
+#     elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
+      { __m128 ONE = _mm_set1_ps(1.0f);
+        __m128 VH;
+        i = 7;
+        while (i<N_hidden)
+        { VH = _mm_loadu_ps(vh+i-3);
+          _mm_storeu_ps (ds+i-3, _mm_mul_ps (_mm_loadu_ps(dh+i-3),
+                                 _mm_sub_ps (ONE, _mm_mul_ps(VH,VH))));
+          i += 4;
+        }
+        i -= 2;
+        if (i<N_hidden)
+        { __m128 Z = _mm_setzero_ps();
+          VH = _mm_loadl_pi(Z, (__m64 *)(vh+i-1));
+          _mm_storel_pi ((__m64 *)(ds+i-1), 
+                         _mm_mul_ps (_mm_loadl_pi(Z, (__m64 *)(dh+i-1)),
+                           _mm_sub_ps (ONE, _mm_mul_ps(VH,VH))));
+          i += 2;
+        }
+        if (i<=N_hidden)
+        { VH = _mm_load_ss(vh+i-1);
+          _mm_store_ss (ds+i-1, _mm_mul_ss (_mm_load_ss(dh+i-1),
+               _mm_sub_ss (ONE, _mm_mul_ss(VH,VH))));
         }
       }
 #     else

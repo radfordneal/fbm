@@ -999,7 +999,29 @@ HOSTDEV static void add_grad2_config
         }
       }
     }
-#   elif FP32 && USE_SIMD_INTRINSICS && __AVX__
+#   elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m128d SI = _mm_set1_pd (s[cn[c].s] + off[cn[c].s]);
+          j = cn[c].d;
+          _mm_storeu_pd (g+k, FMA_pd (SI, _mm_loadu_pd(d+j),
+                                          _mm_loadu_pd(g+k)));
+          _mm_storeu_pd (g+k+2, FMA_pd (SI, _mm_loadu_pd(d+j+2),
+                                            _mm_loadu_pd(g+k+2)));
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m128d SI = _mm_set1_pd (s[cn[c].s]);
+          j = cn[c].d;
+          _mm_storeu_pd (g+k, FMA_pd (SI, _mm_loadu_pd(d+j),
+                                          _mm_loadu_pd(g+k)));
+          _mm_storeu_pd (g+k+2, FMA_pd (SI, _mm_loadu_pd(d+j+2),
+                                            _mm_loadu_pd(g+k+2)));
+        }
+      }
+    }
+#   elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { __m128 SI = _mm_set1_ps (s[cn[c].s] + off[cn[c].s]);

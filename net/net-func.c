@@ -196,7 +196,7 @@ HOSTDEV void net_func
             x = _mm_add_ps(x,x);
             x = sleef_expf4(x);
             x = _mm_sub_ps (cast128f(one), 
-                    _mm_div_ps (caste128f(two), _mm_add_ps (cast128f(one), x)));
+                    _mm_div_ps (cast128f(two), _mm_add_ps (cast128f(one), x)));
             _mm_storeu_ps (vh+j-3, x);
             j += 4;
           }
@@ -206,7 +206,7 @@ HOSTDEV void net_func
             x = _mm_add_ps(x,x);
             x = sleef_expf4(x);
             x = _mm_sub_ps (cast128f(one), 
-                    _mm_div_ps (caste128f(two), _mm_add_ps (cast128f(one), x)));
+                    _mm_div_ps (cast128f(two), _mm_add_ps (cast128f(one), x)));
             _mm_storeu_ps (vh+j-1, x);
             j += 2;
           }

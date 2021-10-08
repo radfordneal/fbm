@@ -2042,7 +2042,7 @@ __global__ void many_cases
   int j = start + cases_per_thread * i;
   int o = use_pairs ? blockIdx.x*((const_blksize+1)>>1) + (threadIdx.x>>1) : i;
   int h;
-//printf("A\n");
+//printf("A blk %d, thrd %d, i %d, j %d, o %d\n",blockIdx.x,threadIdx.x,i,j,o);
   double *restrict threi;
   net_params *restrict thrgi;
   net_values *train_vals_h;
@@ -2051,11 +2051,11 @@ __global__ void many_cases
   if (j < const_N_train)
   { 
     threi = thread_energy==0 ? 0 
-     : threadIdx.x <= use_pairs ? const_block_energy + (blockIdx.x>>use_pairs)
+     : threadIdx.x <= use_pairs ? const_block_energy + blockIdx.x
      : /* else */ thread_energy + o;
 
     thrgi = thread_grad==0 ? 0
-     : threadIdx.x <= use_pairs ? const_block_grad + (blockIdx.x>>use_pairs)
+     : threadIdx.x <= use_pairs ? const_block_grad + blockIdx.x
      : /* else */ thread_grad + o;
   }
 //printf("B\n");
@@ -2074,7 +2074,7 @@ __global__ void many_cases
     net_model_prob (train_vals_h, const_train_targets+const_N_targets*h, 
                     &log_prob, deriv_h, &const_arch, &const_model, 
                     &const_surv, const_noise, Cheap_energy);
-
+//printf("log_prob %d: %f\n",h,log_prob);
     if (thrgi)
     { if (gr_weight!=1)
       { for (k = 0; k<const_arch.N_outputs; k++)
@@ -2145,6 +2145,7 @@ __global__ void many_cases
         net_model_prob (train_vals_h, const_train_targets+const_N_targets*h, 
                         &log_prob, deriv_h, &const_arch, &const_model, 
                         &const_surv, const_noise, Cheap_energy);
+//printf("log_prob %d: %f\n",h,log_prob);
 
         if (threi)
         { if (increment)
@@ -2179,7 +2180,7 @@ __global__ void many_cases
   /* Reduction of all threads to single gradient.  May be done using all 
      threads in the block (including ones not used above). */
 
-  { int blkgrads = (blockDim.x+1) >> use_pairs;
+  { int blkgrads = use_pairs ? (blockDim.x+1)>>1 : blockDim.x;
     int stride;
     for (stride = 1; stride < blkgrads; stride <<= 1)
     { __syncthreads();

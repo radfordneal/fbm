@@ -1861,9 +1861,58 @@ static void one_case  /* Energy and gradient from one training case */
 }
 
 
-/* SETUP FOR GPU COMPUTATIONS OF ENERGY AND/OR GRADIENT.  Sets up what is
-   needed according the the 'energy' and 'gr' arguments, if it has not
-   already been set up. */
+/* SETUP STRUCTURES FOR GPU COMPUTATIONS OF ENERGY AND/OR GRADIENT.
+
+   This function is called from mc_app_energy, which will have been
+   called for either the energy, or the gradient, or both.  Only the
+   setup needed for what has been requested (as indicated by the
+   'energy' and 'gr' arguments) is done, but further setup may be done
+   in a future call.  The setup is recorded in global variables, and
+   is not done again if done before.
+
+   Memory is allocated to hold the result of the energy/gradient
+   computation for each thread block in a kernel launch- as
+   block_energy in the CPU, and const_block_energy, in the GPU, and as
+   block_grad in the CPU, and const_block_grad in the GPU.  The
+   contents of const_block_energy are copied to block_energy after the
+   kernel finishes, and similarly for block_grad and const_block_grad.
+   The CPU then adds their contents to the final accumulators.  If
+   more than one kernel launch is done, the memory is re-used.
+
+   Memory is also allocated here in the GPU to store the energy and
+   gradient computed for individual training cases.  The GPU adds all
+   these to const_block_energy and/or const_block_grad after they are
+   computed, so this memory does not need to be accessed by the CPU.
+   GPU pointers to these areas (thread_energy and thread_grad) are
+   passed to the kernel as arguments (or these arguments are zero to
+   indicate that one of them is not needed for this particular call).
+
+   If use_pairs is 0, the energy/gradient for each training case
+   handled by a kernel lauch is stored separately, so the number of
+   structures allocated for these results is max_threads_per_launch
+   (with each thread handling one case).
+
+   If use_pairs is 1, network values for each case handled by a block
+   are computed by threads individually, but gradients are computed
+   for a pair of cases (except the last, if the number is odd), using
+   a pair of threads, so thread_grad has space for only about half the
+   cases in a block.  (Working on pairs should reduce GPU memory
+   traffic.)  Similarly, thread_energy stores the total energy for
+   pairs (with const_thread_energy2 being used to temporarily hold the
+   energies for odd-numbered cases before these are added to
+   thread_energy).
+   
+   As an optimization, results for the first training case (or for 
+   a pair of training cases) in a block are stored directly in
+   const_block_energy or const_block_grad, with results for other
+   cases/pairs then being added to that.  (Space for the first
+   training case in a block is nevertheless redundantly allocated,
+   which might actually be good for performance, by providing
+   separation between blocks, if "false sharing" is an issue.)
+
+   The memory allocated (except temporarily here) is never freed
+   (until program termination). 
+*/
 
 #if __CUDACC__
 
@@ -1872,7 +1921,7 @@ void cuda_setup
   mc_value *gr		/* Place to store gradient, null if not required */
 )
 {
-  n_thread_accum = 0 && use_pairs ? ((blksize+1)>>1) * max_blocks_per_launch 
+  n_thread_accum = use_pairs ? ((blksize+1)>>1) * max_blocks_per_launch 
                              : max_threads_per_launch;
 
   if (energy && thread_energy==0)

@@ -151,7 +151,10 @@ static net_arch dev_arch;	/* Copy of arch with GPU config pointers */
 
 static double *thread_energy;	/* Energies computed by concurrent threads,
                                    points to GPU memory */
-static net_params *thread_grad;	/* Gradients computed by concurrent threads,
+static double *thread_energy2;	/* Energy for odd threads, when use_pairs */
+static int n_thread_accum;	/* Number of gradient accumulators needed
+				   (only need about half as many if use_pairs)*/
+static net_params *thread_grad;	/* Gradient accumulators in concurrent threads,
                                    points to GPU memory */
 
 static double *block_energy;	/* Energies computed by thread blocks (CPU) */
@@ -170,6 +173,8 @@ __constant__ int const_N_train;    /* Copy of N_train in constant memory */
 __constant__ int const_N_inputs;   /* Copy of N_inputs in constant memory */
 __constant__ int const_N_targets;  /* Copy of N_targets in constant memory */
 
+__constant__ int const_blksize;    /* Copy of blksize in constant memory */
+
 __constant__ net_arch const_arch;  /* Copy of dev_arch in constant memory */
 __constant__ net_flags const_flgs; /* Copy of flgs in constant memory */
 __constant__ int const_has_flgs;   /* Are flags present in const_flgs? */
@@ -187,6 +192,7 @@ __constant__ net_values *const_deriv;  /* Copy of deriv ptr in constant memory*/
 __constant__ net_values *const_train_values; /* Const copy of train_values ptr*/
 __constant__ net_value *const_train_targets; /* Const copy of train_targets */
 
+__constant__ double *const_thread_energy2; /* Copy of thread_energy2 ptr */
 __constant__ double *const_block_energy;   /* Copy of dev_block_energy ptr */
 __constant__ net_params *const_block_grad; /* Copy of dev_block_grad ptr */
 
@@ -684,6 +690,9 @@ void mc_app_initialize
       cudaMemcpyToSymbol (const_N_targets, &N_targets, sizeof N_targets);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_N_targets");
+      cudaMemcpyToSymbol (const_blksize, &blksize, sizeof blksize);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_blksize");
       cudaMemcpyToSymbol (const_arch, &dev_arch, sizeof dev_arch);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_arch");
@@ -1863,10 +1872,22 @@ void cuda_setup
   mc_value *gr		/* Place to store gradient, null if not required */
 )
 {
+  n_thread_accum = 0 && use_pairs ? ((blksize+1)>>1) * max_blocks_per_launch 
+                             : max_threads_per_launch;
+
   if (energy && thread_energy==0)
   { check_cuda_error (cudaMalloc (&thread_energy,
-                        max_threads_per_launch * sizeof *thread_energy),
+                        n_thread_accum * sizeof *thread_energy),
                       "alloc thread_energy");
+    if (use_pairs)
+    { check_cuda_error (cudaMalloc (&thread_energy2,
+                          n_thread_accum * sizeof *thread_energy2),
+                        "alloc thread_energy2");
+      cudaMemcpyToSymbol
+        (const_thread_energy2, &thread_energy2, sizeof thread_energy2);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_thread_energy2");
+    }
     block_energy = (double *) 
       chk_alloc (max_blocks_per_launch, sizeof *block_energy);
     check_cuda_error (cudaMalloc (&dev_block_energy,
@@ -1887,21 +1908,20 @@ void cuda_setup
 
     /* Create thread_grad array on GPU. */
 
-    tmp_grad = (net_params *) 
-      chk_alloc (max_threads_per_launch, sizeof *tmp_grad);
+    tmp_grad = (net_params *) chk_alloc (n_thread_accum, sizeof *tmp_grad);
     tmp_grad->total_params = grad.total_params;
     check_cuda_error (cudaMalloc 
-       (&tmp_grad->param_block, max_threads_per_launch * grad_aligned_total
+       (&tmp_grad->param_block, n_thread_accum * grad_aligned_total
                                  * sizeof *tmp_grad->param_block),
      "alloc tmp_grad param block for thread_grad");
     net_setup_param_pointers (tmp_grad, arch, flgs);
-    net_replicate_param_pointers(tmp_grad, arch, max_threads_per_launch,
-                                 grad_aligned_total);
+    net_replicate_param_pointers (tmp_grad, arch, n_thread_accum,
+                                  grad_aligned_total);
     check_cuda_error (cudaMalloc (&thread_grad,
-                        max_threads_per_launch * sizeof *thread_grad),
+                        n_thread_accum * sizeof *thread_grad),
                       "alloc thread_grad");
     check_cuda_error (cudaMemcpy (thread_grad, tmp_grad,
-                        max_threads_per_launch * sizeof *thread_grad,
+                        n_thread_accum * sizeof *thread_grad,
                         cudaMemcpyHostToDevice),
                       "cudaMemcpy to thread_grad");
     free(tmp_grad);
@@ -1967,28 +1987,27 @@ __global__ void many_cases
   double gr_weight	/* Weight for this case for gradient */
 )
 { 
+  net_flags *flgs = const_has_flgs ? &const_flgs : 0;
   unsigned total_params = const_params.total_params;
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = start + cases_per_thread * i;
+  int o = use_pairs ? blockDim.x*((const_blksize+1)>>1) + (threadIdx.x>>1) : i;
   int h;
 
   double *restrict threi;
   net_params *restrict thrgi;
-  net_flags *flgs;
   net_values *train_vals_h;
   net_values *deriv_h;
 
-  if (j<const_N_train) 
+  if (j < const_N_train)
   { 
-    flgs = const_has_flgs ? &const_flgs : 0;
+    threi = thread_energy==0 ? 0 :
+            threadIdx.x==0   ? const_block_energy + blockIdx.x :
+            /* else */         thread_energy + o;
 
-    threi = thread_energy==0 ? 0 
-            : threadIdx.x==0 ? const_block_energy + blockIdx.x 
-                             : thread_energy + i;
-
-    thrgi = thread_grad==0 ? 0 
-          : threadIdx.x==0 ? const_block_grad + blockIdx.x 
-                           : thread_grad + i;
+    thrgi = thread_grad==0 ? 0 :
+            threadIdx.x==0 ? const_block_grad + blockIdx.x :
+            /* else */       thread_grad + o;
   }
 
   if (j<const_N_train && use_pairs)
@@ -2017,7 +2036,12 @@ __global__ void many_cases
     }
 
     if (threi)
-    { *threi = - en_weight * log_prob;
+    { if (threadIdx.x&1)
+      { *(const_thread_energy2+o) = - en_weight * log_prob;
+      }
+      else
+      { *threi = - en_weight * log_prob;
+      }
     }
   }
 
@@ -2029,7 +2053,7 @@ __global__ void many_cases
     {
       int th = threadIdx.x & 1;
         
-      if (th==0 && (h+1==const_N_train || threadIdx.x+1==blockDim.x))
+      if (th==0 && (h+1>=const_N_train || threadIdx.x+1>=blockDim.x))
       { if (thrgi)
         { net_grad (thrgi, &const_params, train_vals_h, deriv_h, &const_arch, 
                     flgs, 0);
@@ -2037,14 +2061,10 @@ __global__ void many_cases
       }
       else
       { if (threi && th==1)
-        { double *threb = threadIdx.x-th == 0 ? const_block_energy+blockIdx.x 
-                                              : threi-th;
-          *threb += *threi;
+        { *threi += *(const_thread_energy2+o);
         }
         if (thrgi)
-        { net_params *thrgb = threadIdx.x-th == 0 ? const_block_grad+blockIdx.x 
-                                                  : thrgi-th;
-          pair_grad (th, thrgb, &const_params, 
+        { pair_grad (th, thrgi, &const_params, 
                      train_vals_h - th, train_vals_h - th + 1,
                      deriv_h - th, deriv_h - th + 1,
                      &const_arch, flgs);
@@ -2102,15 +2122,16 @@ __global__ void many_cases
   /* Reduction of all threads to single gradient.  May be done using all 
      threads in the block (including ones not used above). */
 
-  { int stride;
-    for (stride = 1+use_pairs; stride < blockDim.x; stride <<= 1)
+  { int blkgrads = (blockDim.x+1) >> use_pairs;
+    int stride;
+    for (stride = 1; stride < blkgrads; stride <<= 1)
     { __syncthreads();
       int mask = 2*stride - 1;
       int base = threadIdx.x & ~mask;
       int offset = threadIdx.x - base;
       int w = i - offset + stride;
-      if (base + stride < blockDim.x 
-       && start + cases_per_thread*w < const_N_train)
+      if (base + stride < blkgrads
+       && start + (cases_per_thread<<use_pairs) * w < const_N_train)
       { 
         if (thread_grad)
         { net_param *restrict p = thread_grad[w].param_block;

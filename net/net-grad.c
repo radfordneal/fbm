@@ -1155,7 +1155,9 @@ HOSTDEV static void store_grad2_config
 }
 
 
-/* STORE GRADIENT FROM A PAIR OF CASES, USING A PAIR OF THREADS. */
+/* STORE SUM OF GRADIENT FROM A PAIR OF CASES, USING A PAIR OF THREADS.  
+   Typically, one thread handles even index, the other odd indexes.  
+   But sometimes only one thread is used. */
 
 #if __CUDACC__ 
 
@@ -1175,7 +1177,7 @@ __device__ static void pair_grad2_config
 
 __device__ void pair_grad
 ( int th,		/* Which thread (0 or 1) */
-  net_params *restrict g, /* Gradient with respect to parameters to add to */
+  net_params *restrict g, /* Gradient with respect to parameters to store to */
   net_params const*w,	/* Network parameters (only offsets used) */
   net_values const*v0,	/* Values for units in network for case 0 */
   net_values const*v1,	/* Values for units in network for case 1 */

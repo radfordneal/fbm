@@ -369,7 +369,7 @@ HOSTDEV void net_func
         j = 1;
         while (j<N_hidden)
         { __m128d a = _mm_loadu_pd(sh+j-1);
-          __m128d v = _mm_or_pd(a,mask);
+          __m128d v = _mm_or_pd(a,mask);  /* compute -fabs(a) */
           v = sleef_expd2(v);
           v = _mm_add_pd(one,v);
           v = sleef_logd2(v);

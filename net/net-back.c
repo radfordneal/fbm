@@ -158,7 +158,7 @@ HOSTDEV void net_back
         { __m256 VH = _mm256_loadu_ps(vh+i-7);
           _mm256_storeu_ps (ds+i-7, _mm256_mul_ps (_mm256_loadu_ps(dh+i-7),
                                       _mm256_sub_ps(ONE,_mm256_mul_ps(VH,VH))));
-          i += 4;
+          i += 8;
         }
         i -= 4;
         if (i<N_hidden)
@@ -185,7 +185,7 @@ HOSTDEV void net_back
 #     elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
       { __m128 ONE = _mm_set1_ps(1.0f);
         __m128 VH;
-        i = 7;
+        i = 3;
         while (i<N_hidden)
         { VH = _mm_loadu_ps(vh+i-3);
           _mm_storeu_ps (ds+i-3, _mm_mul_ps (_mm_loadu_ps(dh+i-3),

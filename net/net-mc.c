@@ -342,12 +342,12 @@ void mc_app_initialize
       if (show_info)
       { if (use_pairs)
         { printf (
-           "Specified 1 case per thread (paired), %d threads per block, %d blocks max\n",
+ "Specified 1 case per thread (paired), %d threads per block, %d blocks max\n",
            blksize, numblks);
         }
         else
         { printf (
-           "Specified %d cases per thread, %d threads per block, %d blocks max\n",
+ "Specified %d cases per thread, %d threads per block, %d blocks max\n",
            perthrd, blksize, numblks);
         }
       }
@@ -2040,9 +2040,9 @@ __global__ void many_cases
   unsigned total_params = const_params.total_params;
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int j = start + cases_per_thread * i;
-  int o = use_pairs ? blockDim.x*((const_blksize+1)>>1) + (threadIdx.x>>1) : i;
+  int o = use_pairs ? blockIdx.x*((const_blksize+1)>>1) + (threadIdx.x>>1) : i;
   int h;
-
+//printf("A\n");
   double *restrict threi;
   net_params *restrict thrgi;
   net_values *train_vals_h;
@@ -2050,14 +2050,15 @@ __global__ void many_cases
 
   if (j < const_N_train)
   { 
-    threi = thread_energy==0 ? 0 :
-            threadIdx.x==0   ? const_block_energy + blockIdx.x :
-            /* else */         thread_energy + o;
+    threi = thread_energy==0 ? 0 
+     : threadIdx.x <= use_pairs ? const_block_energy + (blockIdx.x>>use_pairs)
+     : /* else */ thread_energy + o;
 
-    thrgi = thread_grad==0 ? 0 :
-            threadIdx.x==0 ? const_block_grad + blockIdx.x :
-            /* else */       thread_grad + o;
+    thrgi = thread_grad==0 ? 0
+     : threadIdx.x <= use_pairs ? const_block_grad + (blockIdx.x>>use_pairs)
+     : /* else */ thread_grad + o;
   }
+//printf("B\n");
 
   if (j<const_N_train && use_pairs)
   {
@@ -2093,10 +2094,12 @@ __global__ void many_cases
       }
     }
   }
+//printf("C\n");
 
   if (use_pairs) 
   { 
     __syncthreads();
+//printf("C1\n");
 
     if (j<const_N_train)
     {
@@ -2109,15 +2112,19 @@ __global__ void many_cases
         }
       }
       else
-      { if (threi && th==1)
+      { 
+//printf("C2\n");
+        if (threi && th==1)
         { *threi += *(const_thread_energy2+o);
         }
+//printf("C3 i %d, j %d, o %d, th %d, thrgi%p\n",i,j,o,th,thrgi);
         if (thrgi)
         { pair_grad (th, thrgi, &const_params, 
                      train_vals_h - th, train_vals_h - th + 1,
                      deriv_h - th, deriv_h - th + 1,
                      &const_arch, flgs);
         }
+//printf("C4\n");
       }
     }
   }
@@ -2167,6 +2174,7 @@ __global__ void many_cases
       }
     }
   }
+//printf("D\n");
 
   /* Reduction of all threads to single gradient.  May be done using all 
      threads in the block (including ones not used above). */
@@ -2200,6 +2208,7 @@ __global__ void many_cases
       }
     }
   }
+//printf("E\n");
 }
 
 #endif

@@ -2042,7 +2042,7 @@ __global__ void many_cases
   int j = start + cases_per_thread * i;
   int o = use_pairs ? blockIdx.x*((const_blksize+1)>>1) + (threadIdx.x>>1) : i;
   int h;
-//printf("A blk %d, thrd %d, i %d, j %d, o %d\n",blockIdx.x,threadIdx.x,i,j,o);
+printf("A blk %d, thrd %d, i %d, j %d, o %d\n",blockIdx.x,threadIdx.x,i,j,o);
   double *restrict threi;
   net_params *restrict thrgi;
   net_values *train_vals_h;
@@ -2058,7 +2058,7 @@ __global__ void many_cases
      : threadIdx.x <= use_pairs ? const_block_grad + blockIdx.x
      : /* else */ thread_grad + o;
   }
-//printf("B\n");
+printf("B\n");
 
   if (j<const_N_train && use_pairs)
   {
@@ -2074,7 +2074,7 @@ __global__ void many_cases
     net_model_prob (train_vals_h, const_train_targets+const_N_targets*h, 
                     &log_prob, deriv_h, &const_arch, &const_model, 
                     &const_surv, const_noise, Cheap_energy);
-//printf("log_prob %d: %f\n",h,log_prob);
+printf("log_prob %d: %f\n",h,log_prob);
     if (thrgi)
     { if (gr_weight!=1)
       { for (k = 0; k<const_arch.N_outputs; k++)
@@ -2094,12 +2094,12 @@ __global__ void many_cases
       }
     }
   }
-//printf("C\n");
+printf("C\n");
 
   if (use_pairs) 
   { 
     __syncthreads();
-//printf("C1\n");
+printf("C1\n");
 
     if (j<const_N_train)
     {
@@ -2113,18 +2113,18 @@ __global__ void many_cases
       }
       else
       { 
-//printf("C2\n");
+printf("C2\n");
         if (threi && th==1)
         { *threi += *(const_thread_energy2+o);
         }
-//printf("C3 i %d, j %d, o %d, th %d, thrgi%p\n",i,j,o,th,thrgi);
+printf("C3 i %d, j %d, o %d, th %d, thrgi%p\n",i,j,o,th,thrgi);
         if (thrgi)
         { pair_grad (th, thrgi, &const_params, 
                      train_vals_h - th, train_vals_h - th + 1,
                      deriv_h - th, deriv_h - th + 1,
                      &const_arch, flgs);
         }
-//printf("C4\n");
+printf("C4\n");
       }
     }
   }
@@ -2145,7 +2145,7 @@ __global__ void many_cases
         net_model_prob (train_vals_h, const_train_targets+const_N_targets*h, 
                         &log_prob, deriv_h, &const_arch, &const_model, 
                         &const_surv, const_noise, Cheap_energy);
-//printf("log_prob %d: %f\n",h,log_prob);
+printf("log_prob %d: %f\n",h,log_prob);
 
         if (threi)
         { if (increment)
@@ -2175,19 +2175,73 @@ __global__ void many_cases
       }
     }
   }
-//printf("D\n");
 
   /* Reduction of all threads to single gradient.  May be done using all 
      threads in the block (including ones not used above). */
 
-  { int blkgrads = use_pairs ? (blockDim.x+1)>>1 : blockDim.x;
+  int n_results;	/* Number of energy/grad results in this block (unless 
+                           this goes past the number of training cases) */
+  int base;		/* Index in block of results to add to for this thread*/
+  int stride;		/* Stride from base to reach result to add to it */
+  int workers;          /* Number of threads that can work on adding to base */
+  int base_worker;	/* Lowest of the worker threads */
+  int this_worker;	/* Position of this thread in its worker group */
+
+  if (use_pairs)
+  { 
+    n_results = (blockDim.x+1) >> 1;
+    printf("D block %d, thread %d, n_results %d\n",
+            blockIdx.x,threadIdx.x,n_results);
+
+    for (stride = 1; stride < n_results; stride <<= 1)
+    { 
+      __syncthreads();
+
+      base = (threadIdx.x>>1) & ~(stride-1);
+      base_worker = 2*base;
+      this_worker = threadIdx.x - base_worker;
+      workers = 4*stride;
+      if (base_worker+workers >= blockDim.x) workers = blockDim.x - base_worker;
+
+      int w = blockIdx.x*((const_blksize+1)>>1) + base + stride;
+      printf(
+       "E blk %d, thd %d, stride %d, base %d, base_worker %d, this_worker %d\n",
+       blockIdx.x,threadIdx.x,stride,base,base_worker,this_worker);
+      printf(
+       "EE blk %d, thd %d, workers %d, w %d\n",
+       blockIdx.x,threadIdx.x,workers,w);
+
+      if (base+stride < n_results && start + 2*(base+stride) < const_N_train)
+      { 
+        if (thread_grad)
+        { net_param *restrict p = thread_grad[w].param_block;
+          net_param *restrict q = 
+              base==0 ? const_block_grad[blockIdx.x].param_block
+                      : thread_grad[w].param_block;
+          unsigned k;
+          for (k = this_worker; k < total_params; k += workers)
+          { q[k] += p[k];
+          }
+        }
+
+        if (threi && this_worker==base_worker)
+        { *threi += thread_energy[w];
+        }
+      }
+    }
+    printf("F blk %d, thrd %d\n",blockIdx.x,threadIdx.x);
+  }
+  else
+  { int blkgrads = blockDim.x;
     int stride;
+printf("D blk %d, thrd %d, blkgrads %d\n",blockIdx.x,threadIdx.x,blkgrads);
     for (stride = 1; stride < blkgrads; stride <<= 1)
     { __syncthreads();
       int mask = 2*stride - 1;
       int base = threadIdx.x & ~mask;
       int offset = threadIdx.x - base;
       int w = i - offset + stride;
+printf("E blk %d, thrd %d, stride %d, mask %d, base %d, offset %d, w %d\n",blockIdx.x,threadIdx.x,stride,mask,base,offset,w);
       if (base + stride < blkgrads
        && start + (cases_per_thread<<use_pairs) * w < const_N_train)
       { 
@@ -2208,8 +2262,8 @@ __global__ void many_cases
         }
       }
     }
+printf("F blk %d, thrd %d\n",blockIdx.x,threadIdx.x);
   }
-//printf("E\n");
 }
 
 #endif

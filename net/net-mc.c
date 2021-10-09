@@ -2180,7 +2180,10 @@ __global__ void many_cases
 
   if (use_pairs)
   { 
-    n_results = (blockDim.x+1) >> 1;
+    n_results = (const_N_train - start - blockIdx.x*blockDim.x + 1) >> 1;
+    if (n_results > (blockDim.x+1) >> 1)
+    { n_results = (blockDim.x+1) >> 1;
+    }
 
     for (stride = 1; stride < n_results; stride <<= 1)
     { 
@@ -2190,25 +2193,28 @@ __global__ void many_cases
       base_worker = 2*base;
       this_worker = threadIdx.x - base_worker;
       workers = 4*stride;
-      if (base_worker+workers >= blockDim.x) workers = blockDim.x - base_worker;
+      if (base_worker+workers >= blockDim.x)
+      { workers = blockDim.x - base_worker;
+      }
 
-      int w = blockIdx.x*((const_blksize+1)>>1) + base + stride;
-
-      if (base+stride < n_results && start + 2*(base+stride) < const_N_train)
+      if (base+stride < n_results)
       { 
+        int wb = blockIdx.x*const_blksize + base;
+        int ws = wb+stride;
+
         if (thread_grad)
-        { net_param *restrict p = thread_grad[w].param_block;
+        { net_param *restrict p = thread_grad[ws].param_block;
           net_param *restrict q = 
               base==0 ? const_block_grad[blockIdx.x].param_block
-                      : thread_grad[w].param_block;
+                      : thread_grad[wb].param_block;
           unsigned k;
           for (k = this_worker; k < total_params; k += workers)
           { q[k] += p[k];
           }
         }
 
-        if (threi && this_worker==base_worker)
-        { *threi += thread_energy[w];
+        if (threi && this_worker==0)
+        { *threi += thread_energy[ws];
         }
       }
     }

@@ -164,6 +164,86 @@ Largest absolute log ratio: 0.0000
  
 --- F
  
+Number of training cases: 4
+
+Network in file "log" with index 0
+
+Input to Output Weights [1]
+
+32.00 32.00:+10.00  +1.00
+
+      32.00: +3.00  -1.00
+
+Output Biases [2]
+
+     32.00: +2.00  +1.00
+
+Noise levels
+
+   1.00 -  1.00  1.00
+
+ 3.50000000e+01  2.80000000e+01  3.30000000e+01  2.80000000e+01 
+ 3.00000000e+00  1.00000000e+00 -5.00000000e+00  1.00000000e+00 
+ 5.87500000e+01  1.24908149e+02 
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.500000  Energy: 124.91
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0  +10.00   +5.0650e+00  +3.9399e+00   +1.8010e+01  +1.8010e+01     0.0000
+     1   +1.00   -6.9372e+00  -8.0623e+00   -2.9999e+01  -2.9999e+01     0.0000
+     2   +3.00   -1.6867e+00  -5.3118e+00   -1.3997e+01  -1.3997e+01     0.0000
+     3   -1.00   -9.6877e+00  -1.3313e+01   -4.6001e+01  -4.6001e+01     0.0000
+     4   +2.00   +1.8755e+00  +1.6255e+00   +7.0020e+00  +7.0020e+00     0.0000
+     5   +1.00   -3.8747e+00  -4.1248e+00   -1.5999e+01  -1.5999e+01     0.0000
+
+Largest absolute log ratio: 0.0000
+
+ 
+--- G
+ 
+Number of training cases: 5
+
+Network in file "log" with index 0
+
+Input to Output Weights [1]
+
+32.00 32.00:+10.00  +1.00
+
+      32.00: +3.00  -1.00
+
+Output Biases [2]
+
+     32.00: +2.00  +1.00
+
+Noise levels
+
+   1.00 -  1.00  1.00
+
+ 3.30000000e+01  3.50000000e+01  2.80000000e+01  3.30000000e+01  2.80000000e+01 
+-5.00000000e+00  3.00000000e+00  1.00000000e+00 -5.00000000e+00  1.00000000e+00 
+ 4.82000000e+01  1.29746026e+02 
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.500000  Energy: 129.75
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0  +10.00   +2.8462e+00  +1.6587e+00   +9.0098e+00  +9.0098e+00     0.0000
+     1   +1.00   -7.6560e+00  -8.8435e+00   -3.2999e+01  -3.2999e+01     0.0000
+     2   +3.00   -9.9055e+00  -1.6593e+01   -5.2997e+01  -5.2997e+01     0.0000
+     3   -1.00   -1.3406e+01  -2.0094e+01   -6.7001e+01  -6.7001e+01     0.0000
+     4   +2.00   +1.5677e-01  -1.5579e-01   +1.9531e-03  +1.9531e-03     0.0000
+     5   +1.00   -4.5935e+00  -4.9060e+00   -1.8999e+01  -1.8999e+01     0.0000
+
+Largest absolute log ratio: 0.0000
+
+ 
+--- H
+ 
 Number of training cases: 2
 
 Network in file "log" with index 0

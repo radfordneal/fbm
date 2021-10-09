@@ -163,7 +163,6 @@ HOSTDEV void net_grad
   }
   else  /* store gradient, rather than add to existing gradient */
   {
-//printf("store_grad, g %p, v: %f, d %f\n",g,*v->o,*d->o);
     if (a->has_ti) 
     { store_grad1 (g->ti, d->i, a->N_inputs);
     }
@@ -1188,7 +1187,6 @@ __device__ void pair_grad
   net_flags const*flgs 	/* Network flags, null if none */
 )
 { 
-//printf("pair_grad, th %d, g %p, v: %f %f, d %f %f\n",th,g,*v0->o,*v1->o,*d0->o,*d1->o);
   int l;
   if (a->has_ti) 
   { pair_grad1 (th, g->ti, d0->i, d1->i, a->N_inputs);

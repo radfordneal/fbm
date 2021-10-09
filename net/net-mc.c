@@ -2199,7 +2199,7 @@ __global__ void many_cases
 
       if (base+stride < n_results)
       { 
-        int wb = blockIdx.x*const_blksize + base;
+        int wb = blockIdx.x * ((const_blksize+1)>>1) + base;
         int ws = wb+stride;
 
         if (thread_grad)

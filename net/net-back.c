@@ -324,6 +324,18 @@ HOSTDEV void net_back
       }
 #     endif
     }
+    else if (flgs->layer_type[l]==Square_type)
+    { net_value const* vs = v->s[l];
+      for (i = 0; i<N_hidden; i++)
+      { ds[i] = 2*vs[i] * dh[i];
+      }
+    }
+    else if (flgs->layer_type[l]==Cube_type)
+    { net_value const* vs = v->s[l];
+      for (i = 0; i<N_hidden; i++)
+      { ds[i] = 3*vs[i]*vs[i] * dh[i];
+      }
+    }
     else if (flgs->layer_type[l]==Identity_type)
     { for (i = 0; i<N_hidden; i++)
       { ds[i] = dh[i];

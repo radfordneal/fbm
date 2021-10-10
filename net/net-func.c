@@ -430,6 +430,16 @@ HOSTDEV void net_func
       }
 #     endif
     }
+    else if (flgs->layer_type[l]==Square_type)
+    { for (j = 0; j<N_hidden; j++)
+      { vh[j] = sh[j]*sh[j];
+      }
+    }
+    else if (flgs->layer_type[l]==Cube_type)
+    { for (j = 0; j<N_hidden; j++)
+      { vh[j] = sh[j]*sh[j]*sh[j];
+      }
+    }
     else if (flgs->layer_type[l]==Identity_type)
     { for (j = 0; j<N_hidden; j++)
       { vh[j] = sh[j];

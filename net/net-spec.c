@@ -93,6 +93,8 @@ int main
       else if (flgs->layer_type[l]==Identity_type)   printf("  identity");
       else if (flgs->layer_type[l]==Sin_type)        printf("  sin");
       else if (flgs->layer_type[l]==Softplus_type)   printf("  softplus");
+      else if (flgs->layer_type[l]==Square_type)     printf("  square");
+      else if (flgs->layer_type[l]==Cube_type)       printf("  cube");
       else                                           printf("  UNKNOWN TYPE!");
       if (flgs && list_flags (flgs->omit, a->N_inputs, 1<<(l+1), ps) > 0)
       { printf("  omit%s",ps);
@@ -353,6 +355,14 @@ int main
       else if (strcmp(*ap,"softplus")==0)
       { if (type>=0) usage();
         type = Softplus_type;
+      }
+      else if (strcmp(*ap,"square")==0)
+      { if (type>=0) usage();
+        type = Square_type;
+      }
+      else if (strcmp(*ap,"cube")==0)
+      { if (type>=0) usage();
+        type = Cube_type;
       }
       else
       { usage();
@@ -695,7 +705,7 @@ static void usage(void)
   fprintf(stderr,
    "Flags: cfg-i:<file> cfg-h:<file> cfg-b:<file>\n");
   fprintf(stderr,
-   "       omit:[-]<input>{,<input>} tanh identity sin softplus\n");
+   "       omit:[-]<input>{,<input>} tanh identity sin softplus square cube\n");
 
   exit(1);
 }

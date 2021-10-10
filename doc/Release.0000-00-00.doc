@@ -22,10 +22,11 @@ Feature changes in the version:
    net-spec.doc and net-config.doc for details, as well as the
    tutorial example in Ex-image.doc.
 
-2) The 'softplus' activation function, h(u) = log(1+exp(u)), has been
-   implemented.  It may be specified as documented in net-spec.doc.
-   Note that the stepsize heuristics may not work as well for this 
-   activation function as for tanh.
+2) Hidden layers may now use the 'softplus' activation function, given
+   by h(u) = log(1+exp(u)), the 'square' activation function, given by
+   h(u) = x^2, or the 'cube' activation function, given by h(u) = x^3,
+   in addition to the previous options of tanh, sin, or identity.  The
+   activaton function may be specified as documented in net-spec.doc.
 
 3) The sample-hyper operation for neural network models can now take
    an argument in order to restrict the updates to the hyperparameters
@@ -66,8 +67,8 @@ Performance changes in this version:
 1) Forward / backward / gradient computations for neural networks have
    been sped up, by rewriting the portable code to encourage the
    compiler to use vector instructions, and by (optionally) using
-   specially-written code to exploit AVX instructions (with or without
-   FMA), when available.
+   specially-written code to exploit SIMD and FMA instructions, when
+   available (SSE2, SSE3, SSE4.2, AVX, and AVX2 are supported).
 
 2) Computations for neural networks have also been sped up by using
    the SLEEF library for vectorized mathematical functions (eg, tanh).

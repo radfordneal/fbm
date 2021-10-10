@@ -172,10 +172,12 @@ architecture.
 The following activation functions are supported:\vspace{-22pt}
 \begin{quotation}\noindent
 \begin{tabbing}
-{\bf tanh:}\ \ \ \ \ \ \ \= $a(u)\ =\ \tanh(u)$.\\[3pt]
-{\bf softplus:}\> $a(u)\ =\ \log(1+\exp(u))$.\\[3pt]
-{\bf sin:}\>  $a(u)\ =\ \sqrt{2}\,\sin(\sqrt{2}u)$.\\[4pt]
-{\bf identity:}\> $a(u)\ =\ u$.\vspace{-5pt}
+{\bf tanh:}\ \ \ \ \ \ \ \= $a(u)\ =\ \tanh(u)$\\[3pt]
+{\bf softplus:}\> $a(u)\ =\ \log(1+\exp(u))$\\[3pt]
+{\bf square:}\>  $a(u)\ =\ u^2$\\[4pt]
+{\bf cube:}\>  $a(u)\ =\ u^3$\\[4pt]
+{\bf sin:}\>  $a(u)\ =\ \sqrt{2}\,\sin(\sqrt{2}u)$\\[4pt]
+{\bf identity:}\> $a(u)\ =\ u$\vspace{-5pt}
 \end{tabbing}
 \end{quotation}
 
@@ -798,24 +800,28 @@ hidden unit, given its second derivative with respect to the unit's
 output.  Letting the hidden unit output be $v = a(u)$, we have\beq
   {d^2L \over du^2}
    \ = \ {d \over du} \left[ {dv \over du}\, {dL \over dv} \right] 
-   \ = \ a''(u) {dL \over dv} + a'(u) {d^2L \over dv^2}
-   \ \approx \ a'(u) {d^2L \over dv^2} 
-   \ \approx \ \max[a'(u)]\, {d^2L \over dv^2}\ \ \
+   \ = \ a''(u) {dL \over dv} + a'(u)^2 {d^2L \over dv^2}
+   \ \approx \ a'(u)^2 {d^2L \over dv^2} 
+   \ \approx \ \max[a'(u)^2]\, {d^2L \over dv^2}\ \ \
 \eeq%
 The first approximation assumes that since the first term may be either
 positive or negative, its effects will (optimistically) cancel when
 averaged over the training set.  Since $u$ is not known, the second
 approximation above takes the maximum with respect to $u$.  
-For the $\tanh$ activation function, $\max[a'(u)] = 1$, For
-$a(u)=\sqrt{2}\sin(\sqrt{2}u)$, we have $\max[a'(u)] = 2$.
+For the $\tanh$ and softplus activation functions, $\max[a'(u)^2] = 1$.
+For $a(u)=\sqrt{2}\sin(\sqrt{2}u)$, we have $\max[a'(u)^2] = 4$.  For
+the square and cube activation functions, there is no bound on $a'(u)^2$;
+so rather than take the maximum, the value for $a'(u)^2$ at a ``typical''
+value for $u$ is used, with typical values found as described below.
 
-The backward propagation also ignores any interactions between
-multiple connections from a unit.  Since the stepsizes chosen are not
-allowed to depend on the actual values of the network parameters, the
-magnitude of each weight is taken to be equal to the corresponding
-sigma hyperparameter, multiplied by the destination unit adjustment,
-if present.  This gives the following generic estimate, when layers
-are fully connected:\beq
+Note that the backward propagation ignores any interactions between
+multiple connections from a unit.
+
+Since the stepsizes chosen are not allowed to depend on the actual
+values of the network parameters, the magnitude of each weight is
+taken to be equal to the corresponding sigma hyperparameter,
+multiplied by the destination unit adjustment, if present.  This gives
+the following generic estimate, when layers are fully connected:\beq
   {\partial^2 L \over \partial (v^S_i)^2} & \approx &
      \sum_D\, \sum_j\, (\sigma^{S,D}_{w,i}\, \sigma^D_{a,j})^2\, 
      {\partial^2 L \over (u^D_j)^2}
@@ -863,11 +869,13 @@ bias) on that connection, as given by the controlling hyperparameter.
 it would be if the degrees of freedom were three.)
 
 For a layer of tanh hidden units, the typical squared value found in
-this way is reduced to one if it exceeds one, since one is the
-maximum squared value of tanh.  Similarly, the typical squared value
-for a unit with activation function $\sqrt{2}\,\sin(\sqrt{2}u)$ is capped
-at two.  Units with the softplus activation function are treated the same as 
-those with identity activation function.
+this way is reduced to one if it exceeds one, since one is the maximum
+squared value of tanh.  Similarly, the typical squared value for a
+unit with activation function $\sqrt{2}\,\sin(\sqrt{2}u)$ is capped at
+two.  Units with the softplus activation function are treated the same
+as those with identity activation function.  For units with the square
+or cube activation function, the typical squared value is the square
+or cube of the typical squared value of the input to the unit.
 
 Second derivatives with respect to biases are simply equal to the
 second derivatives with respect to the associated summed input to the

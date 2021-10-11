@@ -311,14 +311,19 @@ HOSTDEV void net_func (net_values *restrict, int, net_arch const*,
                        net_flags const*, net_params const*);
 HOSTDEV void net_back (net_values const*, net_values *restrict, int, 
                        net_arch const*, net_flags const*, net_params const*);
-HOSTDEV void net_grad (net_params *restrict, net_params const*, 
-                       net_values const*, net_values const*, net_arch const*, 
-                       net_flags const*, int);
 
-__device__ void pair_grad (int, net_params *restrict, net_params const*,
-                           net_values const*, net_values const*,
-                           net_values const*, net_values const*,
+HOSTDEV void net_add_grad (net_params *restrict, net_params const*, 
+                           net_values const*, net_values const*, 
                            net_arch const*, net_flags const*);
+
+__device__ void net_store_grad (net_params *restrict, net_params const*, 
+                                net_values const*, net_values const*, 
+                                net_arch const*, net_flags const*);
+
+__device__ void net_store2_grad (int, net_params *restrict, net_params const*,
+                                 net_values const*, net_values const*,
+                                 net_values const*, net_values const*,
+                                 net_arch const*, net_flags const*);
 
 HOSTDEV void net_model_prob (net_values const*, net_value const*, 
                              double *restrict,

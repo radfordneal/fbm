@@ -1438,10 +1438,8 @@ do \
       i += 4; \
     } \
     i -= 3; \
-    while (i<nv) \
-    { if (th) g[i] = v0[i] * d00 + v1[i] * d10; \
-      i += 1; \
-    } \
+    if (i+th+0<nd) g[i+th+0] = v0[i+th+0] * d00 + v1[i+th+0] * d10; \
+    if (i+th+2<nd) g[i+th+2] = v0[i+th+2] * d00 + v1[i+th+2] * d10; \
   } \
   else \
   { net_value tv0, tv1; \

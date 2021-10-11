@@ -1582,7 +1582,7 @@ __device__ static void net_store2_grad2_config
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
       { net_value soi0 = s0[cn[c].s] + off[cn[c].s];
-        net_value soi1 = s0[cn[c].s] + off[cn[c].s];
+        net_value soi1 = s1[cn[c].s] + off[cn[c].s];
         j = cn[c].d;
         g[k] += soi0 * d0[j] + soi1 * d1[j];
         j = cn[c+1].d; k = cn[c+1].w; 

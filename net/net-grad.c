@@ -1868,8 +1868,7 @@ do \
       if (tv0==0 && tv1==0 && tv2==0) \
       { continue; \
       } \
-      /* ------------------------- need to think about this part  ----------*/ \
-      if (tv1==0 && 0)  \
+      if (tv1==0 && tv2==0) \
       { j = 3; \
         while (j<nd) \
         { g[j-th-2] = tv0 * d0[j-th-2]; \
@@ -1882,7 +1881,7 @@ do \
           j += 1; \
         } \
       } \
-      else if (tv0==0 && 0)  \
+      else if (tv0==0 && tv2==0) \
       { j = 3; \
         while (j<nd) \
         { g[j-th-2] = tv1 * d1[j-th-2]; \
@@ -1892,6 +1891,19 @@ do \
         j -= 3; \
         while (j<nd) \
         { if (th) g[j] = tv1 * d1[j]; \
+          j += 1; \
+        } \
+      } \
+      else if (tv0==0 && tv1==0) \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv2 * d2[j-th-2]; \
+          g[j-th-0] = tv2 * d2[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        while (j<nd) \
+        { if (th) g[j] = tv2 * d2[j]; \
           j += 1; \
         } \
       } \
@@ -1941,7 +1953,7 @@ do \
       if (tv0==0 && tv1==0 && tv2==0) \
       { continue; \
       } \
-      if (tv1==0 && 0)  \
+      if (tv1==0 && tv2==0)  \
       { j = 3; \
         while (j<nd) \
         { g[j-th-2] = tv0 * d0[j-th-2]; \
@@ -1954,7 +1966,7 @@ do \
           j += 1; \
         } \
       } \
-      else if (tv0==0 && 0)  \
+      else if (tv0==0 && tv2==0)  \
       { j = 3; \
         while (j<nd) \
         { g[j-th-2] = tv1 * d1[j-th-2]; \
@@ -1964,6 +1976,19 @@ do \
         j -= 3; \
         while (j<nd) \
         { if (th) g[j] = tv1 * d1[j]; \
+          j += 1; \
+        } \
+      } \
+      else if (tv0==0 && tv1==0)  \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv2 * d2[j-th-2]; \
+          g[j-th-0] = tv2 * d2[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        while (j<nd) \
+        { if (th) g[j] = tv2 * d2[j]; \
           j += 1; \
         } \
       } \

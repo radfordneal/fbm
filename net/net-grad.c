@@ -1345,7 +1345,7 @@ __device__ static void net_store2_grad1_config
   { g[k] = 0;
   }
 
-  if (th) return;  /* remainder done by a single thread */
+  if (th!=0) return;  /* remainder done by a single thread */
 
   for (c = 0; (k = cn[c].w) >= 0; c++)
   { j = cn[c].d;
@@ -1361,7 +1361,7 @@ do \
   if (nd==1) \
   { net_value d00 = d0[0]; \
     net_value d10 = d1[0]; \
-    if (th) \
+    if (th==0) \
     { i = 3; \
       while (i<nv) \
       { o = (offset); if (!(omit)) *g++ = (v0[i-3]+o)*d00 +  (v1[i-3]+o)*d10; \
@@ -1560,7 +1560,7 @@ __device__ static void net_store2_grad2_config
     }
   }
 
-  if (th) return;  /* remainder done by a single thread */
+  if (th!=0) return;  /* remainder done by a single thread */
 
   if (CONFIG_SINGLE4)
   { 
@@ -1805,7 +1805,7 @@ __device__ static void net_store3_grad1_config
   { g[k] = 0;
   }
 
-  if (th) return;  /* remainder done by a single thread */
+  if (th!=0) return;  /* remainder done by a single thread */
 
   for (c = 0; (k = cn[c].w) >= 0; c++)
   { j = cn[c].d;
@@ -1822,7 +1822,7 @@ do \
   { net_value d00 = d0[0]; \
     net_value d10 = d1[0]; \
     net_value d20 = d2[0]; \
-    if (th) \
+    if (th==0) \
     { i = 3; \
       while (i<nv) \
       { o = (offset); \

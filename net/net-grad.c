@@ -1395,10 +1395,8 @@ do \
           j += 4; \
         } \
         j -= 3; \
-        while (j<nd) \
-        { if (th) g[j] = tv0 * d0[j]; \
-          j += 1; \
-        } \
+        if (j+th+0<nd) g[j+th+0] = tv0 * d0[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv0 * d0[j+th+2]; \
       } \
       else if (tv0==0)  \
       { j = 3; \
@@ -1408,10 +1406,8 @@ do \
           j += 4; \
         } \
         j -= 3; \
-        while (j<nd) \
-        { if (th) g[j] = tv1 * d1[j]; \
-          j += 1; \
-        } \
+        if (j+th+0<nd) g[j+th+0] = tv1 * d1[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv1 * d1[j+th+2]; \
       } \
       else \
       { j = 3; \
@@ -1421,10 +1417,8 @@ do \
           j += 4; \
         } \
         j -= 3; \
-        while (j<nd) \
-        { if (th) g[j] = tv0 * d0[j] + tv1 * d1[j]; \
-          j += 1; \
-        } \
+        if (j+th+0<nd) g[j+th+0] = tv0 * d0[j+th+0] + tv1 * d1[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv0 * d0[j+th+2] + tv1 * d1[j+th+2]; \
       } \
       g += nd; \
     } \
@@ -1465,10 +1459,8 @@ do \
           j += 4; \
         } \
         j -= 3; \
-        while (j<nd) \
-        { if (th) g[j] = tv0 * d0[j]; \
-          j += 1; \
-        } \
+        if (j+th+0<nd) g[j+th+0] = tv0 * d0[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv0 * d0[j+th+2]; \
       } \
       else if (tv0==0)  \
       { j = 3; \
@@ -1478,10 +1470,8 @@ do \
           j += 4; \
         } \
         j -= 3; \
-        while (j<nd) \
-        { if (th) g[j] = tv1 * d1[j]; \
-          j += 1; \
-        } \
+        if (j+th+0<nd) g[j+th+0] = tv1 * d1[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv1 * d1[j+th+2]; \
       } \
       else \
       { j = 3; \
@@ -1491,10 +1481,8 @@ do \
           j += 4; \
         } \
         j -= 3; \
-        while (j<nd) \
-        { if (th) g[j] = tv0 * d0[j] + tv1 * d1[j]; \
-          j += 1; \
-        } \
+        if (j+th+0<nd) g[j+th+0] = tv0 * d0[j+th+0] + tv1 * d1[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv0 * d0[j+th+2] + tv1 * d1[j+th+2]; \
       } \
       g += nd; \
     } \

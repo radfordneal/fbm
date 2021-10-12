@@ -2067,7 +2067,7 @@ __device__ static void net_store3_grad2_config
     { for (c = 0; (k = cn[c].w) >= 0; c++)
       { net_value si0 = s0[cn[c].s];
         net_value si1 = s1[cn[c].s];
-        net_value si2 = s1[cn[c].s];
+        net_value si2 = s2[cn[c].s];
         j = cn[c].d;
         g[k+th+0] += si0 * d0[j+th+0] + si1 * d1[j+th+0] + si2 * d2[j+th+0];
         g[k+th+2] += si0 * d0[j+th+2] + si1 * d1[j+th+2] + si2 * d2[j+th+2];

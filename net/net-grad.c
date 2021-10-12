@@ -1542,8 +1542,9 @@ __device__ static void net_store2_grad2_config
   { cn = cf->quad_s_4d_4w;
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { net_value soi0 = s0[cn[c].s] + off[cn[c].s];
-        net_value soi1 = s1[cn[c].s] + off[cn[c].s];
+      { net_param o = off[cn[c].s];
+        net_value soi0 = s0[cn[c].s] + o;
+        net_value soi1 = s1[cn[c].s] + o;
         j = cn[c].d;
         g[k+th+0] += soi0 * d0[j+th+0] + soi1 * d1[j+th+0];
         g[k+th+2] += soi0 * d0[j+th+2] + soi1 * d1[j+th+2];
@@ -1567,8 +1568,9 @@ __device__ static void net_store2_grad2_config
     cn = cf->single4_s;
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_value soi0 = s0[cn[c].s] + off[cn[c].s];
-        net_value soi1 = s1[cn[c].s] + off[cn[c].s];
+      { net_param o = off[cn[c].s];
+        net_value soi0 = s0[cn[c].s] + o;
+        net_value soi1 = s1[cn[c].s] + o;
         j = cn[c].d;
         g[k] += soi0 * d0[j] + soi1 * d1[j];
         j = cn[c+1].d; k = cn[c+1].w; 
@@ -1599,14 +1601,15 @@ __device__ static void net_store2_grad2_config
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
       { net_value dj0 = d0[cn[c].d];
         net_value dj1 = d1[cn[c].d];
-        i = cn[c].s;
-        g[k] += (s0[i]+off[i]) *dj0 + (s1[i]+off[i]) * dj1;
-        i = cn[c+1].s; k = cn[c+1].w; 
-        g[k] += (s0[i]+off[i]) *dj0 + (s1[i]+off[i]) * dj1;
-        i = cn[c+2].s; k = cn[c+2].w; 
-        g[k] += (s0[i]+off[i]) *dj0 + (s1[i]+off[i]) * dj1;
-        i = cn[c+3].s; k = cn[c+3].w; 
-        g[k] += (s0[i]+off[i]) *dj0 + (s1[i]+off[i]) * dj1;
+        net_param o;
+        i = cn[c].s; o = off[i];
+        g[k] += (s0[i]+o) *dj0 + (s1[i]+o) * dj1;
+        i = cn[c+1].s; k = cn[c+1].w; o = off[i];
+        g[k] += (s0[i]+o) *dj0 + (s1[i]+o) * dj1;
+        i = cn[c+2].s; k = cn[c+2].w; o = off[i];
+        g[k] += (s0[i]+o) *dj0 + (s1[i]+o) * dj1;
+        i = cn[c+3].s; k = cn[c+3].w; o = off[i];
+        g[k] += (s0[i]+o) *dj0 + (s1[i]+o) * dj1;
       }
     }
     else
@@ -1629,7 +1632,8 @@ __device__ static void net_store2_grad2_config
   if (off)
   { for (c = 0; (k = cn[c].w) >= 0; c++)
     { i = cn[c].s; j = cn[c].d;
-      g[k] += (s0[i]+off[i]) * d0[j] + (s1[i]+off[i]) * d1[j];
+      net_param o = off[i];
+      g[k] += (s0[i]+o) * d0[j] + (s1[i]+o) * d1[j];
     }
   }
   else
@@ -1862,10 +1866,8 @@ do \
           j += 4; \
         } \
         j -= 3; \
-        while (j<nd) \
-        { if (th) g[j] = tv0 * d0[j]; \
-          j += 1; \
-        } \
+        if (j+th+0<nd) g[j+th+0] = tv0 * d0[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv0 * d0[j+th+2]; \
       } \
       else if (tv0==0 && tv2==0) \
       { j = 3; \
@@ -1875,10 +1877,8 @@ do \
           j += 4; \
         } \
         j -= 3; \
-        while (j<nd) \
-        { if (th) g[j] = tv1 * d1[j]; \
-          j += 1; \
-        } \
+        if (j+th+0<nd) g[j+th+0] = tv1 * d1[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv1 * d1[j+th+2]; \
       } \
       else if (tv0==0 && tv1==0) \
       { j = 3; \
@@ -1888,10 +1888,8 @@ do \
           j += 4; \
         } \
         j -= 3; \
-        while (j<nd) \
-        { if (th) g[j] = tv2 * d2[j]; \
-          j += 1; \
-        } \
+        if (j+th+0<nd) g[j+th+0] = tv2 * d2[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv2 * d2[j+th+2]; \
       } \
       else \
       { j = 3; \
@@ -1901,9 +1899,11 @@ do \
           j += 4; \
         } \
         j -= 3; \
-        while (j<nd) \
-        { if (th) g[j] = tv0 * d0[j] + tv1 * d1[j] + tv2 * d2[j]; \
-          j += 1; \
+        if (j+th+0<nd) \
+        { g[j+th+0] = tv0*d0[j+th+0] + tv1*d1[j+th+0] + tv2*d2[j+th+0]; \
+        } \
+        if (j+th+2<nd) \
+        { g[j+th+2] = tv0*d0[j+th+2] + tv1*d1[j+th+2] + tv2*d2[j+th+2]; \
         } \
       } \
       g += nd; \
@@ -1925,9 +1925,11 @@ do \
       i += 4; \
     } \
     i -= 3; \
-    while (i<nv) \
-    { if (th) g[i] = v0[i] * d00 + v1[i] * d10 + v2[i] * d20; \
-      i += 1; \
+    if (i+th+0<nd) \
+    { g[i+th+0] = v0[i+th+0] * d00 + v1[i+th+0] * d10 + v2[i+th+0] * d20; \
+    } \
+    if (i+th+2<nd) \
+    { g[i+th+2] = v0[i+th+2] * d00 + v1[i+th+2] * d10 + v2[i+th+2] * d20; \
     } \
   } \
   else \
@@ -1947,10 +1949,8 @@ do \
           j += 4; \
         } \
         j -= 3; \
-        while (j<nd) \
-        { if (th) g[j] = tv0 * d0[j]; \
-          j += 1; \
-        } \
+        if (j+th+0<nd) g[j+th+0] = tv0 * d0[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv0 * d0[j+th+2]; \
       } \
       else if (tv0==0 && tv2==0)  \
       { j = 3; \
@@ -1960,10 +1960,8 @@ do \
           j += 4; \
         } \
         j -= 3; \
-        while (j<nd) \
-        { if (th) g[j] = tv1 * d1[j]; \
-          j += 1; \
-        } \
+        if (j+th+0<nd) g[j+th+0] = tv1 * d1[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv1 * d1[j+th+2]; \
       } \
       else if (tv0==0 && tv1==0)  \
       { j = 3; \
@@ -1973,10 +1971,8 @@ do \
           j += 4; \
         } \
         j -= 3; \
-        while (j<nd) \
-        { if (th) g[j] = tv2 * d2[j]; \
-          j += 1; \
-        } \
+        if (j+th+0<nd) g[j+th+0] = tv2 * d2[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv2 * d2[j+th+2]; \
       } \
       else \
       { j = 3; \
@@ -1986,9 +1982,11 @@ do \
           j += 4; \
         } \
         j -= 3; \
-        while (j<nd) \
-        { if (th) g[j] = tv0 * d0[j] + tv1 * d1[j] + tv2 * d2[j]; \
-          j += 1; \
+        if (j+th+0<nd) \
+        { g[j+th+0] = tv0*d0[j+th+0] + tv1*d1[j+th+0] + tv2*d2[j+th+0]; \
+        } \
+        if (j+th+2<nd) \
+        { g[j+th+2] = tv0*d0[j+th+2] + tv1*d1[j+th+2] + tv2*d2[j+th+2]; \
         } \
       } \
       g += nd; \
@@ -2056,9 +2054,10 @@ __device__ static void net_store3_grad2_config
   { cn = cf->quad_s_4d_4w;
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { net_value soi0 = s0[cn[c].s] + off[cn[c].s];
-        net_value soi1 = s1[cn[c].s] + off[cn[c].s];
-        net_value soi2 = s2[cn[c].s] + off[cn[c].s];
+      { net_param o = off[cn[c].s];
+        net_value soi0 = s0[cn[c].s] + o;
+        net_value soi1 = s1[cn[c].s] + o;
+        net_value soi2 = s2[cn[c].s] + o;
         j = cn[c].d;
         g[k+th+0] += soi0 * d0[j+th+0] + soi1 * d1[j+th+0] + soi2 * d2[j+th+0];
         g[k+th+2] += soi0 * d0[j+th+2] + soi1 * d1[j+th+2] + soi2 * d2[j+th+2];
@@ -2076,16 +2075,17 @@ __device__ static void net_store3_grad2_config
     }
   }
 
-  if (th) return;  /* remainder done by a single thread */
+  if (th!=0) return;  /* remainder done by a single thread */
 
   if (CONFIG_SINGLE4)
   { 
     cn = cf->single4_s;
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_value soi0 = s0[cn[c].s] + off[cn[c].s];
-        net_value soi1 = s1[cn[c].s] + off[cn[c].s];
-        net_value soi2 = s2[cn[c].s] + off[cn[c].s];
+      { net_param o = off[cn[c].s];
+        net_value soi0 = s0[cn[c].s] + o;
+        net_value soi1 = s1[cn[c].s] + o;
+        net_value soi2 = s2[cn[c].s] + o;
         j = cn[c].d;
         g[k] += soi0 * d0[j] + soi1 * d1[j] + soi2 * d2[j];
         j = cn[c+1].d; k = cn[c+1].w; 
@@ -2118,14 +2118,15 @@ __device__ static void net_store3_grad2_config
       { net_value dj0 = d0[cn[c].d];
         net_value dj1 = d1[cn[c].d];
         net_value dj2 = d2[cn[c].d];
-        i = cn[c].s;
-        g[k] += (s0[i]+off[i])*dj0 + (s1[i]+off[i])*dj1 + (s2[i]+off[i])*dj2;
-        i = cn[c+1].s; k = cn[c+1].w; 
-        g[k] += (s0[i]+off[i])*dj0 + (s1[i]+off[i])*dj1 + (s2[i]+off[i])*dj2;
-        i = cn[c+2].s; k = cn[c+2].w; 
-        g[k] += (s0[i]+off[i])*dj0 + (s1[i]+off[i])*dj1 + (s2[i]+off[i])*dj2;
-        i = cn[c+3].s; k = cn[c+3].w; 
-        g[k] += (s0[i]+off[i])*dj0 + (s1[i]+off[i])*dj1 + (s2[i]+off[i])*dj2;
+        net_param o;
+        i = cn[c].s; o = off[i];
+        g[k] += (s0[i]+o)*dj0 + (s1[i]+o)*dj1 + (s2[i]+o)*dj2;
+        i = cn[c+1].s; k = cn[c+1].w; o = off[i];
+        g[k] += (s0[i]+o)*dj0 + (s1[i]+o)*dj1 + (s2[i]+o)*dj2;
+        i = cn[c+2].s; k = cn[c+2].w; o = off[i];
+        g[k] += (s0[i]+o)*dj0 + (s1[i]+o)*dj1 + (s2[i]+o)*dj2;
+        i = cn[c+3].s; k = cn[c+3].w; o = off[i];
+        g[k] += (s0[i]+o)*dj0 + (s1[i]+o)*dj1 + (s2[i]+o)*dj2;
       }
     }
     else
@@ -2149,7 +2150,8 @@ __device__ static void net_store3_grad2_config
   if (off)
   { for (c = 0; (k = cn[c].w) >= 0; c++)
     { i = cn[c].s; j = cn[c].d;
-      g[k] += (s0[i]+off[i])*d0[j]+(s1[i]+off[i])*d1[j]+(s2[i]+off[i])*d2[j];
+      net_param o = off[i];
+      g[k] += (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j] + (s2[i]+o)*d2[j];
     }
   }
   else

@@ -5,7 +5,7 @@
 
 echo " "; echo "--- A"; echo " "
 
-net-spec log 1 1 / io=32
+net-spec log 1 1 / io=2
 data-spec log 1 1 / "%echo 3 37" .
 model-spec log real 1
 echo 10 | net-gen log fix -
@@ -15,7 +15,7 @@ net-grad-test log 0 0.5
 
 echo " "; echo "--- B"; echo " "
 
-net-spec log 1 1 / io=32 bo=32
+net-spec log 1 1 / io=2 bo=2
 data-spec log 1 1 / "%echo 3 37" .
 model-spec log real 1
 echo 10 2 | net-gen log fix -
@@ -25,7 +25,7 @@ net-grad-test log 0 0.5
 
 echo " "; echo "--- C"; echo " "
 
-net-spec log 1 1 / io=32 bo=32
+net-spec log 1 1 / io=2 bo=2
 (echo 3 37; echo 2 26) >data
 data-spec log 1 1 / data .
 model-spec log real 1
@@ -36,7 +36,7 @@ net-grad-test log 0 0.5
 
 echo " "; echo "--- D"; echo " "
 
-net-spec log 1 1 / io=32 bo=32
+net-spec log 1 1 / io=2 bo=2
 (echo 3 37; echo 2 26; echo 1 9) >data
 data-spec log 1 1 / data .
 model-spec log real 1
@@ -47,7 +47,7 @@ net-grad-test log 0 0.5
 
 echo " "; echo "--- E"; echo " "
 
-net-spec log 2 2 / io=32 bo=32
+net-spec log 2 2 / io=2 bo=2
 (echo 3 1 37 4; echo 2 2 21 7; echo 1 7 39 -2) >data
 data-spec log 2 2 / data .
 model-spec log real 1
@@ -60,7 +60,7 @@ net-grad-test log 0 0.5
 
 echo " "; echo "--- F"; echo " "
 
-net-spec log 2 2 / io=32 bo=32
+net-spec log 2 2 / io=2 bo=2
 (echo 3 1 37 4; echo 2 2 21 7; echo 1 7 39 -2; echo 2 2 20 7) >data
 data-spec log 2 2 / data .
 model-spec log real 1
@@ -73,7 +73,7 @@ net-grad-test log 0 0.5
 
 echo " "; echo "--- G"; echo " "
 
-net-spec log 2 2 / io=32 bo=32
+net-spec log 2 2 / io=2 bo=2
 (echo 1 7 38 -2; echo 3 1 37 4; echo 2 2 21 7; echo 1 7 39 -2; echo 2 2 22 7) \
  >data
 data-spec log 2 2 / data .
@@ -88,7 +88,7 @@ net-grad-test log 0 0.5
 echo " "; echo "--- H"; echo " "
 
 net-spec log 10 11 identity 9 identity 2 \
-          / bh0=16 bh1=16 bo=16 ih0=16 ih1=16 io=16 hh=16 h1o=16 h0o=16 
+          / bh0=4 bh1=4 bo=4 ih0=4 ih1=4 io=4 hh=4 h1o=4 h0o=4 
 (echo 6 -1 2 -3 5 5 6 -6 -4 -7 -6192 56920; 
  echo -10 11 -12 15 14 -15 -16 13 18 -9 1087 40300) >data
 data-spec log 10 2 / data .
@@ -170,7 +170,7 @@ net-grad-test log 0 0.125
 
 echo " "; echo "--- I"; echo " "
 
-net-spec log 2 2 square 1 / ih=32 bh=16 ho=8
+net-spec log 2 2 square 1 / ih=2 bh=4 ho=8
 (echo 1 7 3040; echo 3 1 1200; echo 2 2 1030; echo 1 7 3040; echo 2 2 1028) \
  >data
 data-spec log 2 1 / data .
@@ -183,12 +183,25 @@ net-grad-test log 0 0.03125
 
 echo " "; echo "--- J"; echo " "
 
-net-spec log 2 2 cube 1 / ih=32 bh=16 ho=8
+net-spec log 2 2 cube 1 / ih=2 bh=4 ho=8
 (echo 1 3 -3.5; echo 3 1 7.25; echo 2 2 -1.5; echo 1 4 -32; echo 2 2 -1) \
  >data
 data-spec log 2 1 / data .
 model-spec log real 1
 echo -2 1 0.5 -1 1.5 1 2 5 | net-gen log fix -
+net-display log 0
+net-tbl o0@ log 0
+net-tbl bE log 0
+net-grad-test log 0 0.0625
+
+echo " "; echo "--- J"; echo " "
+
+net-spec log 2 2 identity 1 / ih=2 bh=1 ho=4 bo=1
+(echo 1 3 -3.5; echo 3 1 7.25; echo 2 2 -1.5; echo 1 4 -32; echo 2 2 -1) \
+ >data
+data-spec log 2 1 / data .
+model-spec log real 1
+echo -2 1 0.5 -1 1.5 1 2 5 -1 | net-gen log fix -
 net-display log 0
 net-tbl o0@ log 0
 net-tbl bE log 0

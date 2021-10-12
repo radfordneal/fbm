@@ -1438,8 +1438,8 @@ do \
       i += 4; \
     } \
     i -= 3; \
-    if (i+th+0<nd) g[i+th+0] = v0[i+th+0] * d00 + v1[i+th+0] * d10; \
-    if (i+th+2<nd) g[i+th+2] = v0[i+th+2] * d00 + v1[i+th+2] * d10; \
+    if (i+th+0<nv) g[i+th+0] = v0[i+th+0] * d00 + v1[i+th+0] * d10; \
+    if (i+th+2<nv) g[i+th+2] = v0[i+th+2] * d00 + v1[i+th+2] * d10; \
   } \
   else \
   { net_value tv0, tv1; \
@@ -1925,10 +1925,10 @@ do \
       i += 4; \
     } \
     i -= 3; \
-    if (i+th+0<nd) \
+    if (i+th+0<nv) \
     { g[i+th+0] = v0[i+th+0] * d00 + v1[i+th+0] * d10 + v2[i+th+0] * d20; \
     } \
-    if (i+th+2<nd) \
+    if (i+th+2<nv) \
     { g[i+th+2] = v0[i+th+2] * d00 + v1[i+th+2] * d10 + v2[i+th+2] * d20; \
     } \
   } \

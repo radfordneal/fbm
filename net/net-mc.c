@@ -47,8 +47,8 @@
 
 #define GRAD_ALIGN_ELEMENTS (GRAD_ALIGN_BYTES / 4 / (1+FP64))
 
-#define GROUP_SHIFT 0		/* Log2 of number of threads in a group, must
-                                   be 0, 1, or 2 */
+#define GROUP_SHIFT 1		/* Log2 of number of threads in a group, must
+                                   be set to 0, 1, or 2 */
 
 #define GROUP_SIZE (1<<GROUP_SHIFT)  /* Number of threads in a group */
 #define GROUP_MASK (GROUP_SIZE-1)
@@ -2051,6 +2051,9 @@ __global__ void many_cases
   int o = blockIdx.x*((const_blksize+GROUP_MASK)>>GROUP_SHIFT) 
            + (threadIdx.x>>GROUP_SHIFT);
 
+  // printf("blk %d, thrd %d, th %d, i %d, h %d, o %d, N_train %d\n",
+  //   blockIdx.x, threadIdx.x, th, i, h, o, const_N_train);
+
   double *restrict threi;
   net_params *restrict thrgi;
   net_values *train_vals_h;
@@ -2124,9 +2127,11 @@ __global__ void many_cases
 
       int r = GROUP_SIZE;
       if (GROUP_SIZE>1)
-      { if (r > const_N_train-(h-th))   r = const_N_train-(h-th);
-        if (threadIdx.x+r > blockDim.x) r = blockDim.x-threadIdx.x;
+      { if (r > const_N_train - (h-th))   r = const_N_train - (h-th);
+        if (threadIdx.x-th + r > blockDim.x) r = blockDim.x - (threadIdx.x-th);
       }
+//printf("in store2_grad, blk %d, thread %d, th %d, r %d\n",
+//blockIdx.x,threadIdx.x,th,r);
 
       switch (r)
       { case 1: 
@@ -2139,7 +2144,10 @@ __global__ void many_cases
         }
         case 2: 
         { if (th<2)
-          { net_store2_grad (th, thrgi, &const_params, 
+          { 
+//printf("starting store2_grad, blk %d, thread %d, th %d\n",
+//blockIdx.x,threadIdx.x,th);
+            net_store2_grad (th, thrgi, &const_params, 
                              train_vals_b, train_vals_b+1,
                              deriv_b, deriv_b+1,
                              &const_arch, flgs);

@@ -1327,6 +1327,8 @@ __device__ static void net_store2_grad1
   int i;
   for (i = th; i<n; i+=2)
   { g[i] = v0[i] + v1[i];
+//printf("store2_grad blk %d, thrd %d, i %d: %.17g %.17g -> %.17g\n",
+//blockIdx.x,threadIdx.x,i,v0[i],v1[i],g[i]);
   }
 }
 

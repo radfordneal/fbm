@@ -37,9 +37,9 @@
 
    A version that adds derivatives from a training case to an existing 
    derivative structure is accessible to both CPU and GPU.  Versions that 
-   store a derivative from one training case or the sum of two derivatives
-   from two training cases to a derivative structure are accessible to 
-   the GPU.
+   store a derivative from one training case or the sum of 2, 3, or 4 
+   derivatives from 2, 3, or 4 training cases to a derivative structure
+   are accessible to the GPU.
 */
 
 
@@ -2040,6 +2040,537 @@ __device__ static void net_store3_grad2_config
   net_value const* d0,    /* Derivatives with respect to destination units, 0 */
   net_value const* d1,    /* Derivatives with respect to destination units, 1 */
   net_value const* d2,    /* Derivatives with respect to destination units, 2 */
+  net_config const* cf    /* Configuration for connections and weights */
+)
+{
+  net_connection *cn;
+  int i, j, k, c;
+
+  for (k = th; k<cf->N_wts; k+=2)
+  { g[k] = 0;
+  }
+
+  if (CONFIG_QUAD_S_4D_4W)
+  { cn = cf->quad_s_4d_4w;
+    if (off)
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { net_param o = off[cn[c].s];
+        net_value soi0 = s0[cn[c].s] + o;
+        net_value soi1 = s1[cn[c].s] + o;
+        net_value soi2 = s2[cn[c].s] + o;
+        j = cn[c].d;
+        g[k+th+0] += soi0 * d0[j+th+0] + soi1 * d1[j+th+0] + soi2 * d2[j+th+0];
+        g[k+th+2] += soi0 * d0[j+th+2] + soi1 * d1[j+th+2] + soi2 * d2[j+th+2];
+      }
+    }
+    else
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { net_value si0 = s0[cn[c].s];
+        net_value si1 = s1[cn[c].s];
+        net_value si2 = s2[cn[c].s];
+        j = cn[c].d;
+        g[k+th+0] += si0 * d0[j+th+0] + si1 * d1[j+th+0] + si2 * d2[j+th+0];
+        g[k+th+2] += si0 * d0[j+th+2] + si1 * d1[j+th+2] + si2 * d2[j+th+2];
+      }
+    }
+  }
+
+  if (th!=0) return;  /* remainder done by a single thread */
+
+  if (CONFIG_SINGLE4)
+  { 
+    cn = cf->single4_s;
+    if (off)
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { net_param o = off[cn[c].s];
+        net_value soi0 = s0[cn[c].s] + o;
+        net_value soi1 = s1[cn[c].s] + o;
+        net_value soi2 = s2[cn[c].s] + o;
+        j = cn[c].d;
+        g[k] += soi0 * d0[j] + soi1 * d1[j] + soi2 * d2[j];
+        j = cn[c+1].d; k = cn[c+1].w; 
+        g[k] += soi0 * d0[j] + soi1 * d1[j] + soi2 * d2[j];
+        j = cn[c+2].d; k = cn[c+2].w; 
+        g[k] += soi0 * d0[j] + soi1 * d1[j] + soi2 * d2[j];
+        j = cn[c+3].d; k = cn[c+3].w; 
+        g[k] += soi0 * d0[j] + soi1 * d1[j] + soi2 * d2[j];
+      }
+    }
+    else
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { net_value si0 = s0[cn[c].s];
+        net_value si1 = s1[cn[c].s];
+        net_value si2 = s2[cn[c].s];
+        j = cn[c].d;
+        g[k] += si0 * d0[j] + si1 * d1[j] + si2 * d2[j];
+        j = cn[c+1].d; k = cn[c+1].w; 
+        g[k] += si0 * d0[j] + si1 * d1[j] + si2 * d2[j];
+        j = cn[c+2].d; k = cn[c+2].w; 
+        g[k] += si0 * d0[j] + si1 * d1[j] + si2 * d2[j];
+        j = cn[c+3].d; k = cn[c+3].w; 
+        g[k] += si0 * d0[j] + si1 * d1[j] + si2 * d2[j];
+      }
+    }
+
+    cn = cf->single4_d;
+    if (off)
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { net_value dj0 = d0[cn[c].d];
+        net_value dj1 = d1[cn[c].d];
+        net_value dj2 = d2[cn[c].d];
+        net_param o;
+        i = cn[c].s; o = off[i];
+        g[k] += (s0[i]+o)*dj0 + (s1[i]+o)*dj1 + (s2[i]+o)*dj2;
+        i = cn[c+1].s; k = cn[c+1].w; o = off[i];
+        g[k] += (s0[i]+o)*dj0 + (s1[i]+o)*dj1 + (s2[i]+o)*dj2;
+        i = cn[c+2].s; k = cn[c+2].w; o = off[i];
+        g[k] += (s0[i]+o)*dj0 + (s1[i]+o)*dj1 + (s2[i]+o)*dj2;
+        i = cn[c+3].s; k = cn[c+3].w; o = off[i];
+        g[k] += (s0[i]+o)*dj0 + (s1[i]+o)*dj1 + (s2[i]+o)*dj2;
+      }
+    }
+    else
+    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+      { net_value dj0 = d0[cn[c].d];
+        net_value dj1 = d1[cn[c].d];
+        net_value dj2 = d2[cn[c].d];
+        i = cn[c].s;
+        g[k] += s0[i] * dj0 + s1[i] * dj1 + s2[i] * dj2;
+        i = cn[c+1].s; k = cn[c+1].w; 
+        g[k] += s0[i] * dj0 + s1[i] * dj1 + s2[i] * dj2;
+        i = cn[c+2].s; k = cn[c+2].w; 
+        g[k] += s0[i] * dj0 + s1[i] * dj1 + s2[i] * dj2;
+        i = cn[c+3].s; k = cn[c+3].w; 
+        g[k] += s0[i] * dj0 + s1[i] * dj1 + s2[i] * dj2;
+      }
+    }
+  }
+
+  cn = CONFIG_ORIGINAL ? cf->conn : cf->single;
+  if (off)
+  { for (c = 0; (k = cn[c].w) >= 0; c++)
+    { i = cn[c].s; j = cn[c].d;
+      net_param o = off[i];
+      g[k] += (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j] + (s2[i]+o)*d2[j];
+    }
+  }
+  else
+  { for (c = 0; (k = cn[c].w) >= 0; c++)
+    { i = cn[c].s; j = cn[c].d;
+      g[k] += s0[i] * d0[j] + s1[i] * d1[j] + s2[i] * d2[j];
+    }
+  }
+}
+
+#endif
+
+
+/* --------------------------- store4_grad ---------------------------------- */
+
+#if __CUDACC__
+
+__device__ static void net_store4_grad1 (int, net_param *restrict, 
+   net_value const*, net_value const*, net_value const*, net_value const*,
+   int);
+__device__ static void net_store4_grad1_config (int, net_param *restrict, 
+   net_value const*, net_value const*, net_value const*, net_value const*,
+   net_config const*);
+__device__ static void net_store4_grad2 (int, net_param *restrict, 
+   net_value const*, net_value const*, net_value const*, net_value const*,
+   net_param const*, int,
+   net_value const*, net_value const*, net_value const*,  net_value const*, 
+   int, unsigned short const*, int);
+__device__ static void net_store4_grad2_config (int, net_param *restrict, 
+   net_value const*, net_value const*, net_value const*, net_value const*,
+   net_param const*,
+   net_value const*, net_value const*, net_value const*, net_value const*,
+   net_config const*);
+
+
+/* STORE SUM OF GRADIENT FROM THREE CASES, USING A PAIR OF THREADS.  
+   Typically, one thread handles even index, the other odd indexes.  
+   But sometimes only one thread is used. */
+
+__device__ void net_store4_grad
+( int th,		/* Which thread (0 or 1) */
+  net_params *restrict g, /* Gradient with respect to parameters to store to */
+  net_params const*w,	/* Network parameters (only offsets used) */
+  net_values const*v0,	/* Values for units in network for case 0 */
+  net_values const*v1,	/* Values for units in network for case 1 */
+  net_values const*v2,	/* Values for units in network for case 2 */
+  net_values const*v3,	/* Values for units in network for case 3 */
+  net_values const*d0,	/* Backpropagated derivatives for case 0 */
+  net_values const*d1,	/* Backpropagated derivatives for case 1 */
+  net_values const*d2,	/* Backpropagated derivatives for case 2 */
+  net_values const*d3,	/* Backpropagated derivatives for case 3 */
+  net_arch const*a,	/* Network architecture */
+  net_flags const*flgs 	/* Network flags, null if none */
+)
+{ 
+  int l;
+  if (a->has_ti) 
+  { net_store4_grad1 (th, g->ti, d0->i, d1->i, d2->i, a->N_inputs);
+  }
+
+  for (l = 0; l<a->N_layers; l++)
+  { 
+    int N_hidden = a->N_hidden[l];
+
+    if (a->has_bh[l]) 
+    { if (a->bias_config[l])
+      { net_store4_grad1_config (th, g->bh[l], d0->s[l], d1->s[l], d2->s[l],
+                                 a->bias_config[l]);
+      }
+      else
+      { net_store4_grad1 (th, g->bh[l], d0->s[l], d1->s[l], d2->s[l], N_hidden);
+      }
+    }
+
+    if (a->has_ih[l])
+    { if (a->input_config[l])
+      { net_store4_grad2_config (th, g->ih[l], v0->i, v1->i, v2->i,
+                                 a->has_ti ? w->ti : 0, 
+                                 d0->s[l], d1->s[l], d2->s[l], 
+                                 a->input_config[l]);
+      }
+      else
+      { net_store4_grad2 (th, g->ih[l], v0->i, v1->i, v2->i,
+                    a->has_ti ? w->ti : 0, a->N_inputs, 
+                    d0->s[l], d1->s[l], d2->s[l], N_hidden, 
+                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1));
+      }
+    }
+
+    if (l>0 && a->has_hh[l-1])
+    { if (a->hidden_config[l])
+      { net_store4_grad2_config
+           (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], v2->h[l-1],
+            a->has_th[l-1] ? w->th[l-1] : 0,
+            d0->s[l], d1->s[l], d2->s[l], a->hidden_config[l]);
+      }
+      else
+      { net_store4_grad2 (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], v2->h[l-1],
+          a->has_th[l-1] ? w->th[l-1] : 0,
+          a->N_hidden[l-1], d0->s[l], d1->s[l], d2->s[l], N_hidden,
+          (unsigned short *)0, 0);
+      }
+    }
+
+    if (a->has_th[l]) 
+    { net_store4_grad1 (th, g->th[l], d0->h[l], d1->h[l], d2->h[l], N_hidden);
+    }
+
+    if (a->has_ho[l])
+    { int k = 2*a->N_layers-1-l;
+      if (a->hidden_config[k])
+      { net_store4_grad2_config (th, g->ho[l], v0->h[l], v1->h[l], v2->h[l],
+                           a->has_th[l] ? w->th[l] : 0,
+                           d0->o, d1->o, d2->o, a->hidden_config[k]);
+      }
+      else
+      { net_store4_grad2 (th, g->ho[l], v0->h[l], v1->h[l], v2->h[l],
+                    a->has_th[l] ? w->th[l] : 0,
+                    N_hidden, d0->o, d1->o, d2->o, a->N_outputs, 
+                    (unsigned short *) 0, 0);
+      }
+    }
+  }
+
+  if (a->has_io) 
+  { if (a->input_config[a->N_layers])
+    { net_store4_grad2_config (th, g->io, v0->i, v1->i, v2->i, 
+                               a->has_ti ? w->ti : 0, 
+                               d0->o, d1->o, d2->o, 
+                               a->input_config[a->N_layers]);
+    }
+    else
+    { net_store4_grad2 (th, g->io, v0->i, v1->i, v2->i, a->has_ti ? w->ti : 0, 
+                        a->N_inputs, d0->o, d1->o, d2->o, a->N_outputs, 
+                        flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0,
+                        1);
+    }
+  }
+
+  if (a->has_bo) 
+  { if (a->bias_config[a->N_layers])
+    { net_store4_grad1_config (th, g->bo, d0->o, d1->o, d2->o,
+                               a->bias_config[a->N_layers]);
+    }
+    else
+    { net_store4_grad1 (th, g->bo, d0->o, d1->o, d2->o, a->N_outputs);
+    }
+  }
+}
+
+
+__device__ static void net_store4_grad1
+( int th,		  /* Which thread (0 or 1) */
+  net_param *restrict g,  /* Array of derivatives to store to */
+  net_value const* v0,    /* Derivatives with respect to unit values, case 0 */
+  net_value const* v1,    /* Derivatives with respect to unit values, case 1 */
+  net_value const* v2,    /* Derivatives with respect to unit values, case 2 */
+  net_value const* v3,    /* Derivatives with respect to unit values, case 3 */
+  int n			  /* Number of units */
+)
+{ 
+  int i;
+  for (i = th; i<n; i+=2)
+  { g[i] = v0[i] + v1[i] + v2[i];
+  }
+}
+
+
+__device__ static void net_store4_grad1_config
+( int th,		  /* Which thread (0 or 1) */
+  net_param *restrict g,  /* Array of derivatives to store to */
+  net_value const* v0,    /* Derivatives with respect to unit values, case 0 */
+  net_value const* v1,    /* Derivatives with respect to unit values, case 1 */
+  net_value const* v2,    /* Derivatives with respect to unit values, case 2 */
+  net_value const* v3,    /* Derivatives with respect to unit values, case 3 */
+  net_config const* cf    /* Configuration for biases */
+)
+{ net_connection *cn = cf->conn;
+  int c, j, k;
+
+  for (k = th; k<cf->N_wts; k+=2)
+  { g[k] = 0;
+  }
+
+  if (th!=0) return;  /* remainder done by a single thread */
+
+  for (c = 0; (k = cn[c].w) >= 0; c++)
+  { j = cn[c].d;
+    g[k] += v0[j] + v1[j] + v2[j];
+  }
+}
+
+
+#define NET_STORE4_GRAD2(offset,omit) \
+do \
+{ net_value o; \
+  int i, j; \
+  if (nd==1) \
+  { net_value d00 = d0[0]; \
+    net_value d10 = d1[0]; \
+    net_value d20 = d2[0]; \
+    if (th==0) \
+    { i = 3; \
+      while (i<nv) \
+      { o = (offset); \
+        if (!(omit)) *g++ = (v0[i-3]+o)*d00+(v1[i-3]+o)*d10+(v2[i-3]+o)*d20; \
+        o = (offset); \
+        if (!(omit)) *g++ = (v0[i-2]+o)*d00+(v1[i-2]+o)*d10+(v2[i-2]+o)*d20; \
+        o = (offset); \
+        if (!(omit)) *g++ = (v0[i-1]+o)*d00+(v1[i-1]+o)*d10+(v2[i-1]+o)*d20; \
+        o = (offset); \
+        if (!(omit)) *g++ = (v0[i-0]+o)*d00+(v1[i-0]+o)*d10+(v2[i-0]+o)*d20; \
+        i += 4; \
+      } \
+      i -= 3; \
+      while (i<nv) \
+      { o = (offset); \
+        if (!(omit)) *g++ = (v0[i]+o)*d00 + (v1[i]+o)*d10 + (v2[i]+o)*d20; \
+        i += 1; \
+      } \
+    } \
+  } \
+  else \
+  { for (i = 0; i<nv; i++) \
+    { net_value tv0, tv1, tv2; \
+      o = (offset); \
+      if (omit) continue; \
+      tv0 = v0[i] + o; \
+      tv1 = v1[i] + o; \
+      tv2 = v2[i] + o; \
+      if (tv0==0 && tv1==0 && tv2==0) \
+      { continue; \
+      } \
+      if (tv1==0 && tv2==0) \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv0 * d0[j-th-2]; \
+          g[j-th-0] = tv0 * d0[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        if (j+th+0<nd) g[j+th+0] = tv0 * d0[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv0 * d0[j+th+2]; \
+      } \
+      else if (tv0==0 && tv2==0) \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv1 * d1[j-th-2]; \
+          g[j-th-0] = tv1 * d1[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        if (j+th+0<nd) g[j+th+0] = tv1 * d1[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv1 * d1[j+th+2]; \
+      } \
+      else if (tv0==0 && tv1==0) \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv2 * d2[j-th-2]; \
+          g[j-th-0] = tv2 * d2[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        if (j+th+0<nd) g[j+th+0] = tv2 * d2[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv2 * d2[j+th+2]; \
+      } \
+      else \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv0 * d0[j-th-2] + tv1 * d1[j-th-2] + tv2 * d2[j-th-2]; \
+          g[j-th-0] = tv0 * d0[j-th-0] + tv1 * d1[j-th-0] + tv2 * d2[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        if (j+th+0<nd) \
+        { g[j+th+0] = tv0*d0[j+th+0] + tv1*d1[j+th+0] + tv2*d2[j+th+0]; \
+        } \
+        if (j+th+2<nd) \
+        { g[j+th+2] = tv0*d0[j+th+2] + tv1*d1[j+th+2] + tv2*d2[j+th+2]; \
+        } \
+      } \
+      g += nd; \
+    } \
+  } \
+} while (0)
+
+#define NET_STORE4_GRAD2_00 \
+do \
+{ int i, j; \
+  if (nd==1) \
+  { net_value d00 = d0[0]; \
+    net_value d10 = d1[0]; \
+    net_value d20 = d2[0]; \
+    i = 3; \
+    while (i<nv) \
+    { g[i-th-2] = v0[i-th-2] * d00 + v1[i-th-2] * d10 + v2[i-th-2] * d20; \
+      g[i-th-0] = v0[i-th-0] * d00 + v1[i-th-0] * d10 + v2[i-th-0] * d20; \
+      i += 4; \
+    } \
+    i -= 3; \
+    if (i+th+0<nv) \
+    { g[i+th+0] = v0[i+th+0] * d00 + v1[i+th+0] * d10 + v2[i+th+0] * d20; \
+    } \
+    if (i+th+2<nv) \
+    { g[i+th+2] = v0[i+th+2] * d00 + v1[i+th+2] * d10 + v2[i+th+2] * d20; \
+    } \
+  } \
+  else \
+  { net_value tv0, tv1, tv2; \
+    for (i = 0; i<nv; i++) \
+    { tv0 = v0[i]; \
+      tv1 = v1[i]; \
+      tv2 = v2[i]; \
+      if (tv0==0 && tv1==0 && tv2==0) \
+      { continue; \
+      } \
+      if (tv1==0 && tv2==0)  \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv0 * d0[j-th-2]; \
+          g[j-th-0] = tv0 * d0[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        if (j+th+0<nd) g[j+th+0] = tv0 * d0[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv0 * d0[j+th+2]; \
+      } \
+      else if (tv0==0 && tv2==0)  \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv1 * d1[j-th-2]; \
+          g[j-th-0] = tv1 * d1[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        if (j+th+0<nd) g[j+th+0] = tv1 * d1[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv1 * d1[j+th+2]; \
+      } \
+      else if (tv0==0 && tv1==0)  \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv2 * d2[j-th-2]; \
+          g[j-th-0] = tv2 * d2[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        if (j+th+0<nd) g[j+th+0] = tv2 * d2[j+th+0]; \
+        if (j+th+2<nd) g[j+th+2] = tv2 * d2[j+th+2]; \
+      } \
+      else \
+      { j = 3; \
+        while (j<nd) \
+        { g[j-th-2] = tv0 * d0[j-th-2] + tv1 * d1[j-th-2] + tv2 * d2[j-th-2]; \
+          g[j-th-0] = tv0 * d0[j-th-0] + tv1 * d1[j-th-0] + tv2 * d2[j-th-0]; \
+          j += 4; \
+        } \
+        j -= 3; \
+        if (j+th+0<nd) \
+        { g[j+th+0] = tv0*d0[j+th+0] + tv1*d1[j+th+0] + tv2*d2[j+th+0]; \
+        } \
+        if (j+th+2<nd) \
+        { g[j+th+2] = tv0*d0[j+th+2] + tv1*d1[j+th+2] + tv2*d2[j+th+2]; \
+        } \
+      } \
+      g += nd; \
+    } \
+  } \
+} while (0)
+
+
+__device__ static void net_store4_grad2
+( int th,		  /* Which thread (0 or 1) */
+  net_param *restrict g,  /* Array of derivatives to store to */
+  net_value const* v0,    /* Source unit values, case 0 */
+  net_value const* v1,    /* Source unit values, case 1 */
+  net_value const* v2,    /* Source unit values, case 2 */
+  net_value const* v3,    /* Source unit values, case 3 */
+  net_param const* off,   /* Offsets for source units, or zero if no offsets */
+  int nv,		  /* Number of source units */
+  net_value const* d0,    /* Derivatives with respect to destination units, 0 */
+  net_value const* d1,    /* Derivatives with respect to destination units, 1 */
+  net_value const* d2,    /* Derivatives with respect to destination units, 2 */
+  net_value const* d3,    /* Derivatives with respect to destination units, 3 */
+  int nd,		  /* Number of destination units */
+  unsigned short const* omit, /* Omit flags, null if not present */
+  int ob		  /* Bit to look at in omit flags (mask, not number) */
+)
+{ 
+  if (omit==0)
+  { if (off==0)
+    { NET_STORE4_GRAD2_00;
+    }
+    else
+    { NET_STORE4_GRAD2(*off++,0);
+    }
+  }
+  else
+  { if (off==0)
+    { NET_STORE4_GRAD2(0,(*omit++)&ob);
+    }
+    else
+    { NET_STORE4_GRAD2(*off++,(*omit++)&ob);
+    }
+  }
+}
+
+
+__device__ static void net_store4_grad2_config
+( int th,		  /* Which thread (0 or 1) */
+  net_param *restrict g,  /* Array of derivatives to add to */
+  net_value const* s0,    /* Source unit values, case 0 */
+  net_value const* s1,    /* Source unit values, case 1 */
+  net_value const* s2,    /* Source unit values, case 2 */
+  net_value const* s3,    /* Source unit values, case 3 */
+  net_param const* off,   /* Offsets for source units, or zero if no offsets */
+  net_value const* d0,    /* Derivatives with respect to destination units, 0 */
+  net_value const* d1,    /* Derivatives with respect to destination units, 1 */
+  net_value const* d2,    /* Derivatives with respect to destination units, 2 */
+  net_value const* d3,    /* Derivatives with respect to destination units, 3 */
   net_config const* cf    /* Configuration for connections and weights */
 )
 {

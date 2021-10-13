@@ -2084,6 +2084,35 @@ __global__ void many_cases
   { 
     __syncthreads();
 
+    /* FOR TEST OF STORE3 */
+
+    if ((const_N_train % 3) == 0 && blockDim.x==3)
+    { 
+      int th = threadIdx.x;
+      //printf("S %d\n",th);
+      if (th<2)
+      { if (thrgi)
+        { //printf("A %d\n",th);
+          net_store3_grad (th, thrgi, &const_params, 
+             train_vals_h - th, train_vals_h - th + 1, train_vals_h - th + 2,
+             deriv_h - th, deriv_h - th + 1, deriv_h - th + 2,
+             &const_arch, flgs);
+          //printf("B %d\n",th);
+        }
+        if (threadIdx.x==0 && threi)
+        { int bl = blockIdx.x;
+          //printf("C %d %d %p %p %p\n",bl,th,threi,thread_energy,const_thread_energy2);
+          //printf("C1 %d %d %.17g\n",bl,th,*threi);
+          //printf("C2 %d %d %.17g\n",bl,th,thread_energy[1]);
+          //printf("C3 %d %d %.17g\n",bl,th,const_thread_energy2[0]);
+          *threi += thread_energy[o+1]+const_thread_energy2[o];
+          //printf("D %d %d\n",bl,th);
+        }
+      }
+      //printf("E %d\n",th);
+      return;
+    }
+
     if (j<const_N_train)
     {
       int th = threadIdx.x & 1;

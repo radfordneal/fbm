@@ -1385,9 +1385,9 @@ do \
       tv0 = v0[i] + o; \
       tv1 = v1[i] + o; \
       if (tv0==0 && tv1==0) \
-      { continue; \
+      { /* nothing */ \
       } \
-      if (tv1==0)  \
+      else if (tv1==0)  \
       { j = 3; \
         while (j<nd) \
         { g[j-th-2] = tv0 * d0[j-th-2]; \
@@ -1447,9 +1447,9 @@ do \
     { tv0 = v0[i]; \
       tv1 = v1[i]; \
       if (tv0==0 && tv1==0) \
-      { continue; \
+      { /* nothing */ \
       } \
-      if (tv1==0)  \
+      else if (tv1==0)  \
       { j = 3; \
         while (j<nd) \
         { g[j-th-2] = tv0 * d0[j-th-2]; \
@@ -1856,9 +1856,9 @@ do \
       tv1 = v1[i] + o; \
       tv2 = v2[i] + o; \
       if (tv0==0 && tv1==0 && tv2==0) \
-      { continue; \
+      { /* nothing */ \
       } \
-      if (tv1==0 && tv2==0) \
+      else if (tv1==0 && tv2==0) \
       { j = 3; \
         while (j<nd) \
         { g[j-th-2] = tv0 * d0[j-th-2]; \
@@ -1939,9 +1939,9 @@ do \
       tv1 = v1[i]; \
       tv2 = v2[i]; \
       if (tv0==0 && tv1==0 && tv2==0) \
-      { continue; \
+      { /* nothing */ \
       } \
-      if (tv1==0 && tv2==0)  \
+      else if (tv1==0 && tv2==0)  \
       { j = 3; \
         while (j<nd) \
         { g[j-th-2] = tv0 * d0[j-th-2]; \
@@ -2405,9 +2405,9 @@ do \
       tv2 = v2[i] + o; \
       tv3 = v3[i] + o; \
       if (tv0==0 && tv1==0 && tv2==0 && tv3==0) \
-      { continue; \
+      { /* nothing */ \
       } \
-      if (tv1==0 && tv2==0 && tv3==0) \
+      else if (tv1==0 && tv2==0 && tv3==0) \
       { j = 3; \
         while (j<nd) \
         { g[j-th] = tv0 * d0[j-th]; \
@@ -2485,9 +2485,9 @@ do \
       tv2 = v2[i]; \
       tv3 = v3[i]; \
       if (tv0==0 && tv1==0 && tv2==0 && tv3==0) \
-      { continue; \
+      { /* nothing */ \
       } \
-      if (tv1==0 && tv2==0 && tv3==0) \
+      else if (tv1==0 && tv2==0 && tv3==0) \
       { j = 3; \
         while (j<nd) \
         { g[j-th] = tv0 * d0[j-th]; \

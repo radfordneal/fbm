@@ -47,7 +47,7 @@
 
 #define GRAD_ALIGN_ELEMENTS (GRAD_ALIGN_BYTES / 4 / (1+FP64))
 
-#define GROUP_SHIFT 1		/* Log2 of number of threads in a group, must
+#define GROUP_SHIFT 2		/* Log2 of number of threads in a group, must
                                    be set to 0, 1, or 2 */
 
 #define GROUP_SIZE (1<<GROUP_SHIFT)  /* Number of threads in a group */

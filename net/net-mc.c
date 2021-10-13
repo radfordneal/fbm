@@ -47,27 +47,30 @@
 
 #define GRAD_ALIGN_ELEMENTS (GRAD_ALIGN_BYTES / 4 / (1+FP64))
 
+#define GROUP_SHIFT 2		/* Log2 of number of threads in a group, must
+                                   be 0, 1, or 2 */
+
+#define GROUP_SIZE (1<<GROUP_SHIFT)  /* Number of threads in a group */
+#define GROUP_MASK (GROUP_SIZE-1)
+
 #define MAX_BLKSIZE 128		/* Limit on # of threads in a block, to avoid
 				   exceeding the per-block register use limit
 				   (max 255 reg/thread, min 32K reg/block) */
 
-#define DEFAULT_PERTHRD 1 	/* Defaults, if not set by CUDA_SIZES  */
-#define DEFAULT_BLKSIZE 64	/*   environment variable, which has   */
-#define DEFAULT_NUMBLKS	48	/*   the form PERTHRD:BLKSIZE:NUMBLKS  */
+#define DEFAULT_BLKSIZE 32	/* Defaults, if not set by CUDA_SIZES env var */
+#define DEFAULT_MAXBLKS	48	/*   which has form [BLKSIZE][:MAXBLKS] */
 
-static int use_pairs;                   /* Whether to use 1 case/thrd, paired */
-static int perthrd = DEFAULT_PERTHRD;	/* Number of cases for a CUDA thread */
 static int blksize = DEFAULT_BLKSIZE;	/* Number of threads per block */
-static int numblks = DEFAULT_NUMBLKS;	/* Max number of blocks per kernel */
+static int maxblks = DEFAULT_MAXBLKS;	/* Max number of blocks per kernel */
 
 static int n_launches;			/* Number of launches needed to 
                                            handle all training cases */
-static int max_cases_per_launch;        /* Largest number of cases handled by
-					   one CUDA kernel launch */
 static int max_blocks_per_launch;	/* Largest number of blocks for one
                                            CUDA kernel launch */
 static int max_threads_per_launch;	/* Largest number of threads for one
                                            CUDA kernel launch */
+static int max_cases_per_launch;        /* Largest number of cases handled by
+					   one CUDA kernel launch */
 #endif
 
 
@@ -80,8 +83,6 @@ __global__ void many_cases
   double *thread_energy,   /* Places to store energy, null if not required */
   net_params *thread_grad, /* Places to store gradient, null if not required */
   int start,		/* Start of cases to look at */
-  int use_pairs,	/* Whether to do one case/thread, with pairs */
-  int cases_per_thread,	/* Number of case to handle in a thread */
   double en_weight,	/* Weight for this case for energy */
   double gr_weight	/* Weight for this case for gradient */
 );
@@ -151,9 +152,10 @@ static net_arch dev_arch;	/* Copy of arch with GPU config pointers */
 
 static double *thread_energy;	/* Energies computed by concurrent threads,
                                    points to GPU memory */
-static double *thread_energy2;	/* Energy for odd threads, when use_pairs */
-static int n_thread_accum;	/* Number of gradient accumulators needed
-				   (only need about half as many if use_pairs)*/
+static double *thread_energy1;	/* Energy for threads with index 1 mod 4 */
+static double *thread_energy2;	/* Energy for threads with index 2 mod 4 */
+static double *thread_energy3;	/* Energy for threads with index 3 mod 4 */
+static int n_thread_accum;	/* Number of gradient accumulators needed */
 static net_params *thread_grad;	/* Gradient accumulators in concurrent threads,
                                    points to GPU memory */
 
@@ -192,7 +194,9 @@ __constant__ net_values *const_deriv;  /* Copy of deriv ptr in constant memory*/
 __constant__ net_values *const_train_values; /* Const copy of train_values ptr*/
 __constant__ net_value *const_train_targets; /* Const copy of train_targets */
 
+__constant__ double *const_thread_energy1; /* Copy of thread_energy1 ptr */
 __constant__ double *const_thread_energy2; /* Copy of thread_energy2 ptr */
+__constant__ double *const_thread_energy3; /* Copy of thread_energy3 ptr */
 __constant__ double *const_block_energy;   /* Copy of dev_block_energy ptr */
 __constant__ net_params *const_block_grad; /* Copy of dev_block_grad ptr */
 
@@ -316,40 +320,45 @@ void mc_app_initialize
       }
 
       char *cuda_sizes = getenv("CUDA_SIZES");
-      if (cuda_sizes)
-      { int t, b, n;
+      if (cuda_sizes && *cuda_sizes)
+      { int bs = DEFAULT_BLKSIZE;
+        int mb = DEFAULT_MAXBLKS;
+        int tmp1, tmp2;
         char junk;
-        if (sscanf(cuda_sizes,"%d:%d:%d%c",&t,&b,&n,&junk)!=3 
-             || t<0 || b<1 || n<1)
+        if (sscanf(cuda_sizes,"%d%c",&tmp1,&junk)==1)
+        { bs = tmp1;
+        }
+        else if (sscanf(cuda_sizes,":%d%c",&tmp2,&junk)==1)
+        { mb = tmp2;
+        }
+        else if (sscanf(cuda_sizes,"%d:%d%c",&tmp1,&tmp2,&junk)==2)
+        { bs = tmp1;
+          mb = tmp2;
+        }
+        else 
         { fprintf(stderr,
-           "Bad format for CUDA_SIZES: should be perthrd:blksize:numblks\n");
+           "Bad format for CUDA_SIZES: should be [blksize][:maxblks]\n");
           exit(1);
         }
-        if (b>MAX_BLKSIZE)
+        if (bs<1)
+        { fprintf(stderr,"CUDA_SIZES blksize must be at least 1\n");
+          exit(1);
+        }
+        if (bs>MAX_BLKSIZE)
         { fprintf(stderr,"CUDA_SIZES blksize must not exceed %d\n",MAX_BLKSIZE);
           exit(1);
         }
-        perthrd = t;
-        blksize = b;
-        numblks = n;
-      }
-
-      use_pairs = perthrd==0;
-      if (use_pairs)
-      { perthrd = 1;
+        if (mb<1)
+        { fprintf(stderr,"CUDA_SIZES maxblks must be at least 1\n");
+          exit(1);
+        }
+        blksize = bs;
+        maxblks = mb;
       }
 
       if (show_info)
-      { if (use_pairs)
-        { printf (
- "Specified 1 case per thread (paired), %d threads per block, %d blocks max\n",
-           blksize, numblks);
-        }
-        else
-        { printf (
- "Specified %d cases per thread, %d threads per block, %d blocks max\n",
-           perthrd, blksize, numblks);
-        }
+      { printf ("Specified %d threads per block, max %d blocks per launch\n",
+                 blksize, maxblks);
       }
     }
 #   endif
@@ -738,14 +747,11 @@ void mc_app_initialize
 #   if __CUDACC__
     { 
       if (N_train>0)
-      { n_launches 
-          = (N_train + perthrd*blksize*numblks - 1) / (perthrd*blksize*numblks);
-        max_cases_per_launch 
-          = (N_train + n_launches - 1) / n_launches;
-        max_blocks_per_launch 
-          = (max_cases_per_launch + perthrd*blksize - 1) / (perthrd*blksize);
+      { n_launches = (N_train + blksize*maxblks - 1) / (blksize*maxblks);
+        max_cases_per_launch = (N_train + n_launches - 1) / n_launches;
+        max_blocks_per_launch = (max_cases_per_launch + blksize - 1) / blksize;
         max_threads_per_launch = max_blocks_per_launch * blksize;
-        max_cases_per_launch = max_threads_per_launch * perthrd;
+        max_cases_per_launch = max_threads_per_launch;
         if (show_info)
         { printf ("With %d cases, need %d launches, max %d blocks/launch\n",
                   N_train, n_launches, max_blocks_per_launch);
@@ -1858,44 +1864,42 @@ static void one_case  /* Energy and gradient from one training case */
    is not done again if done before.
 
    Memory is allocated to hold the result of the energy/gradient
-   computation for each thread block in a kernel launch- as
-   block_energy in the CPU, and const_block_energy, in the GPU, and as
-   block_grad in the CPU, and const_block_grad in the GPU.  The
+   computation for each thread block in a kernel launch - as
+   block_energy in the CPU and const_block_energy in the GPU, and as
+   block_grad in the CPU and const_block_grad in the GPU.  The
    contents of const_block_energy are copied to block_energy after the
-   kernel finishes, and similarly for block_grad and const_block_grad.
+   kernel finishes, and similarly for const_block_grad and block_grad.
    The CPU then adds their contents to the final accumulators.  If
    more than one kernel launch is done, the memory is re-used.
 
-   Memory is also allocated here in the GPU to store the energy and
-   gradient computed for individual training cases.  The GPU adds all
-   these to const_block_energy and/or const_block_grad after they are
-   computed, so this memory does not need to be accessed by the CPU.
-   GPU pointers to these areas (thread_energy and thread_grad) are
-   passed to the kernel as arguments (or these arguments are zero to
-   indicate that one of them is not needed for this particular call).
+   GPU memory is also allocated here to store the energy and gradient
+   computed for individual training cases.  The GPU adds all these to
+   const_block_energy and/or const_block_grad after they are computed,
+   so this memory does not need to be accessed by the CPU.  GPU
+   pointers to these areas (thread_energy and thread_grad) are passed
+   to the kernel as arguments (or these arguments are zero to indicate
+   that one of them is not needed for this particular call).
 
-   If use_pairs is 0, the energy/gradient for each training case
-   handled by a kernel lauch is stored separately, so the number of
-   structures allocated for these results is max_threads_per_launch
-   (with each thread handling one case).
+   Network values for each case handled by a block are computed by
+   threads individually, but gradients are computed for a group of
+   cases of size GROUP_SIZE (except at the end, if N_train is not a
+   multiple of GROUP_SIZE), with the results being summed.  This
+   reduces the amount of space allocate for thread_grad by about a
+   factor of GROUP_SIZE.  Computations for a group are done using
+   GROUP_SIZE threads (or perhaps fewer at the end of a block).
 
-   If use_pairs is 1, network values for each case handled by a block
-   are computed by threads individually, but gradients are computed
-   for a pair of cases (except the last, if the number is odd), using
-   a pair of threads, so thread_grad has space for only about half the
-   cases in a block.  (Working on pairs should reduce GPU memory
-   traffic.)  Similarly, thread_energy stores the total energy for
-   pairs (with const_thread_energy2 being used to temporarily hold the
-   energies for odd-numbered cases before these are added to
-   thread_energy).
+   Similarly, thread_energy stores the total energy for groups (with
+   const_thread_energy1,2,3 being used to temporarily hold the
+   energies for cases with indexes not multiples of GROUP_SIZE before
+   these are added to thread_energy).
    
-   As an optimization, results for the first training case (or for 
-   a pair of training cases) in a block are stored directly in
-   const_block_energy or const_block_grad, with results for other
-   cases/pairs then being added to that.  (Space for the first
-   training case in a block is nevertheless redundantly allocated,
-   which might actually be good for performance, by providing
-   separation between blocks, if "false sharing" is an issue.)
+   As an optimization, results for the first group of training cases
+   in a block are stored directly in const_block_energy or
+   const_block_grad, with results for other cases/pairs then being
+   added to that.  (Space for the first group of cases in a block is
+   nevertheless redundantly allocated, which might actually be good
+   for performance, by providing separation between blocks, if "false
+   sharing" is an issue.)
 
    The memory allocated (except temporarily here) is never freed
    (until program termination). 
@@ -1908,22 +1912,38 @@ void cuda_setup
   mc_value *gr		/* Place to store gradient, null if not required */
 )
 {
-  n_thread_accum = use_pairs ? ((blksize+1)>>1) * max_blocks_per_launch 
-                             : max_threads_per_launch;
+  n_thread_accum = ((blksize+GROUP_MASK)>>GROUP_SHIFT) * max_blocks_per_launch;
 
   if (energy && thread_energy==0)
-  { check_cuda_error (cudaMalloc (&thread_energy,
+  { 
+    check_cuda_error (cudaMalloc (&thread_energy,
                         n_thread_accum * sizeof *thread_energy),
                       "alloc thread_energy");
-    if (use_pairs)
-    { check_cuda_error (cudaMalloc (&thread_energy2,
-                          n_thread_accum * sizeof *thread_energy2),
-                        "alloc thread_energy2");
-      cudaMemcpyToSymbol
-        (const_thread_energy2, &thread_energy2, sizeof thread_energy2);
-      check_cuda_error (cudaGetLastError(), 
-                        "After copying to const_thread_energy2");
-    }
+
+    check_cuda_error (cudaMalloc (&thread_energy1,
+                        n_thread_accum * sizeof *thread_energy2),
+                      "alloc thread_energy1");
+    cudaMemcpyToSymbol
+      (const_thread_energy1, &thread_energy1, sizeof thread_energy1);
+    check_cuda_error (cudaGetLastError(), 
+                      "After copying to const_thread_energy1");
+
+    check_cuda_error (cudaMalloc (&thread_energy2,
+                        n_thread_accum * sizeof *thread_energy2),
+                      "alloc thread_energy2");
+    cudaMemcpyToSymbol
+      (const_thread_energy2, &thread_energy2, sizeof thread_energy2);
+    check_cuda_error (cudaGetLastError(), 
+                      "After copying to const_thread_energy2");
+
+    check_cuda_error (cudaMalloc (&thread_energy3,
+                          n_thread_accum * sizeof *thread_energy3),
+                      "alloc thread_energy3");
+    cudaMemcpyToSymbol
+      (const_thread_energy3, &thread_energy3, sizeof thread_energy3);
+    check_cuda_error (cudaGetLastError(), 
+                      "After copying to const_thread_energy3");
+
     block_energy = (double *) 
       chk_alloc (max_blocks_per_launch, sizeof *block_energy);
     check_cuda_error (cudaMalloc (&dev_block_energy,
@@ -2017,42 +2037,35 @@ __global__ void many_cases
   double *thread_energy,   /* Places to store energy, null if not required */
   net_params *thread_grad, /* Places to store gradient, null if not required */
   int start,		/* Start of cases to look at */
-  int use_pairs,	/* Whether to do one case/thread, with pairs */
-  int cases_per_thread,	/* Number of case to handle in a thread */
   double en_weight,	/* Weight for this case for energy */
   double gr_weight	/* Weight for this case for gradient */
 )
 { 
   net_flags *flgs = const_has_flgs ? &const_flgs : 0;
   unsigned total_params = const_params.total_params;
+  int th = threadIdx.x & GROUP_MASK;
   int i = blockIdx.x * blockDim.x + threadIdx.x;
-  int j = start + cases_per_thread * i;
-  int o = use_pairs ? blockIdx.x*((const_blksize+1)>>1) + (threadIdx.x>>1) : i;
-  int h;
+  int h = start + i;
+  int o = blockIdx.x*((const_blksize+GROUP_MASK)>>GROUP_SHIFT) 
+           + (threadIdx.x>>GROUP_SHIFT);
 
   double *restrict threi;
   net_params *restrict thrgi;
   net_values *train_vals_h;
   net_values *deriv_h;
 
-  if (j < const_N_train)
+  if (h < const_N_train)
   { 
     threi = thread_energy==0 ? 0 
-     : threadIdx.x <= use_pairs ? const_block_energy + blockIdx.x
-     : /* else */ thread_energy + o;
+          : threadIdx.x < GROUP_SIZE ? const_block_energy + blockIdx.x
+          : /* else */ thread_energy + o;
 
     thrgi = thread_grad==0 ? 0
-     : threadIdx.x <= use_pairs ? const_block_grad + blockIdx.x
-     : /* else */ thread_grad + o;
-  }
-
-  if (j<const_N_train && use_pairs)
-  {
-    h = j;
+          : threadIdx.x < GROUP_SIZE ? const_block_grad + blockIdx.x
+          : /* else */ thread_grad + o;
 
     train_vals_h = const_train_values+h;
     deriv_h = thrgi ? const_deriv+h : 0;
-    int k;
 
     net_func (train_vals_h, 0, &const_arch, flgs, &const_params);
 
@@ -2060,9 +2073,11 @@ __global__ void many_cases
     net_model_prob (train_vals_h, const_train_targets+const_N_targets*h, 
                     &log_prob, deriv_h, &const_arch, &const_model, 
                     &const_surv, const_noise, Cheap_energy);
+
     if (thrgi)
     { if (gr_weight!=1)
-      { for (k = 0; k<const_arch.N_outputs; k++)
+      { int k;
+        for (k = 0; k<const_arch.N_outputs; k++)
         { deriv_h->o[k] *= gr_weight;
         }
       }
@@ -2071,91 +2086,72 @@ __global__ void many_cases
     }
 
     if (threi)
-    { if (threadIdx.x&1)
-      { *(const_thread_energy2+o) = - en_weight * log_prob;
-      }
-      else
+    { if (GROUP_SIZE==1 || th==0)
       { *threi = - en_weight * log_prob;
       }
+      else if (GROUP_SIZE>1 && (GROUP_SIZE==2 || th==1))
+      { *(const_thread_energy1+o) = - en_weight * log_prob;
+      }
+      else if (GROUP_SIZE>2 && th==2)
+      { *(const_thread_energy2+o) = - en_weight * log_prob;
+      }
+      else if (GROUP_SIZE>3 /* && th==3 */)
+      { *(const_thread_energy3+o) = - en_weight * log_prob;
+      }
     }
-  }
 
-  if (use_pairs) 
-  { 
     __syncthreads();
 
-    if (j<const_N_train)
-    {
-      int th = threadIdx.x & 1;
-        
-      if (th==0 && (h+1>=const_N_train || threadIdx.x+1>=blockDim.x))
-      { if (thrgi)
-        { net_store_grad (thrgi, &const_params, train_vals_h, deriv_h, 
-                          &const_arch, flgs);
-        }
-      }
-      else
-      { if (threi && th==1)
-        { *threi += *(const_thread_energy2+o);
-        }
-        if (thrgi)
-        { net_store2_grad (th, thrgi, &const_params, 
-                           train_vals_h - th, train_vals_h - th + 1,
-                           deriv_h - th, deriv_h - th + 1,
-                           &const_arch, flgs);
-        }
-      }
+    if (GROUP_SIZE>1 && threi && th==0)
+    { if (GROUP_SIZE>1) *threi += *(const_thread_energy1+o);
+      if (GROUP_SIZE>2) *threi += *(const_thread_energy2+o);
+      if (GROUP_SIZE>3) *threi += *(const_thread_energy3+o);
     }
-  }
-  else  /* not using pair scheme */
-  { 
-    if (j<const_N_train)
-    {
-      int increment = 0;
-      for (h = j; h < j+cases_per_thread && h < const_N_train; h++)
-      { 
-        train_vals_h = const_train_values+h;
-        deriv_h = thrgi ? const_deriv+h : 0;
-        int k;
 
-        net_func (train_vals_h, 0, &const_arch, flgs, &const_params);
+    if (thrgi)
+    { 
+      net_values *train_vals_b = train_vals_h-th;
+      net_values *deriv_b = deriv_h-th;
 
-        double log_prob;
-        net_model_prob (train_vals_h, const_train_targets+const_N_targets*h, 
-                        &log_prob, deriv_h, &const_arch, &const_model, 
-                        &const_surv, const_noise, Cheap_energy);
+      int r;
+      r = const_N_train-(h-th);
+      if (r>GROUP_SIZE) r = GROUP_SIZE;
+      if (threadIdx.x+r>blockDim.x) r = blockDim.x-threadIdx.x;
 
-        if (threi)
-        { if (increment)
-          { *threi -= en_weight * log_prob;
-          }
-          else
-          { *threi = - en_weight * log_prob;
-          }
-        }
-
-        if (thrgi)
-        {
-          if (gr_weight!=1)
-          { for (k = 0; k<const_arch.N_outputs; k++)
-            { deriv_h->o[k] *= gr_weight;
-            }
-          }
-
-          net_back (train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
-                    &const_arch, flgs, &const_params);
-
-          if (increment)
-          { net_add_grad (thrgi, &const_params, train_vals_h, deriv_h, 
-                          &const_arch, flgs);
-          }
-          else
-          { net_store_grad (thrgi, &const_params, train_vals_h, deriv_h, 
+      switch (r)
+      { case 1: 
+        { if (th<1)
+          { net_store_grad (thrgi, &const_params, 
+                            train_vals_b, deriv_b, 
                             &const_arch, flgs);
           }
+          break;
         }
-
-        increment = 1;
+        case 2: 
+        { if (th<2)
+          { net_store2_grad (th, thrgi, &const_params, 
+                             train_vals_b, train_vals_b+1,
+                             deriv_b, deriv_b+1,
+                             &const_arch, flgs);
+          }
+          break;
+        }
+        case 3: 
+        { if (th<2) /* yes, 2, not 3 */
+          { net_store3_grad (th, thrgi, &const_params, 
+                             train_vals_b, train_vals_b+1, train_vals_b+2,
+                             deriv_b, deriv_b+1, deriv_b+2,
+                             &const_arch, flgs);
+          }
+          break;
+        }
+        default: /* 4 */
+        { net_store4_grad (th, thrgi, &const_params, 
+             train_vals_b, train_vals_b+1, train_vals_b+2, train_vals_b+3,
+             deriv_b, deriv_b+1, deriv_b+2, deriv_b+3,
+             &const_arch, flgs);
+          break;
+        }
       }
     }
   }
@@ -2163,93 +2159,52 @@ __global__ void many_cases
   /* Reduction of all threads to single gradient.  May be done using all 
      threads in the block (including ones not used above). */
 
-  int n_results;	/* Number of energy/grad results in this block (unless 
-                           this goes past the number of training cases) */
+  int n_blk_res;	/* Max number of energy/grad results in a block */
+  int n_results;	/* Number of energy/grad results in this block, less
+                           than n_blk_res if that would exceed training cases */
   int base;		/* Index in block of results to add to for this thread*/
   int stride;		/* Stride from base to reach result to add to it */
   int workers;          /* Number of threads that can work on adding to base */
   int base_worker;	/* Lowest of the worker threads */
   int this_worker;	/* Position of this thread in its worker group */
 
-  if (use_pairs)
-  { 
-    n_results = (const_N_train - start - blockIdx.x*blockDim.x + 1) >> 1;
-    if (n_results > (blockDim.x+1) >> 1)
-    { n_results = (blockDim.x+1) >> 1;
-    }
-
-    for (stride = 1; stride < n_results; stride <<= 1)
-    { 
-      __syncthreads();
-
-      base = (threadIdx.x>>1) & ~(2*stride-1);
-      base_worker = 2*base;
-      this_worker = threadIdx.x - base_worker;
-      workers = 4*stride;
-      if (base_worker+workers >= blockDim.x)
-      { workers = blockDim.x - base_worker;
-      }
-
-      if (base+stride < n_results)
-      { 
-        int wb = blockIdx.x * ((const_blksize+1)>>1) + base;
-        int ws = wb+stride;
-
-        if (thread_grad)
-        { net_param *restrict p = thread_grad[ws].param_block;
-          net_param *restrict q = 
-              base==0 ? const_block_grad[blockIdx.x].param_block
-                      : thread_grad[wb].param_block;
-          unsigned k;
-          for (k = this_worker; k < total_params; k += workers)
-          { q[k] += p[k];
-          }
-        }
-
-        if (threi && this_worker==0)
-        { *threi += thread_energy[ws];
-        }
-      }
-    }
+  n_blk_res = (const_blksize + GROUP_MASK) >> GROUP_SHIFT;
+  n_results = 
+    (const_N_train - start - blockIdx.x*blockDim.x + GROUP_MASK) >> GROUP_SHIFT;
+  if (n_results > n_blk_res)
+  { n_results = n_blk_res;
   }
-  else  /* !use_pairs */
-  {
-    n_results = const_N_train - start - blockIdx.x*blockDim.x;
-    if (n_results > blockDim.x)
-    { n_results = blockDim.x;
+
+  for (stride = 1; stride < n_results; stride <<= 1)
+  { 
+    __syncthreads();
+
+    base = (threadIdx.x>>GROUP_SHIFT) & ~(2*stride-1);
+    base_worker = base<<GROUP_SHIFT;
+    this_worker = threadIdx.x - base_worker;
+    workers = 2*GROUP_SIZE*stride;
+    if (base_worker+workers >= blockDim.x)
+    { workers = blockDim.x - base_worker;
     }
 
-    for (stride = 1; stride < n_results; stride <<= 1)
+    if (base+stride < n_results)
     { 
-      __syncthreads();
+      int wb = blockIdx.x * n_blk_res + base;
+      int ws = wb+stride;
 
-      base = threadIdx.x & ~(2*stride-1);
-      base_worker = base;
-      this_worker = threadIdx.x - base_worker;
-      workers = 2*stride;
-      if (base_worker+workers >= blockDim.x)
-      { workers = blockDim.x - base_worker;
+      if (thread_grad)
+      { net_param *restrict p = thread_grad[ws].param_block;
+        net_param *restrict q = 
+            base==0 ? const_block_grad[blockIdx.x].param_block
+                    : thread_grad[wb].param_block;
+        unsigned k;
+        for (k = this_worker; k < total_params; k += workers)
+        { q[k] += p[k];
+        }
       }
 
-      if (base+stride < n_results)
-      { 
-        int wb = blockIdx.x*const_blksize + base;
-        int ws = wb+stride;
-
-        if (thread_grad)
-        { net_param *restrict p = thread_grad[ws].param_block;
-          net_param *restrict q = 
-              base==0 ? const_block_grad[blockIdx.x].param_block
-                      : thread_grad[wb].param_block;
-          unsigned k;
-          for (k = this_worker; k < total_params; k += workers)
-          { q[k] += p[k];
-          }
-        }
-
-        if (threi && this_worker==0)
-        { *threi += thread_energy[ws];
-        }
+      if (threi && this_worker==0)
+      { *threi += thread_energy[ws];
       }
     }
   }
@@ -2370,23 +2325,22 @@ void mc_app_energy
 
           while (i < N_train || prev_blks > 0)
           { 
-            int thrds, blks, c;
+            int cases, thrds, blks;
 
             /* Launch kernel to do computations for next batch of cases. */
 
             if (i < N_train)
             {
-              c = N_train-i < max_cases_per_launch ? N_train-i
-                   : max_cases_per_launch;
-
-              thrds = (c + perthrd - 1) / perthrd;
+              cases = N_train-i < max_cases_per_launch ? N_train-i
+                                                       : max_cases_per_launch;
+              thrds = cases;
               blks = (thrds + blksize - 1) / blksize;
 
               if (0)
               { static int first = 1;
                 if (first)
-                { printf("Launching with <<<%d,%d>>>, %d cases per thread\n",
-                          blks,blksize,perthrd);
+                { printf("Launching with <<<%d,%d>>>, group size %d\n",
+                          blks, blksize, GROUP_SIZE);
                   first = 0;
                 }
               }
@@ -2394,9 +2348,8 @@ void mc_app_energy
               check_cuda_error (cudaGetLastError(), 
                                 "Before launching many_cases");
               many_cases <<<blks, blksize>>> 
-                         (energy ? thread_energy : 0, 
-                          gr ? thread_grad : 0, 
-                          i, use_pairs, perthrd, inv_temp, inv_temp);
+                (energy ? thread_energy : 0, gr ? thread_grad : 0, 
+                 i, inv_temp, inv_temp);
             }
 
             /* Do reduction of parts of gradient computed previously, while
@@ -2417,7 +2370,60 @@ void mc_app_energy
               for (j = 0; j<prev_blks; j++)
               { net_param *restrict npb = np->param_block;
                 unsigned k;
-#               if FP32 && USE_SIMD_INTRINSICS && __AVX__
+#               if FP64 && USE_SIMD_INTRINSICS && __AVX__
+                { unsigned e = grad.total_params & ~(unsigned)0x7;
+                  for (k = 0; k < e; k += 8)
+                  { _mm256_storeu_pd (grad.param_block+k, 
+                                      _mm256_add_pd (
+                                        _mm256_loadu_pd (grad.param_block+k),
+                                        _mm256_loadu_pd (npb+k)));
+                    _mm256_storeu_pd (grad.param_block+k+4, 
+                                      _mm256_add_pd (
+                                        _mm256_loadu_pd (grad.param_block+k+4),
+                                        _mm256_loadu_pd (npb+k+4)));
+                  }
+                  if (k < (grad.total_params & ~(unsigned)0x3))
+                  { _mm256_storeu_pd (grad.param_block+k, 
+                                      _mm256_add_pd (
+                                        _mm256_loadu_pd (grad.param_block+k),
+                                        _mm256_loadu_pd (npb+k)));
+                    k += 4;
+                  }
+                  if (k < (grad.total_params & ~(unsigned)0x1))
+                  { _mm_storeu_pd (grad.param_block+k, 
+                                   _mm_add_pd (
+                                     _mm_loadu_pd (grad.param_block+k),
+                                     _mm_loadu_pd (npb+k)));
+                    k += 2;
+                  }
+                  if (k < grad.total_params)
+                  { grad.param_block[k] += npb[k];
+                  }
+                }
+#               elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
+                { unsigned e = grad.total_params & ~(unsigned)0x3;
+                  for (k = 0; k < e; k += 4)
+                  { _mm_storeu_pd (grad.param_block+k, 
+                                   _mm_add_pd (
+                                     _mm_loadu_pd (grad.param_block+k),
+                                     _mm_loadu_pd (npb+k)));
+                    _mm_storeu_pd (grad.param_block+k+2, 
+                                   _mm_add_pd (
+                                     _mm_loadu_pd (grad.param_block+k+2),
+                                     _mm_loadu_pd (npb+k+2)));
+                  }
+                  if (k < (grad.total_params & ~(unsigned)0x1))
+                  { _mm_storeu_pd (grad.param_block+k, 
+                                   _mm_add_pd (
+                                     _mm_loadu_pd (grad.param_block+k),
+                                     _mm_loadu_pd (npb+k)));
+                    k += 2;
+                  }
+                  if (k < grad.total_params)
+                  { grad.param_block[k] += npb[k];
+                  }
+                }
+#               elif FP32 && USE_SIMD_INTRINSICS && __AVX__
                 { unsigned e = grad.total_params & ~(unsigned)0xf;
                   for (k = 0; k < e; k += 16)
                   { _mm256_storeu_ps (grad.param_block+k, 
@@ -2486,59 +2492,6 @@ void mc_app_energy
                   { grad.param_block[k] += npb[k];
                   }
                 }
-#               elif FP64 && USE_SIMD_INTRINSICS && __AVX__
-                { unsigned e = grad.total_params & ~(unsigned)0x7;
-                  for (k = 0; k < e; k += 8)
-                  { _mm256_storeu_pd (grad.param_block+k, 
-                                      _mm256_add_pd (
-                                        _mm256_loadu_pd (grad.param_block+k),
-                                        _mm256_loadu_pd (npb+k)));
-                    _mm256_storeu_pd (grad.param_block+k+4, 
-                                      _mm256_add_pd (
-                                        _mm256_loadu_pd (grad.param_block+k+4),
-                                        _mm256_loadu_pd (npb+k+4)));
-                  }
-                  if (k < (grad.total_params & ~(unsigned)0x3))
-                  { _mm256_storeu_pd (grad.param_block+k, 
-                                      _mm256_add_pd (
-                                        _mm256_loadu_pd (grad.param_block+k),
-                                        _mm256_loadu_pd (npb+k)));
-                    k += 4;
-                  }
-                  if (k < (grad.total_params & ~(unsigned)0x1))
-                  { _mm_storeu_pd (grad.param_block+k, 
-                                   _mm_add_pd (
-                                     _mm_loadu_pd (grad.param_block+k),
-                                     _mm_loadu_pd (npb+k)));
-                    k += 2;
-                  }
-                  if (k < grad.total_params)
-                  { grad.param_block[k] += npb[k];
-                  }
-                }
-#               elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
-                { unsigned e = grad.total_params & ~(unsigned)0x3;
-                  for (k = 0; k < e; k += 4)
-                  { _mm_storeu_pd (grad.param_block+k, 
-                                   _mm_add_pd (
-                                     _mm_loadu_pd (grad.param_block+k),
-                                     _mm_loadu_pd (npb+k)));
-                    _mm_storeu_pd (grad.param_block+k+2, 
-                                   _mm_add_pd (
-                                     _mm_loadu_pd (grad.param_block+k+2),
-                                     _mm_loadu_pd (npb+k+2)));
-                  }
-                  if (k < (grad.total_params & ~(unsigned)0x1))
-                  { _mm_storeu_pd (grad.param_block+k, 
-                                   _mm_add_pd (
-                                     _mm_loadu_pd (grad.param_block+k),
-                                     _mm_loadu_pd (npb+k)));
-                    k += 2;
-                  }
-                  if (k < grad.total_params)
-                  { grad.param_block[k] += npb[k];
-                  }
-                }
 #               else
                 { for (k = 0; k < grad.total_params; k++)
                   { grad.param_block[k] += npb[k];
@@ -2581,7 +2534,7 @@ void mc_app_energy
 
               prev_blks = blks;
 
-              i += c;
+              i += cases;
             }
           }
         }

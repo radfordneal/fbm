@@ -47,7 +47,7 @@
 
 #define GRAD_ALIGN_ELEMENTS (GRAD_ALIGN_BYTES / 4 / (1+FP64))
 
-#define GROUP_SHIFT 2		/* Log2 of number of threads in a group, must
+#define GROUP_SHIFT 0		/* Log2 of number of threads in a group, must
                                    be 0, 1, or 2 */
 
 #define GROUP_SIZE (1<<GROUP_SHIFT)  /* Number of threads in a group */
@@ -2041,6 +2041,8 @@ __global__ void many_cases
   double gr_weight	/* Weight for this case for gradient */
 )
 { 
+  // printf("Start many_cases: block %d, thread %d\n",blockIdx.x,threadIdx.x);
+
   net_flags *flgs = const_has_flgs ? &const_flgs : 0;
   unsigned total_params = const_params.total_params;
   int th = threadIdx.x & GROUP_MASK;
@@ -2099,13 +2101,20 @@ __global__ void many_cases
       { *(const_thread_energy3+o) = - en_weight * log_prob;
       }
     }
+  }
 
-    __syncthreads();
+  if (GROUP_SIZE>1)
+  { __syncthreads();  /* all threads - not just those with h < const_N_train */
+  }
 
-    if (GROUP_SIZE>1 && threi && th==0)
-    { if (GROUP_SIZE>1) *threi += *(const_thread_energy1+o);
-      if (GROUP_SIZE>2) *threi += *(const_thread_energy2+o);
-      if (GROUP_SIZE>3) *threi += *(const_thread_energy3+o);
+  if (h < const_N_train)
+  {
+    if (GROUP_SIZE>1)
+    { if (threi && th==0)
+      { if (GROUP_SIZE>1) *threi += *(const_thread_energy1+o);
+        if (GROUP_SIZE>2) *threi += *(const_thread_energy2+o);
+        if (GROUP_SIZE>3) *threi += *(const_thread_energy3+o);
+      }
     }
 
     if (thrgi)
@@ -2113,10 +2122,11 @@ __global__ void many_cases
       net_values *train_vals_b = train_vals_h-th;
       net_values *deriv_b = deriv_h-th;
 
-      int r;
-      r = const_N_train-(h-th);
-      if (r>GROUP_SIZE) r = GROUP_SIZE;
-      if (threadIdx.x+r>blockDim.x) r = blockDim.x-threadIdx.x;
+      int r = GROUP_SIZE;
+      if (GROUP_SIZE>1)
+      { if (r > const_N_train-(h-th))   r = const_N_train-(h-th);
+        if (threadIdx.x+r > blockDim.x) r = blockDim.x-threadIdx.x;
+      }
 
       switch (r)
       { case 1: 
@@ -2168,6 +2178,8 @@ __global__ void many_cases
   int base_worker;	/* Lowest of the worker threads */
   int this_worker;	/* Position of this thread in its worker group */
 
+  // printf("Reducing: block %d, thread %d\n",blockIdx.x,threadIdx.x);
+
   n_blk_res = (const_blksize + GROUP_MASK) >> GROUP_SHIFT;
   n_results = 
     (const_N_train - start - blockIdx.x*blockDim.x + GROUP_MASK) >> GROUP_SHIFT;
@@ -2208,6 +2220,8 @@ __global__ void many_cases
       }
     }
   }
+
+  // printf("Done many_case: block %d, thread %d\n",blockIdx.x,threadIdx.x);
 }
 
 #endif

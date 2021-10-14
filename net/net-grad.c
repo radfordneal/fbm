@@ -2611,6 +2611,7 @@ __device__ static void net_store4_grad2_config
         net_value soi2 = s2[cn[c].s] + o;
         net_value soi3 = s3[cn[c].s] + o;
         j = cn[c].d;
+        __syncthreads();
         g[k+th] += 
           soi0*d0[j+th] + soi1*d1[j+th] + soi2*d2[j+th] + soi3*d3[j+th];
       }
@@ -2622,6 +2623,7 @@ __device__ static void net_store4_grad2_config
         net_value si2 = s2[cn[c].s];
         net_value si3 = s3[cn[c].s];
         j = cn[c].d;
+        __syncthreads();
         g[k+th] += si0*d0[j+th] + si1*d1[j+th] + si2*d2[j+th] + si3*d3[j+th];
       }
     }

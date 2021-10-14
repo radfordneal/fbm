@@ -681,8 +681,8 @@ void print_config (net_config *cf, int biases)
     { printf("quad_s_4d_4w:\n");
       for (int i = 0; cf->quad_s_4d_4w[i].w >= 0; i++)
       { printf("%3d %3d-%-3d %3d-%-3d\n", cf->quad_s_4d_4w[i].s, 
-                               cf->quad_s_4d_4w[i].d, cf->quad_s_4d_4w[i].d+4,
-                               cf->quad_s_4d_4w[i].w, cf->quad_s_4d_4w[i].w+4);
+                               cf->quad_s_4d_4w[i].d, cf->quad_s_4d_4w[i].d+3,
+                               cf->quad_s_4d_4w[i].w, cf->quad_s_4d_4w[i].w+3);
       }
       printf("\n");
     }

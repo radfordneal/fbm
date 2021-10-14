@@ -336,7 +336,13 @@ net_config *net_config_read (char *file, int ns, int nd)
 }
 
 
-/* PRODUCE SORTED / GROUPED VERSIONS OF THE CONFIGURATION. */
+/* PRODUCE SORTED / GROUPED VERSIONS OF THE CONFIGURATION.  Sets up the
+   'single', 'single4_s', etc. fields of the net_config structure, based
+   on the connections in 'conn'. */
+
+/* Return a measure of nonadjacency in a sequence of connections.  May also
+   print this out (with 'prefix') if enabled below, for performance assessment
+   purposes. */
 
 static int non_adjacency (net_connection *a, const char *prefix)
 { 
@@ -371,6 +377,8 @@ static int non_adjacency (net_connection *a, const char *prefix)
   return s;
 }
 
+/* Comparison functions for sorting. */
+
 static int cmp_s_d_w (const void *a0, const void *b0)
 { net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
   int r;
@@ -404,11 +412,14 @@ static int cmp_s_wmd_d (const void *a0, const void *b0)
   return r;
 }
 
+/* The net_config_sort function called from elsewhere. */
+
 static void net_config_sort (net_config *cf)
 { 
   int n = cf->N_conn;
 
-  /* We will keep remaining connections, not otherwise handled, in 'rem'. */
+  /* We will keep remaining connections, not otherwise handled, in 'rem',
+     with count of how many in 'r'. */
 
   net_connection *rem = 
     (net_connection *) chk_alloc (n+1, sizeof *rem);  /* one -1 at end */
@@ -416,7 +427,8 @@ static void net_config_sort (net_config *cf)
   int r = n;
 
   /* We will put all connections, as sorted and grouped, in successive parts 
-     of 'all', setting pointers to parts of it in cf. */
+     of 'all', setting pointers to parts of it in cf.  The next unused entry
+     in 'all' is stored in 'a'. */
 
   net_connection *all = (net_connection *) chk_alloc (n+9+3, sizeof *all);  
               /* Allow up to nine -1's, then +3 to ensure AVX loads are OK */
@@ -460,7 +472,7 @@ static void net_config_sort (net_config *cf)
     }
 
     tmp[j].w = -1;
-    non_adjacency (tmp, "quads4d4w");
+    non_adjacency (tmp, "quads4d4w");  /* only useful for info, if enabled */
 
     r = k;
     rem[k].w = -1;
@@ -502,7 +514,7 @@ static void net_config_sort (net_config *cf)
     }
 
     tmp[j].w = -1;
-    non_adjacency (tmp, "single4d");
+    non_adjacency (tmp, "single4d");  /* only useful for info, if enabled */
 
     r = k;
     rem[k].w = -1;
@@ -544,7 +556,7 @@ static void net_config_sort (net_config *cf)
     }
 
     tmp[j].w = -1;
-    non_adjacency (tmp, "single4s");
+    non_adjacency (tmp, "single4s");  /* only useful for info, if enabled */
 
     r = k;
     rem[k].w = -1;

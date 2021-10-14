@@ -674,6 +674,40 @@ void print_config (net_config *cf, int biases)
     printf ("%6d %6d\n", cf->conn[k].d+1, cf->conn[k].w+1);
   }
   printf("\n");
+
+  if (0)  /* can enable for debugging */
+  {
+    if (CONFIG_QUAD_S_4D_4W)
+    { printf("quad_s_4d_4w:\n");
+      for (int i = 0; cf->quad_s_4d_4w[i].w >= 0; i++)
+      { printf("%3d %3d-%-3d %3d-%-3d\n", cf->quad_s_4d_4w[i].s, 
+                               cf->quad_s_4d_4w[i].d, cf->quad_s_4d_4w[i].d+4,
+                               cf->quad_s_4d_4w[i].w, cf->quad_s_4d_4w[i].w+4);
+      }
+      printf("\n");
+    }
+
+    if (CONFIG_SINGLE4)
+    { printf("single4_s:\n");
+      for (int i = 0; cf->single4_s[i].w >= 0; i++)
+      { printf("%3d %3d %3d\n",
+                cf->single4_s[i].s, cf->single4_s[i].d, cf->single4_s[i].w);
+      }
+      printf("single4_d:\n");
+      for (int i = 0; cf->single4_d[i].w >= 0; i++)
+      { printf("%3d %3d %3d\n",
+                cf->single4_d[i].s, cf->single4_d[i].d, cf->single4_d[i].w);
+      }
+      printf("\n");
+    }
+
+    printf("single:\n");
+    for (int i = 0; cf->single[i].w >= 0; i++)
+    { printf("%3d %3d %3d\n",
+              cf->single[i].s, cf->single[i].d, cf->single[i].w);
+    }
+    printf("\n");
+  }
 }
 
 

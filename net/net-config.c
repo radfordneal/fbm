@@ -576,27 +576,6 @@ static void net_config_sort (net_config *cf)
 
   free(tmp);
   free(rem);
-
-  if (0)  /* can enable for debugging */
-  {
-    if (CONFIG_SINGLE4)
-    { printf("single4_s:\n");
-      for (int i = 0; cf->single4_s[i].w >= 0; i++)
-      { printf("%d %d %d\n",
-                cf->single4_s[i].s, cf->single4_s[i].d, cf->single4_s[i].w);
-      }
-      printf("single4_d:\n");
-      for (int i = 0; cf->single4_d[i].w >= 0; i++)
-      { printf("%d %d %d\n",
-                cf->single4_d[i].s, cf->single4_d[i].d, cf->single4_d[i].w);
-      }
-    }
-    printf("single:\n");
-    for (int i = 0; cf->single[i].w >= 0; i++)
-    { printf("%d %d %d\n",
-              cf->single[i].s, cf->single[i].d, cf->single[i].w);
-    }
-  }
 }
 
 

@@ -2194,7 +2194,7 @@ __device__ static void net_store4_grad2_config (int, net_param *restrict,
    sometimes only one thread (0) is used. */
 
 __device__ void net_store4_grad
-( int th,		/* Which thread (0 or 1) */
+( int th,		/* Which thread (0, 1, 2, or 3) */
   net_params *restrict g, /* Gradient with respect to parameters to store to */
   net_params const*w,	/* Network parameters (only offsets used) */
   net_values const*v0,	/* Values for units in network for case 0 */
@@ -2543,7 +2543,7 @@ do \
 
 
 __device__ static void net_store4_grad2
-( int th,		  /* Which thread (0 or 1) */
+( int th,		  /* Which thread (0, 1, 2, or 3) */
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const* v0,    /* Source unit values, case 0 */
   net_value const* v1,    /* Source unit values, case 1 */
@@ -2580,7 +2580,7 @@ __device__ static void net_store4_grad2
 
 
 __device__ static void net_store4_grad2_config
-( int th,		  /* Which thread (0 or 1) */
+( int th,		  /* Which thread (0,1, 2, or 3) */
   net_param *restrict g,  /* Array of derivatives to add to */
   net_value const* s0,    /* Source unit values, case 0 */
   net_value const* s1,    /* Source unit values, case 1 */

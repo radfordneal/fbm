@@ -425,6 +425,39 @@ static int cmp_s_wmd_d (const void *a0, const void *b0)
   return r;
 }
 
+/* Copy connections already sorted by w mod 4 (terminated by w of -1), 
+   inserting  w of -1 after the end of each section.  Returns the number 
+   of connections, including the four with -1s.  Stores staring indexes
+   for section for each mod value in start, if it is not null. */
+
+static int copy_wmod4 (net_connection *dst, net_connection *src, int *start)
+{
+  int i, j, w, m;
+
+  if (start) start[0] = 0;
+
+  i = 0;
+  j = 0;
+  m = 0;
+
+  while ((w = src[i].w) >= 0)
+  { while (m != (w & 3)) 
+    { dst[j++].w = -1;
+      m += 1;
+      if (start && m<4) start[m] = j;
+    }
+    dst[j++] = src[i++];
+  }
+
+  while (m < 4)
+  { dst[j++].w = -1;
+    m += 1;
+    if (start && m<4) start[m] = j;
+  }
+
+  return j;
+}
+
 /* The actual net_config_sort function, called from elsewhere. */
 
 static void net_config_sort (net_config *cf)
@@ -456,7 +489,7 @@ static void net_config_sort (net_config *cf)
   /* Temporary storage. */
 
   net_connection *tmp = 
-    (net_connection *) chk_alloc (n+1, sizeof *rem);  /* one -1 at end */
+    (net_connection *) chk_alloc (n+1, sizeof *tmp);  /* one -1 at end */
 
   non_adjacency (cf->conn,  "original");
 
@@ -515,24 +548,18 @@ static void net_config_sort (net_config *cf)
     all_gpu[a_gpu++].w = -1;
   }
   else
-  { int i, j; int w, m;
-    cf->quad_s_4d_4w_gpu = all_gpu+a_gpu;
-    i = 0;
-    j = 0;
-    m = 0;
-    while ((w = cf->quad_s_4d_4w[i].w) >= 0)
-    { while (m != (w & 3)) 
-      { cf->quad_s_4d_4w_gpu[j++].w = -1;
-        m += 1;
-      }
-      cf->quad_s_4d_4w_gpu[j++] = cf->quad_s_4d_4w[i++];
-    }
-    while (m < 4)
-    { cf->quad_s_4d_4w_gpu[j++].w = -1;
-      m += 1;
-    }
-    a_gpu += j;
+  { cf->quad_s_4d_4w_gpu = all_gpu+a_gpu;
+    a_gpu += copy_wmod4 (cf->quad_s_4d_4w_gpu, cf->quad_s_4d_4w, 0);
   }
+
+  /* Set up other connections (not in quad_s_4d_4w_gpu) for use in gpu
+     gradient computations. */
+
+  memcpy (tmp, rem, r * sizeof *tmp);  
+  qsort (tmp, r, sizeof *tmp, cmp_wmod4_w_d_s);
+  tmp[r].w = -1;
+  cf->other_gpu = all_gpu+a_gpu;
+  a_gpu += copy_wmod4 (cf->other_gpu, tmp, cf->start_in_other);
 
   /* Find groups of four single connections with the same value for d, if
      this is enabled. */
@@ -676,6 +703,17 @@ net_config *net_config_to_gpu (net_config *cf)
   dcf.single4_s = dcf.all + (cf->single4_s - cf->all);
   dcf.single4_d = dcf.all + (cf->single4_d - cf->all);
   dcf.quad_s_4d_4w = dcf.all + (cf->quad_s_4d_4w - cf->all);
+
+  check_cuda_error (cudaMalloc (&dcf.all_gpu, 
+                                dcf.all_gpu_length * sizeof *dcf.all_gpu),
+                    "alloc of dev config all_gpu");
+  check_cuda_error (cudaMemcpy (dcf.all_gpu, cf->all_gpu, 
+                                dcf.all_gpu_length * sizeof *dcf.all_gpu,
+                                cudaMemcpyHostToDevice),
+                    "copy to dev config all_gpu");
+
+  dcf.quad_s_4d_4w_gpu = dcf.all_gpu + (cf->quad_s_4d_4w_gpu - cf->all_gpu);
+  dcf.other_gpu = dcf.all_gpu + (cf->other_gpu - cf->all_gpu);
 
   net_config *dev_dcf;
   check_cuda_error (cudaMalloc (&dev_dcf, sizeof *dev_dcf),

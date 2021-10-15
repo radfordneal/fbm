@@ -81,9 +81,11 @@ typedef struct
   net_connection *all;		/* Pointer to block with items above */
   int all_length;		/* Length of 'all' block in use */
 
-  net_connection *quad_s_4d_4w_gpu;  /* GPU version, with extra -1s */
-  net_connection *all_gpu;
-  int all_gpu_length;
+  net_connection *quad_s_4d_4w_gpu;  /* GPU version, with four -1 terminators */
+  net_connection *other_gpu;	/* GPU version of other connections, has 4 -1s*/
+  int start_in_other[4];	/* Start indexes for sections in other_gpu */
+  net_connection *all_gpu;	/* Pointer to block with items above */
+  int all_gpu_length;		/* Length of 'all_gpu' block in use */
 
 } net_config;
 

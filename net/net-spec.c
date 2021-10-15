@@ -675,7 +675,7 @@ void print_config (net_config *cf, int biases)
   }
   printf("\n");
 
-  if (1)  /* can enable for debugging */
+  if (0)  /* can enable for debugging */
   { 
     int i, r;
 
@@ -721,6 +721,22 @@ void print_config (net_config *cf, int biases)
               cf->single[i].s, cf->single[i].d, cf->single[i].w);
     }
     printf("\n");
+
+    printf("other for gpu:\n\n");
+    printf("start indexes: %d %d %d %d\n\n",
+            cf->start_in_other[0], cf->start_in_other[1],
+            cf->start_in_other[2], cf->start_in_other[3]);
+    i = 0;
+    for (r = 0; r<4; r++)
+    { printf("First weight %d mod 4:\n",r);
+      while (cf->other_gpu[i].w >= 0)
+      { printf("%3d %3d %3d\n", 
+                cf->other_gpu[i].s, cf->other_gpu[i].d, cf->other_gpu[i].w);
+        i += 1;
+      }
+      i += 1;
+      printf("\n");
+    }
   }
 }
 

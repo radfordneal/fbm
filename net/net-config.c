@@ -401,6 +401,19 @@ static int cmp_d_s_w (const void *a0, const void *b0)
   return r;
 }
 
+static int cmp_wmod4_w_d_s (const void *a0, const void *b0)
+{ net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
+  int r;
+  r = (int)(a->w&3) - (int)(b->w&3);
+  if (r!=0) return r;
+  r = (int)a->w - (int)b->w;
+  if (r!=0) return r;
+  r = (int)a->d - (int)b->d;
+  if (r!=0) return r;
+  r = (int)a->s - (int)b->s;
+  return r;
+}
+
 static int cmp_s_wmd_d (const void *a0, const void *b0)
 { net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
   int r;
@@ -412,7 +425,7 @@ static int cmp_s_wmd_d (const void *a0, const void *b0)
   return r;
 }
 
-/* The net_config_sort function called from elsewhere. */
+/* The actual net_config_sort function, called from elsewhere. */
 
 static void net_config_sort (net_config *cf)
 { 
@@ -430,9 +443,15 @@ static void net_config_sort (net_config *cf)
      of 'all', setting pointers to parts of it in cf.  The next unused entry
      in 'all' is stored in 'a'. */
 
-  net_connection *all = (net_connection *) chk_alloc (n+9+3, sizeof *all);  
-              /* Allow up to nine -1's, then +3 to ensure AVX loads are OK */
+  net_connection *all = (net_connection *) chk_alloc (n+20+3, sizeof *all);  
+              /* Allow up to twenty -1's, then +3 to ensure AVX loads are OK */
   int a = 0;
+
+  /* For use in gpu gradient computations, we set up somewhat different 
+     sets of connections. */
+
+  net_connection *all_gpu = (net_connection *) chk_alloc(n+20, sizeof *all_gpu);
+  int a_gpu = 0;
 
   /* Temporary storage. */
 
@@ -471,6 +490,8 @@ static void net_config_sort (net_config *cf)
       }
     }
 
+    qsort (tmp, j, sizeof *tmp, cmp_wmod4_w_d_s);
+
     tmp[j].w = -1;
     non_adjacency (tmp, "quads4d4w");  /* only useful for info, if enabled */
 
@@ -481,6 +502,36 @@ static void net_config_sort (net_config *cf)
     memcpy (all+a, tmp, j * sizeof *all);
     all[a+j].w = -1;
     a += j+1;
+  }
+
+  /* The quad_s_4d_4w connections are also used for gpu gradient computations,
+     but with extra -1 indicators for when the first weight mod 4 changes. */
+
+  if (!CONFIG_QUAD_S_4D_4W)
+  { cf->quad_s_4d_4w_gpu = all_gpu+a_gpu;
+    all_gpu[a_gpu++].w = -1;
+    all_gpu[a_gpu++].w = -1;
+    all_gpu[a_gpu++].w = -1;
+    all_gpu[a_gpu++].w = -1;
+  }
+  else
+  { int i, j; int w, m;
+    cf->quad_s_4d_4w_gpu = all_gpu+a_gpu;
+    i = 0;
+    j = 0;
+    m = 0;
+    while ((w = cf->quad_s_4d_4w[i].w) >= 0)
+    { while (m != (w & 3)) 
+      { cf->quad_s_4d_4w_gpu[j++].w = -1;
+        m += 1;
+      }
+      cf->quad_s_4d_4w_gpu[j++] = cf->quad_s_4d_4w[i++];
+    }
+    while (m < 4)
+    { cf->quad_s_4d_4w_gpu[j++].w = -1;
+      m += 1;
+    }
+    a_gpu += j;
   }
 
   /* Find groups of four single connections with the same value for d, if
@@ -579,12 +630,16 @@ static void net_config_sort (net_config *cf)
   { memcpy (all+a, rem, r * sizeof *all);
   }
   cf->single = all+a;
-  all[a+r].w = -1;
+  a += r;
+  all[a++].w = -1;
 
   /* Record the block all the sorted versions came from, in config structure. */
 
   cf->all = all;
-  cf->all_length = a+r+1;
+  cf->all_length = a;
+
+  cf->all_gpu = all_gpu;
+  cf->all_gpu_length = a_gpu;
 
   free(tmp);
   free(rem);

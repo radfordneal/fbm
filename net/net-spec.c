@@ -675,26 +675,40 @@ void print_config (net_config *cf, int biases)
   }
   printf("\n");
 
-  if (0)  /* can enable for debugging */
-  {
+  if (1)  /* can enable for debugging */
+  { 
+    int i, r;
+
     if (CONFIG_QUAD_S_4D_4W)
     { printf("quad_s_4d_4w:\n");
-      for (int i = 0; cf->quad_s_4d_4w[i].w >= 0; i++)
+      for (i = 0; cf->quad_s_4d_4w[i].w >= 0; i++)
       { printf("%3d %3d-%-3d %3d-%-3d\n", cf->quad_s_4d_4w[i].s, 
                                cf->quad_s_4d_4w[i].d, cf->quad_s_4d_4w[i].d+3,
                                cf->quad_s_4d_4w[i].w, cf->quad_s_4d_4w[i].w+3);
       }
       printf("\n");
+      i = 0;
+      for (r = 0; r<4; r++)
+      { printf("First weight %d mod 4:\n",r);
+        while (cf->quad_s_4d_4w_gpu[i].w >= 0)
+        { printf("%3d %3d-%-3d %3d-%-3d\n", cf->quad_s_4d_4w_gpu[i].s, 
+                        cf->quad_s_4d_4w_gpu[i].d, cf->quad_s_4d_4w_gpu[i].d+3,
+                        cf->quad_s_4d_4w_gpu[i].w, cf->quad_s_4d_4w_gpu[i].w+3);
+          i += 1;
+        }
+        i += 1;
+        printf("\n");
+      }
     }
 
     if (CONFIG_SINGLE4)
     { printf("single4_s:\n");
-      for (int i = 0; cf->single4_s[i].w >= 0; i++)
+      for (i = 0; cf->single4_s[i].w >= 0; i++)
       { printf("%3d %3d %3d\n",
                 cf->single4_s[i].s, cf->single4_s[i].d, cf->single4_s[i].w);
       }
       printf("single4_d:\n");
-      for (int i = 0; cf->single4_d[i].w >= 0; i++)
+      for (i = 0; cf->single4_d[i].w >= 0; i++)
       { printf("%3d %3d %3d\n",
                 cf->single4_d[i].s, cf->single4_d[i].d, cf->single4_d[i].w);
       }
@@ -702,7 +716,7 @@ void print_config (net_config *cf, int biases)
     }
 
     printf("single:\n");
-    for (int i = 0; cf->single[i].w >= 0; i++)
+    for (i = 0; cf->single[i].w >= 0; i++)
     { printf("%3d %3d %3d\n",
               cf->single[i].s, cf->single[i].d, cf->single[i].w);
     }

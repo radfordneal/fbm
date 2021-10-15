@@ -80,6 +80,11 @@ typedef struct
   net_connection *quad_s_4d_4w;	/* Four connections, same s, sequential d & w */
   net_connection *all;		/* Pointer to block with items above */
   int all_length;		/* Length of 'all' block in use */
+
+  net_connection *quad_s_4d_4w_gpu;  /* GPU version, with extra -1s */
+  net_connection *all_gpu;
+  int all_gpu_length;
+
 } net_config;
 
 

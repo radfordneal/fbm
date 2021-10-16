@@ -2331,24 +2331,39 @@ __device__ static void net_store4_grad1
 __device__ static void net_store4_grad1_config
 ( int th,		  /* Which thread (0, 1, 2, or 3) */
   net_param *restrict g,  /* Array of derivatives to store to */
-  net_value const* v0,    /* Derivatives with respect to unit values, case 0 */
-  net_value const* v1,    /* Derivatives with respect to unit values, case 1 */
-  net_value const* v2,    /* Derivatives with respect to unit values, case 2 */
-  net_value const* v3,    /* Derivatives with respect to unit values, case 3 */
+  net_value const* d0,    /* Derivatives with respect to unit values, case 0 */
+  net_value const* d1,    /* Derivatives with respect to unit values, case 1 */
+  net_value const* d2,    /* Derivatives with respect to unit values, case 2 */
+  net_value const* d3,    /* Derivatives with respect to unit values, case 3 */
   net_config const* cf    /* Configuration for biases */
 )
-{ net_connection *cn = cf->conn;
+{ net_connection *cn;
   int c, j, k;
 
   for (k = th; k<cf->N_wts; k+=4)
   { g[k] = 0;
   }
 
-  if (th!=0) return;  /* remainder done by a single thread */
+  if (CONFIG_QUAD_S_4D_4W)
+  { cn = cf->quad_s_4d_4w_gpu;
+    int m, ix;
+    c = 0;
+    for (m = 0; m<4; m++)
+    { ix = (th+4-m)&3;
+      for (;;)
+      { j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        g[k+ix] += (d0[j+ix] + d1[j+ix]) + (d2[j+ix] + d3[j+ix]);
+      }
+    }
+  }
 
-  for (c = 0; (k = cn[c].w) >= 0; c++)
-  { j = cn[c].d;
-    g[k] += v0[j] + v1[j] + v2[j] + v3[j];
+  cn = cf->other_gpu;
+  c = cf->start_in_other[th];
+  for (;;)
+  { j = cn[c].d; k = cn[c].w; c += 1;
+    if (k<0) break;
+    g[k] += (d0[j] + d1[j]) + (d2[j] + d3[j]);
   }
 }
 

@@ -2114,9 +2114,15 @@ __global__ void many_cases
   {
     if (GROUP_SIZE>1)
     { if (threi && th==0)
-      { if (GROUP_SIZE>1) *threi += *(const_thread_energy1+o);
-        if (GROUP_SIZE>2) *threi += *(const_thread_energy2+o);
-        if (GROUP_SIZE>3) *threi += *(const_thread_energy3+o);
+      { if (GROUP_SIZE>1 && h+1<const_N_train) 
+        { *threi += *(const_thread_energy1+o);
+        }
+        if (GROUP_SIZE>2 && h+2<const_N_train)
+        { *threi += *(const_thread_energy2+o);
+        }
+        if (GROUP_SIZE>3 && h+3<const_N_train)
+        { *threi += *(const_thread_energy3+o);
+        }
       }
     }
 
@@ -2130,8 +2136,6 @@ __global__ void many_cases
       { if (r > const_N_train - (h-th))   r = const_N_train - (h-th);
         if (threadIdx.x-th + r > blockDim.x) r = blockDim.x - (threadIdx.x-th);
       }
-//printf("in store2_grad, blk %d, thread %d, th %d, r %d\n",
-//blockIdx.x,threadIdx.x,th,r);
 
       switch (r)
       { case 1: 
@@ -2144,10 +2148,7 @@ __global__ void many_cases
         }
         case 2: 
         { if (th<2)
-          { 
-//printf("starting store2_grad, blk %d, thread %d, th %d\n",
-//blockIdx.x,threadIdx.x,th);
-            net_store2_grad (th, thrgi, &const_params, 
+          { net_store2_grad (th, thrgi, &const_params, 
                              train_vals_b, train_vals_b+1,
                              deriv_b, deriv_b+1,
                              &const_arch, flgs);
@@ -2174,7 +2175,7 @@ __global__ void many_cases
     }
   }
 
-  /* Reduction of all threads to single gradient.  May be done using all 
+  /* Reduction of all threads to single energy/gradient.  May be done using all 
      threads in the block (including ones not used above). */
 
   int n_blk_res;	/* Max number of energy/grad results in a block */

@@ -1564,9 +1564,10 @@ __device__ static void net_store2_grad2_config
         for (;;)
         { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
           if (k<0) break;
+          net_value s0i = s0[i], s1i = s1[i];
           net_param o = off[i];
-          g[k+ix] += (s0[i]+o)*d0[j+ix] + (s1[i]+o)*d1[j+ix];
-          g[k+ix+2] += (s0[i]+o)*d0[j+ix+2] + (s1[i]+o)*d1[j+ix+2];
+          g[k+ix] += (s0i+o)*d0[j+ix] + (s1i+o)*d1[j+ix];
+          g[k+ix+2] += (s0i+o)*d0[j+ix+2] + (s1i+o)*d1[j+ix+2];
         }
       }
     }
@@ -1577,8 +1578,9 @@ __device__ static void net_store2_grad2_config
         for (;;)
         { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
           if (k<0) break;
-          g[k+ix] += s0[i]*d0[j+ix] + s1[i]*d1[j+ix];
-          g[k+ix+2] += s0[i]*d0[j+ix+2] + s1[i]*d1[j+ix+2];
+          net_value s0i = s0[i], s1i = s1[i];
+          g[k+ix] += s0i*d0[j+ix] + s1i*d1[j+ix];
+          g[k+ix+2] += s0i*d0[j+ix+2] + s1i*d1[j+ix+2];
         }
       }
     }
@@ -2037,11 +2039,12 @@ __device__ static void net_store3_grad2_config
         for (;;)
         { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
           if (k<0) break;
+          net_value s0i = s0[i], s1i = s1[i], s2i = s2[i];
           net_param o = off[i];
-          g[k+ix] += (s0[i]+o)*d0[j+ix] + (s1[i]+o)*d1[j+ix] 
-                                        + (s2[i]+o)*d2[j+ix];
-          g[k+ix+2] += (s0[i]+o)*d0[j+ix+2] + (s1[i]+o)*d1[j+ix+2]
-                                            + (s2[i]+o)*d2[j+ix+2];
+          g[k+ix] += (s0i+o)*d0[j+ix] + (s1i+o)*d1[j+ix] 
+                                      + (s2i+o)*d2[j+ix];
+          g[k+ix+2] += (s0i+o)*d0[j+ix+2] + (s1i+o)*d1[j+ix+2]
+                                          + (s2i+o)*d2[j+ix+2];
         }
       }
     }
@@ -2052,10 +2055,9 @@ __device__ static void net_store3_grad2_config
         for (;;)
         { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
           if (k<0) break;
-          g[k+ix] += s0[i]*d0[j+ix] + s1[i]*d1[j+ix]
-                                    + s2[i]*d2[j+ix];
-          g[k+ix+2] += s0[i]*d0[j+ix+2] + s1[i]*d1[j+ix+2]
-                                        + s2[i]*d2[j+ix+2];
+          net_value s0i = s0[i], s1i = s1[i], s2i = s2[i];
+          g[k+ix] += s0i*d0[j+ix] + s1i*d1[j+ix] + s2i*d2[j+ix];
+          g[k+ix+2] += s0i*d0[j+ix+2] + s1i*d1[j+ix+2] + s2i*d2[j+ix+2];
         }
       }
     }

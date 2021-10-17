@@ -2186,8 +2186,6 @@ __global__ void many_cases
   int base_worker;	/* Lowest of the worker threads */
   int this_worker;	/* Position of this thread in its worker group */
 
-  // printf("Reducing: block %d, thread %d\n",blockIdx.x,threadIdx.x);
-
   n_blk_res = (const_blksize + GROUP_MASK) >> GROUP_SHIFT;
   n_results = 
     (const_N_train - start - blockIdx.x*blockDim.x + GROUP_MASK) >> GROUP_SHIFT;
@@ -2195,9 +2193,13 @@ __global__ void many_cases
   { n_results = n_blk_res;
   }
 
-  for (stride = 1; stride < n_results; stride <<= 1)
+  for (stride = 1; stride < n_blk_res; stride <<= 1)
   { 
-    __syncthreads();
+    __syncthreads();  /* all calls must be done by all threads! */
+
+    if (stride >= n_results)
+    { continue;
+    }
 
     base = (threadIdx.x>>GROUP_SHIFT) & ~(2*stride-1);
     base_worker = base<<GROUP_SHIFT;

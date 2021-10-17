@@ -1327,8 +1327,6 @@ __device__ static void net_store2_grad1
   int i;
   for (i = th; i<n; i+=2)
   { g[i] = v0[i] + v1[i];
-//printf("store2_grad blk %d, thrd %d, i %d: %.17g %.17g -> %.17g\n",
-//blockIdx.x,threadIdx.x,i,v0[i],v1[i],g[i]);
   }
 }
 
@@ -1336,22 +1334,39 @@ __device__ static void net_store2_grad1
 __device__ static void net_store2_grad1_config
 ( int th,		  /* Which thread (0 or 1) */
   net_param *restrict g,  /* Array of derivatives to store to */
-  net_value const* v0,    /* Derivatives with respect to unit values, case 0 */
-  net_value const* v1,    /* Derivatives with respect to unit values, case 1 */
+  net_value const* d0,    /* Derivatives with respect to unit values, case 0 */
+  net_value const* d1,    /* Derivatives with respect to unit values, case 1 */
   net_config const* cf    /* Configuration for biases */
 )
-{ net_connection *cn = cf->conn;
-  int c, j, k;
+{ net_connection *cn;
+  int c, j, k, m, ix;
 
   for (k = th; k<cf->N_wts; k+=2)
   { g[k] = 0;
   }
 
-  if (th!=0) return;  /* remainder done by a single thread */
+  if (CONFIG_QUAD_S_4D_4W)
+  { cn = cf->quad_s_4d_4w_gpu;
+    c = 0;
+    for (m = 0; m<4; m++)
+    { ix = (th+4-m)&1;
+      for (;;)
+      { j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        g[k+ix] += d0[j+ix] + d1[j+ix];
+        g[k+ix+2] += d0[j+ix+2] + d1[j+ix+2];
+      }
+    }
+  }
 
-  for (c = 0; (k = cn[c].w) >= 0; c++)
-  { j = cn[c].d;
-    g[k] += v0[j] + v1[j];
+  cn = cf->other_gpu;
+  for (m = 0; m<4; m+=2)
+  { c = cf->start_in_other[th+m];
+    for (;;)
+    { j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      g[k] += d0[j] + d1[j];
+    }
   }
 }
 
@@ -1534,114 +1549,58 @@ __device__ static void net_store2_grad2_config
 )
 {
   net_connection *cn;
-  int i, j, k, c;
+  int i, j, k, c, m, ix;
 
   for (k = th; k<cf->N_wts; k+=2)
   { g[k] = 0;
   }
 
   if (CONFIG_QUAD_S_4D_4W)
-  { cn = cf->quad_s_4d_4w;
+  { cn = cf->quad_s_4d_4w_gpu;
     if (off)
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { net_param o = off[cn[c].s];
-        net_value soi0 = s0[cn[c].s] + o;
-        net_value soi1 = s1[cn[c].s] + o;
-        j = cn[c].d;
-        g[k+th+0] += soi0 * d0[j+th+0] + soi1 * d1[j+th+0];
-        g[k+th+2] += soi0 * d0[j+th+2] + soi1 * d1[j+th+2];
+    { c = 0;
+      for (m = 0; m<4; m++)
+      { ix = (th+4-m)&1;
+        for (;;)
+        { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          if (k<0) break;
+          net_param o = off[i];
+          g[k+ix] += (s0[i]+o)*d0[j+ix] + (s1[i]+o)*d1[j+ix];
+          g[k+ix+2] += (s0[i+2]+o)*d0[j+ix+2] + (s1[i+2]+o)*d1[j+ix+2];
+        }
       }
     }
     else
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { net_value si0 = s0[cn[c].s];
-        net_value si1 = s1[cn[c].s];
-        j = cn[c].d;
-        g[k+th+0] += si0 * d0[j+th+0] + si1 * d1[j+th+0];
-        g[k+th+2] += si0 * d0[j+th+2] + si1 * d1[j+th+2];
+    { c = 0;
+      for (m = 0; m<4; m++)
+      { ix = (th+4-m)&1;
+        for (;;)
+        { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          if (k<0) break;
+          g[k+ix] += s0[i]*d0[j+ix] + s1[i]*d1[j+ix];
+          g[k+ix+2] += s0[i+2]*d0[j+ix+2] + s1[i+2]*d1[j+ix+2];
+        }
       }
     }
   }
 
-  if (th!=0) return;  /* remainder done by a single thread */
-
-  if (CONFIG_SINGLE4)
-  { 
-    cn = cf->single4_s;
+  cn = cf->other_gpu;
+  for (m = 0; m<4; m+=2)
+  { c = cf->start_in_other[th+m];
     if (off)
-    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_param o = off[cn[c].s];
-        net_value soi0 = s0[cn[c].s] + o;
-        net_value soi1 = s1[cn[c].s] + o;
-        j = cn[c].d;
-        g[k] += soi0 * d0[j] + soi1 * d1[j];
-        j = cn[c+1].d; k = cn[c+1].w; 
-        g[k] += soi0 * d0[j] + soi1 * d1[j];
-        j = cn[c+2].d; k = cn[c+2].w; 
-        g[k] += soi0 * d0[j] + soi1 * d1[j];
-        j = cn[c+3].d; k = cn[c+3].w; 
-        g[k] += soi0 * d0[j] + soi1 * d1[j];
+    { for (;;)
+      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        net_param o = off[i];
+        g[k] += (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j];
       }
     }
     else
-    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_value si0 = s0[cn[c].s];
-        net_value si1 = s1[cn[c].s];
-        j = cn[c].d;
-        g[k] += si0 * d0[j] + si1 * d1[j];
-        j = cn[c+1].d; k = cn[c+1].w; 
-        g[k] += si0 * d0[j] + si1 * d1[j];
-        j = cn[c+2].d; k = cn[c+2].w; 
-        g[k] += si0 * d0[j] + si1 * d1[j];
-        j = cn[c+3].d; k = cn[c+3].w; 
-        g[k] += si0 * d0[j] + si1 * d1[j];
+    { for (;;)
+      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        g[k] += s0[i]*d0[j] + s1[i]*d1[j];
       }
-    }
-
-    cn = cf->single4_d;
-    if (off)
-    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_value dj0 = d0[cn[c].d];
-        net_value dj1 = d1[cn[c].d];
-        net_param o;
-        i = cn[c].s; o = off[i];
-        g[k] += (s0[i]+o) *dj0 + (s1[i]+o) * dj1;
-        i = cn[c+1].s; k = cn[c+1].w; o = off[i];
-        g[k] += (s0[i]+o) *dj0 + (s1[i]+o) * dj1;
-        i = cn[c+2].s; k = cn[c+2].w; o = off[i];
-        g[k] += (s0[i]+o) *dj0 + (s1[i]+o) * dj1;
-        i = cn[c+3].s; k = cn[c+3].w; o = off[i];
-        g[k] += (s0[i]+o) *dj0 + (s1[i]+o) * dj1;
-      }
-    }
-    else
-    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_value dj0 = d0[cn[c].d];
-        net_value dj1 = d1[cn[c].d];
-        i = cn[c].s;
-        g[k] += s0[i] * dj0 + s1[i] * dj1;
-        i = cn[c+1].s; k = cn[c+1].w; 
-        g[k] += s0[i] * dj0 + s1[i] * dj1;
-        i = cn[c+2].s; k = cn[c+2].w; 
-        g[k] += s0[i] * dj0 + s1[i] * dj1;
-        i = cn[c+3].s; k = cn[c+3].w; 
-        g[k] += s0[i] * dj0 + s1[i] * dj1;
-      }
-    }
-  }
-
-  cn = CONFIG_ORIGINAL ? cf->conn : cf->single;
-  if (off)
-  { for (c = 0; (k = cn[c].w) >= 0; c++)
-    { i = cn[c].s; j = cn[c].d;
-      net_param o = off[i];
-      g[k] += (s0[i]+o) * d0[j] + (s1[i]+o) * d1[j];
-    }
-  }
-  else
-  { for (c = 0; (k = cn[c].w) >= 0; c++)
-    { i = cn[c].s; j = cn[c].d;
-      g[k] += s0[i] * d0[j] + s1[i] * d1[j];
     }
   }
 }
@@ -2338,7 +2297,7 @@ __device__ static void net_store4_grad1_config
   net_config const* cf    /* Configuration for biases */
 )
 { net_connection *cn;
-  int c, j, k;
+  int c, j, k, m, ix;
 
   for (k = th; k<cf->N_wts; k+=4)
   { g[k] = 0;
@@ -2346,7 +2305,6 @@ __device__ static void net_store4_grad1_config
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w_gpu;
-    int m, ix;
     c = 0;
     for (m = 0; m<4; m++)
     { ix = (th+4-m)&3;

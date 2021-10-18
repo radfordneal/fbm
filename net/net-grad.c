@@ -822,6 +822,42 @@ HOSTDEV static void add_grad2_config
       }
     }
 #   endif
+    cn = cf->quad_s_4d_4w_2;
+#   if 1
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+        { net_value soi = s[cn[c].s] + off[cn[c].s];
+          j = cn[c].d;
+          g[k+0] += soi * d[j+0];
+          g[k+1] += soi * d[j+1];
+          g[k+2] += soi * d[j+2];
+          g[k+3] += soi * d[j+3];
+          soi = s[cn[c+1].s] + off[cn[c+1].s];
+          j = cn[c+1].d;
+          g[k+0] += soi * d[j+0];
+          g[k+1] += soi * d[j+1];
+          g[k+2] += soi * d[j+2];
+          g[k+3] += soi * d[j+3];
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+        { net_value si = s[cn[c].s];
+          j = cn[c].d;
+          g[k+0] += si * d[j+0];
+          g[k+1] += si * d[j+1];
+          g[k+2] += si * d[j+2];
+          g[k+3] += si * d[j+3];
+          si = s[cn[c+1].s];
+          j = cn[c+1].d;
+          g[k+0] += si * d[j+0];
+          g[k+1] += si * d[j+1];
+          g[k+2] += si * d[j+2];
+          g[k+3] += si * d[j+3];
+        }
+      }
+    }
+#   endif
   }
 
   if (CONFIG_SINGLE4)
@@ -1339,7 +1375,7 @@ __device__ static void net_store2_grad1_config
   net_config const* cf    /* Configuration for biases */
 )
 { net_connection *cn;
-  int c, j, k, m, ix;
+  int c, j, j2, k, m, ix;
 
   for (k = th; k<cf->N_wts; k+=2)
   { g[k] = 0;
@@ -1357,6 +1393,18 @@ __device__ static void net_store2_grad1_config
         g[k+ix+2] += d0[j+ix+2] + d1[j+ix+2];
       }
     }
+    cn = cf->quad_s_4d_4w_2_gpu;
+    c = 0;
+    for (m = 0; m<4; m++)
+    { ix = (th+4-m)&1;
+      for (;;)
+      { j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        j2 = cn[c].d; c += 1;
+        g[k+ix] += (d0[j+ix] + d1[j+ix]) + (d0[j2+ix] + d1[j2+ix]);
+        g[k+ix+2] += (d0[j+ix+2] + d1[j+ix+2]) + (d0[j2+ix+2] + d1[j2+ix+2]);
+      }
+    }
   }
 
   cn = cf->other_gpu;
@@ -1366,6 +1414,16 @@ __device__ static void net_store2_grad1_config
     { j = cn[c].d; k = cn[c].w; c += 1;
       if (k<0) break;
       g[k] += d0[j] + d1[j];
+    }
+  }
+  cn = cf->other_2_gpu;
+  for (m = 0; m<4; m+=2)
+  { c = cf->start_in_other[th+m];
+    for (;;)
+    { j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      j2 = cn[c].d; c += 1;
+      g[k] += (d0[j] + d1[j]) + (d0[j2] + d1[j2]);
     }
   }
 }
@@ -1549,7 +1607,7 @@ __device__ static void net_store2_grad2_config
 )
 {
   net_connection *cn;
-  int i, j, k, c, m, ix;
+  int i, i2, j, j2, k, c, m, ix;
 
   for (k = th; k<cf->N_wts; k+=2)
   { g[k] = 0;
@@ -1584,6 +1642,43 @@ __device__ static void net_store2_grad2_config
         }
       }
     }
+    cn = cf->quad_s_4d_4w_2_gpu;
+    if (off)
+    { c = 0;
+      for (m = 0; m<4; m++)
+      { ix = (th+4-m)&1;
+        for (;;)
+        { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          if (k<0) break;
+          net_value s0i = s0[i], s1i = s1[i];
+          net_param o = off[i];
+          i2 = cn[c].s; j2 = cn[c].d; c += 1;
+          net_value s0i2 = s0[i2], s1i2 = s1[i2];
+          net_param o2 = off[i2];
+          g[k+ix] += ((s0i+o)*d0[j+ix] + (s1i+o)*d1[j+ix])
+                   + ((s0i2+o2)*d0[j2+ix] + (s1i2+o2)*d1[j2+ix]);
+          g[k+ix+2] += ((s0i+o)*d0[j+ix+2] + (s1i+o)*d1[j+ix+2])
+                     + ((s0i2+o2)*d0[j2+ix+2] + (s1i2+o2)*d1[j2+ix+2]);
+        }
+      }
+    }
+    else
+    { c = 0;
+      for (m = 0; m<4; m++)
+      { ix = (th+4-m)&1;
+        for (;;)
+        { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          if (k<0) break;
+          net_value s0i = s0[i], s1i = s1[i];
+          i2 = cn[c].s; j2 = cn[c].d; c += 1;
+          net_value s0i2 = s0[i2], s1i2 = s1[i2];
+          g[k+ix] += (s0i*d0[j+ix] + s1i*d1[j+ix])
+                   + (s0i2*d0[j2+ix] + s1i2*d1[j2+ix]);
+          g[k+ix+2] += (s0i*d0[j+ix+2] + s1i*d1[j+ix+2])
+                     + (s0i2*d0[j2+ix+2] + s1i2*d1[j2+ix+2]);
+        }
+      }
+    }
   }
 
   cn = cf->other_gpu;
@@ -1602,6 +1697,30 @@ __device__ static void net_store2_grad2_config
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
         g[k] += s0[i]*d0[j] + s1[i]*d1[j];
+      }
+    }
+  }
+  cn = cf->other_2_gpu;
+  for (m = 0; m<4; m+=2)
+  { c = cf->start_in_other[th+m];
+    if (off)
+    { for (;;)
+      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        net_param o = off[i];
+        i2 = cn[c].s; j2 = cn[c].d; c += 1;
+        net_param o2 = off[i2];
+        g[k] += ((s0[i]+o)*d0[j] + (s1[i]+o)*d1[j])
+              + ((s0[i2]+o2)*d0[j2] + (s1[i2]+o2)*d1[j2]);
+      }
+    }
+    else
+    { for (;;)
+      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        i2 = cn[c].s; j2 = cn[c].d; c += 1;
+        g[k] += (s0[i]*d0[j] + s1[i]*d1[j])
+              + (s0[i2]*d0[j2] + s1[i2]*d1[j2]);
       }
     }
   }
@@ -1766,7 +1885,7 @@ __device__ static void net_store3_grad1_config
   net_config const* cf    /* Configuration for biases */
 )
 { net_connection *cn;
-  int c, j, k, m, ix;
+  int c, j, j2, k, m, ix;
 
   for (k = th; k<cf->N_wts; k+=2)
   { g[k] = 0;
@@ -1784,6 +1903,20 @@ __device__ static void net_store3_grad1_config
         g[k+ix+2] += d0[j+ix+2] + d1[j+ix+2] + d2[j+ix+2];
       }
     }
+    cn = cf->quad_s_4d_4w_2_gpu;
+    c = 0;
+    for (m = 0; m<4; m++)
+    { ix = (th+4-m)&1;
+      for (;;)
+      { j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        j2 = cn[c].d; c += 1;
+        g[k+ix] += (d0[j+ix] + d1[j+ix] + d2[j+ix])
+                 + (d0[j2+ix] + d1[j2+ix] + d2[j2+ix]);
+        g[k+ix+2] += (d0[j+ix+2] + d1[j+ix+2] + d2[j+ix+2])
+                   + (d0[j2+ix+2] + d1[j2+ix+2] + d2[j2+ix+2]);
+      }
+    }
   }
 
   cn = cf->other_gpu;
@@ -1793,6 +1926,16 @@ __device__ static void net_store3_grad1_config
     { j = cn[c].d; k = cn[c].w; c += 1;
       if (k<0) break;
       g[k] += d0[j] + d1[j] + d2[j];
+    }
+  }
+  cn = cf->other_2_gpu;
+  for (m = 0; m<4; m+=2)
+  { c = cf->start_in_other[th+m];
+    for (;;)
+    { j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      j2 = cn[c].d; c += 1;
+      g[k] += (d0[j] + d1[j] + d2[j]) + (d0[j2] + d1[j2] + d2[j2]);
     }
   }
 }
@@ -2024,7 +2167,7 @@ __device__ static void net_store3_grad2_config
 )
 {
   net_connection *cn;
-  int i, j, k, c, m, ix;
+  int i, i2, j, j2, k, c, m, ix;
 
   for (k = th; k<cf->N_wts; k+=2)
   { g[k] = 0;
@@ -2061,6 +2204,47 @@ __device__ static void net_store3_grad2_config
         }
       }
     }
+    cn = cf->quad_s_4d_4w_2_gpu;
+    if (off)
+    { c = 0;
+      for (m = 0; m<4; m++)
+      { ix = (th+4-m)&1;
+        for (;;)
+        { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          if (k<0) break;
+          net_value s0i = s0[i], s1i = s1[i], s2i = s2[i];
+          net_param o = off[i];
+          i2 = cn[c].s; j2 = cn[c].d; c += 1;
+          net_value s0i2 = s0[i2], s1i2 = s1[i2], s2i2 = s2[i2];
+          net_param o2 = off[i2];
+          g[k+ix] += ((s0i+o)*d0[j+ix] + (s1i+o)*d1[j+ix] 
+                                       + (s2i+o)*d2[j+ix])
+                   + ((s0i2+o2)*d0[j2+ix] + (s1i2+o2)*d1[j2+ix] 
+                                          + (s2i2+o2)*d2[j2+ix]);
+          g[k+ix+2] += ((s0i+o)*d0[j+ix+2] + (s1i+o)*d1[j+ix+2]
+                                          + (s2i+o)*d2[j+ix+2])
+                     + ((s0i2+o2)*d0[j2+ix+2] + (s1i2+o2)*d1[j2+ix+2]
+                                              + (s2i2+o2)*d2[j2+ix+2]);
+        }
+      }
+    }
+    else
+    { c = 0;
+      for (m = 0; m<4; m++)
+      { ix = (th+4-m)&1;
+        for (;;)
+        { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          if (k<0) break;
+          net_value s0i = s0[i], s1i = s1[i], s2i = s2[i];
+          i2 = cn[c].s; j2 = cn[c].d; c += 1;
+          net_value s0i2 = s0[i2], s1i2 = s1[i2], s2i2 = s2[i2];
+          g[k+ix] += (s0i*d0[j+ix] + s1i*d1[j+ix] + s2i*d2[j+ix])
+                   + (s0i2*d0[j2+ix] + s1i2*d1[j2+ix] + s2i2*d2[j2+ix]);
+          g[k+ix+2] += (s0i*d0[j+ix+2] + s1i*d1[j+ix+2] + s2i*d2[j+ix+2])
+                     + (s0i2*d0[j2+ix+2] + s1i2*d1[j2+ix+2] + s2i2*d2[j2+ix+2]);
+        }
+      }
+    }
   }
 
   cn = cf->other_gpu;
@@ -2079,6 +2263,30 @@ __device__ static void net_store3_grad2_config
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
         g[k] += s0[i]*d0[j] + s1[i]*d1[j] + s2[i]*d2[j];
+      }
+    }
+  }
+  cn = cf->other_2_gpu;
+  for (m = 0; m<4; m+=2)
+  { c = cf->start_in_other[th+m];
+    if (off)
+    { for (;;)
+      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        net_param o = off[i];
+        i2 = cn[c].s; j2 = cn[c].d; c += 1;
+        net_param o2 = off[i2];
+        g[k] += ((s0[i]+o)*d0[j] + (s1[i]+o)*d1[j] + (s2[i]+o)*d2[j])
+              + ((s0[i2]+o2)*d0[j2] + (s1[i2]+o2)*d1[j2] + (s2[i2]+o2)*d2[j2]);
+      }
+    }
+    else
+    { for (;;)
+      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        i2 = cn[c].s; j2 = cn[c].d; c += 1;
+        g[k] += (s0[i]*d0[j] + s1[i]*d1[j] + s2[i]*d2[j])
+              + (s0[i2]*d0[j2] + s1[i2]*d1[j2] + s2[i2]*d2[j2]);
       }
     }
   }
@@ -2258,7 +2466,7 @@ __device__ static void net_store4_grad1_config
   net_config const* cf    /* Configuration for biases */
 )
 { net_connection *cn;
-  int c, j, k, m, ix;
+  int c, j, j2, k, m, ix;
 
   for (k = th; k<cf->N_wts; k+=4)
   { g[k] = 0;
@@ -2275,6 +2483,18 @@ __device__ static void net_store4_grad1_config
         g[k+ix] += (d0[j+ix] + d1[j+ix]) + (d2[j+ix] + d3[j+ix]);
       }
     }
+    cn = cf->quad_s_4d_4w_2_gpu;
+    c = 0;
+    for (m = 0; m<4; m++)
+    { ix = (th+4-m)&3;
+      for (;;)
+      { j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        j2 = cn[c].d; c += 1;
+        g[k+ix] += ((d0[j+ix] + d1[j+ix]) + (d2[j+ix] + d3[j+ix]))
+                 + ((d0[j2+ix] + d1[j2+ix]) + (d2[j2+ix] + d3[j2+ix]));
+      }
+    }
   }
 
   cn = cf->other_gpu;
@@ -2283,6 +2503,15 @@ __device__ static void net_store4_grad1_config
   { j = cn[c].d; k = cn[c].w; c += 1;
     if (k<0) break;
     g[k] += (d0[j] + d1[j]) + (d2[j] + d3[j]);
+  }
+  cn = cf->other_2_gpu;
+  c = cf->start_in_other[th];
+  for (;;)
+  { j = cn[c].d; k = cn[c].w; c += 1;
+    if (k<0) break;
+    j2 = cn[c].d; c += 1;
+    g[k] += ((d0[j] + d1[j]) + (d2[j] + d3[j]))
+          + ((d0[j2] + d1[j2]) + (d2[j2] + d3[j2]));
   }
 }
 
@@ -2529,7 +2758,7 @@ __device__ static void net_store4_grad2_config
 )
 {
   net_connection *cn;
-  int i, j, k, c;
+  int i, i2, j, j2, k, c;
 
   for (k = th; k<cf->N_wts; k+=4)
   { g[k] = 0;
@@ -2563,6 +2792,39 @@ __device__ static void net_store4_grad2_config
         }
       }
     }
+    cn = cf->quad_s_4d_4w_2_gpu;
+    if (off)
+    { c = 0;
+      for (m = 0; m<4; m++)
+      { ix = (th+4-m)&3;
+        for (;;)
+        { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          if (k<0) break;
+          net_param o = off[i];
+          i2 = cn[c].s; j2 = cn[c].d; c += 1;
+          net_param o2 = off[i2];
+          g[k+ix] += (((s0[i]+o)*d0[j+ix] + (s1[i]+o)*d1[j+ix]) 
+                      + ((s2[i]+o)*d2[j+ix] + (s3[i]+o)*d3[j+ix]))
+                   + (((s0[i2]+o2)*d0[j2+ix] + (s1[i2]+o2)*d1[j2+ix]) 
+                      + ((s2[i2]+o2)*d2[j2+ix] + (s3[i2]+o2)*d3[j2+ix]));
+        }
+      }
+    }
+    else
+    { c = 0;
+      for (m = 0; m<4; m++)
+      { ix = (th+4-m)&3;
+        for (;;)
+        { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          if (k<0) break;
+          i2 = cn[c].s; j2 = cn[c].d; c += 1;
+          g[k+ix] += ((s0[i]*d0[j+ix] + s1[i]*d1[j+ix]) 
+                      + (s2[i]*d2[j+ix] + s3[i]*d3[j+ix]))
+                   + ((s0[i2]*d0[j2+ix] + s1[i2]*d1[j2+ix]) 
+                      + (s2[i2]*d2[j2+ix] + s3[i2]*d3[j2+ix]));
+        }
+      }
+    }
   }
 
   cn = cf->other_gpu;
@@ -2582,6 +2844,32 @@ __device__ static void net_store4_grad2_config
       if (k<0) break;
       g[k] += (s0[i]*d0[j] + s1[i]*d1[j]) 
             + (s2[i]*d2[j] + s3[i]*d3[j]);
+    }
+  }
+  cn = cf->other_2_gpu;
+  c = cf->start_in_other[th];
+  if (off)
+  { for (;;)
+    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      net_param o = off[i];
+      i2 = cn[c].s; j2 = cn[c].d; c += 1;
+      net_param o2 = off[i2];
+      g[k] += (((s0[i]+o)*d0[j] + (s1[i]+o)*d1[j]) 
+               + ((s2[i]+o)*d2[j] + (s3[i]+o)*d3[j]))
+            + (((s0[i2]+o2)*d0[j2] + (s1[i2]+o2)*d1[j2]) 
+               + ((s2[i2]+o2)*d2[j2] + (s3[i2]+o2)*d3[j2]));
+    }
+  }
+  else
+  { for (;;)
+    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      i2 = cn[c].s; j2 = cn[c].d; c += 1;
+      g[k] += ((s0[i]*d0[j] + s1[i]*d1[j]) 
+               + (s2[i]*d2[j] + s3[i]*d3[j]))
+            + ((s0[i2]*d0[j2] + s1[i2]*d1[j2]) 
+               + (s2[i2]*d2[j2] + s3[i2]*d3[j2]));
     }
   }
 }

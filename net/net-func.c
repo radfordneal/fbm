@@ -1147,6 +1147,42 @@ HOSTDEV static void add_connections_config
       }
     }
 #   endif
+    cn = cf->quad_s_4d_4w_2;
+#   if 1
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+        { net_value voi = v[cn[c].s] + off[cn[c].s];
+          j = cn[c].d;
+          s[j+0] += voi * w[k+0];
+          s[j+1] += voi * w[k+1];
+          s[j+2] += voi * w[k+2];
+          s[j+3] += voi * w[k+3];
+          voi = v[cn[c+1].s] + off[cn[c+1].s];
+          j = cn[c+1].d;
+          s[j+0] += voi * w[k+0];
+          s[j+1] += voi * w[k+1];
+          s[j+2] += voi * w[k+2];
+          s[j+3] += voi * w[k+3];
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+        { net_value vi = v[cn[c].s];
+          j = cn[c].d; 
+          s[j+0] += vi * w[k+0];
+          s[j+1] += vi * w[k+1];
+          s[j+2] += vi * w[k+2];
+          s[j+3] += vi * w[k+3];
+          vi = v[cn[c+1].s];
+          j = cn[c+1].d; 
+          s[j+0] += vi * w[k+0];
+          s[j+1] += vi * w[k+1];
+          s[j+2] += vi * w[k+2];
+          s[j+3] += vi * w[k+3];
+        }
+      }
+    }
+#   endif
   }
 
   if (CONFIG_SINGLE4)

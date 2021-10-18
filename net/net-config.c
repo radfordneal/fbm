@@ -458,6 +458,37 @@ static int copy_wmod4 (net_connection *dst, net_connection *src, int *start)
   return j;
 }
 
+/* Copy out pairs of connections with same w.  Updates 'a' to hold the
+   remaining connections, terminated with -1.  Puts the pairs in 'b',
+   terminated with -1. */
+
+static void copy_pairs
+( net_connection *a,	/* -1 terminated array of all connections, updated */
+  net_connection *b,	/* Place to store pairs, with -1 terminator */
+  int *an,		/* Set to number of connections left in a, if not 0 */
+  int *bn		/* Set to number of conn. (2xpairs) put in b, if not 0*/
+)
+{ int i, j, k;
+  i = j = k = 0;
+  while (a[i].w != -1)
+  { if (a[i].w==a[i+1].w)
+    { b[k] = a[i];
+      b[k+1] = a[i+1];
+      i += 2;
+      k += 2;
+    }
+    else
+    { a[j] = a[i];
+      i += 1;
+      j += 1;
+    }
+  }
+  a[j].w = -1;
+  b[k].w = -1;
+  if (an) *an = j;
+  if (bn) *bn = k;
+}
+
 /* The actual net_config_sort function, called from elsewhere. */
 
 static void net_config_sort (net_config *cf)
@@ -490,6 +521,8 @@ static void net_config_sort (net_config *cf)
 
   net_connection *tmp = 
     (net_connection *) chk_alloc (n+1, sizeof *tmp);  /* one -1 at end */
+  net_connection *tmp2 = 
+    (net_connection *) chk_alloc (n+1, sizeof *tmp2); /* one -1 at end */
 
   non_adjacency (cf->conn,  "original");
 
@@ -498,6 +531,8 @@ static void net_config_sort (net_config *cf)
 
   if (!CONFIG_QUAD_S_4D_4W)
   { cf->quad_s_4d_4w = all+a;
+    all[a++].w = -1;
+    cf->quad_s_4d_4w_2 = all+a;
     all[a++].w = -1;
   }
   else
@@ -531,6 +566,17 @@ static void net_config_sort (net_config *cf)
     r = k;
     rem[k].w = -1;
 
+    if (!MAKE_QUAD_PAIRS)
+    { cf->quad_s_4d_4w_2 = all+a;
+      all[a++].w = -1;
+    }
+    else
+    { int n;
+      copy_pairs (tmp, all+a, &j, &n);
+      cf->quad_s_4d_4w_2 = all+a;
+      a += n+1;
+    }
+
     cf->quad_s_4d_4w = all+a;
     memcpy (all+a, tmp, j * sizeof *all);
     all[a+j].w = -1;
@@ -542,14 +588,17 @@ static void net_config_sort (net_config *cf)
 
   if (!CONFIG_QUAD_S_4D_4W)
   { cf->quad_s_4d_4w_gpu = all_gpu+a_gpu;
-    all_gpu[a_gpu++].w = -1;
-    all_gpu[a_gpu++].w = -1;
-    all_gpu[a_gpu++].w = -1;
-    all_gpu[a_gpu++].w = -1;
+    all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
+    all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
+    cf->quad_s_4d_4w_2_gpu = all_gpu+a_gpu;
+    all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
+    all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
   }
   else
   { cf->quad_s_4d_4w_gpu = all_gpu+a_gpu;
     a_gpu += copy_wmod4 (cf->quad_s_4d_4w_gpu, cf->quad_s_4d_4w, 0);
+    cf->quad_s_4d_4w_2_gpu = all_gpu+a_gpu;
+    a_gpu += copy_wmod4 (cf->quad_s_4d_4w_2_gpu, cf->quad_s_4d_4w_2, 0);
   }
 
   /* Set up other connections (not in quad_s_4d_4w_gpu) for use in gpu
@@ -558,6 +607,18 @@ static void net_config_sort (net_config *cf)
   memcpy (tmp, rem, r * sizeof *tmp);  
   qsort (tmp, r, sizeof *tmp, cmp_wmod4_w_d_s);
   tmp[r].w = -1;
+
+  if (!MAKE_OTHER_PAIRS)
+  { cf->other_2_gpu = all_gpu+a_gpu;
+    all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
+    all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
+  }
+  else
+  { copy_pairs (tmp, tmp2, 0, 0);
+    cf->other_2_gpu = all_gpu+a_gpu;
+    a_gpu += copy_wmod4 (cf->other_2_gpu, tmp2, cf->start_in_other_2);
+  }
+
   cf->other_gpu = all_gpu+a_gpu;
   a_gpu += copy_wmod4 (cf->other_gpu, tmp, cf->start_in_other);
 
@@ -669,6 +730,7 @@ static void net_config_sort (net_config *cf)
   cf->all_gpu_length = a_gpu;
 
   free(tmp);
+  free(tmp2);
   free(rem);
 }
 
@@ -703,6 +765,7 @@ net_config *net_config_to_gpu (net_config *cf)
   dcf.single4_s = dcf.all + (cf->single4_s - cf->all);
   dcf.single4_d = dcf.all + (cf->single4_d - cf->all);
   dcf.quad_s_4d_4w = dcf.all + (cf->quad_s_4d_4w - cf->all);
+  dcf.quad_s_4d_4w_2 = dcf.all + (cf->quad_s_4d_4w_2 - cf->all);
 
   check_cuda_error (cudaMalloc (&dcf.all_gpu, 
                                 dcf.all_gpu_length * sizeof *dcf.all_gpu),
@@ -713,7 +776,9 @@ net_config *net_config_to_gpu (net_config *cf)
                     "copy to dev config all_gpu");
 
   dcf.quad_s_4d_4w_gpu = dcf.all_gpu + (cf->quad_s_4d_4w_gpu - cf->all_gpu);
+  dcf.quad_s_4d_4w_2_gpu = dcf.all_gpu + (cf->quad_s_4d_4w_2_gpu - cf->all_gpu);
   dcf.other_gpu = dcf.all_gpu + (cf->other_gpu - cf->all_gpu);
+  dcf.other_2_gpu = dcf.all_gpu + (cf->other_2_gpu - cf->all_gpu);
 
   net_config *dev_dcf;
   check_cuda_error (cudaMalloc (&dev_dcf, sizeof *dev_dcf),

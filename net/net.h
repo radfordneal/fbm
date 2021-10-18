@@ -66,6 +66,9 @@ typedef struct
 #define CONFIG_SINGLE4		(!CONFIG_ORIGINAL && 1)
 #define CONFIG_QUAD_S_4D_4W	(!CONFIG_ORIGINAL && 1)
 
+#define MAKE_QUAD_PAIRS 1	/* Make quad_s_4d_4w_2 versions with pairs? */
+#define MAKE_OTHER_PAIRS 0	/* Make other_2 version with pairs? */
+
 /* Set of connections between layers. */
 
 typedef struct
@@ -78,12 +81,18 @@ typedef struct
   net_connection *single4_s;	/* Single connections, in groups of 4, same s */
   net_connection *single4_d;	/* Single connections, in groups of 4, same d */
   net_connection *quad_s_4d_4w;	/* Four connections, same s, sequential d & w */
+  net_connection *quad_s_4d_4w_2; /* Pairs of connections, with same s, 
+                                     sequential d & w, w same for pair */
   net_connection *all;		/* Pointer to block with items above */
   int all_length;		/* Length of 'all' block in use */
 
   net_connection *quad_s_4d_4w_gpu;  /* GPU version, with four -1 terminators */
-  net_connection *other_gpu;	/* GPU version of other connections, has 4 -1s*/
+  net_connection *quad_s_4d_4w_2_gpu;/* GPU version, with four -1 terminators */
+  net_connection *other_gpu;	/* Other connections, has 4 -1s */
   int start_in_other[4];	/* Start indexes for sections in other_gpu */
+  net_connection *other_2_gpu;	/* Pairs of other connections, same w for pair,
+                                   has 4 -1s for sections differing in w mod 4*/
+  int start_in_other_2[4];	/* Start indexes for sections in other_2_gpu */
   net_connection *all_gpu;	/* Pointer to block with items above */
   int all_gpu_length;		/* Length of 'all_gpu' block in use */
 

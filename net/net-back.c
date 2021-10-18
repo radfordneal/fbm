@@ -621,6 +621,18 @@ HOSTDEV static void sum_derivatives_config
       }
     }
 #   endif
+    cn = cf->quad_s_4d_4w_2;
+#   if 1
+    { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+      { i = cn[c].s; j = cn[c].d;
+        ds[i] += (dd[j+0]*w[k+0] + dd[j+2]*w[k+2])      /* same order as SIMD */
+                   + (dd[j+1]*w[k+1] + dd[j+3]*w[k+3]); /* instructions above */
+        i = cn[c+1].s; j = cn[c+1].d;
+        ds[i] += (dd[j+0]*w[k+0] + dd[j+2]*w[k+2])      /* same order as SIMD */
+                   + (dd[j+1]*w[k+1] + dd[j+3]*w[k+3]); /* instructions above */
+      }
+    }
+#   endif
   }
 
   if (CONFIG_SINGLE4)

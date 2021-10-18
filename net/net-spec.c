@@ -675,7 +675,7 @@ void print_config (net_config *cf, int biases)
   }
   printf("\n");
 
-  if (0)  /* can enable for debugging */
+  if (1)  /* can enable for debugging */
   { 
     int i, r;
 
@@ -694,6 +694,25 @@ void print_config (net_config *cf, int biases)
         { printf("%3d %3d-%-3d %3d-%-3d\n", cf->quad_s_4d_4w_gpu[i].s, 
                         cf->quad_s_4d_4w_gpu[i].d, cf->quad_s_4d_4w_gpu[i].d+3,
                         cf->quad_s_4d_4w_gpu[i].w, cf->quad_s_4d_4w_gpu[i].w+3);
+          i += 1;
+        }
+        i += 1;
+        printf("\n");
+      }
+      printf("quad_s_4d_4w_2 (pairs with same w):\n");
+      for (i = 0; cf->quad_s_4d_4w_2[i].w >= 0; i++)
+      { printf("%3d %3d-%-3d %3d-%-3d\n", cf->quad_s_4d_4w_2[i].s, 
+                            cf->quad_s_4d_4w_2[i].d, cf->quad_s_4d_4w_2[i].d+3,
+                            cf->quad_s_4d_4w_2[i].w, cf->quad_s_4d_4w_2[i].w+3);
+      }
+      printf("\n");
+      i = 0;
+      for (r = 0; r<4; r++)
+      { printf("First weight %d mod 4:\n",r);
+        while (cf->quad_s_4d_4w_2_gpu[i].w >= 0)
+        { printf("%3d %3d-%-3d %3d-%-3d\n", cf->quad_s_4d_4w_2_gpu[i].s, 
+                    cf->quad_s_4d_4w_2_gpu[i].d, cf->quad_s_4d_4w_2_gpu[i].d+3,
+                    cf->quad_s_4d_4w_2_gpu[i].w, cf->quad_s_4d_4w_2_gpu[i].w+3);
           i += 1;
         }
         i += 1;
@@ -732,6 +751,21 @@ void print_config (net_config *cf, int biases)
       while (cf->other_gpu[i].w >= 0)
       { printf("%3d %3d %3d\n", 
                 cf->other_gpu[i].s, cf->other_gpu[i].d, cf->other_gpu[i].w);
+        i += 1;
+      }
+      i += 1;
+      printf("\n");
+    }
+    printf("other_2 for gpu (pairs with same w):\n\n");
+    printf("start indexes: %d %d %d %d\n\n",
+            cf->start_in_other_2[0], cf->start_in_other_2[1],
+            cf->start_in_other_2[2], cf->start_in_other_2[3]);
+    i = 0;
+    for (r = 0; r<4; r++)
+    { printf("First weight %d mod 4:\n",r);
+      while (cf->other_2_gpu[i].w >= 0)
+      { printf("%3d %3d %3d\n", 
+              cf->other_2_gpu[i].s, cf->other_2_gpu[i].d, cf->other_2_gpu[i].w);
         i += 1;
       }
       i += 1;

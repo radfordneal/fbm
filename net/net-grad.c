@@ -163,32 +163,55 @@ HOSTDEV void net_add_grad
 
 HOSTDEV static void add_grad1
 ( net_param *restrict g,  /* Array of derivatives to add to */
-  net_value const* v,     /* Derivatives with respect to unit values */
+  net_value const* d,     /* Derivatives with respect to unit values */
   int n			  /* Number of units */
 )
 { 
   int i;
   for (i = 0; i<n; i++)
-  { g[i] += v[i];
+  { g[i] += d[i];
   }
 }
 
 
-/* ADD TO GRADIENT FROM UNIT DERIVATIVE, WITH CONFIGURATION.  At present,
-   just goes through the original list of connections in the configuration,
-   without trying to optimize. */
+/* ADD TO GRADIENT FROM UNIT DERIVATIVE, WITH CONFIGURATION. */
 
 HOSTDEV static void add_grad1_config
 ( net_param *restrict g,  /* Array of derivatives to add to */
-  net_value const* v,     /* Derivatives with respect to unit values */
+  net_value const* d,     /* Derivatives with respect to unit values */
   net_config const* cf    /* Configuration for biases */
 )
-{ net_connection *cn = cf->conn;
+{ net_connection *cn;
   int c, j, k;
 
+  if (CONFIG_QUAD_S_4D_4W)
+  { cn = cf->quad_s_4d_4w;
+    for (c = 0; (k = cn[c].w) >= 0; c++)
+    { j = cn[c].d;
+      g[k+0] += d[j+0];
+      g[k+1] += d[j+1];
+      g[k+2] += d[j+2];
+      g[k+3] += d[j+3];
+    }
+    cn = cf->quad_s_4d_4w_2;
+    for (c = 0; (k = cn[c].w) >= 0; c+=2)
+    { j = cn[c].d;
+      g[k+0] += d[j+0];
+      g[k+1] += d[j+1];
+      g[k+2] += d[j+2];
+      g[k+3] += d[j+3];
+      j = cn[c+1].d;
+      g[k+0] += d[j+0];
+      g[k+1] += d[j+1];
+      g[k+2] += d[j+2];
+      g[k+3] += d[j+3];
+    }
+  }
+
+  cn = CONFIG_ORIGINAL ? cf->conn : cf->single;
   for (c = 0; (k = cn[c].w) >= 0; c++)
   { j = cn[c].d;
-    g[k] += v[j];
+    g[k] += d[j];
   }
 }
 
@@ -1057,31 +1080,29 @@ __device__ void net_store_grad
 
 __device__ static void store_grad1
 ( net_param *restrict g,  /* Array of derivatives to store to */
-  net_value const* v,     /* Derivatives with respect to unit values */
+  net_value const* d,     /* Derivatives with respect to unit values */
   int n			  /* Number of units */
 )
 { 
   int i;
   for (i = 0; i<n; i++)
-  { g[i] = v[i];
+  { g[i] = d[i];
   }
 }
 
 
-/* STORE GRADIENT FROM UNIT DERIVATIVE, WITH CONFIGURATION.  At present,
-   just goes through the original list of connections in the configuration,
-   without trying to optimize. */
+/* STORE GRADIENT FROM UNIT DERIVATIVE, WITH CONFIGURATION. */
 
 __device__ static void store_grad1_config
 ( net_param *restrict g,  /* Array of derivatives to store to */
-  net_value const* v,     /* Derivatives with respect to unit values */
+  net_value const* d,     /* Derivatives with respect to unit values */
   net_config const* cf    /* Configuration for biases */
 )
 { int k;
   for (k = 0; k<cf->N_wts; k++)
   { g[k] = 0;
   }
-  add_grad1_config (g, v, cf);
+  add_grad1_config (g, d, cf);
 }
 
 

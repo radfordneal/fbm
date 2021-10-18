@@ -505,9 +505,7 @@ HOSTDEV static void bias_values
 }
 
 
-/* SET UNIT VALUES TO BIASES WHEN THERE IS A CONFIGURATON.  At present,
-   just goes through the original list of connections in the configuration,
-   without trying to optimize. */
+/* SET UNIT VALUES TO BIASES WHEN THERE IS A CONFIGURATON. */
 
 HOSTDEV static void bias_values_config
 ( net_value *restrict v,	/* Array of unit values to set */
@@ -516,10 +514,36 @@ HOSTDEV static void bias_values_config
   net_config const* cf		/* Configuration for biases */
 )
 { 
-  net_connection *cn = cf->conn;
+  net_connection *cn;
   int c, j, k;
 
   memset (v, 0, n * sizeof *v);
+
+  if (CONFIG_QUAD_S_4D_4W)
+  { cn = cf->quad_s_4d_4w;
+    for (c = 0; (k = cn[c].w) >= 0; c++)
+    { j = cn[c].d;
+      v[j+0] += b[k+0];
+      v[j+1] += b[k+1];
+      v[j+2] += b[k+2];
+      v[j+3] += b[k+3];
+    }
+    cn = cf->quad_s_4d_4w_2;
+    for (c = 0; (k = cn[c].w) >= 0; c+=2)
+    { j = cn[c].d;
+      v[j+0] += b[k+0];
+      v[j+1] += b[k+1];
+      v[j+2] += b[k+2];
+      v[j+3] += b[k+3];
+      j = cn[c+1].d;
+      v[j+0] += b[k+0];
+      v[j+1] += b[k+1];
+      v[j+2] += b[k+2];
+      v[j+3] += b[k+3];
+    }
+  }
+
+  cn = CONFIG_ORIGINAL ? cf->conn : cf->single;
   for (c = 0; (k = cn[c].w) >= 0; c++)
   { j = cn[c].d;
     v[j] += b[k];

@@ -37,7 +37,7 @@ static int lasts, lastd, lastw;   /* Previous source, dest., weight indexes */
 static int at_index;              /* Index for output from "@" item */
 
 
-static void net_config_sort (net_config *cf);
+static void net_config_sort (net_config *cf, int);
 
 
 /* READ ITEMS, AS CHARACTER STRINGS.  Returns a pointer to an array of
@@ -330,7 +330,7 @@ net_config *net_config_read (char *file, int ns, int nd)
   free(p->conn);
   p->conn = q;
 
-  net_config_sort(p);
+  net_config_sort (p, ns == -1);
 
   return p;
 }
@@ -338,7 +338,8 @@ net_config *net_config_read (char *file, int ns, int nd)
 
 /* PRODUCE SORTED / GROUPED VERSIONS OF THE CONFIGURATION.  Sets up the
    'single', 'single4_s', etc. fields of the net_config structure, based
-   on the connections in 'conn'. */
+   on the connections in 'conn'.  Only the quad versions are set up for
+   biases. */
 
 /* Return a measure of nonadjacency in a sequence of connections.  May also
    print this out (with 'prefix') if enabled below, for performance assessment
@@ -491,7 +492,7 @@ static void copy_pairs
 
 /* The actual net_config_sort function, called from elsewhere. */
 
-static void net_config_sort (net_config *cf)
+static void net_config_sort (net_config *cf, int biases)
 { 
   int n = cf->N_conn;
 
@@ -623,9 +624,9 @@ static void net_config_sort (net_config *cf)
   a_gpu += copy_wmod4 (cf->other_gpu, tmp, cf->start_in_other);
 
   /* Find groups of four single connections with the same value for d, if
-     this is enabled. */
+     this is enabled.  Not done for biases. */
 
-  if (!CONFIG_SINGLE4)
+  if (!CONFIG_SINGLE4 || biases)
   { cf->single4_d = all+a;
     all[a++].w = -1;
   }
@@ -665,9 +666,9 @@ static void net_config_sort (net_config *cf)
   }
 
   /* Find groups of four single connections with the same value for s, if
-     this is enabled. */
+     this is enabled.  Not done for biases. */
 
-  if (!CONFIG_SINGLE4)
+  if (!CONFIG_SINGLE4 || biases)
   { cf->single4_s = all+a;
     all[a++].w = -1;
   }

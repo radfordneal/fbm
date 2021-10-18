@@ -66,7 +66,7 @@ typedef struct
 #define CONFIG_SINGLE4		(!CONFIG_ORIGINAL && 1)
 #define CONFIG_QUAD_S_4D_4W	(!CONFIG_ORIGINAL && 1)
 
-#define MAKE_QUAD_PAIRS 1	/* Make quad_s_4d_4w_2 versions with pairs? */
+#define MAKE_QUAD_PAIRS 0	/* Make quad_s_4d_4w_2 versions with pairs? */
 #define MAKE_OTHER_PAIRS 0	/* Make other_2 version with pairs? */
 
 /* Set of connections between layers. */

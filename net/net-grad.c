@@ -1418,7 +1418,7 @@ __device__ static void net_store2_grad1_config
   }
   cn = cf->other_2_gpu;
   for (m = 0; m<4; m+=2)
-  { c = cf->start_in_other[th+m];
+  { c = cf->start_in_other_2[th+m];
     for (;;)
     { j = cn[c].d; k = cn[c].w; c += 1;
       if (k<0) break;
@@ -1702,7 +1702,7 @@ __device__ static void net_store2_grad2_config
   }
   cn = cf->other_2_gpu;
   for (m = 0; m<4; m+=2)
-  { c = cf->start_in_other[th+m];
+  { c = cf->start_in_other_2[th+m];
     if (off)
     { for (;;)
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
@@ -1930,7 +1930,7 @@ __device__ static void net_store3_grad1_config
   }
   cn = cf->other_2_gpu;
   for (m = 0; m<4; m+=2)
-  { c = cf->start_in_other[th+m];
+  { c = cf->start_in_other_2[th+m];
     for (;;)
     { j = cn[c].d; k = cn[c].w; c += 1;
       if (k<0) break;
@@ -2268,7 +2268,7 @@ __device__ static void net_store3_grad2_config
   }
   cn = cf->other_2_gpu;
   for (m = 0; m<4; m+=2)
-  { c = cf->start_in_other[th+m];
+  { c = cf->start_in_other_2[th+m];
     if (off)
     { for (;;)
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;

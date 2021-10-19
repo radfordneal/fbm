@@ -622,7 +622,52 @@ HOSTDEV static void sum_derivatives_config
     }
 #   endif
     cn = cf->quad_s_4d_4w_2;
-#   if 1
+#   if FP64 && USE_SIMD_INTRINSICS && __AVX__
+    { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+      { __m256d WK = _mm256_loadu_pd(w+k);
+        __m256d P;
+        __m128d S;
+        i = cn[c].s; j = cn[c].d;
+        P = _mm256_mul_pd (_mm256_loadu_pd(dd+j), WK);
+        S = _mm_add_pd (_mm256_extractf128_pd(P,1), cast128d(P));
+        _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
+        i = cn[c+1].s; j = cn[c+].d;
+        P = _mm256_mul_pd (_mm256_loadu_pd(dd+j), WK);
+        S = _mm_add_pd (_mm256_extractf128_pd(P,1), cast128d(P));
+        _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
+      }
+    }
+#   elif FP64 && USE_SIMD_INTRINSICS && __SSE3__
+    { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+      { __m128d WK = _mm_loadu_pd(w+k), WK2 = _mm_loadu_pd(w+k+2);
+        __m128d S;
+        i = cn[c].s; j = cn[c].d;
+        S = _mm_add_pd (
+                     _mm_mul_pd (_mm_loadu_pd(dd+j), WK),
+                     _mm_mul_pd (_mm_loadu_pd(dd+j+2), WK2));
+        _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
+        i = cn[c+1].s; j = cn[c+1].d;
+        S = _mm_add_pd (
+                     _mm_mul_pd (_mm_loadu_pd(dd+j), WK),
+                     _mm_mul_pd (_mm_loadu_pd(dd+j+2), WK2));
+        _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
+      }
+    }
+#   elif FP32 && USE_SIMD_INTRINSICS && __SSE3__
+    { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+      { __m128 WK = _mm_loadu_ps(w+k);
+        __m128 P, S;
+        i = cn[c].s; j = cn[c].d;
+        P = _mm_mul_ps (_mm_loadu_ps(dd+j), WK);
+        S = _mm_add_ps (_mm_movehl_ps(P,P), P);
+        _mm_store_ss (ds+i, _mm_add_ss (_mm_load_ss(ds+i), _mm_hadd_ps(S,S)));
+        i = cn[c+1].s; j = cn[c+1].d;
+        P = _mm_mul_ps (_mm_loadu_ps(dd+j), WK);
+        S = _mm_add_ps (_mm_movehl_ps(P,P), P);
+        _mm_store_ss (ds+i, _mm_add_ss (_mm_load_ss(ds+i), _mm_hadd_ps(S,S)));
+      }
+    }
+#   else
     { for (c = 0; (k = cn[c].w) >= 0; c+=2)
       { i = cn[c].s; j = cn[c].d;
         ds[i] += (dd[j+0]*w[k+0] + dd[j+2]*w[k+2])      /* same order as SIMD */

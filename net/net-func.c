@@ -501,7 +501,9 @@ HOSTDEV static void bias_values
 )
 { 
   int j;
-  for (j = 0; j<n; j++) v[j] = b[j];
+  for (j = 0; j<n; j++)
+  { v[j] = b[j];
+  }
 }
 
 
@@ -1172,7 +1174,89 @@ HOSTDEV static void add_connections_config
     }
 #   endif
     cn = cf->quad_s_4d_4w_2;
-#   if 1
+#   if FP64 && USE_SIMD_INTRINSICS && __AVX__
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+        { __m256d WK = _mm256_loadu_pd(w+k);
+          __m256d VOI;
+          VOI = _mm256_set1_pd (v[cn[c].s] + off[cn[c].s]);
+          j = cn[c].d;
+          _mm256_storeu_pd (s+j, FMA256_pd (VOI, WK, _mm256_loadu_pd(s+j)));
+          VOI = _mm256_set1_pd (v[cn[c+1].s] + off[cn[c+1].s]);
+          j = cn[c+1].d;
+          _mm256_storeu_pd (s+j, FMA256_pd (VOI, WK, _mm256_loadu_pd(s+j)));
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+        { __m256d WK = _mm256_loadu_pd(w+k);
+          __m256d VOI;
+          VOI = _mm256_set1_pd (v[cn[c].s]);
+          j = cn[c].d;
+          _mm256_storeu_pd (s+j, FMA256_pd (VOI, WK, _mm256_loadu_pd(s+j)));
+          VOI = _mm256_set1_pd (v[cn[c+1].s]);
+          j = cn[c+1].d;
+          _mm256_storeu_pd (s+j, FMA256_pd (VOI, WK, _mm256_loadu_pd(s+j)));
+        }
+      }
+    }
+#   elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+        { __m128d WK = _mm_loadu_pd(w+k), WK2 = _mm_loadu_pd(w+k+2);
+          __m128d VOI;
+          VOI = _mm_set1_pd (v[cn[c].s] + off[cn[c].s]);
+          j = cn[c].d;
+          _mm_storeu_pd (s+j, FMA_pd(VOI, WK, _mm_loadu_pd(s+j)));
+          _mm_storeu_pd (s+j+2, FMA_pd(VOI, WK2, _mm_loadu_pd(s+j+2)));
+          VOI = _mm_set1_pd (v[cn[c+1].s] + off[cn[c+1].s]);
+          j = cn[c+1].d;
+          _mm_storeu_pd (s+j, FMA_pd(VOI, WK, _mm_loadu_pd(s+j)));
+          _mm_storeu_pd (s+j+2, FMA_pd(VOI, WK2, _mm_loadu_pd(s+j+2)));
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+        { __m128d WK = _mm_loadu_pd(w+k), WK2 = _mm_loadu_pd(w+k+2);
+          __m128d VOI;
+          VOI = _mm_set1_pd (v[cn[c].s]);
+          j = cn[c].d;
+          _mm_storeu_pd (s+j, FMA_pd(VOI, WK, _mm_loadu_pd(s+j)));
+          _mm_storeu_pd (s+j+2, FMA_pd(VOI, WK2, _mm_loadu_pd(s+j+2)));
+          VOI = _mm_set1_pd (v[cn[c+1].s]);
+          j = cn[c+1].d;
+          _mm_storeu_pd (s+j, FMA_pd(VOI, WK, _mm_loadu_pd(s+j)));
+          _mm_storeu_pd (s+j+2, FMA_pd(VOI, WK2, _mm_loadu_pd(s+j+2)));
+        }
+      }
+    }
+#   elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+        { __m128 WK = _mm_loadu_ps(w+k);
+          __m128 VOI;
+          VOI = _mm_set1_ps (v[cn[c].s] + off[cn[c].s]);
+          j = cn[c].d;
+          _mm_storeu_ps (s+j, FMA_ps (VOI, WK, _mm_loadu_ps(s+j)));
+          VOI = _mm_set1_ps (v[cn[c+1].s] + off[cn[c+1].s]);
+          j = cn[c+1].d;
+          _mm_storeu_ps (s+j, FMA_ps (VOI, WK, _mm_loadu_ps(s+j)));
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+        { __m128 WK = _mm_loadu_ps(w+k);
+          __m128 VOI;
+          VOI = _mm_set1_ps (v[cn[c].s]);
+          j = cn[c].d;
+          _mm_storeu_ps (s+j, FMA_ps (VOI, WK, _mm_loadu_ps(s+j)));
+          VOI = _mm_set1_ps (v[cn[c+1].s]);
+          j = cn[c+1].d;
+          _mm_storeu_ps (s+j, FMA_ps (VOI, WK, _mm_loadu_ps(s+j)));
+        }
+      }
+    }
+#   else
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c+=2)
         { net_value voi = v[cn[c].s] + off[cn[c].s];

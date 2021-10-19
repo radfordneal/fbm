@@ -42,6 +42,10 @@
 
 #if __CUDACC__
 
+#define PIN_MEMORY 2		/* 0 = no host memory is pinned, 
+                                   1 = parameters going to gpu only,
+                                   2 = parametres + energy & deriv from gpu */
+
 #define GRAD_ALIGN_BYTES 64	/* Alignment for gradient blocks in GPU, bytes
                                      - must be a power of two, minimum of 8 */
 
@@ -417,8 +421,14 @@ void mc_app_initialize
       sigmas.sigma_block = 
         (net_sigma *) chk_alloc (sigmas.total_sigmas, sizeof (net_sigma));
 
-      params.param_block = 
-        (net_param *) chk_alloc (params.total_params, sizeof (net_param));
+#     if __CUDACC__ && PIN_MEMORY>0
+        check_cuda_error (cudaMallocHost (&params.param_block,
+                            params.total_params * sizeof (net_param)),
+                          "alloc param_block");
+#     else
+        params.param_block = 
+          (net_param *) chk_alloc (params.total_params, sizeof (net_param));
+#     endif
 
       net_setup_sigma_pointers (&sigmas, arch, flgs, model);
       net_setup_param_pointers (&params, arch, flgs);
@@ -1944,8 +1954,14 @@ void cuda_setup
     check_cuda_error (cudaGetLastError(), 
                       "After copying to const_thread_energy3");
 
-    block_energy = (double *) 
-      chk_alloc (max_blocks_per_launch, sizeof *block_energy);
+#   if PIN_MEMORY>1
+      check_cuda_error (cudaMallocHost (&block_energy,
+                           max_blocks_per_launch * sizeof *block_energy),
+                        "alloc block_energy");
+#   else
+      block_energy = (double *) 
+        chk_alloc (max_blocks_per_launch, sizeof *block_energy);
+#   endif
     check_cuda_error (cudaMalloc (&dev_block_energy,
                          max_blocks_per_launch * sizeof *dev_block_energy),
                       "alloc of dev_block_energy");
@@ -1984,12 +2000,21 @@ void cuda_setup
 
     /* Create block_grad array on CPU and on GPU. */
 
-    block_grad = (net_params *) 
-      chk_alloc (max_blocks_per_launch, sizeof *block_grad);
+      block_grad = (net_params *) 
+        chk_alloc (max_blocks_per_launch, sizeof *block_grad);
     block_grad->total_params = grad.total_params;
-    block_grad->param_block = (net_param *) 
-      chk_alloc (max_blocks_per_launch * grad_aligned_total, 
-                 sizeof *block_grad->param_block);
+
+#   if PIN_MEMORY>1
+      check_cuda_error (cudaMallocHost (&block_grad->param_block,
+                          max_blocks_per_launch * grad_aligned_total
+                           * sizeof *block_grad->param_block),
+                        "alloc block_grad param_block");
+#   else
+      block_grad->param_block = (net_param *) 
+        chk_alloc (max_blocks_per_launch * grad_aligned_total, 
+                   sizeof *block_grad->param_block);
+#   endif
+
     net_setup_param_pointers (block_grad, arch, flgs);
     net_replicate_param_pointers (block_grad, arch, max_blocks_per_launch,
                                   grad_aligned_total);

@@ -631,7 +631,7 @@ HOSTDEV static void sum_derivatives_config
         P = _mm256_mul_pd (_mm256_loadu_pd(dd+j), WK);
         S = _mm_add_pd (_mm256_extractf128_pd(P,1), cast128d(P));
         _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
-        i = cn[c+1].s; j = cn[c+].d;
+        i = cn[c+1].s; j = cn[c+1].d;
         P = _mm256_mul_pd (_mm256_loadu_pd(dd+j), WK);
         S = _mm_add_pd (_mm256_extractf128_pd(P,1), cast128d(P));
         _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));

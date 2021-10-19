@@ -849,7 +849,7 @@ HOSTDEV static void add_grad2_config
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { __m256d GK = _mm256_loadu_pd(g+k));
+        { __m256d GK = _mm256_loadu_pd(g+k);
           __m256d SI;
           SI = _mm256_set1_pd (s[cn[c].s] + off[cn[c].s]);
           j = cn[c].d;
@@ -862,7 +862,7 @@ HOSTDEV static void add_grad2_config
       }
       else
       { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { __m256d GK = _mm256_loadu_pd(g+k));
+        { __m256d GK = _mm256_loadu_pd(g+k);
           __m256d SI;
           SI = _mm256_set1_pd (s[cn[c].s]);
           j = cn[c].d;

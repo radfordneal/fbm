@@ -1734,9 +1734,14 @@ static void gibbs_adjustments
 
 
 /* EVALUATE POTENTIAL ENERGY AND ITS GRADIENT DUE TO A SET OF TRAINING CASES. 
-   Adds results to the accumulators pointed to, unless the pointer is null. */
+   Adds results to the accumulators pointed to, unless the pointer is null. 
+
+   Calls the GPU version if it exists, and the number of cases is greater 
+   than one. */
 
 #define DEBUG_SET_OF_CASES 0
+
+static void set_of_cases_gpu (double *, net_params *, int, int, double, double);
 
 static void set_of_cases  /* Energy and gradient from a set of training cases */
 ( 
@@ -1749,6 +1754,14 @@ static void set_of_cases  /* Energy and gradient from a set of training cases */
 )
 {
   int k;
+
+# if __CUDACC__
+  { if (n > 1)
+    { set_of_cases_gpu (energy, grd, i, n, en_weight, gr_weight);
+      return;
+    }
+  }
+# endif
 
   if (DEBUG_SET_OF_CASES)
   { printf("Starting set_of_cases, for %d cases starting at %d\n",n,i);
@@ -2611,242 +2624,7 @@ void mc_app_energy
     {
       if (N_approx==1 || gr==0)
       {
-#       if __CUDACC__
-        { 
-          check_cuda_error (cudaMemcpy (dev_param_block, params.param_block,
-                              params.total_params * sizeof *params.param_block,
-                              cudaMemcpyHostToDevice),
-                            "Copying parameters to GPU");
-
-          if (sigmas.noise != 0)
-          { check_cuda_error (cudaMemcpy (dev_noise, sigmas.noise,
-                                arch->N_outputs * sizeof *dev_noise,
-                                cudaMemcpyHostToDevice),
-                              "Copying noise sigmas to GPU");
-          }
-
-          int prev_blks = 0;  /* Number of blocks waiting to be reduced */
-          i = 0;              /* Number of cases handled so far */
-
-          while (i < N_train || prev_blks > 0)
-          { 
-            int cases, thrds, blks;
-
-            /* Launch kernel to do computations for next batch of cases. */
-
-            if (i < N_train)
-            {
-              cases = N_train-i < max_cases_per_launch ? N_train-i
-                                                       : max_cases_per_launch;
-              thrds = cases;
-              blks = (thrds + blksize - 1) / blksize;
-
-              if (0)
-              { static int first = 1;
-                if (first)
-                { printf("Launching with <<<%d,%d>>>, group size %d\n",
-                          blks, blksize, GROUP_SIZE);
-                  first = 0;
-                }
-              }
-
-              check_cuda_error (cudaGetLastError(), 
-                                "Before launching many_cases");
-              many_cases <<<blks, blksize>>> 
-                (energy ? thread_energy : 0, gr ? thread_grad : 0, 
-                 i, N_train, inv_temp, inv_temp);
-            }
-
-            /* Do reduction of parts of gradient computed previously, while
-               the GPU works on the next batch. */
-
-            if (energy && prev_blks>0)
-            { double e = *energy;
-              for (j = 0; j<prev_blks; j++)
-              { e += block_energy[j];
-              }
-              *energy = e;
-            }
-
-            if (gr && prev_blks>0)
-            { 
-              net_params *np = block_grad;
-
-              for (j = 0; j<prev_blks; j++)
-              { net_param *restrict npb = np->param_block;
-                unsigned k;
-#               if FP64 && USE_SIMD_INTRINSICS && __AVX__
-                { unsigned e = grad.total_params & ~(unsigned)0x7;
-                  for (k = 0; k < e; k += 8)
-                  { _mm256_storeu_pd (grad.param_block+k, 
-                                      _mm256_add_pd (
-                                        _mm256_loadu_pd (grad.param_block+k),
-                                        _mm256_loadu_pd (npb+k)));
-                    _mm256_storeu_pd (grad.param_block+k+4, 
-                                      _mm256_add_pd (
-                                        _mm256_loadu_pd (grad.param_block+k+4),
-                                        _mm256_loadu_pd (npb+k+4)));
-                  }
-                  if (k < (grad.total_params & ~(unsigned)0x3))
-                  { _mm256_storeu_pd (grad.param_block+k, 
-                                      _mm256_add_pd (
-                                        _mm256_loadu_pd (grad.param_block+k),
-                                        _mm256_loadu_pd (npb+k)));
-                    k += 4;
-                  }
-                  if (k < (grad.total_params & ~(unsigned)0x1))
-                  { _mm_storeu_pd (grad.param_block+k, 
-                                   _mm_add_pd (
-                                     _mm_loadu_pd (grad.param_block+k),
-                                     _mm_loadu_pd (npb+k)));
-                    k += 2;
-                  }
-                  if (k < grad.total_params)
-                  { grad.param_block[k] += npb[k];
-                  }
-                }
-#               elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
-                { unsigned e = grad.total_params & ~(unsigned)0x3;
-                  for (k = 0; k < e; k += 4)
-                  { _mm_storeu_pd (grad.param_block+k, 
-                                   _mm_add_pd (
-                                     _mm_loadu_pd (grad.param_block+k),
-                                     _mm_loadu_pd (npb+k)));
-                    _mm_storeu_pd (grad.param_block+k+2, 
-                                   _mm_add_pd (
-                                     _mm_loadu_pd (grad.param_block+k+2),
-                                     _mm_loadu_pd (npb+k+2)));
-                  }
-                  if (k < (grad.total_params & ~(unsigned)0x1))
-                  { _mm_storeu_pd (grad.param_block+k, 
-                                   _mm_add_pd (
-                                     _mm_loadu_pd (grad.param_block+k),
-                                     _mm_loadu_pd (npb+k)));
-                    k += 2;
-                  }
-                  if (k < grad.total_params)
-                  { grad.param_block[k] += npb[k];
-                  }
-                }
-#               elif FP32 && USE_SIMD_INTRINSICS && __AVX__
-                { unsigned e = grad.total_params & ~(unsigned)0xf;
-                  for (k = 0; k < e; k += 16)
-                  { _mm256_storeu_ps (grad.param_block+k, 
-                                      _mm256_add_ps (
-                                        _mm256_loadu_ps (grad.param_block+k),
-                                        _mm256_loadu_ps (npb+k)));
-                    _mm256_storeu_ps (grad.param_block+k+8, 
-                                      _mm256_add_ps (
-                                        _mm256_loadu_ps (grad.param_block+k+8),
-                                        _mm256_loadu_ps (npb+k+8)));
-                  }
-                  if (k < (grad.total_params & ~(unsigned)0x7))
-                  { _mm256_storeu_ps (grad.param_block+k, 
-                                      _mm256_add_ps (
-                                        _mm256_loadu_ps (grad.param_block+k),
-                                        _mm256_loadu_ps (npb+k)));
-                    k += 8;
-                  }
-                  if (k < (grad.total_params & ~(unsigned)0x3))
-                  { _mm_storeu_ps (grad.param_block+k, 
-                                   _mm_add_ps (
-                                     _mm_loadu_ps (grad.param_block+k),
-                                     _mm_loadu_ps (npb+k)));
-                    k += 4;
-                  }
-                  if (k < (grad.total_params & ~(unsigned)0x1))
-                  { __m128 Z = _mm_setzero_ps();
-                    _mm_storel_pi ((__m64 *)(grad.param_block+k), 
-                              _mm_add_ps (
-                                _mm_loadl_pi (Z, (__m64 *)(grad.param_block+k)),
-                                _mm_loadl_pi (Z, (__m64 *)(npb+k))));
-                    k += 2;
-                  }
-                  if (k < grad.total_params)
-                  { grad.param_block[k] += npb[k];
-                  }
-                }
-#               elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
-                { unsigned e = grad.total_params & ~(unsigned)0x7;
-                  for (k = 0; k < e; k += 8)
-                  { _mm_storeu_ps (grad.param_block+k, 
-                                   _mm_add_ps (
-                                     _mm_loadu_ps (grad.param_block+k),
-                                     _mm_loadu_ps (npb+k)));
-                    _mm_storeu_ps (grad.param_block+k+4, 
-                                   _mm_add_ps (
-                                     _mm_loadu_ps (grad.param_block+k+4),
-                                     _mm_loadu_ps (npb+k+4)));
-                  }
-                  if (k < (grad.total_params & ~(unsigned)0x3))
-                  { _mm_storeu_ps (grad.param_block+k, 
-                                   _mm_add_ps (
-                                     _mm_loadu_ps (grad.param_block+k),
-                                     _mm_loadu_ps (npb+k)));
-                    k += 4;
-                  }
-                  if (k < (grad.total_params & ~(unsigned)0x1))
-                  { __m128 Z = _mm_setzero_ps();
-                    _mm_storel_pi ((__m64 *)(grad.param_block+k), 
-                              _mm_add_ps (
-                                _mm_loadl_pi (Z, (__m64 *)(grad.param_block+k)),
-                                _mm_loadl_pi (Z, (__m64 *)(npb+k))));
-                    k += 2;
-                  }
-                  if (k < grad.total_params)
-                  { grad.param_block[k] += npb[k];
-                  }
-                }
-#               else
-                { for (k = 0; k < grad.total_params; k++)
-                  { grad.param_block[k] += npb[k];
-                  }
-                }
-#               endif
-                np += 1;
-              }
-            }
-
-            prev_blks = 0;
-
-            /* Wait for GPU to finish, then copy results from it. */
-
-            if (i < N_train)
-            {
-#             if MANAGED_MEMORY_USED || 1
-              { 
-                check_cuda_error (cudaDeviceSynchronize(), 
-                                  "Synchronizing after launching many_cases");
-                check_cuda_error (cudaGetLastError(), 
-                                  "After synchronizing with many_cases");
-              }
-#             endif
-
-              if (energy)
-              { check_cuda_error (cudaMemcpy (block_energy, dev_block_energy,
-                                              blks * sizeof *block_energy,
-                                              cudaMemcpyDeviceToHost),
-                                  "copy to block_energy");
-              }
-
-              if (gr)
-              { check_cuda_error (cudaMemcpy (
-                   block_grad->param_block, dev_block_grad_params, 
-                    blks * grad_aligned_total * sizeof *block_grad->param_block,
-                   cudaMemcpyDeviceToHost),
-                 "copy from GPU to block_grad");
-              }
-
-              prev_blks = blks;
-
-              i += cases;
-            }
-          }
-        }
-#       else
-        { set_of_cases (energy, gr ? &grad : 0, 0, N_train, inv_temp, inv_temp);
-        }
-#       endif
+        set_of_cases (energy, gr ? &grad : 0, 0, N_train, inv_temp, inv_temp);
       }
       else /* We're using multiple approximations */
       {

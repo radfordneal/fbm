@@ -96,8 +96,8 @@ int main
   unsigned old_clock; /* Theoretically, these should be of type clock_t, but  */
   unsigned new_clock; /* that type is inexplicably declared signed on most    */
                       /* systems, cutting the already-too-small range in half */
-  int ns, np;
-  int i, j, g, o, n, s, c;
+
+  int i, j, g, o, n, s, c, ns;
 
   /* Look at initial program arguments. */
 
@@ -182,6 +182,8 @@ int main
 
   mc_dynamic_state ds;
   mc_app_initialize(&logg,&ds);
+
+  int np = params.total_params;
 
   if (logg.data['r']!=0) 
   { rand_use_state(logg.data['r']);

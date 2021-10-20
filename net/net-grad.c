@@ -1728,8 +1728,8 @@ __device__ static void net_store2_grad2_config
           if (k<0) break;
           net_value s0i = s0[i], s1i = s1[i];
           net_param o = off[i];
-          g[k+ix] += (s0i+o)*d0[j+ix] + (s1i+o)*d1[j+ix];
-          g[k+ix+2] += (s0i+o)*d0[j+ix+2] + (s1i+o)*d1[j+ix+2];
+          g[k+ix] = g[k+ix] + (s0i+o)*d0[j+ix] + (s1i+o)*d1[j+ix];
+          g[k+ix+2] = g[k+ix+2] + (s0i+o)*d0[j+ix+2] + (s1i+o)*d1[j+ix+2];
         }
       }
     }
@@ -1741,8 +1741,8 @@ __device__ static void net_store2_grad2_config
         { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
           if (k<0) break;
           net_value s0i = s0[i], s1i = s1[i];
-          g[k+ix] += s0i*d0[j+ix] + s1i*d1[j+ix];
-          g[k+ix+2] += s0i*d0[j+ix+2] + s1i*d1[j+ix+2];
+          g[k+ix] = g[k+ix] + s0i*d0[j+ix] + s1i*d1[j+ix];
+          g[k+ix+2] = g[k+ix+2] + s0i*d0[j+ix+2] + s1i*d1[j+ix+2];
         }
       }
     }
@@ -1759,10 +1759,10 @@ __device__ static void net_store2_grad2_config
           i2 = cn[c].s; j2 = cn[c].d; c += 1;
           net_value s0i2 = s0[i2], s1i2 = s1[i2];
           net_param o2 = off[i2];
-          g[k+ix] += ((s0i+o)*d0[j+ix] + (s1i+o)*d1[j+ix])
-                   + ((s0i2+o2)*d0[j2+ix] + (s1i2+o2)*d1[j2+ix]);
-          g[k+ix+2] += ((s0i+o)*d0[j+ix+2] + (s1i+o)*d1[j+ix+2])
-                     + ((s0i2+o2)*d0[j2+ix+2] + (s1i2+o2)*d1[j2+ix+2]);
+          g[k+ix] = g[k+ix] + (s0i+o)*d0[j+ix] + (s1i+o)*d1[j+ix]
+                            + (s0i2+o2)*d0[j2+ix] + (s1i2+o2)*d1[j2+ix];
+          g[k+ix+2] = g[k+ix+2] + (s0i+o)*d0[j+ix+2] + (s1i+o)*d1[j+ix+2]
+                                + (s0i2+o2)*d0[j2+ix+2] + (s1i2+o2)*d1[j2+ix+2];
         }
       }
     }
@@ -1776,10 +1776,10 @@ __device__ static void net_store2_grad2_config
           net_value s0i = s0[i], s1i = s1[i];
           i2 = cn[c].s; j2 = cn[c].d; c += 1;
           net_value s0i2 = s0[i2], s1i2 = s1[i2];
-          g[k+ix] += (s0i*d0[j+ix] + s1i*d1[j+ix])
-                   + (s0i2*d0[j2+ix] + s1i2*d1[j2+ix]);
-          g[k+ix+2] += (s0i*d0[j+ix+2] + s1i*d1[j+ix+2])
-                     + (s0i2*d0[j2+ix+2] + s1i2*d1[j2+ix+2]);
+          g[k+ix] = g[k+ix] + s0i*d0[j+ix] + s1i*d1[j+ix]
+                            + s0i2*d0[j2+ix] + s1i2*d1[j2+ix];
+          g[k+ix+2] = g[k+ix+2] + s0i*d0[j+ix+2] + s1i*d1[j+ix+2]
+                                + s0i2*d0[j2+ix+2] + s1i2*d1[j2+ix+2];
         }
       }
     }
@@ -1793,14 +1793,14 @@ __device__ static void net_store2_grad2_config
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
         net_param o = off[i];
-        g[k] += (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j];
+        g[k] = g[k] + (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j];
       }
     }
     else
     { for (;;)
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
-        g[k] += s0[i]*d0[j] + s1[i]*d1[j];
+        g[k] = g[k] + s0[i]*d0[j] + s1[i]*d1[j];
       }
     }
   }
@@ -1814,8 +1814,8 @@ __device__ static void net_store2_grad2_config
         net_param o = off[i];
         i2 = cn[c].s; j2 = cn[c].d; c += 1;
         net_param o2 = off[i2];
-        g[k] += ((s0[i]+o)*d0[j] + (s1[i]+o)*d1[j])
-              + ((s0[i2]+o2)*d0[j2] + (s1[i2]+o2)*d1[j2]);
+        g[k] = g[k] + (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j]
+                    + (s0[i2]+o2)*d0[j2] + (s1[i2]+o2)*d1[j2];
       }
     }
     else
@@ -1823,8 +1823,8 @@ __device__ static void net_store2_grad2_config
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
         i2 = cn[c].s; j2 = cn[c].d; c += 1;
-        g[k] += (s0[i]*d0[j] + s1[i]*d1[j])
-              + (s0[i2]*d0[j2] + s1[i2]*d1[j2]);
+        g[k] = g[k] + s0[i]*d0[j] + s1[i]*d1[j]
+                    + s0[i2]*d0[j2] + s1[i2]*d1[j2];
       }
     }
   }
@@ -2288,10 +2288,10 @@ __device__ static void net_store3_grad2_config
           if (k<0) break;
           net_value s0i = s0[i], s1i = s1[i], s2i = s2[i];
           net_param o = off[i];
-          g[k+ix] += (s0i+o)*d0[j+ix] + (s1i+o)*d1[j+ix] 
-                                      + (s2i+o)*d2[j+ix];
-          g[k+ix+2] += (s0i+o)*d0[j+ix+2] + (s1i+o)*d1[j+ix+2]
-                                          + (s2i+o)*d2[j+ix+2];
+          g[k+ix] = g[k+ix]
+                  + (s0i+o)*d0[j+ix] + (s1i+o)*d1[j+ix] + (s2i+o)*d2[j+ix];
+          g[k+ix+2] = g[k+ix+2]
+                 + (s0i+o)*d0[j+ix+2] + (s1i+o)*d1[j+ix+2] + (s2i+o)*d2[j+ix+2];
         }
       }
     }
@@ -2303,8 +2303,10 @@ __device__ static void net_store3_grad2_config
         { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
           if (k<0) break;
           net_value s0i = s0[i], s1i = s1[i], s2i = s2[i];
-          g[k+ix] += s0i*d0[j+ix] + s1i*d1[j+ix] + s2i*d2[j+ix];
-          g[k+ix+2] += s0i*d0[j+ix+2] + s1i*d1[j+ix+2] + s2i*d2[j+ix+2];
+          g[k+ix] = g[k+ix] 
+                  + s0i*d0[j+ix] + s1i*d1[j+ix] + s2i*d2[j+ix];
+          g[k+ix+2] = g[k+ix+2]
+                    + s0i*d0[j+ix+2] + s1i*d1[j+ix+2] + s2i*d2[j+ix+2];
         }
       }
     }
@@ -2321,14 +2323,13 @@ __device__ static void net_store3_grad2_config
           i2 = cn[c].s; j2 = cn[c].d; c += 1;
           net_value s0i2 = s0[i2], s1i2 = s1[i2], s2i2 = s2[i2];
           net_param o2 = off[i2];
-          g[k+ix] += ((s0i+o)*d0[j+ix] + (s1i+o)*d1[j+ix] 
-                                       + (s2i+o)*d2[j+ix])
-                   + ((s0i2+o2)*d0[j2+ix] + (s1i2+o2)*d1[j2+ix] 
-                                          + (s2i2+o2)*d2[j2+ix]);
-          g[k+ix+2] += ((s0i+o)*d0[j+ix+2] + (s1i+o)*d1[j+ix+2]
-                                          + (s2i+o)*d2[j+ix+2])
-                     + ((s0i2+o2)*d0[j2+ix+2] + (s1i2+o2)*d1[j2+ix+2]
-                                              + (s2i2+o2)*d2[j2+ix+2]);
+          g[k+ix] = g[k+ix]
+            + (s0i+o)*d0[j+ix] + (s1i+o)*d1[j+ix] + (s2i+o)*d2[j+ix]
+            + (s0i2+o2)*d0[j2+ix] + (s1i2+o2)*d1[j2+ix] + (s2i2+o2)*d2[j2+ix];
+          g[k+ix+2] = g[k+ix+2]
+            + (s0i+o)*d0[j+ix+2] + (s1i+o)*d1[j+ix+2] + (s2i+o)*d2[j+ix+2]
+            + (s0i2+o2)*d0[j2+ix+2] + (s1i2+o2)*d1[j2+ix+2] 
+                                    + (s2i2+o2)*d2[j2+ix+2];
         }
       }
     }
@@ -2342,10 +2343,12 @@ __device__ static void net_store3_grad2_config
           net_value s0i = s0[i], s1i = s1[i], s2i = s2[i];
           i2 = cn[c].s; j2 = cn[c].d; c += 1;
           net_value s0i2 = s0[i2], s1i2 = s1[i2], s2i2 = s2[i2];
-          g[k+ix] += (s0i*d0[j+ix] + s1i*d1[j+ix] + s2i*d2[j+ix])
-                   + (s0i2*d0[j2+ix] + s1i2*d1[j2+ix] + s2i2*d2[j2+ix]);
-          g[k+ix+2] += (s0i*d0[j+ix+2] + s1i*d1[j+ix+2] + s2i*d2[j+ix+2])
-                     + (s0i2*d0[j2+ix+2] + s1i2*d1[j2+ix+2] + s2i2*d2[j2+ix+2]);
+          g[k+ix] = g[k+ix] 
+                  + s0i*d0[j+ix] + s1i*d1[j+ix] + s2i*d2[j+ix]
+                  + s0i2*d0[j2+ix] + s1i2*d1[j2+ix] + s2i2*d2[j2+ix];
+          g[k+ix+2] = g[k+ix+2]
+                    + s0i*d0[j+ix+2] + s1i*d1[j+ix+2] + s2i*d2[j+ix+2]
+                    + s0i2*d0[j2+ix+2] + s1i2*d1[j2+ix+2] + s2i2*d2[j2+ix+2];
         }
       }
     }
@@ -2359,14 +2362,14 @@ __device__ static void net_store3_grad2_config
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
         net_param o = off[i];
-        g[k] += (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j] + (s2[i]+o)*d2[j];
+        g[k] = g[k] + (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j] + (s2[i]+o)*d2[j];
       }
     }
     else
     { for (;;)
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
-        g[k] += s0[i]*d0[j] + s1[i]*d1[j] + s2[i]*d2[j];
+        g[k] = g[k] + s0[i]*d0[j] + s1[i]*d1[j] + s2[i]*d2[j];
       }
     }
   }
@@ -2380,8 +2383,8 @@ __device__ static void net_store3_grad2_config
         net_param o = off[i];
         i2 = cn[c].s; j2 = cn[c].d; c += 1;
         net_param o2 = off[i2];
-        g[k] += ((s0[i]+o)*d0[j] + (s1[i]+o)*d1[j] + (s2[i]+o)*d2[j])
-              + ((s0[i2]+o2)*d0[j2] + (s1[i2]+o2)*d1[j2] + (s2[i2]+o2)*d2[j2]);
+        g[k] = g[k] + (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j] + (s2[i]+o)*d2[j]
+                 + (s0[i2]+o2)*d0[j2] + (s1[i2]+o2)*d1[j2] + (s2[i2]+o2)*d2[j2];
       }
     }
     else
@@ -2389,8 +2392,8 @@ __device__ static void net_store3_grad2_config
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
         i2 = cn[c].s; j2 = cn[c].d; c += 1;
-        g[k] += (s0[i]*d0[j] + s1[i]*d1[j] + s2[i]*d2[j])
-              + (s0[i2]*d0[j2] + s1[i2]*d1[j2] + s2[i2]*d2[j2]);
+        g[k] = g[k] + s0[i]*d0[j] + s1[i]*d1[j] + s2[i]*d2[j]
+                    + s0[i2]*d0[j2] + s1[i2]*d1[j2] + s2[i2]*d2[j2];
       }
     }
   }
@@ -2879,8 +2882,8 @@ __device__ static void net_store4_grad2_config
         { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
           if (k<0) break;
           net_param o = off[i];
-          g[k+ix] += ((s0[i]+o)*d0[j+ix] + (s1[i]+o)*d1[j+ix]) 
-                   + ((s2[i]+o)*d2[j+ix] + (s3[i]+o)*d3[j+ix]);
+          g[k+ix] = g[k+ix] + (s0[i]+o)*d0[j+ix] + (s1[i]+o)*d1[j+ix] 
+                            + (s2[i]+o)*d2[j+ix] + (s3[i]+o)*d3[j+ix];
         }
       }
     }
@@ -2891,8 +2894,8 @@ __device__ static void net_store4_grad2_config
         for (;;)
         { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
           if (k<0) break;
-          g[k+ix] += (s0[i]*d0[j+ix] + s1[i]*d1[j+ix]) 
-                   + (s2[i]*d2[j+ix] + s3[i]*d3[j+ix]);
+          g[k+ix] = g[k+ix] + s0[i]*d0[j+ix] + s1[i]*d1[j+ix] 
+                            + s2[i]*d2[j+ix] + s3[i]*d3[j+ix];
         }
       }
     }
@@ -2907,10 +2910,11 @@ __device__ static void net_store4_grad2_config
           net_param o = off[i];
           i2 = cn[c].s; j2 = cn[c].d; c += 1;
           net_param o2 = off[i2];
-          g[k+ix] += (((s0[i]+o)*d0[j+ix] + (s1[i]+o)*d1[j+ix]) 
-                      + ((s2[i]+o)*d2[j+ix] + (s3[i]+o)*d3[j+ix]))
-                   + (((s0[i2]+o2)*d0[j2+ix] + (s1[i2]+o2)*d1[j2+ix]) 
-                      + ((s2[i2]+o2)*d2[j2+ix] + (s3[i2]+o2)*d3[j2+ix]));
+          g[k+ix] = g[k+ix]
+                  + (s0[i]+o)*d0[j+ix] + (s1[i]+o)*d1[j+ix]
+                  + (s2[i]+o)*d2[j+ix] + (s3[i]+o)*d3[j+ix]
+                  + (s0[i2]+o2)*d0[j2+ix] + (s1[i2]+o2)*d1[j2+ix]
+                  + (s2[i2]+o2)*d2[j2+ix] + (s3[i2]+o2)*d3[j2+ix];
         }
       }
     }
@@ -2922,10 +2926,11 @@ __device__ static void net_store4_grad2_config
         { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
           if (k<0) break;
           i2 = cn[c].s; j2 = cn[c].d; c += 1;
-          g[k+ix] += ((s0[i]*d0[j+ix] + s1[i]*d1[j+ix]) 
-                      + (s2[i]*d2[j+ix] + s3[i]*d3[j+ix]))
-                   + ((s0[i2]*d0[j2+ix] + s1[i2]*d1[j2+ix]) 
-                      + (s2[i2]*d2[j2+ix] + s3[i2]*d3[j2+ix]));
+          g[k+ix] = g[k+ix] 
+                  + s0[i]*d0[j+ix] + s1[i]*d1[j+ix]       /* avoid += so  */
+                  + s2[i]*d2[j+ix] + s3[i]*d3[j+ix]       /* multiply-add */
+                  + s0[i2]*d0[j2+ix] + s1[i2]*d1[j2+ix]   /* can be used  */
+                  + s2[i2]*d2[j2+ix] + s3[i2]*d3[j2+ix];
         }
       }
     }
@@ -2938,16 +2943,16 @@ __device__ static void net_store4_grad2_config
     { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
       if (k<0) break;
       net_param o = off[i];
-      g[k] += ((s0[i]+o)*d0[j] + (s1[i]+o)*d1[j]) 
-            + ((s2[i]+o)*d2[j] + (s3[i]+o)*d3[j]);
+      g[k] = g[k] + (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j] 
+                  + (s2[i]+o)*d2[j] + (s3[i]+o)*d3[j];
     }
   }
   else
   { for (;;)
     { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
       if (k<0) break;
-      g[k] += (s0[i]*d0[j] + s1[i]*d1[j]) 
-            + (s2[i]*d2[j] + s3[i]*d3[j]);
+      g[k]  = g[k] + s0[i]*d0[j] + s1[i]*d1[j] 
+                   + s2[i]*d2[j] + s3[i]*d3[j];
     }
   }
   cn = cf->other_2_gpu;
@@ -2959,10 +2964,10 @@ __device__ static void net_store4_grad2_config
       net_param o = off[i];
       i2 = cn[c].s; j2 = cn[c].d; c += 1;
       net_param o2 = off[i2];
-      g[k] += (((s0[i]+o)*d0[j] + (s1[i]+o)*d1[j]) 
-               + ((s2[i]+o)*d2[j] + (s3[i]+o)*d3[j]))
-            + (((s0[i2]+o2)*d0[j2] + (s1[i2]+o2)*d1[j2]) 
-               + ((s2[i2]+o2)*d2[j2] + (s3[i2]+o2)*d3[j2]));
+      g[k] = g[k] + (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j] 
+                  + (s2[i]+o)*d2[j] + (s3[i]+o)*d3[j]
+                  + (s0[i2]+o2)*d0[j2] + (s1[i2]+o2)*d1[j2] 
+                  + (s2[i2]+o2)*d2[j2] + (s3[i2]+o2)*d3[j2];
     }
   }
   else
@@ -2970,10 +2975,10 @@ __device__ static void net_store4_grad2_config
     { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
       if (k<0) break;
       i2 = cn[c].s; j2 = cn[c].d; c += 1;
-      g[k] += ((s0[i]*d0[j] + s1[i]*d1[j]) 
-               + (s2[i]*d2[j] + s3[i]*d3[j]))
-            + ((s0[i2]*d0[j2] + s1[i2]*d1[j2]) 
-               + (s2[i2]*d2[j2] + s3[i2]*d3[j2]));
+      g[k] = g[k] + s0[i]*d0[j] + s1[i]*d1[j]        /* avoid += so  */
+                  + s2[i]*d2[j] + s3[i]*d3[j]        /* multiply-add */
+                  + s0[i2]*d0[j2] + s1[i2]*d1[j2]    /* can be used  */
+                  + s2[i2]*d2[j2] + s3[i2]*d3[j2];
     }
   }
 }

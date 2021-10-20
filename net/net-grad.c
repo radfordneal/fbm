@@ -937,36 +937,29 @@ HOSTDEV static void add_grad2_config
       }
     }
 #   else
-    { if (off)
+    { int j2;
+      if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c+=2)
         { net_value soi = s[cn[c].s] + off[cn[c].s];
           j = cn[c].d;
-          g[k+0] += soi * d[j+0];
-          g[k+1] += soi * d[j+1];
-          g[k+2] += soi * d[j+2];
-          g[k+3] += soi * d[j+3];
-          soi = s[cn[c+1].s] + off[cn[c+1].s];
-          j = cn[c+1].d;
-          g[k+0] += soi * d[j+0];
-          g[k+1] += soi * d[j+1];
-          g[k+2] += soi * d[j+2];
-          g[k+3] += soi * d[j+3];
+          net_value soi2 = s[cn[c+1].s] + off[cn[c+1].s];
+          j2 = cn[c+1].d;
+          g[k+0] = g[k+0] + soi * d[j+0] + soi2 * d[j2+0];  /* not using +=  */
+          g[k+1] = g[k+1] + soi * d[j+1] + soi2 * d[j2+1];  /* allows use of */
+          g[k+2] = g[k+2] + soi * d[j+2] + soi2 * d[j2+2];  /* multiply-add, */
+          g[k+3] = g[k+3] + soi * d[j+3] + soi2 * d[j2+3];  /* matching AVX  */
         }
       }
       else
       { for (c = 0; (k = cn[c].w) >= 0; c+=2)
         { net_value si = s[cn[c].s];
           j = cn[c].d;
-          g[k+0] += si * d[j+0];
-          g[k+1] += si * d[j+1];
-          g[k+2] += si * d[j+2];
-          g[k+3] += si * d[j+3];
-          si = s[cn[c+1].s];
-          j = cn[c+1].d;
-          g[k+0] += si * d[j+0];
-          g[k+1] += si * d[j+1];
-          g[k+2] += si * d[j+2];
-          g[k+3] += si * d[j+3];
+          net_value si2 = s[cn[c+1].s];
+          j2 = cn[c+1].d;
+          g[k+0] = g[k+0] + si * d[j+0] + si2 * d[j2+0];  /* not using +=  */
+          g[k+1] = g[k+1] + si * d[j+1] + si2 * d[j2+1];  /* allows use of */
+          g[k+2] = g[k+2] + si * d[j+2] + si2 * d[j2+2];  /* multiply-add, */
+          g[k+3] = g[k+3] + si * d[j+3] + si2 * d[j2+3];  /* matching AVX  */
         }
       }
     }

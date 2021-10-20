@@ -532,16 +532,20 @@ HOSTDEV static void bias_values_config
     }
     cn = cf->quad_s_4d_4w_2;
     for (c = 0; (k = cn[c].w) >= 0; c+=2)
-    { j = cn[c].d;
-      v[j+0] += b[k+0];
-      v[j+1] += b[k+1];
-      v[j+2] += b[k+2];
-      v[j+3] += b[k+3];
+    { net_value b0 = b[k+0];
+      net_value b1 = b[k+1];
+      net_value b2 = b[k+2];
+      net_value b3 = b[k+3];
+      j = cn[c].d;
+      v[j+0] += b0;
+      v[j+1] += b1;
+      v[j+2] += b2;
+      v[j+3] += b3;
       j = cn[c+1].d;
-      v[j+0] += b[k+0];
-      v[j+1] += b[k+1];
-      v[j+2] += b[k+2];
-      v[j+3] += b[k+3];
+      v[j+0] += b0;
+      v[j+1] += b1;
+      v[j+2] += b2;
+      v[j+3] += b3;
     }
   }
 
@@ -1259,34 +1263,42 @@ HOSTDEV static void add_connections_config
 #   else
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { net_value voi = v[cn[c].s] + off[cn[c].s];
+        { net_value w0 = w[k+0];
+          net_value w1 = w[k+1];
+          net_value w2 = w[k+2];
+          net_value w3 = w[k+3];
+          net_value voi = v[cn[c].s] + off[cn[c].s];
           j = cn[c].d;
-          s[j+0] += voi * w[k+0];
-          s[j+1] += voi * w[k+1];
-          s[j+2] += voi * w[k+2];
-          s[j+3] += voi * w[k+3];
+          s[j+0] += voi * w0;
+          s[j+1] += voi * w1;
+          s[j+2] += voi * w2;
+          s[j+3] += voi * w3;
           voi = v[cn[c+1].s] + off[cn[c+1].s];
           j = cn[c+1].d;
-          s[j+0] += voi * w[k+0];
-          s[j+1] += voi * w[k+1];
-          s[j+2] += voi * w[k+2];
-          s[j+3] += voi * w[k+3];
+          s[j+0] += voi * w0;
+          s[j+1] += voi * w1;
+          s[j+2] += voi * w2;
+          s[j+3] += voi * w3;
         }
       }
       else
       { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { net_value vi = v[cn[c].s];
+        { net_value w0 = w[k+0];
+          net_value w1 = w[k+1];
+          net_value w2 = w[k+2];
+          net_value w3 = w[k+3];
+          net_value vi = v[cn[c].s];
           j = cn[c].d; 
-          s[j+0] += vi * w[k+0];
-          s[j+1] += vi * w[k+1];
-          s[j+2] += vi * w[k+2];
-          s[j+3] += vi * w[k+3];
+          s[j+0] += vi * w0;
+          s[j+1] += vi * w1;
+          s[j+2] += vi * w2;
+          s[j+3] += vi * w3;
           vi = v[cn[c+1].s];
           j = cn[c+1].d; 
-          s[j+0] += vi * w[k+0];
-          s[j+1] += vi * w[k+1];
-          s[j+2] += vi * w[k+2];
-          s[j+3] += vi * w[k+3];
+          s[j+0] += vi * w0;
+          s[j+1] += vi * w1;
+          s[j+2] += vi * w2;
+          s[j+3] += vi * w3;
         }
       }
     }

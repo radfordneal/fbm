@@ -669,12 +669,16 @@ HOSTDEV static void sum_derivatives_config
     }
 #   else
     { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-      { i = cn[c].s; j = cn[c].d;
-        ds[i] += (dd[j+0]*w[k+0] + dd[j+2]*w[k+2])      /* same order as SIMD */
-                   + (dd[j+1]*w[k+1] + dd[j+3]*w[k+3]); /* instructions above */
+      { net_value w0 = w[k+0];
+        net_value w1 = w[k+1];
+        net_value w2 = w[k+2];
+        net_value w3 = w[k+3];
+        i = cn[c].s; j = cn[c].d;
+        ds[i] += (dd[j+0]*w0 + dd[j+2]*w2)      /* same order as SIMD */
+                   + (dd[j+1]*w1 + dd[j+3]*w3); /* instructions above */
         i = cn[c+1].s; j = cn[c+1].d;
-        ds[i] += (dd[j+0]*w[k+0] + dd[j+2]*w[k+2])      /* same order as SIMD */
-                   + (dd[j+1]*w[k+1] + dd[j+3]*w[k+3]); /* instructions above */
+        ds[i] += (dd[j+0]*w0 + dd[j+2]*w2)      /* same order as SIMD */
+                   + (dd[j+1]*w1 + dd[j+3]*w3); /* instructions above */
       }
     }
 #   endif

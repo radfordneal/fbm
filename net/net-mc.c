@@ -1732,134 +1732,141 @@ static void gibbs_adjustments
 }
 
 
-/* EVALUATE POTENTIAL ENERGY AND ITS GRADIENT DUE TO ONE TRAINING CASE. 
-   Adds the results to the accumulators passed. */
+/* EVALUATE POTENTIAL ENERGY AND ITS GRADIENT DUE TO A SET OF TRAINING CASES. 
+   Adds results to the accumulators pointed to, unless the pointer is null. */
 
-#define DEBUG_ONE_CASE 0
+#define DEBUG_SET_OF_CASES 0
 
-static void one_case  /* Energy and gradient from one training case */
+static void set_of_cases  /* Energy and gradient from one training case */
 ( 
   double *energy,	/* Place to store/increment energy, 0 if not required */
   net_params *grd,	/* Place to store/increment gradient, 0 if not needed */
-  int i,		/* Case to look at */
+  int i,		/* First case to look at */
+  int n,		/* Number of cases to look at */
   double en_weight,	/* Weight for this case for energy */
   double gr_weight	/* Weight for this case for gradient */
 )
 {
   int k;
 
-  if (DEBUG_ONE_CASE)
-  { printf("Starting one_case, for case %d\n",i);
+  if (DEBUG_SET_OF_CASES)
+  { printf("Starting set_of_cases, for %d cases starting at %d\n",n,i);
   }
 
-  if (model->type=='V'          /* Handle piecewise-constant hazard    */
-   && surv->hazard_type=='P')   /*   model specially                   */
-  { 
-    double ot, t0, t1;
-    int censored;
-    int w;
-  
-    if (train_targets[i]<0)
-    { censored = 1;
-      ot = -train_targets[i];
+  while (n > 0)
+  {
+    if (model->type=='V'          /* Handle piecewise-constant hazard    */
+     && surv->hazard_type=='P')   /*   model specially                   */
+    { 
+      double ot, t0, t1;
+      int censored;
+      int w;
+    
+      if (train_targets[i]<0)
+      { censored = 1;
+        ot = -train_targets[i];
+      }
+      else
+      { censored = 0;
+        ot = train_targets[i];
+      }
+    
+      t0 = 0;
+      t1 = surv->time[0];
+      train_values[i].i[0] = surv->log_time ? log(t1) : t1;
+    
+      w = 0;
+    
+      for (;;)
+      {
+        net_func (&train_values[i], 0, arch, flgs, &params);
+        
+        net_value fudged_target 
+                    = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
+
+        double log_prob;
+    
+        net_model_prob(&train_values[i], &fudged_target,
+                       &log_prob, grd ? &deriv[i] : 0, arch, model, surv, 
+                       noise, Cheap_energy);
+    
+        if (energy)
+        { *energy -= en_weight * log_prob;
+        }
+    
+        if (grd)
+        { if (gr_weight!=1)
+          { for (k = 0; k<arch->N_outputs; k++)
+            { deriv[i].o[k] *= gr_weight;
+            }
+          }
+          net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
+                    arch, flgs, &params);
+          net_add_grad (grd, &params, &train_values[i], &deriv[i], arch, flgs);
+        }
+    
+        if (ot<=t1) break;
+     
+        t0 = t1;
+        w += 1;
+        
+        if (surv->time[w]==0) 
+        { t1 = ot;
+          train_values[i].i[0] = surv->log_time ? log(t0) : t0;
+        }
+        else
+        { t1 = surv->time[w];
+          train_values[i].i[0] = surv->log_time ? (log(t0)+log(t1))/2
+                                                : (t0+t1)/2;
+        }
+      }
     }
-    else
-    { censored = 0;
-      ot = train_targets[i];
-    }
-  
-    t0 = 0;
-    t1 = surv->time[0];
-    train_values[i].i[0] = surv->log_time ? log(t1) : t1;
-  
-    w = 0;
-  
-    for (;;)
-    {
-      net_func (&train_values[i], 0, arch, flgs, &params);
-      
-      net_value fudged_target 
-                  = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
+    
+    else /* Everything except piecewise-constant hazard model */
+    { 
+      net_values *train_vals_i = train_values+i;
+      net_values *deriv_i = grd ? deriv+i : 0;
+
+      if (DEBUG_SET_OF_CASES)
+      { printf("train_values[%d]->i[0] = %f\n",i,train_vals_i->i[0]);
+        // printf("train_values[%d]->i[1] = %f\n",i,train_vals_i->i[1]);
+      }
+
+      net_func (train_vals_i, 0, arch, flgs, &params);
+
+      if (DEBUG_SET_OF_CASES)
+      { printf("train_values[%d]->o[0] = %f\n",i,train_vals_i->o[0]);
+      }
 
       double log_prob;
-  
-      net_model_prob(&train_values[i], &fudged_target,
-                     &log_prob, grd ? &deriv[i] : 0, arch, model, surv, 
-                     noise, Cheap_energy);
-  
+      net_model_prob (train_vals_i, train_targets+N_targets*i, &log_prob, 
+                      deriv_i, arch, model, surv, noise, Cheap_energy);
+
+      if (DEBUG_SET_OF_CASES)
+      { printf("log_prob = %f\n",log_prob);
+      }
+      
       if (energy)
       { *energy -= en_weight * log_prob;
       }
-  
+
       if (grd)
-      { if (gr_weight!=1)
+      { 
+        if (gr_weight!=1)
         { for (k = 0; k<arch->N_outputs; k++)
-          { deriv[i].o[k] *= gr_weight;
+          { deriv_i->o[k] *= gr_weight;
           }
         }
-        net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
+
+        net_back (train_vals_i, deriv_i, arch->has_ti ? -1 : 0,
                   arch, flgs, &params);
-        net_add_grad (grd, &params, &train_values[i], &deriv[i], arch, flgs);
-      }
-  
-      if (ot<=t1) break;
-   
-      t0 = t1;
-      w += 1;
-      
-      if (surv->time[w]==0) 
-      { t1 = ot;
-        train_values[i].i[0] = surv->log_time ? log(t0) : t0;
-      }
-      else
-      { t1 = surv->time[w];
-        train_values[i].i[0] = surv->log_time ? (log(t0)+log(t1))/2
-                                              : (t0+t1)/2;
+
+        net_add_grad (grd, &params, train_vals_i, deriv_i, arch, flgs);
       }
     }
-  }
-  
-  else /* Everything except piecewise-constant hazard model */
-  { 
-    net_values *train_vals_i = train_values+i;
-    net_values *deriv_i = grd ? deriv+i : 0;
 
-    if (DEBUG_ONE_CASE)
-    { printf("train_values[%d]->i[0] = %f\n",i,train_vals_i->i[0]);
-      // printf("train_values[%d]->i[1] = %f\n",i,train_vals_i->i[1]);
-    }
-
-    net_func (train_vals_i, 0, arch, flgs, &params);
-
-    if (DEBUG_ONE_CASE)
-    { printf("train_values[%d]->o[0] = %f\n",i,train_vals_i->o[0]);
-    }
-
-    double log_prob;
-    net_model_prob (train_vals_i, train_targets+N_targets*i, &log_prob, 
-                    deriv_i, arch, model, surv, noise, Cheap_energy);
-
-    if (DEBUG_ONE_CASE)
-    { printf("log_prob = %f\n",log_prob);
-    }
-    
-    if (energy)
-    { *energy -= en_weight * log_prob;
-    }
-
-    if (grd)
-    { 
-      if (gr_weight!=1)
-      { for (k = 0; k<arch->N_outputs; k++)
-        { deriv_i->o[k] *= gr_weight;
-        }
-      }
-
-      net_back (train_vals_i, deriv_i, arch->has_ti ? -1 : 0,
-                arch, flgs, &params);
-
-      net_add_grad (grd, &params, train_vals_i, deriv_i, arch, flgs);
-    }
+    i += 1;
+    n -= 1;
   }
 }
 
@@ -2158,7 +2165,7 @@ __global__ void many_cases
 
       int r = GROUP_SIZE;
       if (GROUP_SIZE>1)
-      { if (r > const_N_train - (h-th))   r = const_N_train - (h-th);
+      { if (r > const_N_train - (h-th))      r = const_N_train - (h-th);
         if (threadIdx.x-th + r > blockDim.x) r = blockDim.x - (threadIdx.x-th);
       }
 
@@ -2589,9 +2596,7 @@ void mc_app_energy
           }
         }
 #       else
-        { for (i = 0; i<N_train; i++)
-          { one_case (energy, gr ? &grad : 0, i, inv_temp, inv_temp);
-          }
+        { set_of_cases (energy, gr ? &grad : 0, 0, N_train, inv_temp, inv_temp);
         }
 #       endif
       }
@@ -2604,14 +2609,12 @@ void mc_app_energy
 
           for (j = low; j<high; j++)
           { i = approx_case[j] - 1;
-            one_case (0, &grad, i, 1, 
-                     (double)inv_temp*N_approx/approx_times[i]);
+            set_of_cases (0, &grad, i, 1, 1, 
+                          (double)inv_temp*N_approx/approx_times[i]);
           }
 
           if (energy)
-          { for (i = 0; i<N_train; i++)
-            { one_case (energy, 0, i, inv_temp, 1);
-            }
+          { set_of_cases (energy, 0, 0, N_train, inv_temp, 1);
           }
         }
         else /* There's no file saying how to do approximations */
@@ -2620,19 +2623,14 @@ void mc_app_energy
           high = (N_train * w_approx) / N_approx;
 
           if (energy)    
-          { for (i = 0; i<low; i++)
-            { one_case (energy, 0, i, inv_temp, 1);
-            }
+          { set_of_cases (energy, 0, i, low, inv_temp, 1);
           }
 
-          for (i = low; i<high; i++)
-          { one_case (energy, &grad, i, inv_temp, inv_temp*N_approx);
-          }
+          set_of_cases (energy, &grad, low, high-low, inv_temp, 
+                        inv_temp*N_approx);
 
           if (energy)    
-          { for (i = high; i<N_train; i++)
-            { one_case (energy, 0, i, inv_temp, 1);
-            }
+          { set_of_cases (energy, 0, high, N_train-high, inv_temp, 1);
           }
         }
       }

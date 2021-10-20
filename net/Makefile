@@ -248,21 +248,22 @@ net-his:	mc-his.o net-mc.o ars.o misc.o log.o rand.o data-trans.o \
 		  net-config.o -lm -o net-his
 
 net-mc.o:	net-mc.c	misc.h rand.h log.h mc.h data.h prior.h \
-				model.h net.h net-data.h \
+				model.h net.h net-data.h net-mc.h \
 				cuda-use.h
 
 net-gd:		net-gd.o	net-setup.o net-func.o net-model.o net-data.o \
 				net-back.o net-grad.o net-prior.o net-util.o \
-				net-config.o model.o misc.o log.o rand.o \
+				net-config.o net-mc.o \
+				model.o misc.o log.o rand.o \
 				numin.o data-trans.o prior.o ars.o
 		$(CC) $(LFLAGS) net-gd.o net-setup.o net-func.o net-model.o \
 		  net-back.o net-grad.o net-data.o net-prior.o net-util.o \
-		  net-config.o \
+		  net-config.o net-mc.o \
 		  model.o misc.o log.o rand.o numin.o data-trans.o prior.o \
 		  ars.o -lm -o net-gd
 
 net-gd.o:	net-gd.c	misc.h rand.h log.h mc.h data.h prior.h \
-				model.h	net.h net-data.h
+				model.h	net.h net-data.h net-mc.h
 
 net-plt:	net-plt.o	net-mc.o ars.o net-setup.o prior.o net-prior.o \
 				net-func.o net-data.o model.o net-quantities.o \

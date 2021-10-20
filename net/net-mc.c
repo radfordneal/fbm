@@ -30,6 +30,9 @@
 #include "net.h"
 #include "net-data.h"
 
+#define EXTERN
+#include "net-mc.h"
+
 #include "intrinsics-use.h"
 
 
@@ -112,25 +115,7 @@ static inline net_value sq (net_value x) { return x*x; }
 #define Cheap_energy 0		/* Normally set to 0 */
 
 
-/* NETWORK VARIABLES. */
-
-static int initialize_done = 0;	/* Has this all been set up? */
-
-static net_arch *arch;		/* Network architecture */
-static net_flags *flgs;		/* Network flags, null if none */
-static net_priors *priors;	/* Network priors */
-
-static model_specification *model; /* Data model */
-static model_survival *surv;	/* Hazard type for survival model */
-
-static net_sigmas sigmas;	/* Hyperparameters for network, auxiliary state
-				   for Monte Carlo.  Includes noise std. dev. */
-static net_sigma *noise;	/* Just the noise hyperparameters in sigmas */
-
-static net_params params;	/* Pointers to parameters, which are position
-				   coordinates for dynamical Monte Carlo */
-
-static net_values *deriv;	/* Derivatives for training cases */
+/* NETWORK VARIABLES.  Some also in net-mc.h. */
 
 static int approx_count;	/* Number of entries in approx-file, 0 if none*/
 
@@ -1739,11 +1724,12 @@ static void gibbs_adjustments
    Calls the GPU version if it exists, and the number of cases is greater 
    than one. */
 
-#define DEBUG_SET_OF_CASES 0
+#define DEBUG_NET_TRAINING_CASES 0
 
-static void set_of_cases_gpu (double *, net_params *, int, int, double, double);
+static void net_training_cases_gpu 
+  (double *, net_params *, int, int, double, double);
 
-static void set_of_cases  /* Energy and gradient from a set of training cases */
+void net_training_cases
 ( 
   double *energy,	/* Place to store/increment energy, 0 if not required */
   net_params *grd,	/* Place to store/increment gradient, 0 if not needed */
@@ -1757,14 +1743,14 @@ static void set_of_cases  /* Energy and gradient from a set of training cases */
 
 # if __CUDACC__
   { if (n > 1)
-    { set_of_cases_gpu (energy, grd, i, n, en_weight, gr_weight);
+    { net_training_cases_gpu (energy, grd, i, n, en_weight, gr_weight);
       return;
     }
   }
 # endif
 
-  if (DEBUG_SET_OF_CASES)
-  { printf("Starting set_of_cases, for %d cases starting at %d\n",n,i);
+  if (DEBUG_NET_TRAINING_CASES)
+  { printf("Starting net_training_cases, for %d cases starting at %d\n",n,i);
   }
 
   while (n > 0)
@@ -1841,14 +1827,14 @@ static void set_of_cases  /* Energy and gradient from a set of training cases */
       net_values *train_vals_i = train_values+i;
       net_values *deriv_i = grd ? deriv+i : 0;
 
-      if (DEBUG_SET_OF_CASES)
+      if (DEBUG_NET_TRAINING_CASES)
       { printf("train_values[%d]->i[0] = %f\n",i,train_vals_i->i[0]);
         // printf("train_values[%d]->i[1] = %f\n",i,train_vals_i->i[1]);
       }
 
       net_func (train_vals_i, 0, arch, flgs, &params);
 
-      if (DEBUG_SET_OF_CASES)
+      if (DEBUG_NET_TRAINING_CASES)
       { printf("train_values[%d]->o[0] = %f\n",i,train_vals_i->o[0]);
       }
 
@@ -1856,7 +1842,7 @@ static void set_of_cases  /* Energy and gradient from a set of training cases */
       net_model_prob (train_vals_i, train_targets+N_targets*i, &log_prob, 
                       deriv_i, arch, model, surv, noise, Cheap_energy);
 
-      if (DEBUG_SET_OF_CASES)
+      if (DEBUG_NET_TRAINING_CASES)
       { printf("log_prob = %f\n",log_prob);
       }
       
@@ -2288,7 +2274,7 @@ __global__ void many_cases
 
 #if __CUDACC__
 
-static void set_of_cases_gpu  /* Energy and gradient from training cases */
+static void net_training_cases_gpu
 ( 
   double *energy,	/* Place to store/increment energy, 0 if not required */
   net_params *gr,	/* Place to store/increment gradient, 0 if not needed */
@@ -2624,7 +2610,8 @@ void mc_app_energy
     {
       if (N_approx==1 || gr==0)
       {
-        set_of_cases (energy, gr ? &grad : 0, 0, N_train, inv_temp, inv_temp);
+        net_training_cases (energy, gr ? &grad : 0, 0, N_train, 
+                            inv_temp, inv_temp);
       }
       else /* We're using multiple approximations */
       {
@@ -2635,12 +2622,12 @@ void mc_app_energy
 
           for (j = low; j<high; j++)
           { i = approx_case[j] - 1;
-            set_of_cases (0, &grad, i, 1, 1, 
-                          (double)inv_temp*N_approx/approx_times[i]);
+            net_training_cases (0, &grad, i, 1, 
+                                1, (double)inv_temp*N_approx/approx_times[i]);
           }
 
           if (energy)
-          { set_of_cases (energy, 0, 0, N_train, inv_temp, 1);
+          { net_training_cases (energy, 0, 0, N_train, inv_temp, 1);
           }
         }
         else /* There's no file saying how to do approximations */
@@ -2649,14 +2636,14 @@ void mc_app_energy
           high = (N_train * w_approx) / N_approx;
 
           if (energy)    
-          { set_of_cases (energy, 0, i, low, inv_temp, 1);
+          { net_training_cases (energy, 0, i, low, inv_temp, 1);
           }
 
-          set_of_cases (energy, &grad, low, high-low, inv_temp, 
-                        inv_temp*N_approx);
+          net_training_cases (energy, &grad, low, high-low, 
+                              inv_temp, inv_temp*N_approx);
 
           if (energy)    
-          { set_of_cases (energy, 0, high, N_train-high, inv_temp, 1);
+          { net_training_cases (energy, 0, high, N_train-high, inv_temp, 1);
           }
         }
       }

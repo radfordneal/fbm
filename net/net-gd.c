@@ -32,6 +32,9 @@
 #include "net.h"
 #include "net-data.h"
 
+#define EXTERN extern
+#include "net-mc.h"
+
 
 /* CLOCKS_PER_SEC should be defined by <time.h>, but it seems that it
    isn't always.  1000000 seems to be the best guess for Unix systems. */
@@ -41,18 +44,8 @@
 #endif
 
 
-/* NETWORK VARIABLES. */
+/* NETWORK VARIABLES.  Some also in net-mc.h. */
 
-static net_arch *arch;		/* Network architecture */
-static net_flags *flgs;		/* Network flags, null if none */
-static model_specification *model; /* Data model */
-static net_priors *priors;	/* Network priors */
-static model_survival *surv;	/* Hazard type for survival model */
-
-static net_sigmas sigmas;	/* Hyperparameters for network */
-static net_params params;	/* Pointers to parameters */
-
-static net_values *deriv;	/* Derivatives for training cases */
 static net_params grad;		/* Pointers to gradient for network parameters*/
 static net_params gradp;	/* Gradient of the log prior */
 static net_params ograd;	/* Total gradient from last pass through data */
@@ -173,9 +166,6 @@ int main
   log_gobble_init(&logg,0);
 
   logg.req_size['r'] = sizeof (rand_state);
-  logg.req_size['o'] = sizeof (mc_ops);
-  logg.req_size['t'] = sizeof (mc_traj);
-  logg.req_size['b'] = sizeof (mc_temp_state);
 
   while (!logf.at_end)
   { log_gobble(&logf,&logg);
@@ -188,85 +178,24 @@ int main
     exit(1);
   }
 
-  /* Used saved pseudo-random number state. */
+  /* Initialize using records found. */
+
+  mc_dynamic_state ds;
+  mc_app_initialize(&logg,&ds);
 
   if (logg.data['r']!=0) 
   { rand_use_state(logg.data['r']);
   }
-
-  /* Check that required network specification records are present. */
-  
-  arch   = logg.data['A'];
-  flgs   = logg.data['F'];
-  model  = logg.data['M'];
-  priors = logg.data['P'];
-  surv   = logg.data['V'];
-
-  net_check_specs_present(arch,priors,1,model,surv);
 
   if (model && model->type=='V')
   { fprintf(stderr,"Can't handle survival models\n");
     exit(1);
   }
   
-  /* Locate existing network, if one exists, or set one up randomly. */
-  
-  sigmas.total_sigmas = net_setup_sigma_count(arch,flgs,model);
-  params.total_params = net_setup_param_count(arch,flgs);
-
-  sigmas.sigma_block = logg.data['S'];
-  params.param_block = logg.data['W'];
-
-  np = params.total_params;
-  
-  if (sigmas.sigma_block!=0 || params.param_block!=0)
-  {
-    if (sigmas.sigma_block==0 || logg.index['S']!=logg.last_index
-     || params.param_block==0 || logg.index['W']!=logg.last_index)
-    { fprintf(stderr,
-        "Network stored in log file is apparently incomplete\n");
-      exit(1);
-    }
-  
-    if (logg.actual_size['S'] != sigmas.total_sigmas*sizeof(net_sigma)
-     || logg.actual_size['W'] != params.total_params*sizeof(net_param))
-    { fprintf(stderr,"Bad size for network record\n");
-      exit(1);
-    }
-  
-    net_setup_sigma_pointers (&sigmas, arch, flgs, model);
-    net_setup_param_pointers (&params, arch, flgs);
-  }
-  else
-  {
-    sigmas.sigma_block = chk_alloc (sigmas.total_sigmas, sizeof (net_sigma));
-    params.param_block = chk_alloc (params.total_params, sizeof (net_param));
-  
-    net_setup_sigma_pointers (&sigmas, arch, flgs, model);
-    net_setup_param_pointers (&params, arch, flgs);
-   
-    net_prior_generate (&params, &sigmas, arch, flgs, model, priors, 1, 0, 0);
-
-    for (j = 0; j<np; j++) 
+  if (logg.data['W'] == 0) /* no existing network, initialize randomly */
+  { for (j = 0; j<np; j++) 
     { params.param_block[j] += 0.01 - 0.02*rand_uniopen();
     }
-  }
-
-  /* Read training data, and "test" data if needed for cross-validation,
-     and allocate space for derivatives. */
-  
-  data_spec = logg.data['D'];
-
-  if (data_spec!=0)
-  { 
-    net_data_read (1, 0, arch, model, surv);
-    
-    deriv = chk_alloc (1, sizeof *deriv);
-    
-    value_count = net_setup_value_count(arch);
-    value_block = chk_alloc (value_count, sizeof *value_block);
-    
-    net_setup_value_pointers (deriv, value_block, arch, 0);
   }
 
   if (N_train==0)
@@ -345,24 +274,12 @@ int main
 
   old_clock = clock();
 
+  net_model_check (model);    
+
   if (diff && method==Online)
   { 
     net_prior_prob (&params, &sigmas, 0, &ograd, arch, flgs, priors, 2);
-
-    for (i = 0; i<N_train; i++)
-    { 
-      net_func (&train_values[i], 0, arch, flgs, &params);
-
-      net_model_check (model);    
-      net_model_prob (&train_values[i], 
-                      train_targets + data_spec->N_targets*i,
-                      0, deriv, arch, model, surv, sigmas.noise, 2);
-  
-      net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
-                arch, flgs, &params);
-
-      net_add_grad (&ograd, &params, &train_values[i], deriv, arch, flgs);
-    }
+    net_training_cases (0, &ograd, 0, N_train, 1, 1);
   }
 
   /* Perform gradient descent iterations. */
@@ -377,21 +294,7 @@ int main
       case Batch:
       { 
         net_prior_prob (&params, &sigmas, 0, &grad, arch, flgs, priors, 2);
-
-        for (i = 0; i<N_train; i++)
-        { 
-          net_func (&train_values[i], 0, arch, flgs, &params);
-  
-          net_model_check (model);    
-          net_model_prob (&train_values[i], 
-                          train_targets + data_spec->N_targets*i,
-                          0, deriv, arch, model, surv, sigmas.noise, 2);
-  
-          net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
-                    arch, flgs, &params);
-
-          net_add_grad (&grad, &params, &train_values[i], deriv, arch, flgs);
-        }
+        net_training_cases (0, &grad, 0, N_train, 1, 1);
 
         for (g = 0; g<n_groups; g++)
         { 
@@ -438,7 +341,6 @@ int main
         }
 
         break;
-
       }
 
       case Online: 
@@ -455,17 +357,7 @@ int main
         { 
           for (j = 0; j<np; j++) grad.param_block[j] = gradp.param_block[j];
 
-          net_func (&train_values[i], 0, arch, flgs, &params);
-    
-          net_model_check (model);    
-          net_model_prob (&train_values[i], 
-                         train_targets + data_spec->N_targets*i,
-                         0, deriv, arch, model, surv, sigmas.noise, 2);
-  
-          net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
-                    arch, flgs, &params);
-
-          net_add_grad (&grad, &params, &train_values[i], deriv, arch, flgs);
+          net_training_cases (0, &grad, i, 1, 1, 1);
 
           if (diff)
           { for (j = 0; j<np; j++) tgrad.param_block[j] += grad.param_block[j];

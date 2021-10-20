@@ -377,3 +377,5 @@ void net_check_specs_present (net_arch *, net_priors *, int,
 
 net_config *net_config_read (char *, int, int);
 net_config *net_config_to_gpu (net_config *);
+
+void net_training_cases (double *, net_params *, int, int, double, double);

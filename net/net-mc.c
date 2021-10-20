@@ -87,8 +87,9 @@ __global__ void many_cases
   double *thread_energy,   /* Places to store energy, null if not required */
   net_params *thread_grad, /* Places to store gradient, null if not required */
   int start,		/* Start of cases to look at */
-  double en_weight,	/* Weight for this case for energy */
-  double gr_weight	/* Weight for this case for gradient */
+  int end,		/* End of cases to look at (index after last case) */
+  double en_weight,	/* Weight for these cases for energy */
+  double gr_weight	/* Weight for these cases for gradient */
 );
 
 #endif
@@ -1737,7 +1738,7 @@ static void gibbs_adjustments
 
 #define DEBUG_SET_OF_CASES 0
 
-static void set_of_cases  /* Energy and gradient from one training case */
+static void set_of_cases  /* Energy and gradient from a set of training cases */
 ( 
   double *energy,	/* Place to store/increment energy, 0 if not required */
   net_params *grd,	/* Place to store/increment gradient, 0 if not needed */
@@ -2069,8 +2070,9 @@ __global__ void many_cases
   double *thread_energy,   /* Places to store energy, null if not required */
   net_params *thread_grad, /* Places to store gradient, null if not required */
   int start,		/* Start of cases to look at */
-  double en_weight,	/* Weight for this case for energy */
-  double gr_weight	/* Weight for this case for gradient */
+  int end,		/* End of cases to look at (index after last case) */
+  double en_weight,	/* Weight for these cases for energy */
+  double gr_weight	/* Weight for these cases for gradient */
 )
 { 
   // printf("Start many_cases: block %d, thread %d\n",blockIdx.x,threadIdx.x);
@@ -2083,15 +2085,15 @@ __global__ void many_cases
   int o = blockIdx.x*((const_blksize+GROUP_MASK)>>GROUP_SHIFT) 
            + (threadIdx.x>>GROUP_SHIFT);
 
-  // printf("blk %d, thrd %d, th %d, i %d, h %d, o %d, N_train %d\n",
-  //   blockIdx.x, threadIdx.x, th, i, h, o, const_N_train);
+  // printf("blk %d, thrd %d, th %d, i %d, h %d, o %d, start %d, end %d\n",
+  //   blockIdx.x, threadIdx.x, th, i, h, o, start, end);
 
   double *restrict threi;
   net_params *restrict thrgi;
   net_values *train_vals_h;
   net_values *deriv_h;
 
-  if (h < const_N_train)
+  if (h < end)
   { 
     threi = thread_energy==0 ? 0 
           : threadIdx.x < GROUP_SIZE ? const_block_energy + blockIdx.x
@@ -2139,20 +2141,20 @@ __global__ void many_cases
   }
 
   if (GROUP_SIZE>1)
-  { __syncthreads();  /* all threads - not just those with h < const_N_train */
+  { __syncthreads();  /* all threads - not just those with h < end */
   }
 
-  if (h < const_N_train)
+  if (h < end)
   {
     if (GROUP_SIZE>1)
     { if (threi && th==0)
-      { if (GROUP_SIZE>1 && h+1<const_N_train) 
+      { if (GROUP_SIZE>1 && h+1<end) 
         { *threi += *(const_thread_energy1+o);
         }
-        if (GROUP_SIZE>2 && h+2<const_N_train)
+        if (GROUP_SIZE>2 && h+2<end)
         { *threi += *(const_thread_energy2+o);
         }
-        if (GROUP_SIZE>3 && h+3<const_N_train)
+        if (GROUP_SIZE>3 && h+3<end)
         { *threi += *(const_thread_energy3+o);
         }
       }
@@ -2165,7 +2167,7 @@ __global__ void many_cases
 
       int r = GROUP_SIZE;
       if (GROUP_SIZE>1)
-      { if (r > const_N_train - (h-th))      r = const_N_train - (h-th);
+      { if (r > end - (h-th))      r = end - (h-th);
         if (threadIdx.x-th + r > blockDim.x) r = blockDim.x - (threadIdx.x-th);
       }
 
@@ -2220,8 +2222,7 @@ __global__ void many_cases
   int this_worker;	/* Position of this thread in its worker group */
 
   n_blk_res = (const_blksize + GROUP_MASK) >> GROUP_SHIFT;
-  n_results = 
-    (const_N_train - start - blockIdx.x*blockDim.x + GROUP_MASK) >> GROUP_SHIFT;
+  n_results = (end - start - blockIdx.x*blockDim.x + GROUP_MASK) >> GROUP_SHIFT;
   if (n_results > n_blk_res)
   { n_results = n_blk_res;
   }
@@ -2269,6 +2270,253 @@ __global__ void many_cases
 
 #endif
 
+
+/* DO A SET OF CASES IN THE GPU. */
+
+#if __CUDACC__
+
+static void set_of_cases_gpu  /* Energy and gradient from training cases */
+( 
+  double *energy,	/* Place to store/increment energy, 0 if not required */
+  net_params *gr,	/* Place to store/increment gradient, 0 if not needed */
+  int i,		/* First case to look at */
+  int n,		/* Number of cases to look at */
+  double en_weight,	/* Weight for this case for energy */
+  double gr_weight	/* Weight for this case for gradient */
+)
+
+{ int j;
+
+  check_cuda_error (cudaMemcpy (dev_param_block, params.param_block,
+                      params.total_params * sizeof *params.param_block,
+                      cudaMemcpyHostToDevice),
+                    "Copying parameters to GPU");
+
+  if (sigmas.noise != 0)
+  { check_cuda_error (cudaMemcpy (dev_noise, sigmas.noise,
+                        arch->N_outputs * sizeof *dev_noise,
+                        cudaMemcpyHostToDevice),
+                      "Copying noise sigmas to GPU");
+  }
+
+  int prev_blks = 0;  /* Number of blocks waiting to be reduced */
+
+  while (n > 0 || prev_blks > 0)
+  { 
+    int cases, thrds, blks;
+
+    /* Launch kernel to do computations for next batch of cases. */
+
+    if (n > 0)
+    {
+      cases = n < max_cases_per_launch ? n : max_cases_per_launch;
+      thrds = cases;
+      blks = (thrds + blksize - 1) / blksize;
+
+      if (0)
+      { static int first = 1;
+        if (first)
+        { printf("Launching with <<<%d,%d>>>, group size %d\n",
+                  blks, blksize, GROUP_SIZE);
+          first = 0;
+        }
+      }
+
+      check_cuda_error (cudaGetLastError(), 
+                        "Before launching many_cases");
+      many_cases <<<blks, blksize>>> 
+        (energy ? thread_energy : 0, gr ? thread_grad : 0, 
+         i, i+n, en_weight, gr_weight);
+    }
+
+    /* Do reduction of parts of gradient computed previously, while
+       the GPU works on the next batch. */
+
+    if (energy && prev_blks>0)
+    { double e = *energy;
+      for (j = 0; j<prev_blks; j++)
+      { e += block_energy[j];
+      }
+      *energy = e;
+    }
+
+    if (gr && prev_blks>0)
+    { 
+      net_params *np = block_grad;
+
+      for (j = 0; j<prev_blks; j++)
+      { net_param *restrict npb = np->param_block;
+        unsigned k;
+#       if FP64 && USE_SIMD_INTRINSICS && __AVX__
+        { unsigned e = grad.total_params & ~(unsigned)0x7;
+          for (k = 0; k < e; k += 8)
+          { _mm256_storeu_pd (grad.param_block+k, 
+                              _mm256_add_pd (
+                                _mm256_loadu_pd (grad.param_block+k),
+                                _mm256_loadu_pd (npb+k)));
+            _mm256_storeu_pd (grad.param_block+k+4, 
+                              _mm256_add_pd (
+                                _mm256_loadu_pd (grad.param_block+k+4),
+                                _mm256_loadu_pd (npb+k+4)));
+          }
+          if (k < (grad.total_params & ~(unsigned)0x3))
+          { _mm256_storeu_pd (grad.param_block+k, 
+                              _mm256_add_pd (
+                                _mm256_loadu_pd (grad.param_block+k),
+                                _mm256_loadu_pd (npb+k)));
+            k += 4;
+          }
+          if (k < (grad.total_params & ~(unsigned)0x1))
+          { _mm_storeu_pd (grad.param_block+k, 
+                           _mm_add_pd (
+                             _mm_loadu_pd (grad.param_block+k),
+                             _mm_loadu_pd (npb+k)));
+            k += 2;
+          }
+          if (k < grad.total_params)
+          { grad.param_block[k] += npb[k];
+          }
+        }
+#       elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
+        { unsigned e = grad.total_params & ~(unsigned)0x3;
+          for (k = 0; k < e; k += 4)
+          { _mm_storeu_pd (grad.param_block+k, 
+                           _mm_add_pd (
+                             _mm_loadu_pd (grad.param_block+k),
+                             _mm_loadu_pd (npb+k)));
+            _mm_storeu_pd (grad.param_block+k+2, 
+                           _mm_add_pd (
+                             _mm_loadu_pd (grad.param_block+k+2),
+                             _mm_loadu_pd (npb+k+2)));
+          }
+          if (k < (grad.total_params & ~(unsigned)0x1))
+          { _mm_storeu_pd (grad.param_block+k, 
+                           _mm_add_pd (
+                             _mm_loadu_pd (grad.param_block+k),
+                             _mm_loadu_pd (npb+k)));
+            k += 2;
+          }
+          if (k < grad.total_params)
+          { grad.param_block[k] += npb[k];
+          }
+        }
+#       elif FP32 && USE_SIMD_INTRINSICS && __AVX__
+        { unsigned e = grad.total_params & ~(unsigned)0xf;
+          for (k = 0; k < e; k += 16)
+          { _mm256_storeu_ps (grad.param_block+k, 
+                              _mm256_add_ps (
+                                _mm256_loadu_ps (grad.param_block+k),
+                                _mm256_loadu_ps (npb+k)));
+            _mm256_storeu_ps (grad.param_block+k+8, 
+                              _mm256_add_ps (
+                                _mm256_loadu_ps (grad.param_block+k+8),
+                                _mm256_loadu_ps (npb+k+8)));
+          }
+          if (k < (grad.total_params & ~(unsigned)0x7))
+          { _mm256_storeu_ps (grad.param_block+k, 
+                              _mm256_add_ps (
+                                _mm256_loadu_ps (grad.param_block+k),
+                                _mm256_loadu_ps (npb+k)));
+            k += 8;
+          }
+          if (k < (grad.total_params & ~(unsigned)0x3))
+          { _mm_storeu_ps (grad.param_block+k, 
+                           _mm_add_ps (
+                             _mm_loadu_ps (grad.param_block+k),
+                             _mm_loadu_ps (npb+k)));
+            k += 4;
+          }
+          if (k < (grad.total_params & ~(unsigned)0x1))
+          { __m128 Z = _mm_setzero_ps();
+            _mm_storel_pi ((__m64 *)(grad.param_block+k), 
+                      _mm_add_ps (
+                        _mm_loadl_pi (Z, (__m64 *)(grad.param_block+k)),
+                        _mm_loadl_pi (Z, (__m64 *)(npb+k))));
+            k += 2;
+          }
+          if (k < grad.total_params)
+          { grad.param_block[k] += npb[k];
+          }
+        }
+#       elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
+        { unsigned e = grad.total_params & ~(unsigned)0x7;
+          for (k = 0; k < e; k += 8)
+          { _mm_storeu_ps (grad.param_block+k, 
+                           _mm_add_ps (
+                             _mm_loadu_ps (grad.param_block+k),
+                             _mm_loadu_ps (npb+k)));
+            _mm_storeu_ps (grad.param_block+k+4, 
+                           _mm_add_ps (
+                             _mm_loadu_ps (grad.param_block+k+4),
+                             _mm_loadu_ps (npb+k+4)));
+          }
+          if (k < (grad.total_params & ~(unsigned)0x3))
+          { _mm_storeu_ps (grad.param_block+k, 
+                           _mm_add_ps (
+                             _mm_loadu_ps (grad.param_block+k),
+                             _mm_loadu_ps (npb+k)));
+            k += 4;
+          }
+          if (k < (grad.total_params & ~(unsigned)0x1))
+          { __m128 Z = _mm_setzero_ps();
+            _mm_storel_pi ((__m64 *)(grad.param_block+k), 
+                      _mm_add_ps (
+                        _mm_loadl_pi (Z, (__m64 *)(grad.param_block+k)),
+                        _mm_loadl_pi (Z, (__m64 *)(npb+k))));
+            k += 2;
+          }
+          if (k < grad.total_params)
+          { grad.param_block[k] += npb[k];
+          }
+        }
+#       else
+        { for (k = 0; k < grad.total_params; k++)
+          { grad.param_block[k] += npb[k];
+          }
+        }
+#       endif
+        np += 1;
+      }
+    }
+
+    prev_blks = 0;
+
+    /* Wait for GPU to finish, then copy results from it. */
+
+    if (n > 0)
+    {
+#     if MANAGED_MEMORY_USED || 1
+      { 
+        check_cuda_error (cudaDeviceSynchronize(), 
+                          "Synchronizing after launching many_cases");
+        check_cuda_error (cudaGetLastError(), 
+                          "After synchronizing with many_cases");
+      }
+#     endif
+
+      if (energy)
+      { check_cuda_error (cudaMemcpy (block_energy, dev_block_energy,
+                                      blks * sizeof *block_energy,
+                                      cudaMemcpyDeviceToHost),
+                          "copy to block_energy");
+      }
+
+      if (gr)
+      { check_cuda_error (cudaMemcpy (
+           block_grad->param_block, dev_block_grad_params, 
+            blks * grad_aligned_total * sizeof *block_grad->param_block,
+           cudaMemcpyDeviceToHost),
+         "copy from GPU to block_grad");
+      }
+
+      prev_blks = blks;
+
+      i += cases;
+      n -= cases;
+    }
+  }
+}
+#endif
 
 /* APPLICATION-SPECIFIC ENERGY/GRADIENT PROCEDURE.  Called from 'mc' module. */
 
@@ -2406,7 +2654,7 @@ void mc_app_energy
                                 "Before launching many_cases");
               many_cases <<<blks, blksize>>> 
                 (energy ? thread_energy : 0, gr ? thread_grad : 0, 
-                 i, inv_temp, inv_temp);
+                 i, N_train, inv_temp, inv_temp);
             }
 
             /* Do reduction of parts of gradient computed previously, while

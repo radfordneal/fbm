@@ -182,7 +182,7 @@ HOSTDEV static void add_grad1_config
   net_config const* cf    /* Configuration for biases */
 )
 { net_connection *cn;
-  int c, j, k;
+  int c, j, j2, k;
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w;
@@ -195,16 +195,11 @@ HOSTDEV static void add_grad1_config
     }
     cn = cf->quad_s_4d_4w_2;
     for (c = 0; (k = cn[c].w) >= 0; c+=2)
-    { j = cn[c].d;
-      g[k+0] += d[j+0];
-      g[k+1] += d[j+1];
-      g[k+2] += d[j+2];
-      g[k+3] += d[j+3];
-      j = cn[c+1].d;
-      g[k+0] += d[j+0];
-      g[k+1] += d[j+1];
-      g[k+2] += d[j+2];
-      g[k+3] += d[j+3];
+    { j = cn[c].d; j2 = cn[c+1].d;
+      g[k+0] += d[j+0] + d[j2+0];
+      g[k+1] += d[j+1] + d[j2+1];
+      g[k+1] += d[j+2] + d[j2+2];
+      g[k+1] += d[j+3] + d[j2+3];
     }
   }
 

@@ -5,6 +5,10 @@ if [ x$2 == x ]; then echo "No second argument for using"; exit 1; fi
 
 export PATH=`echo $PATH | sed s/bin-fbm/bin-$1/`
 
+if [ x$GPU != x ]; then
+  export CUDA_VISIBLE_DEVICES=$GPU
+fi
+
 shift
 
 exec $@

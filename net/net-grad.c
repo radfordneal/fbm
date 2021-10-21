@@ -1211,7 +1211,10 @@ do \
     { o = (offset); \
       if (omit) continue; \
       tv = v[i] + o; \
-      if (tv!=0)  \
+      if (tv==0) \
+      { for (j = 0; j<nd; j++) g[j] = 0; \
+      } \
+      else \
       { j = 3; \
         while (j<nd) \
         { g[j-3] = tv * d[j-3]; \
@@ -1254,7 +1257,10 @@ do \
   { net_value tv; \
     for (i = 0; i<nv; i++) \
     { tv = v[i]; \
-      if (tv!=0)  \
+      if (tv==0) \
+      { for (j = 0; j<nd; j++) g[j] = 0; \
+      } \
+      else \
       { j = 3; \
         while (j<nd) \
         { g[j-3] = tv * d[j-3]; \
@@ -1559,7 +1565,7 @@ do \
       tv0 = v0[i] + o; \
       tv1 = v1[i] + o; \
       if (tv0==0 && tv1==0) \
-      { /* nothing */ \
+      { for (j = th; j<nd; j+=2) g[j] = 0; \
       } \
       else if (tv1==0)  \
       { j = 3; \
@@ -1621,7 +1627,7 @@ do \
     { tv0 = v0[i]; \
       tv1 = v1[i]; \
       if (tv0==0 && tv1==0) \
-      { /* nothing */ \
+      { for (j = th; j<nd; j+=2) g[j] = 0; \
       } \
       else if (tv1==0)  \
       { j = 3; \
@@ -2078,7 +2084,7 @@ do \
       tv1 = v1[i] + o; \
       tv2 = v2[i] + o; \
       if (tv0==0 && tv1==0 && tv2==0) \
-      { /* nothing */ \
+      { for (j = th; j<nd; j+=2) g[j] = 0; \
       } \
       else if (tv1==0 && tv2==0) \
       { j = 3; \
@@ -2161,7 +2167,7 @@ do \
       tv1 = v1[i]; \
       tv2 = v2[i]; \
       if (tv0==0 && tv1==0 && tv2==0) \
-      { /* nothing */ \
+      { for (j = th; j<nd; j+=2) g[j] = 0; \
       } \
       else if (tv1==0 && tv2==0)  \
       { j = 3; \
@@ -2672,7 +2678,7 @@ do \
       tv2 = v2[i] + o; \
       tv3 = v3[i] + o; \
       if (tv0==0 && tv1==0 && tv2==0 && tv3==0) \
-      { /* nothing */ \
+      { for (j = th; j<nd; j+=4) g[j] = 0; \
       } \
       else if (tv1==0 && tv2==0 && tv3==0) \
       { j = 3; \
@@ -2752,7 +2758,7 @@ do \
       tv2 = v2[i]; \
       tv3 = v3[i]; \
       if (tv0==0 && tv1==0 && tv2==0 && tv3==0) \
-      { /* nothing */ \
+      { for (j = th; j<nd; j+=4) g[j] = 0; \
       } \
       else if (tv1==0 && tv2==0 && tv3==0) \
       { j = 3; \

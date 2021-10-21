@@ -1,0 +1,12 @@
+
+# Commands to train a neural network on the binary response problem using
+# gradent descent training.
+
+net-spec blog.gdol 2 15 1 / ih=+ bh=+ ho=+ bo=+
+model-spec blog.gdol binary
+
+data-spec blog.gdol 2 1 2 / bdata.train . 
+
+net-gd blog.gdol 100000 1000 / 0.4 online
+
+net-pred nmpa blog.gdol 100000 / bdata.test .

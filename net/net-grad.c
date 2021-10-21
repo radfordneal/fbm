@@ -198,8 +198,8 @@ HOSTDEV static void add_grad1_config
     { j = cn[c].d; j2 = cn[c+1].d;
       g[k+0] += d[j+0] + d[j2+0];
       g[k+1] += d[j+1] + d[j2+1];
-      g[k+1] += d[j+2] + d[j2+2];
-      g[k+1] += d[j+3] + d[j2+3];
+      g[k+2] += d[j+2] + d[j2+2];
+      g[k+3] += d[j+3] + d[j2+3];
     }
   }
 

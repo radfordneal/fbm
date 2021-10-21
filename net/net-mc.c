@@ -2286,6 +2286,8 @@ static void net_training_cases_gpu
 
 { int j;
 
+  cuda_setup (energy, gr ? gr->param_block : 0);
+
   check_cuda_error (cudaMemcpy (dev_param_block, params.param_block,
                       params.total_params * sizeof *params.param_block,
                       cudaMemcpyHostToDevice),
@@ -2347,130 +2349,130 @@ static void net_training_cases_gpu
       { net_param *restrict npb = np->param_block;
         unsigned k;
 #       if FP64 && USE_SIMD_INTRINSICS && __AVX__
-        { unsigned e = grad.total_params & ~(unsigned)0x7;
+        { unsigned e = gr->total_params & ~(unsigned)0x7;
           for (k = 0; k < e; k += 8)
-          { _mm256_storeu_pd (grad.param_block+k, 
+          { _mm256_storeu_pd (gr->param_block+k, 
                               _mm256_add_pd (
-                                _mm256_loadu_pd (grad.param_block+k),
+                                _mm256_loadu_pd (gr->param_block+k),
                                 _mm256_loadu_pd (npb+k)));
-            _mm256_storeu_pd (grad.param_block+k+4, 
+            _mm256_storeu_pd (gr->param_block+k+4, 
                               _mm256_add_pd (
-                                _mm256_loadu_pd (grad.param_block+k+4),
+                                _mm256_loadu_pd (gr->param_block+k+4),
                                 _mm256_loadu_pd (npb+k+4)));
           }
-          if (k < (grad.total_params & ~(unsigned)0x3))
-          { _mm256_storeu_pd (grad.param_block+k, 
+          if (k < (gr->total_params & ~(unsigned)0x3))
+          { _mm256_storeu_pd (gr->param_block+k, 
                               _mm256_add_pd (
-                                _mm256_loadu_pd (grad.param_block+k),
+                                _mm256_loadu_pd (gr->param_block+k),
                                 _mm256_loadu_pd (npb+k)));
             k += 4;
           }
-          if (k < (grad.total_params & ~(unsigned)0x1))
-          { _mm_storeu_pd (grad.param_block+k, 
+          if (k < (gr->total_params & ~(unsigned)0x1))
+          { _mm_storeu_pd (gr->param_block+k, 
                            _mm_add_pd (
-                             _mm_loadu_pd (grad.param_block+k),
+                             _mm_loadu_pd (gr->param_block+k),
                              _mm_loadu_pd (npb+k)));
             k += 2;
           }
-          if (k < grad.total_params)
-          { grad.param_block[k] += npb[k];
+          if (k < gr->total_params)
+          { gr->param_block[k] += npb[k];
           }
         }
 #       elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
-        { unsigned e = grad.total_params & ~(unsigned)0x3;
+        { unsigned e = gr->total_params & ~(unsigned)0x3;
           for (k = 0; k < e; k += 4)
-          { _mm_storeu_pd (grad.param_block+k, 
+          { _mm_storeu_pd (gr->param_block+k, 
                            _mm_add_pd (
-                             _mm_loadu_pd (grad.param_block+k),
+                             _mm_loadu_pd (gr->param_block+k),
                              _mm_loadu_pd (npb+k)));
-            _mm_storeu_pd (grad.param_block+k+2, 
+            _mm_storeu_pd (gr->param_block+k+2, 
                            _mm_add_pd (
-                             _mm_loadu_pd (grad.param_block+k+2),
+                             _mm_loadu_pd (gr->param_block+k+2),
                              _mm_loadu_pd (npb+k+2)));
           }
-          if (k < (grad.total_params & ~(unsigned)0x1))
-          { _mm_storeu_pd (grad.param_block+k, 
+          if (k < (gr->total_params & ~(unsigned)0x1))
+          { _mm_storeu_pd (gr->param_block+k, 
                            _mm_add_pd (
-                             _mm_loadu_pd (grad.param_block+k),
+                             _mm_loadu_pd (gr->param_block+k),
                              _mm_loadu_pd (npb+k)));
             k += 2;
           }
-          if (k < grad.total_params)
-          { grad.param_block[k] += npb[k];
+          if (k < gr->total_params)
+          { gr->param_block[k] += npb[k];
           }
         }
 #       elif FP32 && USE_SIMD_INTRINSICS && __AVX__
-        { unsigned e = grad.total_params & ~(unsigned)0xf;
+        { unsigned e = gr->total_params & ~(unsigned)0xf;
           for (k = 0; k < e; k += 16)
-          { _mm256_storeu_ps (grad.param_block+k, 
+          { _mm256_storeu_ps (gr->param_block+k, 
                               _mm256_add_ps (
-                                _mm256_loadu_ps (grad.param_block+k),
+                                _mm256_loadu_ps (gr->param_block+k),
                                 _mm256_loadu_ps (npb+k)));
-            _mm256_storeu_ps (grad.param_block+k+8, 
+            _mm256_storeu_ps (gr->param_block+k+8, 
                               _mm256_add_ps (
-                                _mm256_loadu_ps (grad.param_block+k+8),
+                                _mm256_loadu_ps (gr->param_block+k+8),
                                 _mm256_loadu_ps (npb+k+8)));
           }
-          if (k < (grad.total_params & ~(unsigned)0x7))
-          { _mm256_storeu_ps (grad.param_block+k, 
+          if (k < (gr->total_params & ~(unsigned)0x7))
+          { _mm256_storeu_ps (gr->param_block+k, 
                               _mm256_add_ps (
-                                _mm256_loadu_ps (grad.param_block+k),
+                                _mm256_loadu_ps (gr->param_block+k),
                                 _mm256_loadu_ps (npb+k)));
             k += 8;
           }
-          if (k < (grad.total_params & ~(unsigned)0x3))
-          { _mm_storeu_ps (grad.param_block+k, 
+          if (k < (gr->total_params & ~(unsigned)0x3))
+          { _mm_storeu_ps (gr->param_block+k, 
                            _mm_add_ps (
-                             _mm_loadu_ps (grad.param_block+k),
+                             _mm_loadu_ps (gr->param_block+k),
                              _mm_loadu_ps (npb+k)));
             k += 4;
           }
-          if (k < (grad.total_params & ~(unsigned)0x1))
+          if (k < (gr->total_params & ~(unsigned)0x1))
           { __m128 Z = _mm_setzero_ps();
-            _mm_storel_pi ((__m64 *)(grad.param_block+k), 
+            _mm_storel_pi ((__m64 *)(gr->param_block+k), 
                       _mm_add_ps (
-                        _mm_loadl_pi (Z, (__m64 *)(grad.param_block+k)),
+                        _mm_loadl_pi (Z, (__m64 *)(gr->param_block+k)),
                         _mm_loadl_pi (Z, (__m64 *)(npb+k))));
             k += 2;
           }
-          if (k < grad.total_params)
-          { grad.param_block[k] += npb[k];
+          if (k < gr->total_params)
+          { gr->param_block[k] += npb[k];
           }
         }
 #       elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
-        { unsigned e = grad.total_params & ~(unsigned)0x7;
+        { unsigned e = gr->total_params & ~(unsigned)0x7;
           for (k = 0; k < e; k += 8)
-          { _mm_storeu_ps (grad.param_block+k, 
+          { _mm_storeu_ps (gr->param_block+k, 
                            _mm_add_ps (
-                             _mm_loadu_ps (grad.param_block+k),
+                             _mm_loadu_ps (gr->param_block+k),
                              _mm_loadu_ps (npb+k)));
-            _mm_storeu_ps (grad.param_block+k+4, 
+            _mm_storeu_ps (gr->param_block+k+4, 
                            _mm_add_ps (
-                             _mm_loadu_ps (grad.param_block+k+4),
+                             _mm_loadu_ps (gr->param_block+k+4),
                              _mm_loadu_ps (npb+k+4)));
           }
-          if (k < (grad.total_params & ~(unsigned)0x3))
-          { _mm_storeu_ps (grad.param_block+k, 
+          if (k < (gr->total_params & ~(unsigned)0x3))
+          { _mm_storeu_ps (gr->param_block+k, 
                            _mm_add_ps (
-                             _mm_loadu_ps (grad.param_block+k),
+                             _mm_loadu_ps (gr->param_block+k),
                              _mm_loadu_ps (npb+k)));
             k += 4;
           }
-          if (k < (grad.total_params & ~(unsigned)0x1))
+          if (k < (gr->total_params & ~(unsigned)0x1))
           { __m128 Z = _mm_setzero_ps();
-            _mm_storel_pi ((__m64 *)(grad.param_block+k), 
+            _mm_storel_pi ((__m64 *)(gr->param_block+k), 
                       _mm_add_ps (
-                        _mm_loadl_pi (Z, (__m64 *)(grad.param_block+k)),
+                        _mm_loadl_pi (Z, (__m64 *)(gr->param_block+k)),
                         _mm_loadl_pi (Z, (__m64 *)(npb+k))));
             k += 2;
           }
-          if (k < grad.total_params)
-          { grad.param_block[k] += npb[k];
+          if (k < gr->total_params)
+          { gr->param_block[k] += npb[k];
           }
         }
 #       else
-        { for (k = 0; k < grad.total_params; k++)
-          { grad.param_block[k] += npb[k];
+        { for (k = 0; k < gr->total_params; k++)
+          { gr->param_block[k] += npb[k];
           }
         }
 #       endif
@@ -2538,13 +2540,6 @@ void mc_app_energy
   { grad.param_block = gr;
     net_setup_param_pointers (&grad, arch, flgs);
   }
-
-# if __CUDACC__
-  { if (N_train>0)
-    { cuda_setup (energy, gr);
-    }
-  }
-# endif
 
   /* Compute part of energy and/or gradient due to the prior. */
 

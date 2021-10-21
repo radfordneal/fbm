@@ -22,6 +22,8 @@
 #include <math.h>
 #include <time.h>
 
+#include "cuda-use.h"
+
 #include "misc.h"
 #include "rand.h"
 #include "log.h"
@@ -62,9 +64,9 @@ static int n_groups;		/* Number of groups */
 static int start_group[Max_groups+1];  /* Index of first weight in group */
 static double stepsize[Max_groups];    /* Stepsizes for each group */
 static int subdivide[Max_groups];      /* Should group be subdivided? */
-static int configured[Max_groups];     /* Is group configured? */
 
 static double submag[Max_subgroups];   /* Magnitudes of gradients in subgroups*/
+
 
 /* PROCEDURES. */
 
@@ -89,9 +91,6 @@ int main
   log_gobbled logg;
 
   char **ap;
-
-  net_value *value_block;
-  int value_count;
 
   unsigned old_clock; /* Theoretically, these should be of type clock_t, but  */
   unsigned new_clock; /* that type is inexplicably declared signed on most    */
@@ -186,7 +185,7 @@ int main
   int np = params.total_params;
 
   if (logg.data['r']!=0) 
-  { rand_use_state(logg.data['r']);
+  { rand_use_state ((rand_state *) logg.data['r']);
   }
 
   if (model && model->type=='V')
@@ -257,19 +256,23 @@ int main
   /* Initialize for performing iterations. */
   
   grad.total_params = params.total_params;
-  grad.param_block  = chk_alloc (params.total_params, sizeof (net_param));
+  grad.param_block  = (net_param *) 
+                        chk_alloc (params.total_params, sizeof (net_param));
   net_setup_param_pointers (&grad, arch, flgs);
 
   gradp.total_params = params.total_params;
-  gradp.param_block  = chk_alloc (params.total_params, sizeof (net_param));
+  gradp.param_block  = (net_param *)
+                         chk_alloc (params.total_params, sizeof (net_param));
   net_setup_param_pointers (&gradp, arch, flgs);
 
   tgrad.total_params = params.total_params;
-  tgrad.param_block  = chk_alloc (params.total_params, sizeof (net_param));
+  tgrad.param_block  = (net_param *)
+                         chk_alloc (params.total_params, sizeof (net_param));
   net_setup_param_pointers (&tgrad, arch, flgs);
 
   ograd.total_params = params.total_params;
-  ograd.param_block  = chk_alloc (params.total_params, sizeof (net_param));
+  ograd.param_block  = (net_param *)
+                         chk_alloc (params.total_params, sizeof (net_param));
   net_setup_param_pointers (&ograd, arch, flgs);
 
   it = logg.data['i']==0 ? &it0 : (mc_iter *) logg.data['i'];

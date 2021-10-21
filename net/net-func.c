@@ -71,6 +71,8 @@ HOSTDEV static void add_connections_config (net_value *restrict,
                                     net_config const*);
 
 
+/* ---------------------------- net_func ----------------------------------- */
+
 /* EVALUATE NETWORK FUNCTION FOR GIVEN INPUTS.  The inputs are taken from
    the net_values structure passed.  When 'start' is greater than zero, the
    correct unit values for that number of hidden layers are assumed to be
@@ -1406,3 +1408,276 @@ HOSTDEV static void add_connections_config
     }
   }
 }
+
+
+/* ---------------------------- net_func2 ---------------------------------- */
+
+#if __CUDACC__
+
+
+__device__ static void bias_values2
+  ( int, net_value *restrict,  net_value *restrict, int,
+    net_param const*);
+
+__device__ static void bias_values2_config
+  ( int, net_value *restrict,  net_value *restrict, int,
+    net_param const*, net_config const*);
+
+__device__ static void add_connections2
+  ( int, net_value *restrict,  net_value *restrict, int,
+    net_value const*, net_value const*, int,
+    net_param const*, net_param const*,
+    unsigned short const*, int);
+
+__device__ static void add_connections2_config 
+  ( int, net_value *restrict,  net_value *restrict,
+    net_value const*, net_value const*,
+    net_param const*, net_param const*,
+    net_config const*);
+
+
+/* EVALUATE NETWORK FUNCTION OF INPUTS FOR 2 CASES, USING 2 GPU THREADS.
+   The inputs are taken from the net_values structures passed.  When
+   'start' is greater than zero, the correct unit values for that
+   number of hidden layers are assumed to be already present in the
+   net_values structures. */
+
+__device__ void net_func2
+( int th,		/* Which thread, 0 or 1 */
+  net_values *restrict v0, /* Place to get inputs and store outputs, case 0 */
+  net_values *restrict v1, /* Place to get inputs and store outputs, case 1 */
+  int start,		/* Number of hidden layers with known values */
+  net_arch const* a,	/* Network architecture */
+  net_flags const* flgs,/* Network flags, null if none */
+  net_params const* w	/* Network parameters */
+)
+{
+  int l, j;
+
+  /* Compute values for successive hidden layers. */
+
+  for (l = start; l<a->N_layers; l++)
+  {
+    int N_hidden = a->N_hidden[l];
+
+    net_value *sh0 = v0->s[l], *sh1 = v1->s[l];
+
+    if (a->has_bh[l])
+    { if (a->bias_config[l])
+      { bias_values2_config (th, sh0, sh1, N_hidden, w->bh[l], 
+                             a->bias_config[l]);
+      }
+      else
+      { bias_values2 (th, sh0, sh1, N_hidden, w->bh[l]);
+      }
+    }
+    else
+    { for (j = th; j < N_hidden; j+=2)
+      { sh0[j] = 0;
+        sh1[j] = 0;
+      }
+    }
+
+    if (a->has_ih[l])
+    { if (a->input_config[l])
+      { add_connections2_config (th, sh0, sh1, v0->i, v1->i,
+          w->ih[l], a->has_ti ? w->ti : 0, a->input_config[l]);
+      }
+      else
+      { add_connections2 (th, sh0, sh1, N_hidden, v0->i, v1->i,
+          a->N_inputs, w->ih[l], a->has_ti ? w->ti : 0, 
+          flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1));
+      }
+    }
+
+    if (l>0 && a->has_hh[l-1])
+    { if (a->hidden_config[l])
+      { add_connections2_config (th, sh0, sh1, v0->h[l-1], v1->h[l-1],
+          w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0, a->hidden_config[l]);
+      }
+      else
+      { add_connections2 (th, sh0, sh1, N_hidden, v0->h[l-1], v1->h[l-1],
+          a->N_hidden[l-1], w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0,
+          (unsigned short *) 0, 0);
+      }
+    }
+
+    /* Put values through hidden unit activation function. */
+
+    net_value *vh0 = v0->h[l], *vh1 = v1->h[l];
+
+    if (flgs==0 || flgs->layer_type[l]==Tanh_type)
+    { for (j = th; j<N_hidden; j+=2)
+      { vh0[j] = TANH (sh0[j]);
+        vh1[j] = TANH (sh1[j]);
+      }
+    }
+    else if (flgs->layer_type[l]==Sin_type)
+    { for (j = th; j<N_hidden; j+=2)
+      { vh0[j] = sqrt_2 * prec_sin(sh0[j]*sqrt_2);
+        vh1[j] = sqrt_2 * prec_sin(sh1[j]*sqrt_2);
+      }
+    }
+    else if (flgs->layer_type[l]==Softplus_type)
+    { for (j = th; j<N_hidden; j+=2)
+      { net_value a, v;
+        a = sh0[j];
+        v = prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
+        if (a>0) v += a;
+        vh0[j] = v;
+        a = sh1[j];
+        v = prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
+        if (a>0) v += a;
+        vh1[j] = v;
+      }
+    }
+    else if (flgs->layer_type[l]==Square_type)
+    { for (j = th; j<N_hidden; j+=2)
+      { vh0[j] = sh0[j]*sh0[j];
+        vh1[j] = sh1[j]*sh1[j];
+      }
+    }
+    else if (flgs->layer_type[l]==Cube_type)
+    { for (j = th; j<N_hidden; j+=2)
+      { vh0[j] = sh0[j]*sh0[j]*sh0[j];
+        vh1[j] = sh1[j]*sh1[j]*sh1[j];
+      }
+    }
+    else if (flgs->layer_type[l]==Identity_type)
+    { for (j = th; j<N_hidden; j+=2)
+      { vh0[j] = sh0[j];
+        vh1[j] = sh1[j];
+      }
+    }
+    else
+    { abort();
+    }
+  }
+
+  /* Compute values for the outputs. */
+
+  if (a->has_bo)
+  { if (a->bias_config[a->N_layers])
+    { bias_values2_config (th, v0->o, v1->o, a->N_outputs, w->bo, 
+                           a->bias_config[l]);
+    }
+    else
+    { bias_values2 (th, v0->o, v1->o, a->N_outputs, w->bo);
+    }
+  }
+  else
+  { for (j = th; j < a->N_outputs; j+=2)
+    { v0->o[j] = 0;
+      v1->o[j] = 0;
+    }
+  }
+
+  if (a->has_io)
+  { if (a->input_config[a->N_layers])
+    { add_connections2_config (th, v0->o, v1->o, v0->i, v1->i,
+        w->io, a->has_ti ? w->ti : 0, a->input_config[a->N_layers]);
+    }
+    else
+    { add_connections2 (th, v0->o, v1->o, a->N_outputs, v0->i, v1->i,
+                    a->N_inputs, w->io, a->has_ti ? w->ti : 0, 
+                    flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1);
+    }
+  }
+
+  for (l = 0; l<a->N_layers; l++)
+  { if (a->has_ho[l])
+    { int k = 2*a->N_layers-1-l;
+      if (a->hidden_config[k])
+      { add_connections2_config (th, v0->o, v1->o, v0->h[l], v1->h[l], 
+                                 w->ho[l], a->has_th[l] ? w->th[l] : 0, 
+                                 a->hidden_config[k]);
+      }
+      else
+      { add_connections2 (th, v0->o, v1->o, a->N_outputs, v0->h[l], v1->h[l],
+                          a->N_hidden[l], w->ho[l], a->has_th[l] ? w->th[l] : 0,
+                          (unsigned short *) 0, 0);
+      }
+    }
+  }
+}
+
+
+/* SET UNIT VALUES TO BIASES.  Version for 2 cases using 2 GPU threads. */
+
+__device__ static void bias_values2
+( int th,			/* Which thread, 0 or 1 */
+  net_value *restrict v0,	/* Array of unit values to set, case 0 */
+  net_value *restrict v1,	/* Array of unit values to set, case 1 */
+  int n,			/* Number of units */
+  net_param const* b		/* Biases */
+)
+{ 
+  int j;
+  for (j = th; j<n; j+=2)
+  { v0[j] = b[j];
+    v1[j] = b[j];
+  }
+}
+
+
+/* SET UNIT VALUES TO BIASES WHEN THERE IS A CONFIGURATON. For 2 cases/thrds. */
+
+__device__ static void bias_values2_config
+( int th,			/* Which thread, 0 or 1 */
+  net_value *restrict v0,	/* Array of unit values to set, case 0 */
+  net_value *restrict v1,	/* Array of unit values to set, case 1 */
+  int n,			/* Number of units */
+  net_param const* b,		/* Biases */
+  net_config const* cf		/* Configuration for biases */
+)
+{ 
+  net_connection *cn;
+  int c, j, k, m;
+
+  for (j = th; j < n; j+=2)
+  { v0[j] = 0;
+    v1[j] = 0;
+  }
+
+  /* ...  to be written ... */
+}
+
+
+/* ADD CONTRIBUTION FROM ONE GROUP OF CONNECTIONS.  For 2 cases, 2 threads. */
+
+__device__ static void add_connections2
+( int th,			/* Which thread, 0 or 1 */
+  net_value *restrict s0, /* Summed input for dest units to add to, case 0 */
+  net_value *restrict s1, /* Summed input for dest units to add to, case 1 */
+  int nd,		  /* Number of destination units */
+  net_value const* v0,    /* Values for source units, case 0 */
+  net_value const* v1,    /* Values for source units, case 1 */
+  int ns,		  /* Number of source units */
+  net_param const* w,     /* Connection weights */
+  net_param const* off,   /* Offsets to add to source unit values */
+  unsigned short const* omit, /* Omit flags, null if not present/relevant */
+  int ob		  /* Bit to look at in omit flags */
+)
+{
+  /* ...  to be written ... */
+}
+
+
+/* ADD CONTRIBUTION FROM ONE GROUP OF CONNECTIONS WITH CONFIGURATION FROM FILE.
+   Version for 2 cases, done using 2 GPU threads. */
+
+__device__ static void add_connections2_config
+( int th,			/* Which thread, 0 or 1 */
+  net_value *restrict s0, /* Summed input for dest units to add to, case 0 */
+  net_value *restrict s1, /* Summed input for dest units to add to, case 1 */
+  net_value const* v0,    /* Values for source units, case 0 */
+  net_value const* v1,    /* Values for source units, case 1 */
+  net_param const* w,     /* Connection weights */
+  net_param const* off,   /* Offsets to add to source unit values */
+  net_config const* cf    /* Configuration for connections and weights */
+)
+{
+  /* ...  to be written ... */
+}
+
+#endif

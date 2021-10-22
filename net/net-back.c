@@ -413,8 +413,8 @@ HOSTDEV static void sum_derivatives
           i += 2;
         }
         if (i<=ns)
-        { _mm_store_sd (ds+i-1, FMA_sd (cast128d(D0),
-                                 _mm_load_sd(w+i-1), _mm_load_sd(ds+i-1)));
+        { _mm_store_sd (ds+i-1, FMA_sd (cast128d(D0), _mm_load_sd(w+i-1), 
+                                                      _mm_load_sd(ds+i-1)));
         }
       }
       else
@@ -471,6 +471,86 @@ HOSTDEV static void sum_derivatives
           { T = FMA_sd (_mm_load_sd(w+j-1), _mm_load_sd(dd+j-1), T);
           }
           _mm_store_sd (ds+i-1, _mm_add_sd(_mm_load_sd(ds+i-1), T));
+        }
+      }
+    }
+
+#   elif FP32 && USE_SIMD_INTRINSICS && __SSE2__ && 0 /* not working */
+    { 
+      __m128 Z = _mm_setzero_ps();
+      if (nd==1)
+      { __m128 D0 = _mm_set1_ps(*dd);
+        i = 3;
+        while (i<ns)
+        { _mm_storeu_ps (ds+i-3, FMA_ps (D0, _mm_loadu_ps(w+i-3),
+                                             _mm_loadu_ps(ds+i-3)));
+          i += 4;
+        }
+        i -= 2;
+        if (i<ns)
+        { _mm_storel_pi ((__m64 *)(ds+i-1), 
+                         FMA_ps (D0, _mm_loadl_pi (Z, (__m64 *)(w+i-1)),
+                                     _mm_loadl_pi (Z, (__m64 *)(ds+i-1))));
+          i += 2;
+        }
+        if (i<=ns)
+        { _mm_store_ss (ds+i-1, FMA_ss (D0, _mm_load_ss(w+i-1), 
+                                            _mm_load_ss(ds+i-1)));
+        }
+      }
+      else
+      { __m128 TV, TV2;
+        for (i = 1; i<ns; i+=2)
+        { net_param const*w2 = w+nd;
+          TV = _mm_setzero_ps();
+          TV2 = _mm_setzero_ps();
+          j = 3;
+          while (j<nd)
+          { __m128 DD = _mm_loadu_ps(dd+j-3);
+            TV = FMA_ps (_mm_loadu_ps(w+j-3), DD, TV);
+            TV2 = FMA_ps (_mm_loadu_ps(w2+j-3), DD, TV2);
+            j += 4;
+          }
+          __m128 T, T2;
+          T = _mm_add_ps (TV, _mm_movehl_ps(Z,TV));
+          T2 = _mm_add_ps (TV2, _mm_movehl_ps(Z,TV2));
+          j -= 2;
+          if (j<nd)
+          { __m128 DD = _mm_loadl_pi (Z, (__m64 *)(dd+j-1));
+            T = FMA_ps (_mm_loadl_pi (Z, (__m64 *)(w+j-1)), DD, T);
+            T2 = FMA_ps (_mm_loadl_pi (Z, (__m64 *)(w2+j-1)), DD, T2);
+            j += 2;
+          }
+          T = _mm_hadd_ps(T,T2);
+          if (j<=nd)
+          { __m128 DD = _mm_set1_ps(*(dd+j-1));
+            __m128 WW = _mm_shuffle_ps 
+                (_mm_loadh_pi (_mm_load_ss(w+j-1), (__m64 *)(w2+j-1)), Z, 8);
+            T = FMA_ps (WW, DD, T);
+          }
+          _mm_storeu_ps (ds+i-1, _mm_add_ps (_mm_loadu_ps(ds+i-1), T));
+          w = w2+nd;
+        }
+        if (i<=ns)
+        { TV = _mm_setzero_ps();
+          j = 3;
+          while (j<nd)
+          { TV = FMA_ps (_mm_loadu_ps(w+j-3), _mm_loadu_ps(dd+j-3), TV);
+            j += 4;
+          }
+          __m128 T;
+          T = _mm_add_ps (TV, _mm_movehl_ps(Z,TV));
+          j -= 2;
+          if (j<nd)
+          { T = FMA_ps (_mm_loadl_pi (Z, (__m64 *)(w+j-1)), 
+                        _mm_loadl_pi (Z, (__m64 *)(dd+j-1)), T);
+            j += 2;
+          }
+          T = _mm_hadd_ps(T,T);
+          if (j<=nd)
+          { T = FMA_ss (_mm_load_ss(w+j-1), _mm_load_ss(dd+j-1), T);
+          }
+          _mm_store_ss (ds+i-1, _mm_add_ss (_mm_load_ss(ds+i-1), T));
         }
       }
     }

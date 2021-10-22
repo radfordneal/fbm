@@ -475,7 +475,7 @@ HOSTDEV static void sum_derivatives
       }
     }
 
-#   elif FP32 && USE_SIMD_INTRINSICS && __SSE2__ && 0 /* not working */
+#   elif FP32 && USE_SIMD_INTRINSICS && __SSE3__
     { 
       __m128 Z = _mm_setzero_ps();
       if (nd==1)
@@ -521,14 +521,14 @@ HOSTDEV static void sum_derivatives
             T2 = FMA_ps (_mm_loadl_pi (Z, (__m64 *)(w2+j-1)), DD, T2);
             j += 2;
           }
-          T = _mm_hadd_ps(T,T2);
           if (j<=nd)
-          { __m128 DD = _mm_set1_ps(*(dd+j-1));
-            __m128 WW = _mm_shuffle_ps 
-                (_mm_loadh_pi (_mm_load_ss(w+j-1), (__m64 *)(w2+j-1)), Z, 8);
-            T = FMA_ps (WW, DD, T);
+          { __m128 DD = _mm_load_ss(dd+j-1);
+            T = FMA_ps (_mm_load_ss(w+j-1), DD, T);
+            T2 = FMA_ps (_mm_load_ss(w2+j-1), DD, T2);
           }
-          _mm_storeu_ps (ds+i-1, _mm_add_ps (_mm_loadu_ps(ds+i-1), T));
+          T = _mm_shuffle_ps (_mm_hadd_ps(T,T2), Z, 8);
+          _mm_storel_pi((__m64 *)(ds+i-1), _mm_add_ps (T, 
+                                            _mm_loadl_pi(Z,(__m64 *)(ds+i-1))));
           w = w2+nd;
         }
         if (i<=ns)
@@ -546,10 +546,10 @@ HOSTDEV static void sum_derivatives
                         _mm_loadl_pi (Z, (__m64 *)(dd+j-1)), T);
             j += 2;
           }
-          T = _mm_hadd_ps(T,T);
           if (j<=nd)
-          { T = FMA_ss (_mm_load_ss(w+j-1), _mm_load_ss(dd+j-1), T);
+          { T = FMA_ps (_mm_load_ss(w+j-1), _mm_load_ss(dd+j-1), T);
           }
+          T = _mm_hadd_ps(T,T);
           _mm_store_ss (ds+i-1, _mm_add_ss (_mm_load_ss(ds+i-1), T));
         }
       }

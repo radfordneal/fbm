@@ -475,6 +475,89 @@ HOSTDEV static void sum_derivatives
       }
     }
 
+#   elif FP64 && USE_SIMD_INTRINSICS && __SSE3__
+    { 
+      if (nd==1)
+      { __m128d D0 = _mm_set1_pd(*dd);
+        i = 3;
+        while (i<ns)
+        { _mm_storeu_pd (ds+i-3, FMA_pd (D0, _mm_loadu_pd(w+i-3),
+                                             _mm_loadu_pd(ds+i-3)));
+          _mm_storeu_pd (ds+i-1, FMA_pd (D0, _mm_loadu_pd(w+i-1),
+                                             _mm_loadu_pd(ds+i-1)));
+          i += 4;
+        }
+        i -= 2;
+        if (i<ns)
+        { _mm_storeu_pd (ds+i-1, FMA_pd (D0, _mm_loadu_pd(w+i-1),
+                                             _mm_loadu_pd(ds+i-1)));
+          i += 2;
+        }
+        if (i<=ns)
+        { _mm_store_sd (ds+i-1, FMA_sd (D0, _mm_load_sd(w+i-1), 
+                                            _mm_load_sd(ds+i-1)));
+        }
+      }
+      else
+      { __m128d TVa, TVb, TV2a, TV2b;
+        for (i = 1; i<ns; i+=2)
+        { net_param const*w2 = w+nd;
+          TVa = TVb = _mm_setzero_pd();
+          TV2a = TV2b = _mm_setzero_pd();
+          j = 3;
+          while (j<nd)
+          { __m128d DD;
+            DD = _mm_loadu_pd(dd+j-3);
+            TVa = FMA_pd (_mm_loadu_pd(w+j-3), DD, TVa);
+            TV2a = FMA_pd (_mm_loadu_pd(w2+j-3), DD, TV2a);
+            DD = _mm_loadu_pd(dd+j-1);
+            TVb = FMA_pd (_mm_loadu_pd(w+j-1), DD, TVb);
+            TV2b = FMA_pd (_mm_loadu_pd(w2+j-1), DD, TV2b);
+            j += 4;
+          }
+          __m128d T, T2;
+          T = _mm_add_pd (TVa, TVb);
+          T2 = _mm_add_pd (TV2a, TV2b);
+          j -= 2;
+          if (j<nd)
+          { __m128d DD = _mm_loadu_pd(dd+j-1);
+            T = FMA_pd (_mm_loadu_pd(w+j-1), DD, T);
+            T2 = FMA_pd (_mm_loadu_pd(w2+j-1), DD, T2);
+            j += 2;
+          }
+          T = _mm_hadd_pd(T,T2);
+          if (j<=nd)
+          { __m128d DD = _mm_load_pd1(dd+j-1);
+            __m128d WW = _mm_loadh_pd (_mm_load_sd(w+j-1), w2+j-1);
+            T = FMA_pd (WW, DD, T);
+          }
+          _mm_storeu_pd (ds+i-1, _mm_add_pd (_mm_loadu_pd(ds+i-1), T));
+          w = w2+nd;
+        }
+        if (i<=ns)
+        { TVa = TVb = _mm_setzero_pd();
+          j = 3;
+          while (j<nd)
+          { TVa = FMA_pd(_mm_loadu_pd(w+j-3), _mm_loadu_pd(dd+j-3), TVa);
+            TVb = FMA_pd(_mm_loadu_pd(w+j-1), _mm_loadu_pd(dd+j-1), TVb);
+            j += 4;
+          }
+          __m128d T;
+          T = _mm_add_pd (TVa, TVb);
+          j -= 2;
+          if (j<nd)
+          { T = FMA_pd (_mm_loadu_pd(w+j-1), _mm_loadu_pd(dd+j-1), T);
+            j += 2;
+          }
+          T = _mm_hadd_pd(T,T);
+          if (j<=nd)
+          { T = FMA_sd (_mm_load_sd(w+j-1), _mm_load_sd(dd+j-1), T);
+          }
+          _mm_store_sd (ds+i-1, _mm_add_sd(_mm_load_sd(ds+i-1), T));
+        }
+      }
+    }
+
 #   elif FP32 && USE_SIMD_INTRINSICS && __SSE3__
     { 
       __m128 Z = _mm_setzero_ps();

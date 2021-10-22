@@ -1350,8 +1350,12 @@ __device__ static void net_store2_grad2_config
 
 
 /* STORE SUM OF GRADIENT FROM A PAIR OF CASES, USING A PAIR OF THREADS.  
-   Typically, one thread handles even index, the other odd indexes.  
-   But sometimes only one thread is used. */
+   Thread 0 handles even indexes; thread 1 handles odd indexes, with
+   the exact meaning of this depending on the kind of parameter group.
+   This eliminates any need for thread synchronization, even if the
+   gradient is produced incrementally by adding several terms, since
+   there is no overlap in the set of places the two threads store to.
+   Such a consistent even/odd scheme may also improve performance. */
 
 __device__ void net_store2_grad
 ( int th,		/* Which thread (0 or 1) */
@@ -1457,6 +1461,9 @@ __device__ void net_store2_grad
 }
 
 
+/* STORE GRADIENT FOR BIASES FOR 2 CASES.  The even/odd scheme is
+   based on indexes for the biases/destination units. */
+
 __device__ static void net_store2_grad1
 ( int th,		  /* Which thread (0 or 1) */
   net_param *restrict g,  /* Array of derivatives to store to */
@@ -1471,6 +1478,12 @@ __device__ static void net_store2_grad1
   }
 }
 
+
+/* STORE GRADIENT FOR BIASES FOR 2 CASES, WITH CONFIGURATION.
+   The even/odd scheme is based on indexes for the biases.  Note that the
+   connections in quad_s_4d_4w_gpu, other_gpu, and other_2_gpu come in
+   four sections, with bias indexes mod 4 of 0 to 3 (for the first
+   bias, for quad). */
 
 __device__ static void net_store2_grad1_config
 ( int th,		  /* Which thread (0 or 1) */
@@ -1533,6 +1546,11 @@ __device__ static void net_store2_grad1_config
   }
 }
 
+
+/* STORE GRADIENT FOR WEIGHTS FOR 2 CASES.  The even/odd scheme is
+   based on the indexes for the destination units, unless there is
+   only one destination unit, in which case it is based on the indexes
+   for the source units. */
 
 #define NET_STORE2_GRAD2(offset,omit) \
 do \
@@ -1700,6 +1718,9 @@ __device__ static void net_store2_grad2
 }
 
 
+/* STORE GRADIENT FOR WEIGHTS FOR 2 CASES, WITH CONFIGURATION.  The
+   even/odd scheme is based on the indexes for the weights. */
+
 __device__ static void net_store2_grad2_config
 ( int th,		  /* Which thread (0 or 1) */
   net_param *restrict g,  /* Array of derivatives to add to */
@@ -1852,8 +1873,12 @@ __device__ static void net_store3_grad2_config (int, net_param *restrict,
 
 
 /* STORE SUM OF GRADIENT FROM THREE CASES, USING A PAIR OF THREADS.  
-   Typically, one thread handles even index, the other odd indexes.  
-   But sometimes only one thread is used. */
+   Thread 0 handles even indexes; thread 1 handles odd indexes, with
+   the exact meaning of this depending on the kind of parameter group.
+   This eliminates any need for thread synchronization, even if the
+   gradient is produced incrementally by adding several terms, since
+   there is no overlap in the set of places the two threads store to.
+   Such a consistent even/odd scheme may also improve performance. */
 
 __device__ void net_store3_grad
 ( int th,		/* Which thread (0 or 1) */
@@ -2425,9 +2450,13 @@ __device__ static void net_store4_grad2_config (int, net_param *restrict,
    net_config const*);
 
 
-/* STORE SUM OF GRADIENT FROM FOUR CASES, USING FOUR THREADS.  Typically, 
-   the threads handle indexes with remainders mod 4 of 0, 1, 2, or 3, but 
-   sometimes only one thread (0) is used. */
+/* STORE SUM OF GRADIENT FROM FOUR CASES, USING FOUR THREADS.
+   Thread 'th' handles indexes congruent to 'th' mod 4, with the exact
+   meaning of this depending on the kind of parameter group.  This
+   eliminates any need for thread synchronization, even if the
+   gradient is produced by adding several terms, since there is no
+   overlap in the set of places the four threads store to.  Such a
+   consistent scheme may also improve performance. */
 
 __device__ void net_store4_grad
 ( int th,		/* Which thread (0, 1, 2, or 3) */

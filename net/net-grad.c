@@ -2565,6 +2565,9 @@ __device__ void net_store4_grad
 }
 
 
+/* STORE GRADIENT FOR BIASES FOR 4 CASES.  The mod 4 scheme is
+   based on indexes for the biases/destination units. */
+
 __device__ static void net_store4_grad1
 ( int th,		  /* Which thread (0, 1, 2, or 3) */
   net_param *restrict g,  /* Array of derivatives to store to */
@@ -2581,6 +2584,12 @@ __device__ static void net_store4_grad1
   }
 }
 
+
+/* STORE GRADIENT FOR BIASES FOR 4 CASES, WITH CONFIGURATION.
+   The mod 4 scheme is based on indexes for the biases.  Note that the
+   connections in quad_s_4d_4w_gpu, other_gpu, and other_2_gpu come in
+   four sections, with bias indexes mod 4 of 0 to 3 (for the first
+   bias, for quad). */
 
 __device__ static void net_store4_grad1_config
 ( int th,		  /* Which thread (0, 1, 2, or 3) */
@@ -2642,6 +2651,11 @@ __device__ static void net_store4_grad1_config
 }
 
 
+/* STORE GRADIENT FOR WEIGHTS FOR 4 CASES.  The mod 4 scheme is based
+   on the indexes for the destination units, unless there is only one
+   destination unit, in which case it is based on the indexes for the
+   source units. */
+
 #define NET_STORE4_GRAD2(offset,omit) \
 do \
 { net_value o; \
@@ -2651,39 +2665,16 @@ do \
     net_value d10 = d1[0]; \
     net_value d20 = d2[0]; \
     net_value d30 = d3[0]; \
-    if (th==0) \
-    { i = 3; \
-      while (i<nv) \
-      { o = (offset); \
-        if (!(omit)) \
-        { *g++ = \
-            (v0[i-3]+o)*d00+(v1[i-3]+o)*d10+(v2[i-3]+o)*d20+(v3[i-3]+o)*d30; \
+    i = 0; \
+    while (i<nv) \
+    { o = (offset); \
+      if (!(omit)) \
+      { if (th==(i&1)) \
+        { *g = (v0[i]+o)*d00+(v1[i]+o)*d10+(v2[i]+o)*d20+(v3[i]+o)*d30; \
         } \
-        o = (offset); \
-        if (!(omit)) \
-        { *g++ = \
-            (v0[i-2]+o)*d00+(v1[i-2]+o)*d10+(v2[i-2]+o)*d20+(v3[i-2]+o)*d30; \
-        } \
-        o = (offset); \
-        if (!(omit)) \
-        { *g++ = \
-            (v0[i-1]+o)*d00+(v1[i-1]+o)*d10+(v2[i-1]+o)*d20+(v3[i-1]+o)*d30; \
-        } \
-        o = (offset); \
-        if (!(omit)) \
-        { *g++ = \
-            (v0[i-0]+o)*d00+(v1[i-0]+o)*d10+(v2[i-0]+o)*d20+(v3[i-0]+o)*d30; \
-        } \
-        i += 4; \
+        g += 1; \
       } \
-      i -= 3; \
-      while (i<nv) \
-      { o = (offset); \
-        if (!(omit)) \
-        { *g++ = (v0[i]+o)*d00+(v1[i]+o)*d10+(v2[i]+o)*d20+(v3[i]+o)*d30; \
-        } \
-        i += 1; \
-      } \
+      i += 1; \
     } \
   } \
   else \
@@ -2701,48 +2692,45 @@ do \
       else if (tv1==0 && tv2==0 && tv3==0) \
       { j = 3; \
         while (j<nd) \
-        { g[j-th] = tv0 * d0[j-th]; \
+        { g[j-3+th] = tv0 * d0[j-3+th]; \
           j += 4; \
         } \
-        j -= 3; \
-        if (j+th<nd) g[j+th] = tv0 * d0[j+th]; \
+        if (j-3+th<nd) g[j-3+th] = tv0 * d0[j-3+th]; \
       } \
       else if (tv0==0 && tv2==0 && tv3==0) \
       { j = 3; \
         while (j<nd) \
-        { g[j-th] = tv1 * d1[j-th]; \
+        { g[j-3+th] = tv1 * d1[j-3+th]; \
           j += 4; \
         } \
-        j -= 3; \
-        if (j+th<nd) g[j+th] = tv1 * d1[j+th]; \
+        if (j-3+th<nd) g[j-3+th] = tv1 * d1[j-3+th]; \
       } \
       else if (tv0==0 && tv1==0 && tv3==0) \
       { j = 3; \
         while (j<nd) \
-        { g[j-th] = tv2 * d2[j-th]; \
+        { g[j-3+th] = tv2 * d2[j-3+th]; \
           j += 4; \
         } \
-        j -= 3; \
-        if (j+th<nd) g[j+th] = tv2 * d2[j+th]; \
+        if (j-3+th<nd) g[j-3+th] = tv2 * d2[j-3+th]; \
       } \
       else if (tv0==0 && tv1==0 && tv2==0) \
       { j = 3; \
         while (j<nd) \
-        { g[j-th] = tv3 * d3[j-th]; \
+        { g[j-3+th] = tv3 * d3[j-3+th]; \
           j += 4; \
         } \
-        j -= 3; \
-        if (j+th<nd) g[j+th] = tv3 * d3[j+th]; \
+        if (j-3+th<nd) g[j-3+th] = tv3 * d3[j-3+th]; \
       } \
       else \
       { j = 3; \
         while (j<nd) \
-        { g[j-th] = tv0*d0[j-th] + tv1*d1[j-th] + tv2*d2[j-th] + tv3*d3[j-th]; \
+        { g[j-3+th] = tv0*d0[j-3+th] + tv1*d1[j-3+th] \
+                    + tv2*d2[j-3+th] + tv3*d3[j-3+th]; \
           j += 4; \
         } \
-        j -= 3; \
-        if (j+th<nd) \
-        { g[j+th] = tv0*d0[j+th] + tv1*d1[j+th] + tv2*d2[j+th] + tv3*d3[j+th]; \
+        if (j-3+th<nd) \
+        { g[j-3+th] = tv0*d0[j-3+th] + tv1*d1[j-3+th] \
+                    + tv2*d2[j-3+th] + tv3*d3[j-3+th]; \
         } \
       } \
       g += nd; \
@@ -2781,55 +2769,51 @@ do \
       else if (tv1==0 && tv2==0 && tv3==0) \
       { j = 3; \
         while (j<nd) \
-        { g[j-th] = tv0 * d0[j-th]; \
+        { g[j-3+th] = tv0 * d0[j-3+th]; \
           j += 4; \
         } \
-        j -= 3; \
-        if (j+th<nd) g[j+th] = tv0 * d0[j+th]; \
+        if (j-3+th<nd) g[j-3+th] = tv0 * d0[j-3+th]; \
       } \
       else if (tv0==0 && tv2==0 && tv3==0) \
       { j = 3; \
         while (j<nd) \
-        { g[j-th] = tv1 * d1[j-th]; \
+        { g[j-3+th] = tv1 * d1[j-3+th]; \
           j += 4; \
         } \
-        j -= 3; \
-        if (j+th<nd) g[j+th] = tv1 * d1[j+th]; \
+        if (j-3+th<nd) g[j-3+th] = tv1 * d1[j-3+th]; \
       } \
       else if (tv0==0 && tv1==0 && tv3==0) \
       { j = 3; \
         while (j<nd) \
-        { g[j-th] = tv2 * d2[j-th]; \
+        { g[j-3+th] = tv2 * d2[j-3+th]; \
           j += 4; \
         } \
-        j -= 3; \
-        if (j+th<nd) g[j+th] = tv2 * d2[j+th]; \
+        if (j-3+th<nd) g[j-3+th] = tv2 * d2[j-3+th]; \
       } \
       else if (tv0==0 && tv1==0 && tv2==0) \
       { j = 3; \
         while (j<nd) \
-        { g[j-th] = tv3 * d3[j-th]; \
+        { g[j-3+th] = tv3 * d3[j-3+th]; \
           j += 4; \
         } \
-        j -= 3; \
-        if (j+th<nd) g[j+th] = tv3 * d3[j+th]; \
+        if (j-3+th<nd) g[j-3+th] = tv3 * d3[j-3+th]; \
       } \
       else \
       { j = 3; \
         while (j<nd) \
-        { g[j-th] = tv0*d0[j-th] + tv1*d1[j-th] + tv2*d2[j-th] + tv3*d3[j-th]; \
+        { g[j-3+th] = tv0*d0[j-3+th] + tv1*d1[j-3+th] \
+                    + tv2*d2[j-3+th] + tv3*d3[j-3+th]; \
           j += 4; \
         } \
-        j -= 3; \
-        if (j+th<nd) \
-        { g[j+th] = tv0*d0[j+th] + tv1*d1[j+th] + tv2*d2[j+th] + tv3*d3[j+th]; \
+        if (j-3+th<nd) \
+        { g[j-3+th] = tv0*d0[j-3+th] + tv1*d1[j-3+th] \
+                    + tv2*d2[j-3+th] + tv3*d3[j-3+th]; \
         } \
       } \
       g += nd; \
     } \
   } \
 } while (0)
-
 
 __device__ static void net_store4_grad2
 ( int th,		  /* Which thread (0, 1, 2, or 3) */
@@ -2867,6 +2851,13 @@ __device__ static void net_store4_grad2
   }
 }
 
+
+
+/* STORE GRADIENT FOR WEIGHTS FOR 4 CASES, WITH CONFIGURATION.
+   The mod 4 scheme is based on the indexes for the weights.
+   Note that the connections in quad_s_4d_4w_gpu, other_gpu, and
+   other_2_gpu come in four sections, with weight indexes mod 4 of
+   0 to 3 (for the first weight, for quad). */
 
 __device__ static void net_store4_grad2_config
 ( int th,		  /* Which thread (0,1, 2, or 3) */

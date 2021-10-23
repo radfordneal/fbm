@@ -2656,104 +2656,68 @@ __device__ static void net_store4_grad1_config
    destination unit, in which case it is based on the indexes for the
    source units. */
 
-#define NET_STORE4_GRAD2(offset,omit,alllab,onelab) \
+#define NET_STORE4_GRAD2(has_off,has_omit,alllab,onelab) \
 do \
-{ net_value o; \
-  int i, j; \
+{ int i; \
   if (nd==1) \
   { net_value d00 = d0[0]; \
     net_value d10 = d1[0]; \
     net_value d20 = d2[0]; \
     net_value d30 = d3[0]; \
-    i = 0; \
-    while (i<nv) \
-    { o = (offset); \
-      if (!(omit)) \
-      { if (th==(i&1)) \
-        { *g = (v0[i]+o)*d00+(v1[i]+o)*d10+(v2[i]+o)*d20+(v3[i]+o)*d30; \
+    if (has_omit) \
+    { net_value o; \
+      i = 0; \
+      while (i<nv) \
+      { o = has_off ? off[i] : 0; \
+        if ((omit[i]&ob)==0) \
+        { if (th==(i&1)) \
+          { *g = (v0[i]+o)*d00 + (v1[i]+o)*d10 \
+               + (v2[i]+o)*d20 + (v3[i]+o)*d30; \
+          } \
+          g += 1; \
         } \
-        g += 1; \
+        i += 1; \
       } \
-      i += 1; \
+    } \
+    else if (has_off) \
+    { net_value o; \
+      i = 0; \
+      while (i+3<nv) \
+      { o = off[i+th]; \
+        g[i+th] = (v0[i+th]+o)*d00 + (v1[i+th]+o)*d10 \
+                + (v2[i+th]+o)*d20 + (v3[i+th]+o)*d30; \
+        i += 4; \
+      } \
+      if (i+th<nv) \
+      { o = off[i+th]; \
+        g[i+th] = (v0[i+th]+o)*d00 + (v1[i+th]+o)*d10 \
+                + (v2[i+th]+o)*d20 + (v3[i+th]+o)*d30; \
+      } \
+    } \
+    else \
+    { i = 0; \
+      while (i+3<nv) \
+      { g[i+th] = v0[i+th]*d00 + v1[i+th]*d10 \
+                + v2[i+th]*d20 + v3[i+th]*d30; \
+        i += 4; \
+      } \
+      if (i+th<nv) \
+      { g[i+th] = v0[i+th]*d00 + v1[i+th]*d10 \
+                + v2[i+th]*d20 + v3[i+th]*d30; \
+      } \
     } \
   } \
   else \
-  { net_value tv0, tv1, tv2, tv3, tvh; \
+  { net_value tv0, tv1, tv2, tv3, tvh, o; \
     net_value const*dh; \
+    int j; \
     for (i = 0; i<nv; i++, g+=nd) \
-    { o = (offset); \
-      if (omit) continue; \
+    { o = has_off ? off[i] : 0; \
+      if (has_omit && (omit[i]&ob)) continue; \
       tv0 = v0[i] + o; \
       tv1 = v1[i] + o; \
       tv2 = v2[i] + o; \
       tv3 = v3[i] + o; \
-      if (tv0!=0) \
-      { if (tv1!=0 || tv2!=0 || tv3!=0) goto alllab; \
-        tvh = tv0; dh = d0; \
-        goto onelab; \
-      } \
-      else if (tv1!=0) \
-      { if (tv2!=0 || tv3!=0) goto alllab; \
-        tvh = tv1; dh = d1; \
-        goto onelab; \
-      } \
-      else if (tv2!=0) \
-      { if (tv3!=0) goto alllab; \
-        tvh = tv2; dh = d2; \
-        goto onelab; \
-      } \
-      else if (tv3!=0) \
-      { tvh = tv3; dh = d3; \
-        goto onelab; \
-      } \
-      for (j = th; j<nd; j+=4) g[j] = 0; \
-      continue; \
-    onelab: \
-      j = 0; \
-      while (j+3<nd) \
-      { g[j+th] = tvh * dh[j+th]; \
-        j += 4; \
-      } \
-      if (j+th<nd) g[j+th] = tvh * dh[j+th]; \
-      continue; \
-    alllab: \
-      j = 0; \
-      while (j+3<nd) \
-      { g[j+th] = tv0*d0[j+th] + tv1*d1[j+th] + tv2*d2[j+th] + tv3*d3[j+th]; \
-        j += 4; \
-      } \
-      if (j+th<nd) \
-      { g[j+th] = tv0*d0[j+th] + tv1*d1[j+th] + tv2*d2[j+th] + tv3*d3[j+th]; \
-      } \
-    } \
-  } \
-} while (0)
-
-#define NET_STORE4_GRAD2_00(alllab,onelab) \
-do \
-{ int i, j; \
-  if (nd==1) \
-  { net_value d00 = d0[0]; \
-    net_value d10 = d1[0]; \
-    net_value d20 = d2[0]; \
-    net_value d30 = d3[0]; \
-    i = 0; \
-    while (i+3<nv) \
-    { g[i+th] = v0[i+th]*d00 + v1[i+th]*d10 + v2[i+th]*d20 + v3[i+th]*d30; \
-      i += 4; \
-    } \
-    if (i+th<nv) \
-    { g[i+th] = v0[i+th]*d00 + v1[i+th]*d10 + v2[i+th]*d20 + v3[i+th]*d30; \
-    } \
-  } \
-  else \
-  { net_value tv0, tv1, tv2, tv3, tvh; \
-    net_value const*dh; \
-    for (i = 0; i<nv; i++, g+=nd) \
-    { tv0 = v0[i]; \
-      tv1 = v1[i]; \
-      tv2 = v2[i]; \
-      tv3 = v3[i]; \
       if (tv0!=0) \
       { if (tv1!=0 || tv2!=0 || tv3!=0) goto alllab; \
         tvh = tv0; dh = d0; \
@@ -2816,18 +2780,18 @@ __device__ static void net_store4_grad2
 { 
   if (omit==0)
   { if (off==0)
-    { NET_STORE4_GRAD2_00(all1,one1);
+    { NET_STORE4_GRAD2(0,0,all1,one1);
     }
     else
-    { NET_STORE4_GRAD2(*off++,0,all2,one2);
+    { NET_STORE4_GRAD2(1,0,all2,one2);
     }
   }
   else
   { if (off==0)
-    { NET_STORE4_GRAD2(0,(*omit++)&ob,all3,one3);
+    { NET_STORE4_GRAD2(0,1,all3,one3);
     }
     else
-    { NET_STORE4_GRAD2(*off++,(*omit++)&ob,all4,one4);
+    { NET_STORE4_GRAD2(1,1,all4,one4);
     }
   }
 }

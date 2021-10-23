@@ -2690,47 +2690,45 @@ do \
       { for (j = th; j<nd; j+=4) g[j] = 0; \
       } \
       else if (tv1==0 && tv2==0 && tv3==0) \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv0 * d0[j-3+th]; \
+      { j = 0; \
+        while (j+3<nd) \
+        { g[j+th] = tv0 * d0[j+th]; \
           j += 4; \
         } \
-        if (j-3+th<nd) g[j-3+th] = tv0 * d0[j-3+th]; \
+        if (j+th<nd) g[j+th] = tv0 * d0[j+th]; \
       } \
       else if (tv0==0 && tv2==0 && tv3==0) \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv1 * d1[j-3+th]; \
+      { j = 0; \
+        while (j+3<nd) \
+        { g[j+th] = tv1 * d1[j+th]; \
           j += 4; \
         } \
-        if (j-3+th<nd) g[j-3+th] = tv1 * d1[j-3+th]; \
+        if (j+th<nd) g[j+th] = tv1 * d1[j+th]; \
       } \
       else if (tv0==0 && tv1==0 && tv3==0) \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv2 * d2[j-3+th]; \
+      { j = 0; \
+        while (j+3<nd) \
+        { g[j+th] = tv2 * d2[j+th]; \
           j += 4; \
         } \
-        if (j-3+th<nd) g[j-3+th] = tv2 * d2[j-3+th]; \
+        if (j+th<nd) g[j+th] = tv2 * d2[j+th]; \
       } \
       else if (tv0==0 && tv1==0 && tv2==0) \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv3 * d3[j-3+th]; \
+      { j = 0; \
+        while (j+3<nd) \
+        { g[j+th] = tv3 * d3[j+th]; \
           j += 4; \
         } \
-        if (j-3+th<nd) g[j-3+th] = tv3 * d3[j-3+th]; \
+        if (j+th<nd) g[j+th] = tv3 * d3[j+th]; \
       } \
       else \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv0*d0[j-3+th] + tv1*d1[j-3+th] \
-                    + tv2*d2[j-3+th] + tv3*d3[j-3+th]; \
+      { j = 0; \
+        while (j+3<nd) \
+        { g[j+th] = tv0*d0[j+th] + tv1*d1[j+th] + tv2*d2[j+th] + tv3*d3[j+th]; \
           j += 4; \
         } \
-        if (j-3+th<nd) \
-        { g[j-3+th] = tv0*d0[j-3+th] + tv1*d1[j-3+th] \
-                    + tv2*d2[j-3+th] + tv3*d3[j-3+th]; \
+        if (j+th<nd) \
+        { g[j+th] = tv0*d0[j+th] + tv1*d1[j+th] + tv2*d2[j+th] + tv3*d3[j+th]; \
         } \
       } \
       g += nd; \
@@ -2767,47 +2765,45 @@ do \
       { for (j = th; j<nd; j+=4) g[j] = 0; \
       } \
       else if (tv1==0 && tv2==0 && tv3==0) \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv0 * d0[j-3+th]; \
+      { j = 0; \
+        while (j+3<nd) \
+        { g[j+th] = tv0 * d0[j+th]; \
           j += 4; \
         } \
-        if (j-3+th<nd) g[j-3+th] = tv0 * d0[j-3+th]; \
+        if (j+th<nd) g[j+th] = tv0 * d0[j+th]; \
       } \
       else if (tv0==0 && tv2==0 && tv3==0) \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv1 * d1[j-3+th]; \
+      { j = 0; \
+        while (j+3<nd) \
+        { g[j+th] = tv1 * d1[j+th]; \
           j += 4; \
         } \
-        if (j-3+th<nd) g[j-3+th] = tv1 * d1[j-3+th]; \
+        if (j+th<nd) g[j+th] = tv1 * d1[j+th]; \
       } \
       else if (tv0==0 && tv1==0 && tv3==0) \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv2 * d2[j-3+th]; \
+      { j = 0; \
+        while (j+3<nd) \
+        { g[j+th] = tv2 * d2[j+th]; \
           j += 4; \
         } \
-        if (j-3+th<nd) g[j-3+th] = tv2 * d2[j-3+th]; \
+        if (j+th<nd) g[j+th] = tv2 * d2[j+th]; \
       } \
       else if (tv0==0 && tv1==0 && tv2==0) \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv3 * d3[j-3+th]; \
+      { j = 0; \
+        while (j+3<nd) \
+        { g[j+th] = tv3 * d3[j+th]; \
           j += 4; \
         } \
-        if (j-3+th<nd) g[j-3+th] = tv3 * d3[j-3+th]; \
+        if (j+th<nd) g[j+th] = tv3 * d3[j+th]; \
       } \
       else \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv0*d0[j-3+th] + tv1*d1[j-3+th] \
-                    + tv2*d2[j-3+th] + tv3*d3[j-3+th]; \
+      { j = 0; \
+        while (j+3<nd) \
+        { g[j+th] = tv0*d0[j+th] + tv1*d1[j+th] + tv2*d2[j+th] + tv3*d3[j+th]; \
           j += 4; \
         } \
-        if (j-3+th<nd) \
-        { g[j-3+th] = tv0*d0[j-3+th] + tv1*d1[j-3+th] \
-                    + tv2*d2[j-3+th] + tv3*d3[j-3+th]; \
+        if (j+th<nd) \
+        { g[j+th] = tv0*d0[j+th] + tv1*d1[j+th] + tv2*d2[j+th] + tv3*d3[j+th]; \
         } \
       } \
       g += nd; \

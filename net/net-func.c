@@ -568,21 +568,15 @@ do \
 { int i, j; \
   net_param o; \
   if (nd==1) \
-  { net_value sv[4] = { 0, 0, 0, 0 }; \
-    i = 3; \
-    while (i<ns) \
-    { o = (offset); if (!(omit)) sv[0] += (v[i-3] + o) * *w++; \
-      o = (offset); if (!(omit)) sv[1] += (v[i-2] + o) * *w++; \
-      o = (offset); if (!(omit)) sv[2] += (v[i-1] + o) * *w++; \
-      o = (offset); if (!(omit)) sv[3] += (v[i-0] + o) * *w++; \
-      i += 4; \
+  { net_value sv = 0; \
+    for (i = 0; i<ns; i++) \
+    { o = (offset); \
+      if (!(omit)) \
+      { sv += (v[i] + o) * *w; \
+        w += 1; \
+      } \
     } \
-    i -= 3; \
-    *s += (sv[0] + sv[2]) + (sv[1] + sv[3]); \
-    while (i<ns) \
-    { o = (offset); if (!(omit)) *s += (v[i] + o) * *w++; \
-      i += 1; \
-    } \
+    *s += sv; \
   } \
   else \
   { for (i = 0; i<ns; i++) \
@@ -590,18 +584,8 @@ do \
       if (omit) continue; \
       net_value tv = v[i] + o; \
       if (tv!=0)  \
-      { j = 3; \
-        while (j<nd) \
-        { s[j-3] += w[j-3] * tv; \
-          s[j-2] += w[j-2] * tv; \
-          s[j-1] += w[j-1] * tv; \
-          s[j-0] += w[j-0] * tv; \
-          j += 4; \
-        } \
-        j -= 3; \
-        while (j<nd) \
+      { for (j = 0; j<nd; j++) \
         { s[j] += w[j] * tv; \
-          j += 1; \
         } \
       } \
       w += nd; \
@@ -1684,11 +1668,12 @@ __device__ static void bias_values2_config
 #define ADD_CONNECTIONS2(offset,omit) \
 do \
 { int i, j; \
+  net_param o; \
   if (nd==1) \
   { net_value const* v = th==0 ? v0 : v1; \
     net_value sv = 0; \
     for (i = 0; i<ns; i++) \
-    { net_param o = (offset); \
+    { o = (offset); \
       if (!(omit)) \
       { sv += (v[i] + o) * *w; \
         w += 1; \
@@ -1698,9 +1683,10 @@ do \
   } \
   else \
   { for (i = 0; i<ns; i++) \
-    { if (omit) continue; \
-      net_value tv0 = v0[i] + (offset); \
-      net_value tv1 = v1[i] + (offset); \
+    { o = (offset); \
+      if (omit) continue; \
+      net_value tv0 = v0[i] + o; \
+      net_value tv1 = v1[i] + o; \
       if (tv0!=0 && tv1!=0)  \
       { for (j = th; j<nd; j+= 2) \
         { s0[j] += w[j] * tv0; \

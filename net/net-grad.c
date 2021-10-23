@@ -2664,46 +2664,30 @@ do \
     net_value d10 = d1[0]; \
     net_value d20 = d2[0]; \
     net_value d30 = d3[0]; \
-    if (has_omit) \
+    if (has_omit && has_off) \
     { net_value o; \
-      i = 0; \
-      while (i<nv) \
-      { o = has_off ? off[i] : 0; \
-        if ((omit[i]&ob)==0) \
-        { if (th==(i&1)) \
-          { *g = (v0[i]+o)*d00 + (v1[i]+o)*d10 \
-               + (v2[i]+o)*d20 + (v3[i]+o)*d30; \
-          } \
-          g += 1; \
-        } \
-        i += 1; \
+      for (i = th; i<nv; i+=4) \
+      { if (omit[i]&ob) continue; \
+        o = off[i]; \
+        g[i] = (v0[i]+o)*d00 + (v1[i]+o)*d10 + (v2[i]+o)*d20 + (v3[i]+o)*d30; \
+      } \
+    } \
+    else if (has_omit) \
+    { for (i = th; i<nv; i+=4) \
+      { if (omit[i]&ob) continue; \
+        g[i] = v0[i]*d00 + v1[i]*d10 + v2[i]*d20 + v3[i]*d30; \
       } \
     } \
     else if (has_off) \
     { net_value o; \
-      i = 0; \
-      while (i+3<nv) \
-      { o = off[i+th]; \
-        g[i+th] = (v0[i+th]+o)*d00 + (v1[i+th]+o)*d10 \
-                + (v2[i+th]+o)*d20 + (v3[i+th]+o)*d30; \
-        i += 4; \
-      } \
-      if (i+th<nv) \
-      { o = off[i+th]; \
-        g[i+th] = (v0[i+th]+o)*d00 + (v1[i+th]+o)*d10 \
-                + (v2[i+th]+o)*d20 + (v3[i+th]+o)*d30; \
+      for (i = th; i<nv; i+=4) \
+      { o = off[i]; \
+        g[i] = (v0[i]+o)*d00 + (v1[i]+o)*d10 + (v2[i]+o)*d20 + (v3[i]+o)*d30; \
       } \
     } \
     else \
-    { i = 0; \
-      while (i+3<nv) \
-      { g[i+th] = v0[i+th]*d00 + v1[i+th]*d10 \
-                + v2[i+th]*d20 + v3[i+th]*d30; \
-        i += 4; \
-      } \
-      if (i+th<nv) \
-      { g[i+th] = v0[i+th]*d00 + v1[i+th]*d10 \
-                + v2[i+th]*d20 + v3[i+th]*d30; \
+    { for (i = th; i<nv; i+=4) \
+      { g[i] = v0[i]*d00 + v1[i]*d10 + v2[i]*d20 + v3[i]*d30; \
       } \
     } \
   } \
@@ -2712,8 +2696,8 @@ do \
     net_value const*dh; \
     int j; \
     for (i = 0; i<nv; i++, g+=nd) \
-    { o = has_off ? off[i] : 0; \
-      if (has_omit && (omit[i]&ob)) continue; \
+    { if (has_omit && (omit[i]&ob)) continue; \
+      o = has_off ? off[i] : 0; \
       tv0 = v0[i] + o; \
       tv1 = v1[i] + o; \
       tv2 = v2[i] + o; \
@@ -2737,24 +2721,18 @@ do \
       { tvh = tv3; dh = d3; \
         goto onelab; \
       } \
-      for (j = th; j<nd; j+=4) g[j] = 0; \
+      for (j = th; j<nd; j+=4) \
+      { g[j] = 0; \
+      } \
       continue; \
     onelab: \
-      j = 0; \
-      while (j+3<nd) \
-      { g[j+th] = tvh * dh[j+th]; \
-        j += 4; \
+      for (j = th; j<nd; j+=4) \
+      { g[j] = tvh * dh[j]; \
       } \
-      if (j+th<nd) g[j+th] = tvh * dh[j+th]; \
       continue; \
     alllab: \
-      j = 0; \
-      while (j+3<nd) \
-      { g[j+th] = tv0*d0[j+th] + tv1*d1[j+th] + tv2*d2[j+th] + tv3*d3[j+th]; \
-        j += 4; \
-      } \
-      if (j+th<nd) \
-      { g[j+th] = tv0*d0[j+th] + tv1*d1[j+th] + tv2*d2[j+th] + tv3*d3[j+th]; \
+      for (j = th; j<nd; j+=4) \
+      { g[j] = tv0*d0[j] + tv1*d1[j] + tv2*d2[j] + tv3*d3[j]; \
       } \
     } \
   } \

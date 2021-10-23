@@ -1552,122 +1552,70 @@ __device__ static void net_store2_grad1_config
    only one destination unit, in which case it is based on the indexes
    for the source units. */
 
-#define NET_STORE2_GRAD2(offset,omit) \
+#define NET_STORE2_GRAD2(has_off,has_omit,alllab,onelab) \
 do \
-{ net_value o; \
-  int i, j; \
+{ int i; \
   if (nd==1) \
   { net_value d00 = d0[0]; \
     net_value d10 = d1[0]; \
-    i = 0; \
-    while (i<nv) \
-    { o = (offset); \
-      if (!(omit)) \
-      { if (th==(i&1)) *g = (v0[i]+o)*d00 +  (v1[i]+o)*d10; \
-        g += 1; \
+    if (has_omit && has_off) \
+    { net_value o; \
+      for (i = th; i<nv; i+=2) \
+      { if (omit[i]&ob) continue; \
+        o = off[i]; \
+        g[i] = (v0[i]+o)*d00 + (v1[i]+o)*d10; \
       } \
-      i += 1; \
+    } \
+    else if (has_omit) \
+    { for (i = th; i<nv; i+=2) \
+      { if (omit[i]&ob) continue; \
+        g[i] = v0[i]*d00 + v1[i]*d10; \
+      } \
+    } \
+    else if (has_off) \
+    { net_value o; \
+      for (i = th; i<nv; i+=2) \
+      { o = off[i]; \
+        g[i] = (v0[i]+o)*d00 + (v1[i]+o)*d10; \
+      } \
+    } \
+    else \
+    { for (i = th; i<nv; i+=2) \
+      { g[i] = v0[i]*d00 + v1[i]*d10; \
+      } \
     } \
   } \
   else \
-  { for (i = 0; i<nv; i++) \
-    { net_value tv0, tv1; \
-      o = (offset); \
-      if (omit) continue; \
+  { net_value tv0, tv1, tvh, o; \
+    net_value const*dh; \
+    int j; \
+    for (i = 0; i<nv; i++, g+=nd) \
+    { if (has_omit && (omit[i]&ob)) continue; \
+      o = has_off ? off[i] : 0; \
       tv0 = v0[i] + o; \
       tv1 = v1[i] + o; \
-      if (tv0==0 && tv1==0) \
-      { for (j = th; j<nd; j+=2) g[j] = 0; \
+      if (tv0!=0) \
+      { if (tv1!=0) goto alllab; \
+        tvh = tv0; dh = d0; \
+        goto onelab; \
       } \
-      else if (tv1==0)  \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv0 * d0[j-3+th]; \
-          g[j-1+th] = tv0 * d0[j-1+th]; \
-          j += 4; \
-        } \
-        if (j-3+th<nd) g[j-3+th] = tv0 * d0[j-3+th]; \
-        if (j-1+th<nd) g[j-1+th] = tv0 * d0[j-1+th]; \
+      else if (tv1!=0) \
+      { tvh = tv1; dh = d1; \
+        goto onelab; \
       } \
-      else if (tv0==0)  \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv1 * d1[j-3+th]; \
-          g[j-1+th] = tv1 * d1[j-1+th]; \
-          j += 4; \
-        } \
-        if (j-3+th<nd) g[j-3+th] = tv1 * d1[j-3+th]; \
-        if (j-1+th<nd) g[j-1+th] = tv1 * d1[j-1+th]; \
+      for (j = th; j<nd; j+=2) \
+      { g[j] = 0; \
       } \
-      else \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv0 * d0[j-3+th] + tv1 * d1[j-3+th]; \
-          g[j-1+th] = tv0 * d0[j-1+th] + tv1 * d1[j-1+th]; \
-          j += 4; \
-        } \
-        if (j-3+th<nd) g[j-3+th] = tv0 * d0[j-3+th] + tv1 * d1[j-3+th]; \
-        if (j-1+th<nd) g[j-1+th] = tv0 * d0[j-1+th] + tv1 * d1[j-1+th]; \
+      continue; \
+    onelab: \
+      for (j = th; j<nd; j+=2) \
+      { g[j] = tvh * dh[j]; \
       } \
-      g += nd; \
-    } \
-  } \
-} while (0)
-
-#define NET_STORE2_GRAD2_00 \
-do \
-{ int i, j; \
-  if (nd==1) \
-  { net_value d00 = d0[0]; \
-    net_value d10 = d1[0]; \
-    i = 3; \
-    while (i<nv) \
-    { g[i-3+th] = v0[i-3+th] * d00 + v1[i-3+th] * d10; \
-      g[i-1+th] = v0[i-1+th] * d00 + v1[i-1+th] * d10; \
-      i += 4; \
-    } \
-    if (i-3+th<nv) g[i-3+th] = v0[i-3+th] * d00 + v1[i-3+th] * d10; \
-    if (i-1+th<nv) g[i-1+th] = v0[i-1+th] * d00 + v1[i-1+th] * d10; \
-  } \
-  else \
-  { net_value tv0, tv1; \
-    for (i = 0; i<nv; i++) \
-    { tv0 = v0[i]; \
-      tv1 = v1[i]; \
-      if (tv0==0 && tv1==0) \
-      { for (j = th; j<nd; j+=2) g[j] = 0; \
+      continue; \
+    alllab: \
+      for (j = th; j<nd; j+=2) \
+      { g[j] = tv0*d0[j] + tv1*d1[j]; \
       } \
-      else if (tv1==0)  \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv0 * d0[j-3+th]; \
-          g[j-1+th] = tv0 * d0[j-1+th]; \
-          j += 4; \
-        } \
-        if (j-3+th<nd) g[j-3+th] = tv0 * d0[j-3+th]; \
-        if (j-1+th<nd) g[j-1+th] = tv0 * d0[j-1+th]; \
-      } \
-      else if (tv0==0)  \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv1 * d1[j-3+th]; \
-          g[j-1+th] = tv1 * d1[j-1+th]; \
-          j += 4; \
-        } \
-        if (j-3+th<nd) g[j-3+th] = tv1 * d1[j-3+th]; \
-        if (j-1+th<nd) g[j-1+th] = tv1 * d1[j-1+th]; \
-      } \
-      else \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv0 * d0[j-3+th] + tv1 * d1[j-3+th]; \
-          g[j-1+th] = tv0 * d0[j-1+th] + tv1 * d1[j-1+th]; \
-          j += 4; \
-        } \
-        if (j-3+th<nd) g[j-3+th] = tv0 * d0[j-3+th] + tv1 * d1[j-3+th]; \
-        if (j-1+th<nd) g[j-1+th] = tv0 * d0[j-1+th] + tv1 * d1[j-1+th]; \
-      } \
-      g += nd; \
     } \
   } \
 } while (0)
@@ -1688,18 +1636,18 @@ __device__ static void net_store2_grad2
 { 
   if (omit==0)
   { if (off==0)
-    { NET_STORE2_GRAD2_00;
+    { NET_STORE2_GRAD2(0,0,all1,one1);
     }
     else
-    { NET_STORE2_GRAD2(*off++,0);
+    { NET_STORE2_GRAD2(1,0,all2,one2);
     }
   }
   else
   { if (off==0)
-    { NET_STORE2_GRAD2(0,(*omit++)&ob);
+    { NET_STORE2_GRAD2(0,1,all3,one3);
     }
     else
-    { NET_STORE2_GRAD2(*off++,(*omit++)&ob);
+    { NET_STORE2_GRAD2(1,1,all4,one4);
     }
   }
 }
@@ -2069,167 +2017,85 @@ __device__ static void net_store3_grad1_config
 }
 
 
-/* STORE GRADIENT FOR WEIGHTS FOR 3 CASES.  The even/odd scheme is
-   based on the indexes for the destination units, unless there is
-   only one destination unit, in which case it is based on the indexes
-   for the source units. */
+/* STORE GRADIENT FOR WEIGHTS FOR 3 CASES, USING 2 THREADS.  The
+   even/odd scheme is based on the indexes for the destination units,
+   unless there is only one destination unit, in which case it is
+   based on the indexes for the source units. */
 
-#define NET_STORE3_GRAD2(offset,omit) \
+#define NET_STORE3_GRAD2(has_off,has_omit,alllab,onelab) \
 do \
-{ net_value o; \
-  int i, j; \
+{ int i; \
   if (nd==1) \
   { net_value d00 = d0[0]; \
     net_value d10 = d1[0]; \
     net_value d20 = d2[0]; \
-    i = 0; \
-    while (i<nv) \
-    { o = (offset); \
-      if (!(omit)) \
-      { if (th==(i&1)) *g = (v0[i]+o)*d00 + (v1[i]+o)*d10 + (v2[i]+o)*d20; \
-        g += 1; \
+    if (has_omit && has_off) \
+    { net_value o; \
+      for (i = th; i<nv; i+=2) \
+      { if (omit[i]&ob) continue; \
+        o = off[i]; \
+        g[i] = (v0[i]+o)*d00 + (v1[i]+o)*d10 + (v2[i]+o)*d20; \
       } \
-      i += 1; \
+    } \
+    else if (has_omit) \
+    { for (i = th; i<nv; i+=2) \
+      { if (omit[i]&ob) continue; \
+        g[i] = v0[i]*d00 + v1[i]*d10 + v2[i]*d20; \
+      } \
+    } \
+    else if (has_off) \
+    { net_value o; \
+      for (i = th; i<nv; i+=2) \
+      { o = off[i]; \
+        g[i] = (v0[i]+o)*d00 + (v1[i]+o)*d10 + (v2[i]+o)*d20; \
+      } \
+    } \
+    else \
+    { for (i = th; i<nv; i+=2) \
+      { g[i] = v0[i]*d00 + v1[i]*d10 + v2[i]*d20; \
+      } \
     } \
   } \
   else \
-  { for (i = 0; i<nv; i++) \
-    { net_value tv0, tv1, tv2; \
-      o = (offset); \
-      if (omit) continue; \
+  { net_value tv0, tv1, tv2, tvh, o; \
+    net_value const*dh; \
+    int j; \
+    for (i = 0; i<nv; i++, g+=nd) \
+    { if (has_omit && (omit[i]&ob)) continue; \
+      o = has_off ? off[i] : 0; \
       tv0 = v0[i] + o; \
       tv1 = v1[i] + o; \
       tv2 = v2[i] + o; \
-      if (tv0==0 && tv1==0 && tv2==0) \
-      { for (j = th; j<nd; j+=2) g[j] = 0; \
+      if (tv0!=0) \
+      { if (tv1!=0 || tv2!=0) goto alllab; \
+        tvh = tv0; dh = d0; \
+        goto onelab; \
       } \
-      else if (tv1==0 && tv2==0) \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv0 * d0[j-3+th]; \
-          g[j-1+th] = tv0 * d0[j-1+th]; \
-          j += 4; \
-        } \
-        if (j-3+th<nd) g[j-3+th] = tv0 * d0[j-3+th]; \
-        if (j-1+th<nd) g[j-1+th] = tv0 * d0[j-1+th]; \
+      else if (tv1!=0) \
+      { if (tv2!=0) goto alllab; \
+        tvh = tv1; dh = d1; \
+        goto onelab; \
       } \
-      else if (tv0==0 && tv2==0) \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv1 * d1[j-3+th]; \
-          g[j-1+th] = tv1 * d1[j-1+th]; \
-          j += 4; \
-        } \
-        if (j-3+th<nd) g[j-3+th] = tv1 * d1[j-3+th]; \
-        if (j-1+th<nd) g[j-1+th] = tv1 * d1[j-1+th]; \
+      else if (tv2!=0) \
+      { tvh = tv2; dh = d2; \
+        goto onelab; \
       } \
-      else if (tv0==0 && tv1==0) \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv2 * d2[j-3+th]; \
-          g[j-1+th] = tv2 * d2[j-1+th]; \
-          j += 4; \
-        } \
-        if (j-3+th<nd) g[j-3+th] = tv2 * d2[j-3+th]; \
-        if (j-1+th<nd) g[j-1+th] = tv2 * d2[j-1+th]; \
+      for (j = th; j<nd; j+=2) \
+      { g[j] = 0; \
       } \
-      else \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv0 * d0[j-3+th] + tv1 * d1[j-3+th] + tv2 * d2[j-3+th]; \
-          g[j-1+th] = tv0 * d0[j-1+th] + tv1 * d1[j-1+th] + tv2 * d2[j-1+th]; \
-          j += 4; \
-        } \
-        if (j-3+th<nd) \
-        { g[j-3+th] = tv0*d0[j-3+th] + tv1*d1[j-3+th] + tv2*d2[j-3+th]; \
-        } \
-        if (j-1+th<nd) \
-        { g[j-1+th] = tv0*d0[j-1+th] + tv1*d1[j-1+th] + tv2*d2[j-1+th]; \
-        } \
+      continue; \
+    onelab: \
+      for (j = th; j<nd; j+=2) \
+      { g[j] = tvh * dh[j]; \
       } \
-      g += nd; \
+      continue; \
+    alllab: \
+      for (j = th; j<nd; j+=2) \
+      { g[j] = tv0*d0[j] + tv1*d1[j] + tv2*d2[j]; \
+      } \
     } \
   } \
 } while (0)
-
-#define NET_STORE3_GRAD2_00 \
-do \
-{ int i, j; \
-  if (nd==1) \
-  { net_value d00 = d0[0]; \
-    net_value d10 = d1[0]; \
-    net_value d20 = d2[0]; \
-    i = 3; \
-    while (i<nv) \
-    { g[i-3+th] = v0[i-3+th] * d00 + v1[i-3+th] * d10 + v2[i-3+th] * d20; \
-      g[i-1+th] = v0[i-1+th] * d00 + v1[i-1+th] * d10 + v2[i-1+th] * d20; \
-      i += 4; \
-    } \
-    if (i-3+th<nv) \
-    { g[i-3+th] = v0[i-3+th] * d00 + v1[i-3+th] * d10 + v2[i-3+th] * d20; \
-    } \
-    if (i-1+th<nv) \
-    { g[i-1+th] = v0[i-1+th] * d00 + v1[i-1+th] * d10 + v2[i-1+th] * d20; \
-    } \
-  } \
-  else \
-  { net_value tv0, tv1, tv2; \
-    for (i = 0; i<nv; i++) \
-    { tv0 = v0[i]; \
-      tv1 = v1[i]; \
-      tv2 = v2[i]; \
-      if (tv0==0 && tv1==0 && tv2==0) \
-      { for (j = th; j<nd; j+=2) g[j] = 0; \
-      } \
-      else if (tv1==0 && tv2==0) \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv0 * d0[j-3+th]; \
-          g[j-1+th] = tv0 * d0[j-1+th]; \
-          j += 4; \
-        } \
-        if (j-3+th<nd) g[j-3+th] = tv0 * d0[j-3+th]; \
-        if (j-1+th<nd) g[j-1+th] = tv0 * d0[j-1+th]; \
-      } \
-      else if (tv0==0 && tv2==0) \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv1 * d1[j-3+th]; \
-          g[j-1+th] = tv1 * d1[j-1+th]; \
-          j += 4; \
-        } \
-        if (j-3+th<nd) g[j-3+th] = tv1 * d1[j-3+th]; \
-        if (j-1+th<nd) g[j-1+th] = tv1 * d1[j-1+th]; \
-      } \
-      else if (tv0==0 && tv1==0) \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv2 * d2[j-3+th]; \
-          g[j-1+th] = tv2 * d2[j-1+th]; \
-          j += 4; \
-        } \
-        if (j-3+th<nd) g[j-3+th] = tv2 * d2[j-3+th]; \
-        if (j-1+th<nd) g[j-1+th] = tv2 * d2[j-1+th]; \
-      } \
-      else \
-      { j = 3; \
-        while (j<nd) \
-        { g[j-3+th] = tv0 * d0[j-3+th] + tv1 * d1[j-3+th] + tv2 * d2[j-3+th]; \
-          g[j-1+th] = tv0 * d0[j-1+th] + tv1 * d1[j-1+th] + tv2 * d2[j-1+th]; \
-          j += 4; \
-        } \
-        if (j-3+th<nd) \
-        { g[j-3+th] = tv0*d0[j-3+th] + tv1*d1[j-3+th] + tv2*d2[j-3+th]; \
-        } \
-        if (j-1+th<nd) \
-        { g[j-1+th] = tv0*d0[j-1+th] + tv1*d1[j-1+th] + tv2*d2[j-1+th]; \
-        } \
-      } \
-      g += nd; \
-    } \
-  } \
-} while (0)
-
 
 __device__ static void net_store3_grad2
 ( int th,		  /* Which thread (0 or 1) */
@@ -2249,18 +2115,18 @@ __device__ static void net_store3_grad2
 { 
   if (omit==0)
   { if (off==0)
-    { NET_STORE3_GRAD2_00;
+    { NET_STORE3_GRAD2(0,0,all1,one1);
     }
     else
-    { NET_STORE3_GRAD2(*off++,0);
+    { NET_STORE3_GRAD2(1,0,all2,one2);
     }
   }
   else
   { if (off==0)
-    { NET_STORE3_GRAD2(0,(*omit++)&ob);
+    { NET_STORE3_GRAD2(0,1,all3,one3);
     }
     else
-    { NET_STORE3_GRAD2(*off++,(*omit++)&ob);
+    { NET_STORE3_GRAD2(1,1,all4,one4);
     }
   }
 }
@@ -2775,12 +2641,11 @@ __device__ static void net_store4_grad2
 }
 
 
-
-/* STORE GRADIENT FOR WEIGHTS FOR 4 CASES, WITH CONFIGURATION.
-   The mod 4 scheme is based on the indexes for the weights.
-   Note that the connections in quad_s_4d_4w_gpu, other_gpu, and
-   other_2_gpu come in four sections, with weight indexes mod 4 of
-   0 to 3 (for the first weight, for quad). */
+/* STORE GRADIENT FOR WEIGHTS FOR 4 CASES, WITH CONFIGURATION, USING 4 THREADS.
+   The mod 4 scheme is based on the indexes for the weights.  Note that 
+   the connections in quad_s_4d_4w_gpu, other_gpu, and other_2_gpu come in 
+   four sections, with weight indexes mod 4 of 0 to 3 (for the first weight, 
+   for quad). */
 
 __device__ static void net_store4_grad2_config
 ( int th,		  /* Which thread (0,1, 2, or 3) */

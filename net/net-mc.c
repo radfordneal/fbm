@@ -65,7 +65,7 @@
 				   (max 255 reg/thread, min 32K reg/block) */
 
 #define DEFAULT_BLKSIZE 32	/* Defaults, if not set by CUDA_SIZES env var */
-#define DEFAULT_MAXBLKS	48	/*   which has form [BLKSIZE][:MAXBLKS] */
+#define DEFAULT_MAXBLKS	500	/*   which has form [BLKSIZE][:MAXBLKS] */
 
 static int blksize = DEFAULT_BLKSIZE;	/* Number of threads per block */
 static int maxblks = DEFAULT_MAXBLKS;	/* Max number of blocks per kernel */

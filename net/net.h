@@ -310,8 +310,11 @@ int net_setup_param_group
   (net_arch *, net_flags *, int, int *, int *, int *, int*);
 
 unsigned net_setup_value_count (net_arch *);
+unsigned net_setup_value_count_aligned (net_arch *, int, int);
 void net_setup_value_pointers 
   (net_values *, net_value *, net_arch *, net_value *);
+void net_setup_value_pointers_aligned
+  (net_values *, net_value *, net_arch *, int, net_value *);
 
 void net_prior_generate (net_params *, net_sigmas *, net_arch *, net_flags *,
                          model_specification *m, net_priors *, int, 

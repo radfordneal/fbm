@@ -14,6 +14,15 @@
  */
 
 
+/* ALIGNMENT FOR VALUE STRUCTURES.  Used when allocating structures when data
+   is read. */
+
+#define NET_VALUE_ALIGN_BYTES 16   /* Alignment for value arrays, in bytes
+                                       - must be power of two, minimum of 8 */
+
+#define NET_VALUE_ALIGN_ELEMENTS (NET_VALUE_ALIGN_BYTES / 4 / (1+FP64))
+
+
 /* VARIABLES HOLDING TRAINING AND/OR TEST DATA.  When the values or targets
    aren't known, the pointers are null. */
 

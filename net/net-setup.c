@@ -51,7 +51,7 @@ unsigned net_setup_sigma_count
   model_specification *m /* Data model */
 )
 { 
-  int count;
+  unsigned count;
   int l;
 
   count = 0;
@@ -93,7 +93,7 @@ unsigned net_setup_param_count
   net_flags *flgs	/* Network flags, null if none */
 )
 {
-  int count;
+  unsigned count;
   int l;
 
   count = 0;
@@ -179,6 +179,7 @@ unsigned net_setup_param_count
     { count += a->N_outputs;
     }
   }
+
   return count;
 }
 
@@ -198,6 +199,33 @@ unsigned net_setup_value_count
 
   for (l = 0; l<a->N_layers; l++)
   { count += 2 * a->N_hidden[l];
+  }
+
+  return count;
+}
+
+
+/* RETURN NUMBER OF UNIT-RELATED VALUES IN NETWORK, WITH ALIGNMENT.  Returns
+   the number of unit-related values for a network with the given architecture,
+   including padding for alignment to 'align' boundary (elements, not bytes,
+   must be a power of two).  Includes outputs, and inputs if include_inputs
+   is non-zero. */
+
+unsigned net_setup_value_count_aligned
+( net_arch *a,		/* Network architecture */
+  int align,		/* Alignment, must be a power of 2 */
+  int include_inputs	/* Should inputs be included in the count? */
+)
+{ 
+  unsigned count = 0;
+  int m = align-1;
+  int l;
+
+  if (include_inputs) count += (a->N_inputs+m)&~m;
+  count += (a->N_outputs+m)&~m;
+
+  for (l = 0; l<a->N_layers; l++)
+  { count += 2 * ((a->N_hidden[l]+m)&~m);
   }
 
   return count;
@@ -418,9 +446,9 @@ void net_replicate_param_pointers
 
 
 /* SET UP POINTERS TO UNIT VALUES.  Sets the pointers in the net_values
-   structure to point the appropriate places in the block of net_value
+   structure to point to the appropriate places in the block of net_value
    values passed.  The size of this block must be as indicated by the
-   net_setup_value_count procedure, except that the count will exclude
+   net_setup_value_count procedure, except that the count should exclude
    inputs if a separate 'inputs' argument is passed, indicating where 
    they are. */
 
@@ -450,6 +478,43 @@ void net_setup_value_pointers
 
   v->o = b;
   // b += a->N_outputs; // not necessary
+}
+
+
+/* SET UP POINTERS TO UNIT VALUES WITH ALIGNMENT.  Like net_setup_value_pointers
+   except that values for each layer are given offsets from 'b' that are aligned
+   (by elements, not bytes) at a multiple of 'align', which must be a power of 
+   two.  The size of 'b' must be sufficient when this alignment is done (as the
+   net_setup_value_count_aligned function will do). */
+
+void net_setup_value_pointers_aligned
+( net_values *v,	/* Structure to set up pointers in */
+  net_value *b,		/* Block of 'value' values */
+  net_arch *a,		/* Network architecture */
+  int align,		/* Alignment, must be power of 2 */
+  net_value *inputs	/* Input values, 0 if part of value block */
+)
+{
+  int m = align-1;
+  int l;
+
+  if (inputs)
+  { v->i = inputs;
+  }
+  else
+  { v->i = b;
+    b += (a->N_inputs+m)&~m;
+  }
+
+  for (l = 0; l<a->N_layers; l++)
+  { v->h[l] = b;
+    b += (a->N_hidden[l]+m)&~m;
+    v->s[l] = b;
+    b += (a->N_hidden[l]+m)&~m;
+  }
+
+  v->o = b;
+  // b += (a->N_outputs+m)&~m; // not necessary
 }
 
 

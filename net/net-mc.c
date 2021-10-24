@@ -252,7 +252,7 @@ void mc_app_initialize
 )
 { 
   net_value *value_block;
-  int value_count;
+  int value_count, value_count_noin;
   int i, j, junk;
 
   if (!initialize_done)
@@ -480,9 +480,13 @@ void mc_app_initialize
   
     net_setup_param_pointers (&stepsizes, arch, flgs);
 
-    /* Find number of network values. */
+    /* Find number of network values, including alignment padding, with and
+       without inputs. */
 
-    value_count = net_setup_value_count(arch);
+    value_count = 
+      net_setup_value_count_aligned (arch, NET_VALUE_ALIGN_ELEMENTS, 1);
+    value_count_noin = 
+      net_setup_value_count_aligned (arch, NET_VALUE_ALIGN_ELEMENTS, 0);
 
     /* Set up second derivative and typical value structures. */
 
@@ -621,7 +625,6 @@ void mc_app_initialize
       net_values *tmp_values
                     = (net_values *) chk_alloc (N_train, sizeof *tmp_values);
 
-      int value_count_noin = value_count - N_inputs;
       net_value *iblk, *vblk;
 
       check_cuda_error (cudaGetLastError(), "Before copying to data to GPU");

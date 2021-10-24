@@ -329,10 +329,6 @@ void net_prior_max_second (net_params *, net_sigmas *, net_arch *, net_flags *,
 HOSTDEV void net_func (net_values *restrict, int, net_arch const*, 
                        net_flags const*, net_params const*);
 
-__device__ void net_func2 (int, net_values *restrict, net_values *restrict, 
-                           int, net_arch const*, net_flags const*, 
-                           net_params const*);
-
 HOSTDEV void net_back (net_values const*, net_values *restrict, int, 
                        net_arch const*, net_flags const*, net_params const*);
 

@@ -1622,6 +1622,7 @@ __device__ static void bias_values2
   net_param const* b		/* Biases */
 )
 { 
+  // printf("bias_values2, th %d\n",th);
   if (n==1)
   { if (th==0) v0[0] = b[0]; else v1[0] = b[0];
   }
@@ -1690,7 +1691,7 @@ do \
       if (tv0!=0 && tv1!=0)  \
       { for (j = th; j<nd; j+= 2) \
         { s0[j] += w[j] * tv0; \
-          s1[2] += w[j] * tv1; \
+          s1[j] += w[j] * tv1; \
         } \
       } \
       else if (tv0!=0) \
@@ -1709,7 +1710,7 @@ do \
 } while (0)
 
 __device__ static void add_connections2
-( int th,			/* Which thread, 0 or 1 */
+( int th,                 /* Which thread, 0 or 1 */
   net_value *restrict s0, /* Summed input for dest units to add to, case 0 */
   net_value *restrict s1, /* Summed input for dest units to add to, case 1 */
   int nd,		  /* Number of destination units */
@@ -1721,7 +1722,9 @@ __device__ static void add_connections2
   unsigned short const* omit, /* Omit flags, null if not present/relevant */
   int ob		  /* Bit to look at in omit flags */
 )
-{ if (omit==0)
+{ 
+  // printf("add_connections2, th %d\n",th);
+  if (omit==0)
   { if (off==0)
     { ADD_CONNECTIONS2(0,0);
     }
@@ -1744,7 +1747,7 @@ __device__ static void add_connections2
    Version for 2 cases, done using 2 GPU threads. */
 
 __device__ static void add_connections2_config
-( int th,			/* Which thread, 0 or 1 */
+( int th,                 /* Which thread, 0 or 1 */
   net_value *restrict s0, /* Summed input for dest units to add to, case 0 */
   net_value *restrict s1, /* Summed input for dest units to add to, case 1 */
   net_value const* v0,    /* Values for source units, case 0 */

@@ -1392,3 +1392,316 @@ HOSTDEV static void add_connections_config
     }
   }
 }
+
+
+/* -------------------------- net_func_gpu --------------------------------- */
+
+#if __CUDACC__
+
+__device__ static void bias_values_gpu (int th, net_value *restrict, int, 
+                                        net_param const*);
+
+__device__ static void bias_values_config_gpu (int, net_value *restrict, int, 
+                                        net_param const*, net_config const*);
+
+__device__ static void add_connections_gpu (int, net_value *restrict, int, 
+                      net_value const*, int, net_param const*, net_param const*,
+                      unsigned short const*, int);
+
+__device__ static void add_connections_config_gpu (int, net_value *restrict, 
+                                    net_value const*,
+                                    net_param const*, net_param const*,
+                                    net_config const*);
+
+#define NTH (NET_FUNC_GPU_THREADS)	/* Short form for use here */
+
+
+/* EVALUATE NETWORK FUNCTION FOR GIVEN INPUTS.  The inputs are taken from
+   the net_values structure passed.  When 'start' is greater than zero, the
+   correct unit values for that number of hidden layers are assumed to be
+   already present in the net_values structure. 
+
+   This version uses four GPU threads to do the computation.  It
+   is called from each of these threads, with 'th' set to 0 up to 
+   NET_FUNC_GPU_THREADS-1.
+  
+   Layers are computed in sequence, using all threads, with a
+   __syncthreads call after each layer's computations, so that all
+   threads will correctly see all values when computing the next layer.
+   Note that ALL threads must call this function so that all will
+   make the __syncthreads calls here.
+
+   Thread 'th' is used to compute the units whose index is 'th' mod
+   NET_FUNC_GPU_THREADS.  Consistent use of this scheme for the
+   various componenets avoids any need to synchronize threads within
+   computations for a single layer. */
+
+__device__ void net_func_gpu
+( int th,		/* Thread index */
+  net_values *restrict v, /* Place to get inputs and store outputs */
+  int start,		/* Number of hidden layers with known values */
+  net_arch const* a,	/* Network architecture */
+  net_flags const* flgs,/* Network flags, null if none */
+  net_params const* w	/* Network parameters */
+)
+{
+  int l, j;
+
+  /* Compute values for successive hidden layers. */
+
+  for (l = start; l<a->N_layers; l++)
+  {
+    int N_hidden = a->N_hidden[l];
+
+    net_value *sh = v->s[l];
+
+    if (a->has_bh[l])
+    { if (a->bias_config[l])
+      { bias_values_config_gpu (th, sh, N_hidden, w->bh[l], a->bias_config[l]);
+      }
+      else
+      { bias_values_gpu (th, sh, N_hidden, w->bh[l]);
+      }
+    }
+    else
+    { for (j = th; j < N_hidden; j+=NTH)
+      { sh[j] = 0;
+      }
+    }
+
+    if (a->has_ih[l])
+    { if (a->input_config[l])
+      { add_connections_config_gpu (th, sh, v->i, w->ih[l], 
+          a->has_ti ? w->ti : 0, a->input_config[l]);
+      }
+      else
+      { add_connections_gpu (th, sh, N_hidden, v->i, a->N_inputs, 
+          w->ih[l], a->has_ti ? w->ti : 0, 
+          flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1));
+      }
+    }
+
+    if (l>0 && a->has_hh[l-1])
+    { if (a->hidden_config[l])
+      { add_connections_config_gpu (th, sh, v->h[l-1], w->hh[l-1], 
+          a->has_th[l-1] ? w->th[l-1] : 0, a->hidden_config[l]);
+      }
+      else
+      { add_connections_gpu (th, sh, N_hidden, v->h[l-1], a->N_hidden[l-1],
+          w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0, (unsigned short *) 0, 0);
+      }
+    }
+
+    /* Put values through hidden unit activation function. */
+
+    net_value *vh = v->h[l];
+
+    if (flgs==0 || flgs->layer_type[l]==Tanh_type)
+    { for (j = th; j<N_hidden; j+=NTH)
+      { vh[j] = TANH (sh[j]);
+      }
+    }
+    else if (flgs->layer_type[l]==Sin_type)
+    { for (j = th; j<N_hidden; j+=NTH)
+      { vh[j] = sqrt_2 * prec_sin(sh[j]*sqrt_2);
+      }
+    }
+    else if (flgs->layer_type[l]==Softplus_type)
+    { for (j = th; j<N_hidden; j+=NTH)
+      { net_value a = sh[j];
+        net_value v = 
+          prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
+        if (a>0) v += a;
+        vh[j] = v;
+      }
+    }
+    else if (flgs->layer_type[l]==Square_type)
+    { for (j = th; j<N_hidden; j+=NTH)
+      { vh[j] = sh[j]*sh[j];
+      }
+    }
+    else if (flgs->layer_type[l]==Cube_type)
+    { for (j = th; j<N_hidden; j+=NTH)
+      { vh[j] = sh[j]*sh[j]*sh[j];
+      }
+    }
+    else /* identity */ 
+    { for (j = th; j<N_hidden; j+=NTH)
+      { vh[j] = sh[j];
+      }
+    }
+
+    __syncthreads();
+  }
+
+  /* Compute values for the outputs. */
+
+  if (a->has_bo)
+  { if (a->bias_config[a->N_layers])
+    { bias_values_config_gpu (th, v->o, a->N_outputs, w->bo, a->bias_config[l]);
+    }
+    else
+    { bias_values_gpu (th, v->o, a->N_outputs, w->bo);
+    }
+  }
+  else
+  { for (j = th; j < a->N_outputs; j+=NTH)
+    { v->o[j] = 0;
+    }
+  }
+
+  if (a->has_io)
+  { if (a->input_config[a->N_layers])
+    { add_connections_config_gpu (th, v->o, v->i, w->io,
+        a->has_ti ? w->ti : 0, a->input_config[a->N_layers]);
+    }
+    else
+    { add_connections_gpu (th, v->o, a->N_outputs, v->i, a->N_inputs,
+                    w->io, a->has_ti ? w->ti : 0, 
+                    flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1);
+    }
+  }
+
+  for (l = 0; l<a->N_layers; l++)
+  { if (a->has_ho[l])
+    { int k = 2*a->N_layers-1-l;
+      if (a->hidden_config[k])
+      { add_connections_config_gpu (th, v->o, v->h[l], w->ho[l], 
+                         a->has_th[l] ? w->th[l] : 0, a->hidden_config[k]);
+      }
+      else
+      { add_connections_gpu (th, v->o, a->N_outputs, v->h[l], a->N_hidden[l], 
+                             w->ho[l], a->has_th[l] ? w->th[l] : 0, 
+                             (unsigned short *) 0, 0);
+      }
+    }
+  }
+
+  __syncthreads();
+}
+
+
+/* SET UNIT VALUES TO BIASES. */
+
+__device__ static void bias_values_gpu
+( int th,			/* Thread index */
+  net_value *restrict v,	/* Array of unit values to set */
+  int n,			/* Number of units */
+  net_param const* b		/* Biases */
+)
+{ 
+  int j;
+  for (j = th; j<n; j+=NTH)
+  { v[j] = b[j];
+  }
+}
+
+
+/* SET UNIT VALUES TO BIASES WHEN THERE IS A CONFIGURATON. */
+
+__device__ static void bias_values_config_gpu
+( int th,			/* Thread index */
+  net_value *restrict v,	/* Array of unit values to set */
+  int n,			/* Number of units */
+  net_param const* b,		/* Biases */
+  net_config const* cf		/* Configuration for biases */
+)
+{ 
+  net_connection *cn;
+  int c, j, k;
+
+  for (j = th; j < n; j+=NTH)
+  { v[j] = 0;
+  }
+
+  /* ... not written yet ... */
+}
+
+
+/* ADD CONTRIBUTION FROM ONE GROUP OF CONNECTIONS.  Adds the weighted input
+   due to connections from one source layer to the current unit values for
+   the destination layer. */
+
+#define ADD_CONNECTIONS_GPU(offset,omit) \
+do \
+{ int i, j; \
+  net_param o; \
+  if (nd==1) \
+  { if (th==0) \
+    { net_value sv = 0; \
+      for (i = 0; i<ns; i++) \
+      { o = (offset); \
+        if (!(omit)) \
+        { sv += (v[i] + o) * *w; \
+          w += 1; \
+        } \
+      } \
+      *s += sv; \
+    } \
+  } \
+  else \
+  { for (i = 0; i<ns; i++) \
+    { o = (offset); \
+      if (omit) continue; \
+      net_value tv = v[i] + o; \
+      if (tv!=0)  \
+      { for (j = th; j<nd; j+=NTH) \
+        { s[j] += w[j] * tv; \
+        } \
+      } \
+      w += nd; \
+    } \
+  } \
+} while (0)
+
+__device__ static void add_connections_gpu
+( int th,		  /* Thread index */
+  net_value *restrict s,  /* Summed input for destination units to add to */
+  int nd,		  /* Number of destination units */
+  net_value const* v,     /* Values for source units */
+  int ns,		  /* Number of source units */
+  net_param const* w,     /* Connection weights */
+  net_param const* off,   /* Offsets to add to source unit values */
+  unsigned short const* omit, /* Omit flags, null if not present/relevant */
+  int ob		  /* Bit to look at in omit flags */
+)
+{
+  if (omit==0)
+  { if (off==0)
+    { ADD_CONNECTIONS_GPU(0,0);
+    }
+    else
+    { ADD_CONNECTIONS_GPU(*off++,0);
+    }
+  }
+  else
+  { if (off==0)
+    { ADD_CONNECTIONS_GPU(0,(*omit++)&ob);
+    }
+    else
+    { ADD_CONNECTIONS_GPU(*off++,(*omit++)&ob);
+    }
+  }
+}
+
+
+/* ADD CONTRIBUTION FROM ONE GROUP OF CONNECTIONS WITH CONFIGURATION FROM FILE.
+   Adds the weighted input due to connections from one source layer to the 
+   current unit values for the destination layer. */
+
+__device__ static void add_connections_config_gpu
+( int th,		  /* Thread index */
+  net_value *restrict s,  /* Summed input for destination units to add to */
+  net_value const* v,     /* Values for source units */
+  net_param const* w,     /* Connection weights */
+  net_param const* off,   /* Offsets to add to source unit values */
+  net_config const* cf    /* Configuration for connections and weights */
+)
+{
+  net_connection *cn;
+  int i, j, k, c;
+
+  /* ... not written yet ... */
+}
+
+#endif

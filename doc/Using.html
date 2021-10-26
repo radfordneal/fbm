@@ -110,31 +110,38 @@ Controlling programs using environment variables.
 Some aspects of program behaviour can be controlled by setting
 environment variables, as follows:
 
-    SHOW_INFO     If this is set to any value other than "false", 
-                  "FALSE", or "0", some information on the CPU
-                  and GPU configuration will be displayed by some
-                  programs (currently only net-mc).
+    INFO       If this is set to any value other than "false", 
+               "FALSE", or "0", some information on the CPU
+               and GPU configuration will be displayed by some
+               programs.
 
-    CUDA_SIZES    May be used to control how GPU tasks are split
-                  amongst blocks.  (How is currently in flux.)
+    MAXBLKS    May be used to control the maximum number of GPU
+               thread blocks in a GPU kernel launch.  Reducing
+               it from the default of 1000 may help if your GPU
+               runs out of memory (perhaps if you are running 
+               several program instances in parallel).
+
+    BLKCASES   May be used to control how many training cases
+               are handled by each GPU thread block.  Only 
+               useful if you know a lot about the implementation.
 
     CUDA_VISIBLE_DEVICES  May be set to the number of the GPU
-                          to be used (useful only if you have 
-                          more than one GPU).  Default is "0".
+                          to be used.  Useful only if you have 
+                          more than one GPU.  Default is "0".
 
 These environment variables may be set for a session with the shell
 "export" (bash) or "setenv" (csh) command, or set for just a single
 command as illustrated below:
 
-    SHOW_INFO=1 net-mc log 100
+    INFO=1 net-mc log 100
 
 or
 
-    SHOW_INFO=1 using dbl-gpu net-mc log 100
+    INFO=1 using dbl-gpu net-mc log 100
 
 or
 
-    SHOW_INFO=1 using flt my-shell-script
+    INFO=1 using flt my-shell-script
 
 where my-shell-script contains various commands.
 </pre>

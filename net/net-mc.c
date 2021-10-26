@@ -60,21 +60,19 @@
 #define GROUP_SIZE (1<<GROUP_SHIFT)  /* Number of threads in a group */
 #define GROUP_MASK (GROUP_SIZE-1)
 
-#define MAX_BLKSIZE 128		/* Limit on # of threads in a block, to avoid
+#define MAX_THREADS 128		/* Limit on # of threads in a block, to avoid
 				   exceeding the per-block register use limit
 				   (max 255 reg/thread, min 32K reg/block) */
 
-#define DEFAULT_BLKSIZE 32	/* Defaults, if not set by CUDA_SIZES env var */
-#define DEFAULT_MAXBLKS	500	/*   which has form [BLKSIZE][:MAXBLKS] */
+#define DEFAULT_BLKCASES 32	/* Default, if not set by BLKCASES env var */
+#define DEFAULT_MAXBLKS	500	/* Default, if not set by MAXBLKS env var */
 
-static int blksize = DEFAULT_BLKSIZE;	/* Number of threads per block */
+static int blkcases = DEFAULT_BLKCASES;	/* Number of cases handled per block */
 static int maxblks = DEFAULT_MAXBLKS;	/* Max number of blocks per kernel */
 
 static int n_launches;			/* Number of launches needed to 
                                            handle all training cases */
 static int max_blocks_per_launch;	/* Largest number of blocks for one
-                                           CUDA kernel launch */
-static int max_threads_per_launch;	/* Largest number of threads for one
                                            CUDA kernel launch */
 static int max_cases_per_launch;        /* Largest number of cases handled by
 					   one CUDA kernel launch */
@@ -171,7 +169,7 @@ __constant__ int const_N_train;    /* Copy of N_train in constant memory */
 __constant__ int const_N_inputs;   /* Copy of N_inputs in constant memory */
 __constant__ int const_N_targets;  /* Copy of N_targets in constant memory */
 
-__constant__ int const_blksize;    /* Copy of blksize in constant memory */
+__constant__ int const_blkcases;   /* Copy of blkcases in constant memory */
 
 __constant__ net_arch const_arch;  /* Copy of dev_arch in constant memory */
 __constant__ net_flags const_flgs; /* Copy of flgs in constant memory */
@@ -276,7 +274,7 @@ void mc_app_initialize
       exit(1);
     }
 
-    char *e =  getenv("SHOW_INFO");
+    char *e =  getenv("INFO");
     int show_info = e!=0 && strcmp(e,"false")!=0
                          && strcmp(e,"FALSE")!=0
                          && strcmp(e,"0")!=0;
@@ -315,46 +313,37 @@ void mc_app_initialize
           cuda_prop.ECCEnabled ? " ECC" : "");
       }
 
-      char *cuda_sizes = getenv("CUDA_SIZES");
-      if (cuda_sizes && *cuda_sizes)
-      { int bs = DEFAULT_BLKSIZE;
-        int mb = DEFAULT_MAXBLKS;
-        int tmp1, tmp2;
-        char junk;
-        if (sscanf(cuda_sizes,"%d%c",&tmp1,&junk)==1)
-        { bs = tmp1;
-        }
-        else if (sscanf(cuda_sizes,":%d%c",&tmp2,&junk)==1)
-        { mb = tmp2;
-        }
-        else if (sscanf(cuda_sizes,"%d:%d%c",&tmp1,&tmp2,&junk)==2)
-        { bs = tmp1;
-          mb = tmp2;
-        }
-        else 
-        { fprintf(stderr,
-           "Bad format for CUDA_SIZES: should be [blksize][:maxblks]\n");
+      char junk;
+      char *e_blkcases = getenv("BLKCASES");
+      if (e_blkcases)
+      { if (sscanf(e_blkcases,"%d%c",&blkcases,&junk)!=1)
+        { fprintf(stderr,"Bad format for BLKCASES\n");
           exit(1);
         }
-        if (bs<1)
-        { fprintf(stderr,"CUDA_SIZES blksize must be at least 1\n");
+        if (blkcases<1)
+        { fprintf(stderr,"BLKCASES must be at least 1\n");
           exit(1);
         }
-        if (bs>MAX_BLKSIZE)
-        { fprintf(stderr,"CUDA_SIZES blksize must not exceed %d\n",MAX_BLKSIZE);
+      }
+      if (blkcases*NET_FUNC_GPU_THREADS > MAX_THREADS)
+      { blkcases = MAX_THREADS / NET_FUNC_GPU_THREADS;
+        fprintf(stderr,"BLKCASES too large, reduced to %d\n",blkcases);
+      }
+      char *e_maxblks = getenv("MAXBLKS");
+      if (e_maxblks)
+      { if (sscanf(e_maxblks,"%d%c",&maxblks,&junk)!=1)
+        { fprintf(stderr,"Bad format for MAXBLKS\n");
           exit(1);
         }
-        if (mb<1)
-        { fprintf(stderr,"CUDA_SIZES maxblks must be at least 1\n");
+        if (maxblks<1)
+        { fprintf(stderr,"MAXBLKS must be at least 1\n");
           exit(1);
         }
-        blksize = bs;
-        maxblks = mb;
       }
 
       if (show_info)
-      { printf ("Specified %d threads per block, max %d blocks per launch\n",
-                 blksize, maxblks);
+      { printf ("Specified %d cases per block, max %d blocks per launch\n",
+                 blkcases, maxblks);
       }
     }
 #   endif
@@ -704,9 +693,9 @@ void mc_app_initialize
       cudaMemcpyToSymbol (const_N_targets, &N_targets, sizeof N_targets);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_N_targets");
-      cudaMemcpyToSymbol (const_blksize, &blksize, sizeof blksize);
+      cudaMemcpyToSymbol (const_blkcases, &blkcases, sizeof blkcases);
       check_cuda_error (cudaGetLastError(), 
-                        "After copying to const_blksize");
+                        "After copying to const_blkcases");
       cudaMemcpyToSymbol (const_arch, &dev_arch, sizeof dev_arch);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_arch");
@@ -752,11 +741,10 @@ void mc_app_initialize
 #   if __CUDACC__
     { 
       if (N_train>0)
-      { n_launches = (N_train + blksize*maxblks - 1) / (blksize*maxblks);
+      { n_launches = (N_train + blkcases*maxblks-1) / (blkcases*maxblks);
         max_cases_per_launch = (N_train + n_launches - 1) / n_launches;
-        max_blocks_per_launch = (max_cases_per_launch + blksize - 1) / blksize;
-        max_threads_per_launch = max_blocks_per_launch * blksize;
-        max_cases_per_launch = max_threads_per_launch;
+        max_blocks_per_launch = (max_cases_per_launch + blkcases-1) / blkcases;
+        max_cases_per_launch = max_blocks_per_launch * blkcases;
         if (show_info)
         { printf ("With %d cases, need %d launches, max %d blocks/launch\n",
                   N_train, n_launches, max_blocks_per_launch);
@@ -1941,7 +1929,7 @@ void cuda_setup
   mc_value *gr		/* Place to store gradient, null if not required */
 )
 {
-  n_thread_accum = ((blksize+GROUP_MASK)>>GROUP_SHIFT) * max_blocks_per_launch;
+  n_thread_accum = ((blkcases+GROUP_MASK)>>GROUP_SHIFT) * max_blocks_per_launch;
 
   if (energy && thread_energy==0)
   { 
@@ -2118,7 +2106,7 @@ __global__ void energy_grad_kernel
   int th = threadIdx.x & GROUP_MASK;
   int i = blockIdx.x * blockDim.x + threadIdx.x;
   int h = start + i;
-  int o = blockIdx.x*((const_blksize+GROUP_MASK)>>GROUP_SHIFT) 
+  int o = blockIdx.x*((const_blkcases+GROUP_MASK)>>GROUP_SHIFT) 
            + (threadIdx.x>>GROUP_SHIFT);
 
   // printf("blk %d, thrd %d, th %d, i %d, h %d, o %d, start %d, end %d\n",
@@ -2255,7 +2243,7 @@ __global__ void energy_grad_kernel
   int base_worker;	/* Lowest of the worker threads */
   int this_worker;	/* Position of this thread in its worker group */
 
-  n_blk_res = (const_blksize + GROUP_MASK) >> GROUP_SHIFT;
+  n_blk_res = (const_blkcases + GROUP_MASK) >> GROUP_SHIFT;
   n_results = (end - start - blockIdx.x*blockDim.x + GROUP_MASK) >> GROUP_SHIFT;
   if (n_results > n_blk_res)
   { n_results = n_blk_res;
@@ -2339,22 +2327,21 @@ static void net_training_cases_gpu
 
   while (n > 0 || prev_blks > 0)
   { 
-    int cases, thrds, blks;
+    int cases, blks;
 
     /* Launch kernel to do computations for next batch of cases. */
 
     if (n > 0)
     {
       cases = n < max_cases_per_launch ? n : max_cases_per_launch;
-      thrds = cases;
-      blks = (thrds + blksize - 1) / blksize;
+      blks = (cases + blkcases-1) / blkcases;
 
       check_cuda_error (cudaGetLastError(), 
                         "Before launching many_cases");
 
-      compute_func_kernel <<<blks, blksize*NET_FUNC_GPU_THREADS>>> (i, i+n);
+      compute_func_kernel <<<blks, blkcases*NET_FUNC_GPU_THREADS>>> (i, i+n);
 
-      energy_grad_kernel <<<blks, blksize>>> 
+      energy_grad_kernel <<<blks, blkcases>>> 
         (energy ? thread_energy : 0, gr ? thread_grad : 0, 
          i, i+n, en_weight, gr_weight);
     }

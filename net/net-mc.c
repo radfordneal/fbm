@@ -81,11 +81,17 @@ static int max_cases_per_launch;        /* Largest number of cases handled by
 #endif
 
 
-/* FORWARD DECLARATION OF CUDA KERNEL. */
+/* FORWARD DECLARATIONS OF CUDA KERNELS. */
 
 #if __CUDACC__
 
-__global__ void many_cases 
+__global__ void compute_func_kernel
+(
+  int start,		/* Start of cases to look at */
+  int end 		/* End of cases to look at (index after last case) */
+);
+
+__global__ void energy_grad_kernel
 (
   double *thread_energy,   /* Places to store energy, null if not required */
   net_params *thread_grad, /* Places to store gradient, null if not required */
@@ -759,11 +765,14 @@ void mc_app_initialize
     }
 
     /* Set GPU to use memory for L1 cache rather than for shared memory when
-       executing the many_cases kernel (which doesn't use shared memory). */
+       executing the kernels (which don't use shared memory). */
 
     check_cuda_error (
-      cudaFuncSetCacheConfig (many_cases, cudaFuncCachePreferL1),
-      "Set cache config");
+      cudaFuncSetCacheConfig (compute_func_kernel, cudaFuncCachePreferL1),
+      "Set cache config for compute_func");
+    check_cuda_error (
+      cudaFuncSetCacheConfig (energy_grad_kernel, cudaFuncCachePreferL1),
+      "Set cache config for energy_grad");
 
 #   endif
 
@@ -2061,13 +2070,38 @@ void cuda_setup
 #endif
 
 
-/* GPU PROCEDURE TO EVALUATE POTENTIAL ENERGY AND IT GRADIENT ON MANY CASES.
+#if __CUDACC__
+
+/* GPU PROCEDURE TO EVALUATE NETWORK OUTPUTS FOR A SET OF CASES.
    References the const_... variables in GPU constant memory with things  
    such as the network architecture. */
 
-#if __CUDACC__
+__global__ void compute_func_kernel
+(
+  int start,		/* Start of cases to look at */
+  int end 		/* End of cases to look at (index after last case) */
+)
+{ 
+  // printf("Start compute_func: block %d, thread %d\n",blockIdx.x,threadIdx.x);
 
-__global__ void many_cases 
+  net_flags *flgs = const_has_flgs ? &const_flgs : 0;
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int i = x / NET_FUNC_GPU_THREADS;
+  int th = x - NET_FUNC_GPU_THREADS*i;
+  int h = start + i;
+
+  if (h < end)
+  { net_values *train_vals_h = const_train_values+h;
+    net_func_gpu (th, train_vals_h, 0, &const_arch, flgs, &const_params);
+  }
+}
+
+
+/* GPU PROCEDURE TO EVALUATE POTENTIAL ENERGY AND IT GRADIENT ON SET OF CASES.
+   References the const_... variables in GPU constant memory with things  
+   such as the network architecture. */
+
+__global__ void energy_grad_kernel
 (
   double *thread_energy,   /* Places to store energy, null if not required */
   net_params *thread_grad, /* Places to store gradient, null if not required */
@@ -2077,7 +2111,7 @@ __global__ void many_cases
   double gr_weight	/* Weight for these cases for gradient */
 )
 { 
-  // printf("Start many_cases: block %d, thread %d\n",blockIdx.x,threadIdx.x);
+  // printf("Start energy_grad: block %d, thread %d\n",blockIdx.x,threadIdx.x);
 
   net_flags *flgs = const_has_flgs ? &const_flgs : 0;
   unsigned total_params = const_params.total_params;
@@ -2107,8 +2141,6 @@ __global__ void many_cases
 
     train_vals_h = const_train_values+h;
     deriv_h = thrgi ? const_deriv+h : 0;
-
-    net_func (train_vals_h, 0, &const_arch, flgs, &const_params);
 
     double log_prob;
     net_model_prob (train_vals_h, const_train_targets+const_N_targets*h, 
@@ -2267,7 +2299,7 @@ __global__ void many_cases
     }
   }
 
-  // printf("Done many_case: block %d, thread %d\n",blockIdx.x,threadIdx.x);
+  // printf("Done energy_grad: block %d, thread %d\n",blockIdx.x,threadIdx.x);
 }
 
 #endif
@@ -2317,18 +2349,12 @@ static void net_training_cases_gpu
       thrds = cases;
       blks = (thrds + blksize - 1) / blksize;
 
-      if (0)
-      { static int first = 1;
-        if (first)
-        { printf("Launching with <<<%d,%d>>>, group size %d\n",
-                  blks, blksize, GROUP_SIZE);
-          first = 0;
-        }
-      }
-
       check_cuda_error (cudaGetLastError(), 
                         "Before launching many_cases");
-      many_cases <<<blks, blksize>>> 
+
+      compute_func_kernel <<<blks, blksize*NET_FUNC_GPU_THREADS>>> (i, i+n);
+
+      energy_grad_kernel <<<blks, blksize>>> 
         (energy ? thread_energy : 0, gr ? thread_grad : 0, 
          i, i+n, en_weight, gr_weight);
     }
@@ -2489,12 +2515,12 @@ static void net_training_cases_gpu
 
     if (n > 0)
     {
-#     if MANAGED_MEMORY_USED || 1
+#     if MANAGED_MEMORY_USED
       { 
         check_cuda_error (cudaDeviceSynchronize(), 
-                          "Synchronizing after launching many_cases");
+                          "Synchronizing after launching kernels");
         check_cuda_error (cudaGetLastError(), 
-                          "After synchronizing with many_cases");
+                          "After synchronizing with kernels");
       }
 #     endif
 

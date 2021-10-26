@@ -47,7 +47,11 @@
    group of connections with a cfg-b, cfg-i, or cfg-h flag.  Note that
    the stored indexes start at zero, though they are 1-based in the file. 
 
-   There are also derived arrays of connections for faster computation. */
+   There are also derived arrays of connections for faster computation. 
+
+   Note that net_config_to_gpu may need to be updated when net_config 
+   changes.
+ */
 
 #define Max_conn 1000000	/* Maximum number of connections in a group */
 
@@ -88,13 +92,19 @@ typedef struct
   net_connection *all;		/* Pointer to block with items above */
   int all_length;		/* Length of 'all' block in use */
 
-  net_connection *quad_s_4d_4w_gpu;  /* GPU version, with four -1 terminators */
-  net_connection *quad_s_4d_4w_2_gpu;/* GPU version, with four -1 terminators */
-  net_connection *other_gpu;	/* Other connections, has 4 -1s */
-  int start_in_other[4];	/* Start indexes for sections in other_gpu */
-  net_connection *other_2_gpu;	/* Pairs of other connections, same w for pair,
+  net_connection *quad_s_4d_4w_wgpu;  /* GPU grad version, four -1 terminators*/
+  net_connection *quad_s_4d_4w_2_wgpu;/* GPU grad version, four -1 terminators*/
+  net_connection *other_wgpu;	/* Other connections for grad, has 4 -1s */
+  int start_other_wgpu[4];	/* Start indexes for sections in other_wgpu */
+  net_connection *other_2_wgpu;	/* Pairs of other connections, same w for pair,
                                    has 4 -1s for sections differing in w mod 4*/
-  int start_in_other_2[4];	/* Start indexes for sections in other_2_gpu */
+  int start_other_2_wgpu[4];	/* Start indexes for sections in other_2_wgpu */
+
+  net_connection *quad_s_4d_4w_dgpu;  /* Four connections, same s, sequential
+                                         d & w, sorted by d, grouped d mod 4 */
+  net_connection *other_dgpu;	/* Other connections for dest, has 4 -1s */
+  int start_other_dgpu[4];	/* Start indexes for sections in other_dgpu */
+
   net_connection *all_gpu;	/* Pointer to block with items above */
   int all_gpu_length;		/* Length of 'all_gpu' block in use */
 

@@ -415,6 +415,19 @@ static int cmp_wmod4_w_d_s (const void *a0, const void *b0)
   return r;
 }
 
+static int cmp_dmod4_d_w_s (const void *a0, const void *b0)
+{ net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
+  int r;
+  r = (int)(a->d&3) - (int)(b->d&3);
+  if (r!=0) return r;
+  r = (int)a->d - (int)b->d;
+  if (r!=0) return r;
+  r = (int)a->w - (int)b->w;
+  if (r!=0) return r;
+  r = (int)a->s - (int)b->s;
+  return r;
+}
+
 static int cmp_s_wmd_d (const void *a0, const void *b0)
 { net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
   int r;
@@ -428,7 +441,7 @@ static int cmp_s_wmd_d (const void *a0, const void *b0)
 
 /* Copy connections already sorted by w mod 4 (terminated by w of -1), 
    inserting  w of -1 after the end of each section.  Returns the number 
-   of connections, including the four with -1s.  Stores staring indexes
+   of connections, including the four with -1s.  Stores starting indexes
    for section for each mod value in start, if it is not null. */
 
 static int copy_wmod4 (net_connection *dst, net_connection *src, int *start)
@@ -443,6 +456,40 @@ static int copy_wmod4 (net_connection *dst, net_connection *src, int *start)
 
   while ((w = src[i].w) >= 0)
   { while (m != (w & 3)) 
+    { dst[j++].w = -1;
+      m += 1;
+      if (start && m<4) start[m] = j;
+    }
+    dst[j++] = src[i++];
+  }
+
+  while (m < 4)
+  { dst[j++].w = -1;
+    m += 1;
+    if (start && m<4) start[m] = j;
+  }
+
+  return j;
+}
+
+/* Copy connections already sorted by d mod 4 (terminated by w of -1), 
+   inserting  w of -1 after the end of each section.  Returns the number 
+   of connections, including the four with -1s.  Stores starting indexes
+   for section for each mod value in start, if it is not null. */
+
+static int copy_dmod4 (net_connection *dst, net_connection *src, int *start)
+{
+  int i, j, d, m;
+
+  if (start) start[0] = 0;
+
+  i = 0;
+  j = 0;
+  m = 0;
+
+  while (src[i].w >= 0)
+  { d = src[i].d;
+    while (m != (d & 3)) 
     { dst[j++].w = -1;
       m += 1;
       if (start && m<4) start[m] = j;
@@ -512,14 +559,18 @@ static void net_config_sort (net_config *cf, int biases)
               /* Allow up to twenty -1's, then +3 to ensure AVX loads are OK */
   int a = 0;
 
-  /* For use in gpu gradient computations, we set up somewhat different 
-     sets of connections. */
+  /* For use in gpu computations, we set up somewhat different sets of
+     connections.  There are actually two sets, sorted by weight and by 
+     destination, used for gradient and function computations, respectively. */
 
-  net_connection *all_gpu = (net_connection *) chk_alloc(n+20, sizeof *all_gpu);
+  net_connection *all_gpu = (net_connection *) 
+                               chk_alloc(2*(n+20), sizeof *all_gpu);
   int a_gpu = 0;
 
   /* Temporary storage. */
 
+  net_connection *quad = 
+    (net_connection *) chk_alloc (n+1, sizeof *quad); /* one -1 at end */
   net_connection *tmp = 
     (net_connection *) chk_alloc (n+1, sizeof *tmp);  /* one -1 at end */
   net_connection *tmp2 = 
@@ -529,6 +580,8 @@ static void net_config_sort (net_config *cf, int biases)
 
   /* Find groups of four connections with same value for s, and sequential
      values for d and w.  Condense these to single entries. */
+
+  int j;  /* number of items in quad, not including -1 at end */
 
   if (!CONFIG_QUAD_S_4D_4W)
   { cf->quad_s_4d_4w = all+a;
@@ -540,7 +593,7 @@ static void net_config_sort (net_config *cf, int biases)
   {
     qsort (rem, r, sizeof *rem, cmp_s_wmd_d);
 
-    int i, j, k;
+    int i, k;
     i = j = k = 0;
     while (i < r)
     { int s = rem[i].s;
@@ -548,7 +601,7 @@ static void net_config_sort (net_config *cf, int biases)
       if (r-i >= 4 && rem[i+1].s==s  && rem[i+2].s==s && rem[i+3].s==s
            && rem[i+1].w-rem[i+1].d==wmd  && rem[i+2].w-rem[i+2].d==wmd 
            && rem[i+3].w-rem[i+3].d==wmd)
-      { tmp[j] = rem[i];
+      { quad[j] = rem[i];
         j += 1;
         i += 4;
       }
@@ -559,13 +612,16 @@ static void net_config_sort (net_config *cf, int biases)
       }
     }
 
-    qsort (tmp, j, sizeof *tmp, cmp_wmod4_w_d_s);
+    qsort (quad, j, sizeof *tmp, cmp_wmod4_w_d_s);
+    quad[j].w = -1;
 
-    tmp[j].w = -1;
+    memcpy (tmp, quad, (j+1) * sizeof *tmp);
     non_adjacency (tmp, "quads4d4w");  /* only useful for info, if enabled */
 
     r = k;
     rem[k].w = -1;
+
+    int jj = j;
 
     if (!MAKE_QUAD_PAIRS)
     { cf->quad_s_4d_4w_2 = all+a;
@@ -573,58 +629,81 @@ static void net_config_sort (net_config *cf, int biases)
     }
     else
     { int n;
-      copy_pairs (tmp, all+a, &j, &n);
+      copy_pairs (tmp, all+a, &jj, &n);
       cf->quad_s_4d_4w_2 = all+a;
       a += n+1;
     }
 
     cf->quad_s_4d_4w = all+a;
-    memcpy (all+a, tmp, j * sizeof *all);
-    all[a+j].w = -1;
-    a += j+1;
+    memcpy (all+a, tmp, jj * sizeof *all);
+    all[a+jj].w = -1;
+    a += jj+1;
   }
 
   /* The quad_s_4d_4w connections are also used for gpu gradient computations,
      but with extra -1 indicators for when the first weight mod 4 changes. */
 
   if (!CONFIG_QUAD_S_4D_4W)
-  { cf->quad_s_4d_4w_gpu = all_gpu+a_gpu;
+  { cf->quad_s_4d_4w_wgpu = all_gpu+a_gpu;
     all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
     all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
-    cf->quad_s_4d_4w_2_gpu = all_gpu+a_gpu;
+    cf->quad_s_4d_4w_2_wgpu = all_gpu+a_gpu;
     all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
     all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
   }
   else
-  { cf->quad_s_4d_4w_gpu = all_gpu+a_gpu;
-    a_gpu += copy_wmod4 (cf->quad_s_4d_4w_gpu, cf->quad_s_4d_4w, 0);
-    cf->quad_s_4d_4w_2_gpu = all_gpu+a_gpu;
-    a_gpu += copy_wmod4 (cf->quad_s_4d_4w_2_gpu, cf->quad_s_4d_4w_2, 0);
+  { cf->quad_s_4d_4w_wgpu = all_gpu+a_gpu;
+    a_gpu += copy_wmod4 (cf->quad_s_4d_4w_wgpu, cf->quad_s_4d_4w, 0);
+    cf->quad_s_4d_4w_2_wgpu = all_gpu+a_gpu;
+    a_gpu += copy_wmod4 (cf->quad_s_4d_4w_2_wgpu, cf->quad_s_4d_4w_2, 0);
   }
 
-  /* Set up other connections (not in quad_s_4d_4w_gpu) for use in gpu
-     gradient computations. */
+  /* Set up other connections (not in quad_s_4d_4w_wgpu) for use in gpu
+     gradient computations. */ 
 
   memcpy (tmp, rem, r * sizeof *tmp);  
   qsort (tmp, r, sizeof *tmp, cmp_wmod4_w_d_s);
   tmp[r].w = -1;
 
   if (!MAKE_OTHER_PAIRS)
-  { cf->other_2_gpu = all_gpu+a_gpu;
+  { cf->other_2_wgpu = all_gpu+a_gpu;
     all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
     all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
   }
   else
   { copy_pairs (tmp, tmp2, 0, 0);
-    cf->other_2_gpu = all_gpu+a_gpu;
-    a_gpu += copy_wmod4 (cf->other_2_gpu, tmp2, cf->start_in_other_2);
+    cf->other_2_wgpu = all_gpu+a_gpu;
+    a_gpu += copy_wmod4 (cf->other_2_wgpu, tmp2, cf->start_other_2_wgpu);
   }
 
-  cf->other_gpu = all_gpu+a_gpu;
-  a_gpu += copy_wmod4 (cf->other_gpu, tmp, cf->start_in_other);
+  cf->other_wgpu = all_gpu+a_gpu;
+  a_gpu += copy_wmod4 (cf->other_wgpu, tmp, cf->start_other_wgpu);
+
+  /* Similarly, the quad_s_4d_4w connections are used for gpu function
+     computations, sorted by d, but a paired version is not set up. */
+
+  if (!CONFIG_QUAD_S_4D_4W)
+  { cf->quad_s_4d_4w_dgpu = all_gpu+a_gpu;
+    all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
+    all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
+  }
+  else
+  { qsort (quad, j, sizeof *tmp, cmp_dmod4_d_w_s);
+    cf->quad_s_4d_4w_dgpu = all_gpu+a_gpu;
+    a_gpu += copy_dmod4 (cf->quad_s_4d_4w_dgpu, quad, 0);
+  }
+
+  /* Set up other connections (not in quad_s_4d_4w_dgpu) for use in gpu
+     function computations. */
+
+  memcpy (tmp, rem, r * sizeof *tmp);  
+  qsort (tmp, r, sizeof *tmp, cmp_dmod4_d_w_s);
+  tmp[r].w = -1;
+  cf->other_dgpu = all_gpu+a_gpu;
+  a_gpu += copy_dmod4 (cf->other_dgpu, tmp, cf->start_other_dgpu);
 
   /* Find groups of four single connections with the same value for d, if
-     this is enabled.  Not done for biases. */
+     this is enabled, for use in CPU computations.  Not done for biases. */
 
   if (!CONFIG_SINGLE4 || biases)
   { cf->single4_d = all+a;
@@ -666,7 +745,7 @@ static void net_config_sort (net_config *cf, int biases)
   }
 
   /* Find groups of four single connections with the same value for s, if
-     this is enabled.  Not done for biases. */
+     this is enabled, for use in CPU computations.  Not done for biases. */
 
   if (!CONFIG_SINGLE4 || biases)
   { cf->single4_s = all+a;
@@ -776,10 +855,15 @@ net_config *net_config_to_gpu (net_config *cf)
                                 cudaMemcpyHostToDevice),
                     "copy to dev config all_gpu");
 
-  dcf.quad_s_4d_4w_gpu = dcf.all_gpu + (cf->quad_s_4d_4w_gpu - cf->all_gpu);
-  dcf.quad_s_4d_4w_2_gpu = dcf.all_gpu + (cf->quad_s_4d_4w_2_gpu - cf->all_gpu);
-  dcf.other_gpu = dcf.all_gpu + (cf->other_gpu - cf->all_gpu);
-  dcf.other_2_gpu = dcf.all_gpu + (cf->other_2_gpu - cf->all_gpu);
+  dcf.quad_s_4d_4w_wgpu = dcf.all_gpu + (cf->quad_s_4d_4w_wgpu - cf->all_gpu);
+  dcf.quad_s_4d_4w_2_wgpu = dcf.all_gpu 
+                             + (cf->quad_s_4d_4w_2_wgpu - cf->all_gpu);
+  dcf.other_wgpu = dcf.all_gpu + (cf->other_wgpu - cf->all_gpu);
+  dcf.other_2_wgpu = dcf.all_gpu + (cf->other_2_wgpu - cf->all_gpu);
+
+  dcf.quad_s_4d_4w_dgpu = dcf.all_gpu + (cf->quad_s_4d_4w_dgpu - cf->all_gpu);
+  dcf.other_dgpu = dcf.all_gpu + (cf->other_dgpu - cf->all_gpu);
+  
 
   net_config *dev_dcf;
   check_cuda_error (cudaMalloc (&dev_dcf, sizeof *dev_dcf),

@@ -1481,7 +1481,7 @@ __device__ static void net_store2_grad1
 
 /* STORE GRADIENT FOR BIASES FOR 2 CASES, WITH CONFIGURATION.
    The even/odd scheme is based on indexes for the biases.  Note that the
-   connections in quad_s_4d_4w_gpu, other_gpu, and other_2_gpu come in
+   connections in quad_s_4d_4w_wgpu, other_wgpu, and other_2_wgpu come in
    four sections, with bias indexes mod 4 of 0 to 3 (for the first
    bias, for quad). */
 
@@ -1500,7 +1500,7 @@ __device__ static void net_store2_grad1_config
   }
 
   if (CONFIG_QUAD_S_4D_4W)
-  { cn = cf->quad_s_4d_4w_gpu;
+  { cn = cf->quad_s_4d_4w_wgpu;
     c = 0;
     for (m = 0; m<4; m++)
     { ix = (th+4-m)&1;
@@ -1511,7 +1511,7 @@ __device__ static void net_store2_grad1_config
         g[k+ix+2] += d0[j+ix+2] + d1[j+ix+2];
       }
     }
-    cn = cf->quad_s_4d_4w_2_gpu;
+    cn = cf->quad_s_4d_4w_2_wgpu;
     c = 0;
     for (m = 0; m<4; m++)
     { ix = (th+4-m)&1;
@@ -1525,18 +1525,18 @@ __device__ static void net_store2_grad1_config
     }
   }
 
-  cn = cf->other_gpu;
+  cn = cf->other_wgpu;
   for (m = 0; m<4; m+=2)
-  { c = cf->start_in_other[th+m];
+  { c = cf->start_other_wgpu[th+m];
     for (;;)
     { j = cn[c].d; k = cn[c].w; c += 1;
       if (k<0) break;
       g[k] += d0[j] + d1[j];
     }
   }
-  cn = cf->other_2_gpu;
+  cn = cf->other_2_wgpu;
   for (m = 0; m<4; m+=2)
-  { c = cf->start_in_other_2[th+m];
+  { c = cf->start_other_2_wgpu[th+m];
     for (;;)
     { j = cn[c].d; k = cn[c].w; c += 1;
       if (k<0) break;
@@ -1655,8 +1655,8 @@ __device__ static void net_store2_grad2
 
 /* STORE GRADIENT FOR WEIGHTS FOR 2 CASES, WITH CONFIGURATION. 
    The even/odd scheme is based on the indexes for the weights.  
-   Note that the connections in quad_s_4d_4w_gpu, other_gpu, and
-   other_2_gpu come in four sections, with weight indexes mod 4 of 
+   Note that the connections in quad_s_4d_4w_wgpu, other_wgpu, and
+   other_2_wgpu come in four sections, with weight indexes mod 4 of 
    0 to 3 (for the first weight, for quad). */
 
 __device__ static void net_store2_grad2_config
@@ -1678,7 +1678,7 @@ __device__ static void net_store2_grad2_config
   }
 
   if (CONFIG_QUAD_S_4D_4W)
-  { cn = cf->quad_s_4d_4w_gpu;
+  { cn = cf->quad_s_4d_4w_wgpu;
     if (off)
     { c = 0;
       for (m = 0; m<4; m++)
@@ -1706,7 +1706,7 @@ __device__ static void net_store2_grad2_config
         }
       }
     }
-    cn = cf->quad_s_4d_4w_2_gpu;
+    cn = cf->quad_s_4d_4w_2_wgpu;
     if (off)
     { c = 0;
       for (m = 0; m<4; m++)
@@ -1745,9 +1745,9 @@ __device__ static void net_store2_grad2_config
     }
   }
 
-  cn = cf->other_gpu;
+  cn = cf->other_wgpu;
   for (m = 0; m<4; m+=2)
-  { c = cf->start_in_other[th+m];
+  { c = cf->start_other_wgpu[th+m];
     if (off)
     { for (;;)
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
@@ -1764,9 +1764,9 @@ __device__ static void net_store2_grad2_config
       }
     }
   }
-  cn = cf->other_2_gpu;
+  cn = cf->other_2_wgpu;
   for (m = 0; m<4; m+=2)
-  { c = cf->start_in_other_2[th+m];
+  { c = cf->start_other_2_wgpu[th+m];
     if (off)
     { for (;;)
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
@@ -1948,7 +1948,7 @@ __device__ static void net_store3_grad1
 
 /* STORE GRADIENT FOR BIASES FOR 3 CASES, WITH CONFIGURATION.
    The even/odd scheme is based on indexes for the biases.  Note that the
-   connections in quad_s_4d_4w_gpu, other_gpu, and other_2_gpu come in
+   connections in quad_s_4d_4w_wgpu, other_wgpu, and other_2_wgpu come in
    four sections, with bias indexes mod 4 of 0 to 3 (for the first
    bias, for quad). */
 
@@ -1968,7 +1968,7 @@ __device__ static void net_store3_grad1_config
   }
 
   if (CONFIG_QUAD_S_4D_4W)
-  { cn = cf->quad_s_4d_4w_gpu;
+  { cn = cf->quad_s_4d_4w_wgpu;
     c = 0;
     for (m = 0; m<4; m++)
     { ix = (th+4-m)&1;
@@ -1979,7 +1979,7 @@ __device__ static void net_store3_grad1_config
         g[k+ix+2] += d0[j+ix+2] + d1[j+ix+2] + d2[j+ix+2];
       }
     }
-    cn = cf->quad_s_4d_4w_2_gpu;
+    cn = cf->quad_s_4d_4w_2_wgpu;
     c = 0;
     for (m = 0; m<4; m++)
     { ix = (th+4-m)&1;
@@ -1995,18 +1995,18 @@ __device__ static void net_store3_grad1_config
     }
   }
 
-  cn = cf->other_gpu;
+  cn = cf->other_wgpu;
   for (m = 0; m<4; m+=2)
-  { c = cf->start_in_other[th+m];
+  { c = cf->start_other_wgpu[th+m];
     for (;;)
     { j = cn[c].d; k = cn[c].w; c += 1;
       if (k<0) break;
       g[k] += d0[j] + d1[j] + d2[j];
     }
   }
-  cn = cf->other_2_gpu;
+  cn = cf->other_2_wgpu;
   for (m = 0; m<4; m+=2)
-  { c = cf->start_in_other_2[th+m];
+  { c = cf->start_other_2_wgpu[th+m];
     for (;;)
     { j = cn[c].d; k = cn[c].w; c += 1;
       if (k<0) break;
@@ -2134,8 +2134,8 @@ __device__ static void net_store3_grad2
 
 /* STORE GRADIENT FOR WEIGHTS FOR 2 CASES, WITH CONFIGURATION.
    The even/odd scheme is based on the indexes for the weights.
-   Note that the connections in quad_s_4d_4w_gpu, other_gpu, and
-   other_2_gpu come in four sections, with weight indexes mod 4 of
+   Note that the connections in quad_s_4d_4w_wgpu, other_wgpu, and
+   other_2_wgpu come in four sections, with weight indexes mod 4 of
    0 to 3 (for the first weight, for quad). */
 
 __device__ static void net_store3_grad2_config
@@ -2159,7 +2159,7 @@ __device__ static void net_store3_grad2_config
   }
 
   if (CONFIG_QUAD_S_4D_4W)
-  { cn = cf->quad_s_4d_4w_gpu;
+  { cn = cf->quad_s_4d_4w_wgpu;
     if (off)
     { c = 0;
       for (m = 0; m<4; m++)
@@ -2191,7 +2191,7 @@ __device__ static void net_store3_grad2_config
         }
       }
     }
-    cn = cf->quad_s_4d_4w_2_gpu;
+    cn = cf->quad_s_4d_4w_2_wgpu;
     if (off)
     { c = 0;
       for (m = 0; m<4; m++)
@@ -2235,9 +2235,9 @@ __device__ static void net_store3_grad2_config
     }
   }
 
-  cn = cf->other_gpu;
+  cn = cf->other_wgpu;
   for (m = 0; m<4; m+=2)
-  { c = cf->start_in_other[th+m];
+  { c = cf->start_other_wgpu[th+m];
     if (off)
     { for (;;)
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
@@ -2254,9 +2254,9 @@ __device__ static void net_store3_grad2_config
       }
     }
   }
-  cn = cf->other_2_gpu;
+  cn = cf->other_2_wgpu;
   for (m = 0; m<4; m+=2)
-  { c = cf->start_in_other_2[th+m];
+  { c = cf->start_other_2_wgpu[th+m];
     if (off)
     { for (;;)
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
@@ -2453,7 +2453,7 @@ __device__ static void net_store4_grad1
 
 /* STORE GRADIENT FOR BIASES FOR 4 CASES, WITH CONFIGURATION.
    The mod 4 scheme is based on indexes for the biases.  Note that the
-   connections in quad_s_4d_4w_gpu, other_gpu, and other_2_gpu come in
+   connections in quad_s_4d_4w_wgpu, other_wgpu, and other_2_wgpu come in
    four sections, with bias indexes mod 4 of 0 to 3 (for the first
    bias, for quad). */
 
@@ -2474,7 +2474,7 @@ __device__ static void net_store4_grad1_config
   }
 
   if (CONFIG_QUAD_S_4D_4W)
-  { cn = cf->quad_s_4d_4w_gpu;
+  { cn = cf->quad_s_4d_4w_wgpu;
     c = 0;
     for (m = 0; m<4; m++)
     { ix = (th+4-m)&3;
@@ -2484,7 +2484,7 @@ __device__ static void net_store4_grad1_config
         g[k+ix] += (d0[j+ix] + d1[j+ix]) + (d2[j+ix] + d3[j+ix]);
       }
     }
-    cn = cf->quad_s_4d_4w_2_gpu;
+    cn = cf->quad_s_4d_4w_2_wgpu;
     c = 0;
     for (m = 0; m<4; m++)
     { ix = (th+4-m)&3;
@@ -2498,15 +2498,15 @@ __device__ static void net_store4_grad1_config
     }
   }
 
-  cn = cf->other_gpu;
-  c = cf->start_in_other[th];
+  cn = cf->other_wgpu;
+  c = cf->start_other_wgpu[th];
   for (;;)
   { j = cn[c].d; k = cn[c].w; c += 1;
     if (k<0) break;
     g[k] += (d0[j] + d1[j]) + (d2[j] + d3[j]);
   }
-  cn = cf->other_2_gpu;
-  c = cf->start_in_other_2[th];
+  cn = cf->other_2_wgpu;
+  c = cf->start_other_2_wgpu[th];
   for (;;)
   { j = cn[c].d; k = cn[c].w; c += 1;
     if (k<0) break;
@@ -2643,7 +2643,7 @@ __device__ static void net_store4_grad2
 
 /* STORE GRADIENT FOR WEIGHTS FOR 4 CASES, WITH CONFIGURATION, USING 4 THREADS.
    The mod 4 scheme is based on the indexes for the weights.  Note that 
-   the connections in quad_s_4d_4w_gpu, other_gpu, and other_2_gpu come in 
+   the connections in quad_s_4d_4w_wgpu, other_wgpu, and other_2_wgpu come in 
    four sections, with weight indexes mod 4 of 0 to 3 (for the first weight, 
    for quad). */
 
@@ -2670,7 +2670,7 @@ __device__ static void net_store4_grad2_config
   }
  
   if (CONFIG_QUAD_S_4D_4W)
-  { cn = cf->quad_s_4d_4w_gpu;
+  { cn = cf->quad_s_4d_4w_wgpu;
     int m, ix;
     if (off)
     { c = 0;
@@ -2697,7 +2697,7 @@ __device__ static void net_store4_grad2_config
         }
       }
     }
-    cn = cf->quad_s_4d_4w_2_gpu;
+    cn = cf->quad_s_4d_4w_2_wgpu;
     if (off)
     { c = 0;
       for (m = 0; m<4; m++)
@@ -2734,8 +2734,8 @@ __device__ static void net_store4_grad2_config
     }
   }
 
-  cn = cf->other_gpu;
-  c = cf->start_in_other[th];
+  cn = cf->other_wgpu;
+  c = cf->start_other_wgpu[th];
   if (off)
   { for (;;)
     { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
@@ -2753,8 +2753,8 @@ __device__ static void net_store4_grad2_config
                    + s2[i]*d2[j] + s3[i]*d3[j];
     }
   }
-  cn = cf->other_2_gpu;
-  c = cf->start_in_other_2[th];
+  cn = cf->other_2_wgpu;
+  c = cf->start_other_2_wgpu[th];
   if (off)
   { for (;;)
     { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;

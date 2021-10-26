@@ -1608,13 +1608,46 @@ __device__ static void bias_values_config_gpu
 )
 { 
   net_connection *cn;
-  int c, j, k;
+  int c, j, k, m, ix;
 
   for (j = th; j < n; j+=NTH)
   { v[j] = 0;
   }
 
-  /* ... not written yet ... */
+  if (CONFIG_QUAD_S_4D_4W)
+  { cn = cf->quad_s_4d_4w_dgpu;
+    c = 0;
+    for (m = 0; m<4; m++)
+    { if (NTH>1) ix = (th+4-m)&(NTH-1);
+      for (;;)
+      { j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        if (NTH==1)
+        { v[j+0] += b[k+0];
+          v[j+1] += b[k+1];
+          v[j+2] += b[k+2];
+          v[j+3] += b[k+3];
+        }
+        else if (NTH==2)
+        { v[j+ix] += b[k+ix];
+          v[j+ix+2] += b[k+ix+2];
+        }
+        else /* NTH==4 */
+        { v[j+ix] += b[k+ix];
+        }
+      }
+    }
+  }
+
+  cn = cf->other_dgpu;
+  for (m = 0; m<4; m+=NTH)
+  { c = cf->start_other_dgpu[th+m];
+    for (;;)
+    { j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      v[j] += b[k];
+    }
+  }
 }
 
 
@@ -1699,9 +1732,47 @@ __device__ static void add_connections_config_gpu
 )
 {
   net_connection *cn;
-  int i, j, k, c;
+  int c, i, j, k, m, ix;
+  net_value vi;
 
-  /* ... not written yet ... */
+  if (CONFIG_QUAD_S_4D_4W)
+  { cn = cf->quad_s_4d_4w_dgpu;
+    c = 0;
+    for (m = 0; m<4; m++)
+    { if (NTH>1) ix = (th+4-m)&(NTH-1);
+      for (;;)
+      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        vi = v[i];
+        if (off) vi += off[i];
+        if (NTH==1)
+        { s[j+0] += vi * w[k+0];
+          s[j+1] += vi * w[k+1];
+          s[j+2] += vi * w[k+2];
+          s[j+3] += vi * w[k+3];
+        }
+        else if (NTH==2)
+        { s[j+ix] += vi * w[k+ix];
+          s[j+ix+2] += vi * w[k+ix+2];
+        }
+        else /* NTH==4 */
+        { s[j+ix] += vi * w[k+ix];
+        }
+      }
+    }
+  }
+
+  cn = cf->other_dgpu;
+  for (m = 0; m<4; m+=NTH)
+  { c = cf->start_other_dgpu[th+m];
+    for (;;)
+    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      vi = v[i];
+      if (off) vi += off[i];
+      s[j] += vi * w[k];
+    }
+  }
 }
 
 #endif

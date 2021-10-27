@@ -164,15 +164,18 @@ HOSTDEV void net_model_prob
     case 'R':  /* Real-valued target */
     { 
       double alpha = m->noise.alpha[2];
+      double nconst;
 
       if (alpha==0) /* Gaussian distribution for noise */
       { 
-        if (pr) *pr = op>=1 ? 0 : -0.5 * N_outputs * Log2pi;
+        if (pr)
+        { nconst = op>0 ? 0 : - 0.5 * Log2pi;
+          *pr = 0;
+        }
 
         for (i = 0; i<N_outputs; i++)
         { if (isnan(t[i]))  /* target not observed */
           { if (dp) dp->o[i] = 0;
-            if (pr && op<1) *pr += 0.5 * Log2pi;  /* undo what was done above */
             continue;
           }
           net_sigma rn = 1 / noise[i];
@@ -180,12 +183,9 @@ HOSTDEV void net_model_prob
           if (d<-1e10) d = -1e10;
           if (d>+1e10) d = +1e10;
           if (pr) 
-          { if (op<2)
-            { *pr -= (net_value)0.5 * (d*d) - prec_log(rn);
-            }
-            else
-            { *pr -= (net_value)0.5 * (d*d);
-            }
+          { double p = nconst - 0.5 * (d*d);
+            if (op<2) p += prec_log(rn);
+            *pr += p;
           }
           if (dp)
           { dp->o[i] = d * rn;
@@ -195,12 +195,14 @@ HOSTDEV void net_model_prob
 
       else /* Student t distribution for noise */
       {
-        if (pr) *pr = op>=1 ? 0 : N_outputs * m->alpha_cnst;
+        if (pr)
+        { nconst = op>0 ? 0 : m->alpha_cnst;
+          *pr = 0;
+        }
 
         for (i = 0; i<N_outputs; i++)
         { if (isnan(t[i]))  /* target not observed */
           { if (dp) dp->o[i] = 0;
-            if (pr && op<1) *pr -= m->alpha_cnst;
             continue;
           }
           net_sigma rn = 1 / noise[i];
@@ -209,10 +211,9 @@ HOSTDEV void net_model_prob
           if (d>+1e10) d = +1e10;
           net_value x = 1 + d*d/(net_value)alpha;
           if (pr) 
-          { *pr -= ((alpha+1)/2) * prec_log(x);
-            if (op<2) 
-            { *pr += log(rn);
-            }
+          { double p = nconst - ((alpha+1)/2) * prec_log(x);
+            if (op<2) p += log(rn);
+            *pr += p;
           }
           if (dp)
           { dp->o[i] = (net_value)((alpha+1)/alpha) * (d*rn) / x;
@@ -274,7 +275,10 @@ HOSTDEV void net_model_prob
 
 
 /* VERSION OF NET_MODEL_PROB USING MULTIPLE GPU THREADS.  Must not be used
-   for survival models (type 'V'). */
+   for survival models (type 'V').  The probability pointed to by 'pr'
+   is updated by the thread with th==0; the derivative at index i in 'dp'
+   is updated by the thread with th equal to i mod NET_FUNC_GPU_THREADS. 
+   Note that a syncthreads is NOT done after this. */
 
 #if __CUDACC__
 
@@ -294,7 +298,6 @@ __device__ void net_model_prob_gpu
 )
 {
   int N_outputs = a->N_outputs;
-  double nconst = 0;
   int i;
 
   switch (m->type)
@@ -334,13 +337,14 @@ __device__ void net_model_prob_gpu
     case 'C':  /* Single class with multiple possible values */
     {
       if (isnan(*t))  /* target not observed */
-      { if (dp) 
+      { if (th<0) return;
+        if (dp) 
         { for (i = th; i<N_outputs; i+=NTH)
           { dp->o[i] = 0;
           }
         }
         if (pr && th==0) *pr = 0;
-        break;
+        return;
       }
 
       if (th<0) goto sync;
@@ -359,7 +363,7 @@ __device__ void net_model_prob_gpu
     sync:
       __syncthreads();
 
-      if (th<0) break;
+      if (th<0) return;
 
       s = 0;
       for (i = 0; i<N_outputs; i++)
@@ -379,7 +383,7 @@ __device__ void net_model_prob_gpu
         }
       }
 
-      break;
+      return;
     }
 
     case 'R':  /* Real-valued target */
@@ -390,12 +394,12 @@ __device__ void net_model_prob_gpu
 
       if (alpha==0) /* Gaussian distribution for noise */
       { 
-        if (pr && op<1) nconst = -0.5 * N_outputs * Log2pi;
+        double nconst = op>0 ? 0 : - 0.5 * Log2pi;
 
         for (i = th; i<N_outputs; i+=NTH)
         { if (isnan(t[i]))  /* target not observed */
           { if (dp) dp->o[i] = 0;
-            if (pr && op<1) nconst += 0.5 * Log2pi; /* undo what's done above */
+            if (pr) scratch[i] = 0;
             continue;
           }
           net_sigma rn = 1 / noise[i];
@@ -403,12 +407,8 @@ __device__ void net_model_prob_gpu
           if (d<-1e10) d = -1e10;
           if (d>+1e10) d = +1e10;
           if (pr) 
-          { if (op<2) 
-            { scratch[i] = - (net_value)0.5 * (d*d) + prec_log(rn);
-            }
-            else
-            { scratch[i] = - (net_value)0.5 * (d*d);
-            }
+          { scratch[i] = nconst - 0.5 * (d*d);
+            if (op<2) scratch[i] += prec_log(rn);
           }
           if (dp)
           { dp->o[i] = d * rn;
@@ -418,12 +418,12 @@ __device__ void net_model_prob_gpu
 
       else /* Student t distribution for noise */
       {
-        if (pr && op<1) nconst = N_outputs * m->alpha_cnst;
+        double nconst = op>0 ? 0 : m->alpha_cnst;
 
         for (i = th; i<N_outputs; i+=NTH)
         { if (isnan(t[i]))  /* target not observed */
           { if (dp) dp->o[i] = 0;
-            if (pr && op<1) nconst -= m->alpha_cnst; /* undo what's done above*/
+            if (pr) scratch[i] = 0;
             continue;
           }
           net_sigma rn = 1 / noise[i];
@@ -432,7 +432,7 @@ __device__ void net_model_prob_gpu
           if (d>+1e10) d = +1e10;
           net_value x = 1 + d*d/(net_value)alpha;
           if (pr) 
-          { scratch[i] = - ((alpha+1)/2) * prec_log(x);
+          { scratch[i] = nconst - ((alpha+1)/2) * prec_log(x);
             if (op<2) scratch[i] += log(rn);
           }
           if (dp)
@@ -445,14 +445,15 @@ __device__ void net_model_prob_gpu
     }
   }
 
-  /* Compute total log probability from scratch values. */
+  /* Compute total log probability from scratch values.  (Not for class
+     models, which will have returned already above.) */
 
-  if (pr && m->type!='C')
+  if (pr)
   { 
     __syncthreads();
 
     if (th==0)
-    { double p = nconst;
+    { double p = 0;
       for (i = 0; i<N_outputs; i++)
       { p += scratch[i];
       }

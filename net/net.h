@@ -376,6 +376,11 @@ HOSTDEV void net_model_prob (net_values const*, net_value const*,
                              model_specification const*, model_survival const*,
                              net_sigma const*, int);
 
+__device__ void net_model_prob_gpu (int, net_values const*, net_value const*, 
+                             double *restrict, net_values *restrict, 
+                             net_arch const*, model_specification const*,
+                             net_sigma const*, net_value *, int);
+
 void net_model_check (model_specification const*);
 
 void net_model_max_second (net_value *, net_arch *, model_specification *,

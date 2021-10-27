@@ -109,8 +109,7 @@ HOSTDEV void net_model_prob
         net_value ep1 = prec_exp (-abs_oi) + 1;
 
         if (pr)  /* find log probability */
-        { net_value log_ep1 = prec_log (ep1);
-          *pr += (t[i] - 0.5*(sign_oi+1)) * oi - log_ep1;
+        { *pr += (t[i] - 0.5*(sign_oi+1)) * oi - prec_log(ep1);;
         }
 
         if (dp)  /* find derivative of log probability */
@@ -168,11 +167,7 @@ HOSTDEV void net_model_prob
 
       if (alpha==0) /* Gaussian distribution for noise */
       { 
-        if (pr) *pr = 0;
-
-        if (pr && op<1) 
-        { *pr -= 0.5 * N_outputs * Log2pi;
-        }
+        if (pr) *pr = op>=1 ? 0 : -0.5 * N_outputs * Log2pi;
 
         for (i = 0; i<N_outputs; i++)
         { if (isnan(t[i]))  /* target not observed */
@@ -185,8 +180,12 @@ HOSTDEV void net_model_prob
           if (d<-1e10) d = -1e10;
           if (d>+1e10) d = +1e10;
           if (pr) 
-          { *pr -= (net_value)0.5 * (d*d);
-            if (op<2) *pr += prec_log(rn);
+          { if (op<2)
+            { *pr -= (net_value)0.5 * (d*d) - prec_log(rn);
+            }
+            else
+            { *pr -= (net_value)0.5 * (d*d);
+            }
           }
           if (dp)
           { dp->o[i] = d * rn;
@@ -196,11 +195,7 @@ HOSTDEV void net_model_prob
 
       else /* Student t distribution for noise */
       {
-        if (pr) *pr = 0;
-
-        if (pr && op<1) 
-        { *pr += N_outputs * m->alpha_cnst;
-        }
+        if (pr) *pr = op>=1 ? 0 : N_outputs * m->alpha_cnst;
 
         for (i = 0; i<N_outputs; i++)
         { if (isnan(t[i]))  /* target not observed */
@@ -276,6 +271,197 @@ HOSTDEV void net_model_prob
     }
   }
 }
+
+
+/* VERSION OF NET_MODEL_PROB USING MULTIPLE GPU THREADS.  Must not be used
+   for survival models (type 'V'). */
+
+#if __CUDACC__
+
+#define NTH (NET_FUNC_GPU_THREADS)  /* Short form for here */
+
+__device__ void net_model_prob_gpu
+( int th,		/* Thread index, if negative, just sync */
+  net_values const*v,	/* Values for units in network */
+  net_value const*t,	/* Target values */
+  double *restrict pr,	/* Place to store log probability, zero if not wanted */
+  net_values *restrict dp,/* Place to store log probability derivatives, or 0 */
+  net_arch const*a,	/* Network architecture */
+  model_specification const*m, /* Data model */
+  net_sigma const*noise,/* Noise sigmas, or null */
+  net_value *scratch,	/* Scratch memory for outputs */
+  int op		/* Can we ignore some factors? */
+)
+{
+  int N_outputs = a->N_outputs;
+  double nconst = 0;
+  int i;
+
+  switch (m->type)
+  {
+    case 'B':  /* Binary data values */
+    { 
+      if (th<0) break;
+
+      for (i = th; i<N_outputs; i+=NTH)
+      { 
+        if (isnan(t[i]))  /* target not observed */
+        { if (dp) dp->o[i] = 0;
+          if (pr) scratch[i] = 0;
+          continue;
+        }
+
+        net_value oi = v->o[i];
+        net_value sign_oi = prec_copysign((net_value)1.0,oi);
+        net_value abs_oi = prec_fabs(oi);
+
+        /* Note: The exp computation below never overflows. */
+
+        net_value ep1 = prec_exp (-abs_oi) + 1;
+
+        if (dp)  /* find derivative of log probability */
+        { dp->o[i] = sign_oi/ep1 + 0.5*(1.0-sign_oi) - t[i];
+        }
+
+        if (pr)  /* store log probability in scratch */
+        { scratch[i] = (t[i] - 0.5*(sign_oi+1)) * oi - prec_log(ep1);
+        }
+      }
+
+      break;
+    }
+
+    case 'C':  /* Single class with multiple possible values */
+    {
+      if (isnan(*t))  /* target not observed */
+      { if (dp) 
+        { for (i = th; i<N_outputs; i+=NTH)
+          { dp->o[i] = 0;
+          }
+        }
+        if (pr && th==0) *pr = 0;
+        break;
+      }
+
+      if (th<0) goto sync;
+
+      net_value m, s;
+
+      m = v->o[0];
+      for (i = 1; i<N_outputs; i++)
+      { if (v->o[i]>m) m = v->o[i];
+      }
+
+      for (i = th; i<N_outputs; i+=NTH)
+      { scratch[i] = prec_exp (v->o[i] - m);
+      }
+
+    sync:
+      __syncthreads();
+
+      if (th<0) break;
+
+      s = 0;
+      for (i = 0; i<N_outputs; i++)
+      { s += scratch[i];
+      }
+
+      if (pr && th==0) 
+      { *pr = v->o[(int)*t] - m - prec_log(s);
+      }
+
+      if (dp)
+      { s = 1/s;
+        int w = *t;
+        for (i = th; i<N_outputs; i+=NTH)
+        { dp->o[i] = scratch[i] * s;
+          if (i==w) dp->o[i] -= 1;
+        }
+      }
+
+      break;
+    }
+
+    case 'R':  /* Real-valued target */
+    { 
+      if (th<0) break;
+
+      double alpha = m->noise.alpha[2];
+
+      if (alpha==0) /* Gaussian distribution for noise */
+      { 
+        if (pr && op<1) nconst = -0.5 * N_outputs * Log2pi;
+
+        for (i = th; i<N_outputs; i+=NTH)
+        { if (isnan(t[i]))  /* target not observed */
+          { if (dp) dp->o[i] = 0;
+            if (pr && op<1) nconst += 0.5 * Log2pi; /* undo what's done above */
+            continue;
+          }
+          net_sigma rn = 1 / noise[i];
+          net_value d = (v->o[i] - t[i]) * rn;
+          if (d<-1e10) d = -1e10;
+          if (d>+1e10) d = +1e10;
+          if (pr) 
+          { if (op<2) 
+            { scratch[i] = - (net_value)0.5 * (d*d) + prec_log(rn);
+            }
+            else
+            { scratch[i] = - (net_value)0.5 * (d*d);
+            }
+          }
+          if (dp)
+          { dp->o[i] = d * rn;
+          }
+        }
+      }
+
+      else /* Student t distribution for noise */
+      {
+        if (pr && op<1) nconst = N_outputs * m->alpha_cnst;
+
+        for (i = th; i<N_outputs; i+=NTH)
+        { if (isnan(t[i]))  /* target not observed */
+          { if (dp) dp->o[i] = 0;
+            if (pr && op<1) nconst -= m->alpha_cnst; /* undo what's done above*/
+            continue;
+          }
+          net_sigma rn = 1 / noise[i];
+          net_value d = (v->o[i] - t[i]) * rn;
+          if (d<-1e10) d = -1e10;
+          if (d>+1e10) d = +1e10;
+          net_value x = 1 + d*d/(net_value)alpha;
+          if (pr) 
+          { scratch[i] = - ((alpha+1)/2) * prec_log(x);
+            if (op<2) scratch[i] += log(rn);
+          }
+          if (dp)
+          { dp->o[i] = (net_value)((alpha+1)/alpha) * (d*rn) / x;
+          }
+        }
+      }
+
+      break;
+    }
+  }
+
+  /* Compute total log probability from scratch values. */
+
+  if (pr && m->type!='C')
+  { 
+    __syncthreads();
+
+    if (th==0)
+    { double p = nconst;
+      for (i = 0; i<N_outputs; i++)
+      { p += scratch[i];
+      }
+      *pr = p;
+    }
+  }
+}
+
+#endif
 
 
 /* COMPUTE MAXIMUM LOG LIKELIHOOD SECOND DERIVATIVES.  Computes the maximum

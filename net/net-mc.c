@@ -170,6 +170,8 @@ static net_values *dev_train_values; /* Value structures in GPU memory */
 
 static net_values *dev_deriv;	/* GPU copy  of derivatives for training cases*/
 
+static double *dev_scratch;  /* GPU scratch memory, for outputs for all cases */
+
 __constant__ int const_N_train;    /* Copy of N_train in constant memory */
 __constant__ int const_N_inputs;   /* Copy of N_inputs in constant memory */
 __constant__ int const_N_targets;  /* Copy of N_targets in constant memory */
@@ -195,6 +197,8 @@ __constant__ net_value *const_train_targets; /* Const copy of train_targets */
 
 __constant__ double *const_block_energy;   /* Copy of dev_block_energy ptr */
 __constant__ net_params *const_block_grad; /* Copy of dev_block_grad ptr */
+
+__constant__ net_value *const_scratch;	/* Copy of dev_scratch ptr */
 
 #endif
 
@@ -676,6 +680,10 @@ void mc_app_initialize
           (dev_deriv, tmp_values, sz, cudaMemcpyHostToDevice),
         "copy to dev_deriv");
 
+      sz = N_train * arch->N_outputs * sizeof *dev_scratch;
+      check_cuda_error (cudaMalloc (&dev_scratch, sz),
+                        "cudaMalloc of dev_scratch");
+
       free(tmp_values);
     }
 #   endif
@@ -734,6 +742,10 @@ void mc_app_initialize
         (const_train_targets, &dev_train_targets, sizeof dev_train_targets);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_train_targets");
+      cudaMemcpyToSymbol
+        (const_scratch, &dev_scratch, sizeof dev_scratch);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_scratch");
     }
 #   endif
 
@@ -2076,19 +2088,29 @@ __global__ void forward_kernel
 
   net_func_gpu (th, train_vals_h, 0, &const_arch, flgs, &const_params);
 
-  if (th==0)
-  { 
-    net_value *targ_h = const_train_targets+const_N_targets*h;
-    net_values *deriv_h = need_deriv ? const_deriv+h : 0;
-    double *log_prob_h = case_energy ? case_energy+i : 0;
+  net_value *targ_h = const_train_targets + const_N_targets*h;
+  net_values *deriv_h = need_deriv ? const_deriv+h : 0;
+  double *log_prob_h = case_energy ? case_energy+i : 0;
 
-    net_model_prob (train_vals_h, targ_h, log_prob_h, deriv_h, 
-                    &const_arch, &const_model, &const_surv, const_noise, 
-                    Cheap_energy);
+  if (NET_FUNC_GPU_THREADS==1 || const_arch.N_outputs==1
+       || const_model.type=='V')
+  { if (th==0) 
+    { net_model_prob (train_vals_h, targ_h, log_prob_h, deriv_h, 
+                      &const_arch, &const_model, &const_surv, const_noise, 
+                      Cheap_energy);
+    }
+  }
+  else
+  { net_value *scratch_h = const_scratch + const_arch.N_outputs*h;
+    net_model_prob_gpu (th, train_vals_h, targ_h, log_prob_h, deriv_h, 
+                        &const_arch, &const_model, const_noise, 
+                        scratch_h, Cheap_energy);
+  }
 
-    if (need_deriv && gr_weight!=1)
-    { int k;
-      for (k = 0; k<const_arch.N_outputs; k++)
+  if (need_deriv && gr_weight!=1)
+  { int k;
+    if (th>=0) 
+    { for (k = th; k<const_arch.N_outputs; k += NET_FUNC_GPU_THREADS)
       { deriv_h->o[k] *= gr_weight;
       }
     }
@@ -2339,6 +2361,9 @@ static void net_training_cases_gpu
 
       forward_kernel <<<blks, blkcases*NET_FUNC_GPU_THREADS>>> 
         (energy ? case_energy : 0, i, i+n, en_weight, gr!=0, gr_weight);
+
+check_cuda_error (cudaDeviceSynchronize(), 
+                          "Synchronizing after launching forward kernel");
 
       if (gr)
       { backward_kernel <<<blks, blkcases>>> (i, i+n);

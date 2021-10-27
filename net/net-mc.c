@@ -47,7 +47,7 @@
 
 #define PIN_MEMORY 2		/* 0 = no host memory is pinned, 
                                    1 = parameters going to gpu only,
-                                   2 = parametres + energy & deriv from gpu */
+                                   2 = parameters + energy & deriv from gpu */
 
 #define GRAD_ALIGN_BYTES 64	/* Alignment for gradient blocks in GPU, bytes
                                      - must be a power of two, minimum of 8 */
@@ -89,15 +89,21 @@ __global__ void forward_kernel
   int start,		/* Start of cases to look at */
   int end, 		/* End of cases to look at (index after last case) */
   double en_weight,	/* Weight for these cases for energy */
-  int need_deriv	/* Need derivatives of energy w.r.t. output units? */
+  int need_deriv,	/* Need derivatives of energy w.r.t. output units? */
+  double gr_weight	/* Weight for these cases for gradient */
 );
 
 __global__ void backward_kernel
 (
+  int start,		/* Start of cases to look at */
+  int end		/* End of cases to look at (index after last case) */
+);
+
+__global__ void gradient_kernel
+(
   net_params *group_grad, /* Places to store gradient, null if not required */
   int start,		/* Start of cases to look at */
-  int end,		/* End of cases to look at (index after last case) */
-  double gr_weight	/* Weight for these cases for gradient */
+  int end		/* End of cases to look at (index after last case) */
 );
 
 #endif
@@ -756,6 +762,9 @@ void mc_app_initialize
       "Set cache config for forward_kernel");
     check_cuda_error (
       cudaFuncSetCacheConfig (backward_kernel, cudaFuncCachePreferL1),
+      "Set cache config for backward_kernel");
+    check_cuda_error (
+      cudaFuncSetCacheConfig (gradient_kernel, cudaFuncCachePreferL1),
       "Set cache config for backward_kernel");
 
 #   endif
@@ -2048,7 +2057,8 @@ __global__ void forward_kernel
   int start,		/* Start of cases to look at */
   int end, 		/* End of cases to look at (index after last case) */
   double en_weight,	/* Weight for these cases for energy */
-  int need_deriv	/* Need derivatives of energy w.r.t. output units? */
+  int need_deriv,	/* Need derivatives of energy w.r.t. output units? */
+  double gr_weight	/* Weight for these cases for gradient */
 )
 { 
   // printf("Forward_kernel/%d,%d: block %d, thread %d\n",
@@ -2075,6 +2085,13 @@ __global__ void forward_kernel
     net_model_prob (train_vals_h, targ_h, log_prob_h, deriv_h, 
                     &const_arch, &const_model, &const_surv, const_noise, 
                     Cheap_energy);
+
+    if (need_deriv && gr_weight!=1)
+    { int k;
+      for (k = 0; k<const_arch.N_outputs; k++)
+      { deriv_h->o[k] *= gr_weight;
+      }
+    }
   }
 
   // printf("before reduction: block %d, thread %d\n",blockIdx.x,threadIdx.x);
@@ -2099,20 +2116,52 @@ __global__ void forward_kernel
 }
 
 
-/* GPU PROCEDURE FOR BACKWARD PASS AND GRADIENT EVALUATION.
+/* GPU PROCEDURE FOR BACKWARD PASS.
 
    References the const_... variables in GPU constant memory with things  
    such as the network architecture. */
 
 __global__ void backward_kernel
 (
-  net_params *group_grad, /* Places to store gradient */
   int start,		/* Start of cases to look at */
-  int end,		/* End of cases to look at (index after last case) */
-  double gr_weight	/* Weight for these cases for gradient */
+  int end		/* End of cases to look at (index after last case) */
 )
 { 
   // printf("Backward_kernel: block %d, thread %d\n",blockIdx.x,threadIdx.x);
+
+  net_flags *flgs = const_has_flgs ? &const_flgs : 0;
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  int h = start + i;
+
+  // printf("blk %d, thrd %d, th %d, i %d, h %d, o %d, start %d, end %d\n",
+  //   blockIdx.x, threadIdx.x, th, i, h, o, start, end);
+
+  net_values *train_vals_h = const_train_values+h;
+  net_values *deriv_h;
+
+  if (h < end)
+  { 
+    deriv_h = const_deriv+h;
+
+    net_back (train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
+              &const_arch, flgs, &const_params);
+  }
+}
+
+
+/* GPU PROCEDURE FOR GRADIENT EVALUATION.
+
+   References the const_... variables in GPU constant memory with things  
+   such as the network architecture. */
+
+__global__ void gradient_kernel
+(
+  net_params *group_grad, /* Places to store gradient */
+  int start,		/* Start of cases to look at */
+  int end		/* End of cases to look at (index after last case) */
+)
+{ 
+  // printf("Gradient_kernel: block %d, thread %d\n",blockIdx.x,threadIdx.x);
 
   net_flags *flgs = const_has_flgs ? &const_flgs : 0;
   unsigned total_params = const_params.total_params;
@@ -2130,32 +2179,14 @@ __global__ void backward_kernel
   net_values *deriv_h;
 
   if (h < end)
-  { 
+  {
+    deriv_h = const_deriv+h;
+
+    net_values *train_vals_b = train_vals_h-th;
+    net_values *deriv_b = deriv_h-th;
 
     ggrad = threadIdx.x < GROUP_SIZE ? const_block_grad + blockIdx.x
              : group_grad + o;
-
-    deriv_h = const_deriv+h;
-
-    if (gr_weight!=1)
-    { int k;
-      for (k = 0; k<const_arch.N_outputs; k++)
-      { deriv_h->o[k] *= gr_weight;
-      }
-    }
-
-    net_back (train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
-              &const_arch, flgs, &const_params);
-  }
-
-  if (GROUP_SIZE>1)
-  { __syncthreads();  /* all threads - not just those with h < end */
-  }
-
-  if (h < end)
-  {
-    net_values *train_vals_b = train_vals_h-th;
-    net_values *deriv_b = deriv_h-th;
 
     int r = GROUP_SIZE;
     if (GROUP_SIZE>1)
@@ -2307,10 +2338,11 @@ static void net_training_cases_gpu
                         "Before launching many_cases");
 
       forward_kernel <<<blks, blkcases*NET_FUNC_GPU_THREADS>>> 
-        (energy ? case_energy : 0, i, i+n, en_weight, gr!=0);
+        (energy ? case_energy : 0, i, i+n, en_weight, gr!=0, gr_weight);
 
       if (gr)
-      { backward_kernel <<<blks, blkcases>>> (group_grad, i, i+n, gr_weight);
+      { backward_kernel <<<blks, blkcases>>> (i, i+n);
+        gradient_kernel <<<blks, blkcases>>> (group_grad, i, i+n);
       }
     }
 

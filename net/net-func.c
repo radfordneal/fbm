@@ -1423,7 +1423,9 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
 
    This version uses four GPU threads to do the computation.  It
    is called from each of these threads, with 'th' set to 0 up to 
-   NET_FUNC_GPU_THREADS-1.
+   NET_FUNC_GPU_THREADS-1.  If called with a negative 'th' (done
+   when there are spare threads at end of training set), it just 
+   skips to the synchronization points.
   
    Layers are computed in sequence, using all threads, with a
    __syncthreads call after each layer's computations, so that all
@@ -1452,8 +1454,10 @@ __device__ void net_func_gpu
   for (l = start; l<a->N_layers; l++)
   {
     int N_hidden = a->N_hidden[l];
-
     net_value *sh = v->s[l];
+    net_value *vh = v->h[l];
+
+    if (th<0) goto sync_layer;
 
     if (a->has_bh[l])
     { if (a->bias_config[l])
@@ -1494,8 +1498,6 @@ __device__ void net_func_gpu
 
     /* Put values through hidden unit activation function. */
 
-    net_value *vh = v->h[l];
-
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     { for (j = th; j<N_hidden; j+=NTH)
       { vh[j] = TANH (sh[j]);
@@ -1531,10 +1533,13 @@ __device__ void net_func_gpu
       }
     }
 
+  sync_layer:
     __syncthreads();
   }
 
   /* Compute values for the outputs. */
+
+  if (th<0) goto sync_output;
 
   if (a->has_bo)
   { if (a->bias_config[a->N_layers])
@@ -1577,6 +1582,7 @@ __device__ void net_func_gpu
     }
   }
 
+sync_output:
   __syncthreads();
 }
 

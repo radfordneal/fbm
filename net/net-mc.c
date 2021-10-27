@@ -65,7 +65,7 @@
 				   (max 255 reg/thread, min 32K reg/block) */
 
 #define DEFAULT_BLKCASES 32	/* Default, if not set by BLKCASES env var */
-#define DEFAULT_MAXBLKS	500	/* Default, if not set by MAXBLKS env var */
+#define DEFAULT_MAXBLKS	1000	/* Default, if not set by MAXBLKS env var */
 
 static int blkcases = DEFAULT_BLKCASES;	/* Number of cases handled per block */
 static int maxblks = DEFAULT_MAXBLKS;	/* Max number of blocks per kernel */
@@ -83,19 +83,20 @@ static int max_cases_per_launch;        /* Largest number of cases handled by
 
 #if __CUDACC__
 
-__global__ void compute_func_kernel
+__global__ void forward_kernel
 (
+  double *case_energy,  /* Places to store energy, null if not required */
   int start,		/* Start of cases to look at */
-  int end 		/* End of cases to look at (index after last case) */
+  int end, 		/* End of cases to look at (index after last case) */
+  double en_weight,	/* Weight for these cases for energy */
+  int need_deriv	/* Need derivatives of energy w.r.t. output units? */
 );
 
-__global__ void energy_grad_kernel
+__global__ void backward_kernel
 (
-  double *thread_energy,   /* Places to store energy, null if not required */
-  net_params *thread_grad, /* Places to store gradient, null if not required */
+  net_params *group_grad, /* Places to store gradient, null if not required */
   int start,		/* Start of cases to look at */
   int end,		/* End of cases to look at (index after last case) */
-  double en_weight,	/* Weight for these cases for energy */
   double gr_weight	/* Weight for these cases for gradient */
 );
 
@@ -144,13 +145,11 @@ static unsigned grad_aligned_total; /* Aligned size of grad block for one case*/
 
 static net_arch dev_arch;	/* Copy of arch with GPU config pointers */
 
-static double *thread_energy;	/* Energies computed by concurrent threads,
+static double *case_energy;	/* Energies for individual cases in a launch,
                                    points to GPU memory */
-static double *thread_energy1;	/* Energy for threads with index 1 mod 4 */
-static double *thread_energy2;	/* Energy for threads with index 2 mod 4 */
-static double *thread_energy3;	/* Energy for threads with index 3 mod 4 */
-static int n_thread_accum;	/* Number of gradient accumulators needed */
-static net_params *thread_grad;	/* Gradient accumulators in concurrent threads,
+static int n_energy_accum;	/* Number of energy accumulators needed */
+static int n_grad_accum;	/* Number of gradient accumulators needed */
+static net_params *group_grad;	/* Gradients for groups of cases in a launch,
                                    points to GPU memory */
 
 static double *block_energy;	/* Energies computed by thread blocks (CPU) */
@@ -188,9 +187,6 @@ __constant__ net_values *const_deriv;  /* Copy of deriv ptr in constant memory*/
 __constant__ net_values *const_train_values; /* Const copy of train_values ptr*/
 __constant__ net_value *const_train_targets; /* Const copy of train_targets */
 
-__constant__ double *const_thread_energy1; /* Copy of thread_energy1 ptr */
-__constant__ double *const_thread_energy2; /* Copy of thread_energy2 ptr */
-__constant__ double *const_thread_energy3; /* Copy of thread_energy3 ptr */
 __constant__ double *const_block_energy;   /* Copy of dev_block_energy ptr */
 __constant__ net_params *const_block_grad; /* Copy of dev_block_grad ptr */
 
@@ -756,11 +752,11 @@ void mc_app_initialize
        executing the kernels (which don't use shared memory). */
 
     check_cuda_error (
-      cudaFuncSetCacheConfig (compute_func_kernel, cudaFuncCachePreferL1),
-      "Set cache config for compute_func");
+      cudaFuncSetCacheConfig (forward_kernel, cudaFuncCachePreferL1),
+      "Set cache config for forward_kernel");
     check_cuda_error (
-      cudaFuncSetCacheConfig (energy_grad_kernel, cudaFuncCachePreferL1),
-      "Set cache config for energy_grad");
+      cudaFuncSetCacheConfig (backward_kernel, cudaFuncCachePreferL1),
+      "Set cache config for backward_kernel");
 
 #   endif
 
@@ -1880,46 +1876,50 @@ void net_training_cases
    in a future call.  The setup is recorded in global variables, and
    is not done again if done before.
 
-   Memory is allocated to hold the result of the energy/gradient
+   Memory is allocated here to hold the result of the energy
    computation for each thread block in a kernel launch - as
-   block_energy in the CPU and const_block_energy in the GPU, and as
-   block_grad in the CPU and const_block_grad in the GPU.  The
+   block_energy in the CPU and const_block_energy in the GPU.  The
    contents of const_block_energy are copied to block_energy after the
-   kernel finishes, and similarly for const_block_grad and block_grad.
-   The CPU then adds their contents to the final accumulators.  If
-   more than one kernel launch is done, the memory is re-used.
+   kernel finishes.  The CPU then adds the contents of block_energy to
+   the final energy accumulator.  Memory is also allocated here on the
+   GPU to hold the energy for individual cases for the kernel launch,
+   accessed only from the GPU, with a pointer to it passed as a kernel
+   argument (case_energy, null if energy is not required).
 
-   GPU memory is also allocated here to store the energy and gradient
-   computed for individual training cases.  The GPU adds all these to
-   const_block_energy and/or const_block_grad after they are computed,
-   so this memory does not need to be accessed by the CPU.  GPU
-   pointers to these areas (thread_energy and thread_grad) are passed
-   to the kernel as arguments (or these arguments are zero to indicate
-   that one of them is not needed for this particular call).
+   Network values and energies for each individual case handled by a
+   block are computed using NET_FUNC_GPU_THREADS.  The number of
+   threads in a block used for this computation is therefore
+   NET_FUNC_GPU_THREADS times the number of cases handled by a block.
 
-   Network values for each case handled by a block are computed by
-   threads individually, but gradients are computed for a group of
-   cases of size GROUP_SIZE (except at the end, if N_train is not a
-   multiple of GROUP_SIZE), with the results being summed.  This
-   reduces the amount of space allocate for thread_grad by about a
-   factor of GROUP_SIZE.  Computations for a group are done using
-   GROUP_SIZE threads (or perhaps fewer at the end of a block).
+   GPU memory is also allocated here to store computed gradients. The
+   GPU stores the total gradient for a block in const_block_grad,
+   which is copied to block_grad on the CPU, and the added by the CPU
+   to the final gradient accumulator.  Memory is also allocated here
+   on the GPU to hold the gradient for groups of GROUP_SIZE cases,
+   accessed only from the GPU, with a pointer to it passed as a kernel
+   argument (group_grad, null if gradient is not required).
 
-   Similarly, thread_energy stores the total energy for groups (with
-   const_thread_energy1,2,3 being used to temporarily hold the
-   energies for cases with indexes not multiples of GROUP_SIZE before
-   these are added to thread_energy).
+   Gradients are computed for a group of cases of size GROUP_SIZE
+   (except at the end, if N_train is not a multiple of GROUP_SIZE).
+   This reduces the amount of space allocate for group_grad by about a
+   factor of GROUP_SIZE compared to allocating space for each case.
+   Computations for a group are done using GROUP_SIZE threads (or
+   perhaps fewer at the end of a block).
    
-   As an optimization, results for the first group of training cases
-   in a block are stored directly in const_block_energy or
-   const_block_grad, with results for other cases/pairs then being
-   added to that.  (Space for the first group of cases in a block is
-   nevertheless redundantly allocated, which might actually be good
-   for performance, by providing separation between blocks, if "false
-   sharing" is an issue.)
+   As an optimization, gradient for the first group of training cases
+   in a block are stored directly in const_block_grad, with results
+   for other cases/pairs then being added to that.  (Space for the
+   first group of cases in a block is nevertheless redundantly
+   allocated, which might actually be good for performance, by
+   providing separation between blocks, if "false sharing" is an
+   issue.)
 
-   The memory allocated (except temporarily here) is never freed
-   (until program termination). 
+   If more than one kernel launch is done, the per-launch memory
+   mentioned above is re-used.  (So the allocations here are all that
+   are required.)
+
+   The memory allocated here (except temporarily for use her) is never
+   freed (until program termination).  
 */
 
 #if __CUDACC__
@@ -1929,37 +1929,14 @@ void cuda_setup
   mc_value *gr		/* Place to store gradient, null if not required */
 )
 {
-  n_thread_accum = ((blkcases+GROUP_MASK)>>GROUP_SHIFT) * max_blocks_per_launch;
+  n_grad_accum = ((blkcases+GROUP_MASK)>>GROUP_SHIFT) * max_blocks_per_launch;
+  n_energy_accum = blkcases * max_blocks_per_launch;
 
-  if (energy && thread_energy==0)
+  if (energy && case_energy==0)
   { 
-    check_cuda_error (cudaMalloc (&thread_energy,
-                        n_thread_accum * sizeof *thread_energy),
-                      "alloc thread_energy");
-
-    check_cuda_error (cudaMalloc (&thread_energy1,
-                        n_thread_accum * sizeof *thread_energy2),
-                      "alloc thread_energy1");
-    cudaMemcpyToSymbol
-      (const_thread_energy1, &thread_energy1, sizeof thread_energy1);
-    check_cuda_error (cudaGetLastError(), 
-                      "After copying to const_thread_energy1");
-
-    check_cuda_error (cudaMalloc (&thread_energy2,
-                        n_thread_accum * sizeof *thread_energy2),
-                      "alloc thread_energy2");
-    cudaMemcpyToSymbol
-      (const_thread_energy2, &thread_energy2, sizeof thread_energy2);
-    check_cuda_error (cudaGetLastError(), 
-                      "After copying to const_thread_energy2");
-
-    check_cuda_error (cudaMalloc (&thread_energy3,
-                          n_thread_accum * sizeof *thread_energy3),
-                      "alloc thread_energy3");
-    cudaMemcpyToSymbol
-      (const_thread_energy3, &thread_energy3, sizeof thread_energy3);
-    check_cuda_error (cudaGetLastError(), 
-                      "After copying to const_thread_energy3");
+    check_cuda_error (cudaMalloc (&case_energy,
+                        n_energy_accum * sizeof *case_energy),
+                      "alloc case_energy");
 
 #   if PIN_MEMORY>1
       check_cuda_error (cudaMallocHost (&block_energy,
@@ -1978,31 +1955,31 @@ void cuda_setup
                       "After copying to const_block_energy");
   }
 
-  if (gr && thread_grad==0)
+  if (gr && group_grad==0)
   { 
     net_params *tmp_grad;
 
     grad_aligned_total = (grad.total_params + GRAD_ALIGN_ELEMENTS - 1)
                             & ~(GRAD_ALIGN_ELEMENTS - 1);
 
-    /* Create thread_grad array on GPU. */
+    /* Create group_grad array on GPU. */
 
-    tmp_grad = (net_params *) chk_alloc (n_thread_accum, sizeof *tmp_grad);
+    tmp_grad = (net_params *) chk_alloc (n_grad_accum, sizeof *tmp_grad);
     tmp_grad->total_params = grad.total_params;
     check_cuda_error (cudaMalloc 
-       (&tmp_grad->param_block, n_thread_accum * grad_aligned_total
+       (&tmp_grad->param_block, n_grad_accum * grad_aligned_total
                                  * sizeof *tmp_grad->param_block),
-     "alloc tmp_grad param block for thread_grad");
+     "alloc tmp_grad param block for group_grad");
     net_setup_param_pointers (tmp_grad, arch, flgs);
-    net_replicate_param_pointers (tmp_grad, arch, n_thread_accum,
+    net_replicate_param_pointers (tmp_grad, arch, n_grad_accum,
                                   grad_aligned_total);
-    check_cuda_error (cudaMalloc (&thread_grad,
-                        n_thread_accum * sizeof *thread_grad),
-                      "alloc thread_grad");
-    check_cuda_error (cudaMemcpy (thread_grad, tmp_grad,
-                        n_thread_accum * sizeof *thread_grad,
+    check_cuda_error (cudaMalloc (&group_grad,
+                        n_grad_accum * sizeof *group_grad),
+                      "alloc group_grad");
+    check_cuda_error (cudaMemcpy (group_grad, tmp_grad,
+                        n_grad_accum * sizeof *group_grad,
                         cudaMemcpyHostToDevice),
-                      "cudaMemcpy to thread_grad");
+                      "cudaMemcpy to group_grad");
     free(tmp_grad);
 
     /* Create block_grad array on CPU and on GPU. */
@@ -2060,17 +2037,22 @@ void cuda_setup
 
 #if __CUDACC__
 
-/* GPU PROCEDURE TO EVALUATE NETWORK OUTPUTS FOR A SET OF CASES.
+/* GPU PROCEDURE FOR FORWARD PASS AND ENERGY EVALUATION.
+
    References the const_... variables in GPU constant memory with things  
    such as the network architecture. */
 
-__global__ void compute_func_kernel
+__global__ void forward_kernel
 (
+  double *case_energy,  /* Places to store energy, null if not required */
   int start,		/* Start of cases to look at */
-  int end 		/* End of cases to look at (index after last case) */
+  int end, 		/* End of cases to look at (index after last case) */
+  double en_weight,	/* Weight for these cases for energy */
+  int need_deriv	/* Need derivatives of energy w.r.t. output units? */
 )
 { 
-  // printf("Start compute_func: block %d, thread %d\n",blockIdx.x,threadIdx.x);
+  // printf("Forward_kernel/%d,%d: block %d, thread %d\n",
+  //         case_energy!=0,need_deriv,blockIdx.x,threadIdx.x);
 
   net_flags *flgs = const_has_flgs ? &const_flgs : 0;
   int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -2078,28 +2060,59 @@ __global__ void compute_func_kernel
   int th = x - NET_FUNC_GPU_THREADS*i;
   int h = start + i;
 
-  if (h < end)
-  { net_values *train_vals_h = const_train_values+h;
-    net_func_gpu (th, train_vals_h, 0, &const_arch, flgs, &const_params);
+  if (h >= end) th = -1;
+
+  net_values *train_vals_h = const_train_values+h;
+
+  net_func_gpu (th, train_vals_h, 0, &const_arch, flgs, &const_params);
+
+  if (th==0)
+  { 
+    net_value *targ_h = const_train_targets+const_N_targets*h;
+    net_values *deriv_h = need_deriv ? const_deriv+h : 0;
+    double *log_prob_h = case_energy ? case_energy+i : 0;
+
+    net_model_prob (train_vals_h, targ_h, log_prob_h, deriv_h, 
+                    &const_arch, &const_model, &const_surv, const_noise, 
+                    Cheap_energy);
   }
+
+  // printf("before reduction: block %d, thread %d\n",blockIdx.x,threadIdx.x);
+
+  if (case_energy)
+  {
+    __syncthreads();
+
+    if (threadIdx.x==0)
+    { double e = 0;
+      int j, l;
+      l = blockDim.x / NET_FUNC_GPU_THREADS;
+      if (h+l > end) l = end-h;
+      for (j = 0; j<l; j++)
+      { e += case_energy[h+j];
+      }
+      *(const_block_energy + blockIdx.x) = -en_weight * e;
+    }
+  }
+
+  // printf("after reduction: block %d, thread %d\n",blockIdx.x,threadIdx.x);
 }
 
 
-/* GPU PROCEDURE TO EVALUATE POTENTIAL ENERGY AND IT GRADIENT ON SET OF CASES.
+/* GPU PROCEDURE FOR BACKWARD PASS AND GRADIENT EVALUATION.
+
    References the const_... variables in GPU constant memory with things  
    such as the network architecture. */
 
-__global__ void energy_grad_kernel
+__global__ void backward_kernel
 (
-  double *thread_energy,   /* Places to store energy, null if not required */
-  net_params *thread_grad, /* Places to store gradient, null if not required */
+  net_params *group_grad, /* Places to store gradient */
   int start,		/* Start of cases to look at */
   int end,		/* End of cases to look at (index after last case) */
-  double en_weight,	/* Weight for these cases for energy */
   double gr_weight	/* Weight for these cases for gradient */
 )
 { 
-  // printf("Start energy_grad: block %d, thread %d\n",blockIdx.x,threadIdx.x);
+  // printf("Backward_kernel: block %d, thread %d\n",blockIdx.x,threadIdx.x);
 
   net_flags *flgs = const_has_flgs ? &const_flgs : 0;
   unsigned total_params = const_params.total_params;
@@ -2112,54 +2125,27 @@ __global__ void energy_grad_kernel
   // printf("blk %d, thrd %d, th %d, i %d, h %d, o %d, start %d, end %d\n",
   //   blockIdx.x, threadIdx.x, th, i, h, o, start, end);
 
-  double *restrict threi;
-  net_params *restrict thrgi;
-  net_values *train_vals_h;
+  net_values *train_vals_h = const_train_values+h;
+  net_params *restrict ggrad;
   net_values *deriv_h;
 
   if (h < end)
   { 
-    threi = thread_energy==0 ? 0 
-          : threadIdx.x < GROUP_SIZE ? const_block_energy + blockIdx.x
-          : /* else */ thread_energy + o;
 
-    thrgi = thread_grad==0 ? 0
-          : threadIdx.x < GROUP_SIZE ? const_block_grad + blockIdx.x
-          : /* else */ thread_grad + o;
+    ggrad = threadIdx.x < GROUP_SIZE ? const_block_grad + blockIdx.x
+             : group_grad + o;
 
-    train_vals_h = const_train_values+h;
-    deriv_h = thrgi ? const_deriv+h : 0;
+    deriv_h = const_deriv+h;
 
-    double log_prob;
-    net_model_prob (train_vals_h, const_train_targets+const_N_targets*h, 
-                    &log_prob, deriv_h, &const_arch, &const_model, 
-                    &const_surv, const_noise, Cheap_energy);
-
-    if (thrgi)
-    { if (gr_weight!=1)
-      { int k;
-        for (k = 0; k<const_arch.N_outputs; k++)
-        { deriv_h->o[k] *= gr_weight;
-        }
-      }
-      net_back (train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
-                &const_arch, flgs, &const_params);
-    }
-
-    if (threi)
-    { if (GROUP_SIZE==1 || th==0)
-      { *threi = - en_weight * log_prob;
-      }
-      else if (GROUP_SIZE>1 && (GROUP_SIZE==2 || th==1))
-      { *(const_thread_energy1+o) = - en_weight * log_prob;
-      }
-      else if (GROUP_SIZE>2 && th==2)
-      { *(const_thread_energy2+o) = - en_weight * log_prob;
-      }
-      else if (GROUP_SIZE>3 /* && th==3 */)
-      { *(const_thread_energy3+o) = - en_weight * log_prob;
+    if (gr_weight!=1)
+    { int k;
+      for (k = 0; k<const_arch.N_outputs; k++)
+      { deriv_h->o[k] *= gr_weight;
       }
     }
+
+    net_back (train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
+              &const_arch, flgs, &const_params);
   }
 
   if (GROUP_SIZE>1)
@@ -2168,65 +2154,52 @@ __global__ void energy_grad_kernel
 
   if (h < end)
   {
+    net_values *train_vals_b = train_vals_h-th;
+    net_values *deriv_b = deriv_h-th;
+
+    int r = GROUP_SIZE;
     if (GROUP_SIZE>1)
-    { if (threi && th==0)
-      { if (GROUP_SIZE>1 && h+1<end) 
-        { *threi += *(const_thread_energy1+o);
-        }
-        if (GROUP_SIZE>2 && h+2<end)
-        { *threi += *(const_thread_energy2+o);
-        }
-        if (GROUP_SIZE>3 && h+3<end)
-        { *threi += *(const_thread_energy3+o);
-        }
+    { if (r > end - (h-th))
+      { r = end - (h-th);
+      }
+      if (threadIdx.x-th + r > blockDim.x)
+      { r = blockDim.x - (threadIdx.x-th);
       }
     }
 
-    if (thrgi)
-    { 
-      net_values *train_vals_b = train_vals_h-th;
-      net_values *deriv_b = deriv_h-th;
-
-      int r = GROUP_SIZE;
-      if (GROUP_SIZE>1)
-      { if (r > end - (h-th))      r = end - (h-th);
-        if (threadIdx.x-th + r > blockDim.x) r = blockDim.x - (threadIdx.x-th);
+    switch (r)
+    { case 1: 
+      { if (th<1)
+        { net_store_grad (ggrad, &const_params, 
+                          train_vals_b, deriv_b, 
+                          &const_arch, flgs);
+        }
+        break;
       }
-
-      switch (r)
-      { case 1: 
-        { if (th<1)
-          { net_store_grad (thrgi, &const_params, 
-                            train_vals_b, deriv_b, 
-                            &const_arch, flgs);
-          }
-          break;
+      case 2: 
+      { if (th<2)
+        { net_store2_grad (th, ggrad, &const_params, 
+                           train_vals_b, train_vals_b+1,
+                           deriv_b, deriv_b+1,
+                           &const_arch, flgs);
         }
-        case 2: 
-        { if (th<2)
-          { net_store2_grad (th, thrgi, &const_params, 
-                             train_vals_b, train_vals_b+1,
-                             deriv_b, deriv_b+1,
-                             &const_arch, flgs);
-          }
-          break;
+        break;
+      }
+      case 3: 
+      { if (th<2) /* yes, 2, not 3 */
+        { net_store3_grad (th, ggrad, &const_params, 
+                           train_vals_b, train_vals_b+1, train_vals_b+2,
+                           deriv_b, deriv_b+1, deriv_b+2,
+                           &const_arch, flgs);
         }
-        case 3: 
-        { if (th<2) /* yes, 2, not 3 */
-          { net_store3_grad (th, thrgi, &const_params, 
-                             train_vals_b, train_vals_b+1, train_vals_b+2,
-                             deriv_b, deriv_b+1, deriv_b+2,
-                             &const_arch, flgs);
-          }
-          break;
-        }
-        default: /* 4 */
-        { net_store4_grad (th, thrgi, &const_params, 
-             train_vals_b, train_vals_b+1, train_vals_b+2, train_vals_b+3,
-             deriv_b, deriv_b+1, deriv_b+2, deriv_b+3,
-             &const_arch, flgs);
-          break;
-        }
+        break;
+      }
+      default: /* 4 */
+      { net_store4_grad (th, ggrad, &const_params, 
+           train_vals_b, train_vals_b+1, train_vals_b+2, train_vals_b+3,
+           deriv_b, deriv_b+1, deriv_b+2, deriv_b+3,
+           &const_arch, flgs);
+        break;
       }
     }
   }
@@ -2270,24 +2243,18 @@ __global__ void energy_grad_kernel
       int wb = blockIdx.x * n_blk_res + base;
       int ws = wb+stride;
 
-      if (thread_grad)
-      { net_param *restrict p = thread_grad[ws].param_block;
-        net_param *restrict q = 
-            base==0 ? const_block_grad[blockIdx.x].param_block
-                    : thread_grad[wb].param_block;
-        unsigned k;
-        for (k = this_worker; k < total_params; k += workers)
-        { q[k] += p[k];
-        }
-      }
-
-      if (threi && this_worker==0)
-      { *threi += thread_energy[ws];
+      net_param *restrict p = group_grad[ws].param_block;
+      net_param *restrict q = 
+          base==0 ? const_block_grad[blockIdx.x].param_block
+                  : group_grad[wb].param_block;
+      unsigned k;
+      for (k = this_worker; k < total_params; k += workers)
+      { q[k] += p[k];
       }
     }
   }
 
-  // printf("Done energy_grad: block %d, thread %d\n",blockIdx.x,threadIdx.x);
+  //printf("End backward_kernel: block %d, thread %d\n",blockIdx.x,threadIdx.x);
 }
 
 #endif
@@ -2339,14 +2306,15 @@ static void net_training_cases_gpu
       check_cuda_error (cudaGetLastError(), 
                         "Before launching many_cases");
 
-      compute_func_kernel <<<blks, blkcases*NET_FUNC_GPU_THREADS>>> (i, i+n);
+      forward_kernel <<<blks, blkcases*NET_FUNC_GPU_THREADS>>> 
+        (energy ? case_energy : 0, i, i+n, en_weight, gr!=0);
 
-      energy_grad_kernel <<<blks, blkcases>>> 
-        (energy ? thread_energy : 0, gr ? thread_grad : 0, 
-         i, i+n, en_weight, gr_weight);
+      if (gr)
+      { backward_kernel <<<blks, blkcases>>> (group_grad, i, i+n, gr_weight);
+      }
     }
 
-    /* Do reduction of parts of gradient computed previously, while
+    /* Do reduction of parts of energy and gradient computed previously, while
        the GPU works on the next batch. */
 
     if (energy && prev_blks>0)
@@ -2534,6 +2502,7 @@ static void net_training_cases_gpu
   }
 }
 #endif
+
 
 /* APPLICATION-SPECIFIC ENERGY/GRADIENT PROCEDURE.  Called from 'mc' module. */
 

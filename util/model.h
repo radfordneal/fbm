@@ -30,12 +30,11 @@ typedef struct
 			/* 'V' = survival data                                */
 
   prior_spec noise;	/* Prior for noise level in model of real targets */
+  double alpha_cnst;	/* Normalizing constant computed for noise.alpha[2] */
 
   int autocorr;		/* 0 = no autocorrelations, 1 = autocorr as specified */
   int n_autocorr;	/* Number of specified autocorrelations */
   float acf[Max_autocorr]; /* Autocorrelations at lags up to n_autocorr */
-
-  int reserved[3];	/* Reserved for future use */
 
 } model_specification;
 
@@ -53,8 +52,6 @@ typedef struct
 {
   int hazard_type;		/* Type of hazard function:                   */
 	                        /*   'C' = constant, 'P' = piece-wise constant*/
-
-  int reserved[4];		/* Reserved for future use                    */
 
   int log_time;			/* Present times to network in log form?      */
 

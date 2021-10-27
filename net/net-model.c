@@ -84,9 +84,6 @@ HOSTDEV void net_model_prob
   int op		/* Can we ignore some factors? */
 )
 {
-  static double alpha_saved=0.0;/* Constant already computed for this alpha */
-  static double cnst;		/* Saved value for normalizing constant */
-
   int N_outputs = a->N_outputs;
   int i;
 
@@ -202,17 +199,13 @@ HOSTDEV void net_model_prob
         if (pr) *pr = 0;
 
         if (pr && op<1) 
-        { if (alpha!=alpha_saved)
-          { cnst = lgamma((alpha+1)/2) - lgamma(alpha/2) - 0.5*log(M_PI*alpha);
-            alpha_saved = alpha;
-          }
-          *pr += N_outputs * cnst;
+        { *pr += N_outputs * m->alpha_cnst;
         }
 
         for (i = 0; i<N_outputs; i++)
         { if (isnan(t[i]))  /* target not observed */
           { if (dp) dp->o[i] = 0;
-            if (pr && op<1) *pr -= cnst;
+            if (pr && op<1) *pr -= m->alpha_cnst;
             continue;
           }
           net_sigma rn = 1 / noise[i];

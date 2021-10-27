@@ -24,6 +24,10 @@
 #include "model.h"
 #include "matrix.h"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846     /* Define pi, if not defined already */
+#endif
+
 
 static void usage(void);
 
@@ -185,6 +189,10 @@ int main
     if (m->noise.scale || m->noise.two_point)
     { fprintf(stderr,"Illegal prior for noise level\n");
       exit(1);
+    }
+    if (m->noise.alpha[2]!=0)
+    {  double a = m->noise.alpha[2];
+       m->alpha_cnst = lgamma((a+1)/2) - lgamma(a/2) - 0.5*log(M_PI*a);
     }
     ap += 1;
     if (*ap!=0)

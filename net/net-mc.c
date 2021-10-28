@@ -2092,8 +2092,10 @@ __global__ void forward_kernel
   net_values *deriv_h = need_deriv ? const_deriv+h : 0;
   double *log_prob_h = case_energy ? case_energy+i : 0;
 
-  if (NET_FUNC_GPU_THREADS==1 || const_arch.N_outputs==1
-       || const_model.type=='V')
+  int single_thread = NET_FUNC_GPU_THREADS==1 
+                       || const_arch.N_outputs < 2 /* adjustable */
+                       || const_model.type=='V';
+  if (single_thread)
   { if (th==0) 
     { net_model_prob (train_vals_h, targ_h, log_prob_h, deriv_h, 
                       &const_arch, &const_model, &const_surv, const_noise, 
@@ -2108,10 +2110,17 @@ __global__ void forward_kernel
   }
 
   if (need_deriv && gr_weight!=1)
-  { int k;
-    if (th>=0) 
-    { for (k = th; k<const_arch.N_outputs; k += NET_FUNC_GPU_THREADS)
-      { deriv_h->o[k] *= gr_weight;
+  { if (th>=0) 
+    { int k;
+      if (single_thread) /* must use one thread, as for computing deriv_h->o */
+      { for (k = 0; k<const_arch.N_outputs; k++)
+        { deriv_h->o[k] *= gr_weight;
+        }
+      }
+      else  /* must use multiple threads, as for computing deriv_h->o */ 
+      { for (k = th; k<const_arch.N_outputs; k += NET_FUNC_GPU_THREADS)
+        { deriv_h->o[k] *= gr_weight;
+        }
       }
     }
   }

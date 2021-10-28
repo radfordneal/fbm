@@ -29,6 +29,8 @@
 static void usage(void);
 static void print_config (net_config *, int);
 
+static int show_config_details;
+
 
 /* MAIN PROGRAM. */
 
@@ -57,9 +59,12 @@ int main
 
   /* See if we are to display specifications for existing network. */
 
-  if (argc==2 || argc==3 && strcmp(argv[2],"config")==0)
+  if (argc==2 
+   || argc==3 && (strcmp(argv[2],"config")==0 || strcmp(argv[2],"config+")==0))
   {
     int show_configs = argc==3;
+
+    show_config_details = show_configs && strcmp(argv[2],"config+")==0;
 
     /* Open log file and gobble up initial records. */
   
@@ -675,7 +680,7 @@ void print_config (net_config *cf, int biases)
   }
   printf("\n");
 
-  if (0)  /* can enable for debugging */
+  if (show_config_details)
   { 
     int i, r;
 
@@ -856,7 +861,7 @@ static void usage(void)
    "                / { group=prior }\n");
 
   fprintf(stderr,
-   "   or: net-spec log-file (to display stored network specifications)\n");
+   "   or: net-spec log-file [ \"config\" ]  (displays stored specifications)\n");
 
   fprintf(stderr,
    "Group: ti ih# bh# th# hh# ho# io bo ah# ao\n");

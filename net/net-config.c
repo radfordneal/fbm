@@ -762,7 +762,7 @@ static void net_config_sort (net_config *cf, int biases)
   else
   { qsort (quad, j, sizeof *tmp, cmp_smod4_s_w_d);
     cf->quad_s_4d_4w_sgpu = all_gpu+a_gpu;
-    a_gpu += copy_smod4 (cf->quad_s_4d_4w_sgpu, quad, 0);
+    a_gpu += copy_smod4 (cf->quad_s_4d_4w_sgpu, quad, cf->start_quad_sgpu);
   }
 
   /* Set up other connections (not in quad_s_4d_4w_sgpu) for use in gpu

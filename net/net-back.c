@@ -1133,6 +1133,31 @@ __device__ static void sum_derivatives_config_gpu
   net_config const* cf    /* Configuration for connections and weights */
 )
 {
+  net_connection *cn;
+  int c, i, j, k, m;
+
+  if (CONFIG_QUAD_S_4D_4W)
+  { cn = cf->quad_s_4d_4w_sgpu;
+    for (m = 0; m<4; m+=NTH)
+    { c = cf->start_quad_sgpu[th+m];
+      for (;;)
+      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        ds[i] = ds[i] + dd[j+0]*w[k+0] + dd[j+1]*w[k+1]  /* written so it can */
+                      + dd[j+2]*w[k+2] + dd[j+3]*w[k+3]; /*  use multiply-add */
+      }
+    }
+  }
+
+  cn = cf->other_sgpu;
+  for (m = 0; m<4; m+=NTH)
+  { c = cf->start_other_sgpu[th+m];
+    for (;;)
+    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      ds[i] += dd[j] * w[k];
+    }
+  }
 }
 
 #endif

@@ -675,7 +675,7 @@ void print_config (net_config *cf, int biases)
   }
   printf("\n");
 
-  if (1)  /* can enable for debugging */
+  if (0)  /* can enable for debugging */
   { 
     int i, r;
 

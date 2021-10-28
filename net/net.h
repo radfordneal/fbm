@@ -107,6 +107,7 @@ typedef struct
 
   net_connection *quad_s_4d_4w_sgpu;  /* Four connections, same s, sequential
                                          d & w, sorted by s, grouped s mod 4 */
+  int start_quad_sgpu[4];	/* Start indexes for sections in quad...sgpu */
   net_connection *other_sgpu;	/* Other connections for dource, has 4 -1s */
   int start_other_sgpu[4];	/* Start indexes for sections in other_sgpu */
 

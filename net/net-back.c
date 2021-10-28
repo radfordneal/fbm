@@ -40,6 +40,10 @@
 
 #define sqrt_2 1.4142135623730950488
 
+
+
+/* ---------------------------- net_back ----------------------------------- */
+
 HOSTDEV static void sum_derivatives (net_value const*, int, net_value *restrict,
                                      int, net_param const*, 
                                      unsigned short const*, int);
@@ -346,7 +350,7 @@ HOSTDEV void net_back
     }
   }
 
-  /* Backpropagate to input layer. */
+  /* Backpropagate to input layer (if needed). */
 
   if (start<0)
   {
@@ -873,3 +877,318 @@ HOSTDEV static void sum_derivatives_config
     ds[i] += dd[j] * w[k];
   }
 }
+
+
+/* -------------------------- net_back_gpu --------------------------------- */
+
+__device__ static void sum_derivatives_gpu 
+    (int, net_value const*, int, net_value *restrict, 
+     int, net_param const*, unsigned short const*, int);
+
+__device__ static void sum_derivatives_config_gpu
+    (int, net_value const*, net_value *restrict,
+     net_param const*, net_config const*);
+
+#define NTH (NET_FUNC_GPU_THREADS)      /* Short form for use here */
+
+
+/* BACKPROPAGATE ERROR DERIVATIVES, GPU VERSION. */
+
+#if __CUDACC__
+
+__device__ void net_back_gpu
+( int th,		/* Which thread, negative for surplus thread */
+  net_values const*v,	/* Values for units in network */
+  net_values *restrict d,/* Place to get output derivatives, and store others */
+  int start,		/* Earliest layer to find derivatives for */
+  net_arch const*a,	/* Network architecture */
+  net_flags const*flgs,	/* Network flags, null if none */
+  net_params const*w	/* Network parameters */
+)
+{
+  int l, i;
+
+  /* Backpropagate through hidden layers. */
+
+  for (l = a->N_layers-1; l>=0 && l>=start; l--)
+  { 
+    int N_hidden = a->N_hidden[l];
+    net_value *restrict dh = d->h[l];
+    net_value *restrict ds = d->s[l];
+
+    if (th<0) goto sync_layer;
+
+    for (i = th; i<N_hidden; i+=NTH)
+    { dh[i] = 0;
+    }
+    
+    if (a->has_ho[l])
+    { int k = 2*a->N_layers-1-l;
+      if (a->hidden_config[k])
+      { sum_derivatives_config_gpu 
+          (th, d->o, dh, w->ho[l], a->hidden_config[k]);
+      }
+      else 
+      { sum_derivatives_gpu 
+          (th, d->o, a->N_outputs, dh, N_hidden, 
+           w->ho[l], (unsigned short *) 0, 0);
+      }
+    }
+
+    if (l<a->N_layers-1 && a->has_hh[l])
+    { if (a->hidden_config[l+1])
+      { sum_derivatives_config_gpu 
+          (th, d->s[l+1], dh, w->hh[l], a->hidden_config[l+1]);
+      }
+      else 
+      { sum_derivatives_gpu 
+          (th, d->s[l+1], a->N_hidden[l+1], dh, N_hidden, 
+           w->hh[l], (unsigned short *) 0, 0);
+      }
+    }
+
+    if (flgs==0 || flgs->layer_type[l]==Tanh_type)
+    { net_value const* vh = v->h[l];
+      for (i = th; i<N_hidden; i+=NTH)
+      { ds[i] = (1 - vh[i]*vh[i]) * dh[i];
+      }
+    }
+    else if (flgs->layer_type[l]==Sin_type)
+    { net_value const* vs = v->s[l];
+      for (i = th; i<N_hidden; i+=NTH)
+      { ds[i] = 2 * prec_cos(vs[i]*sqrt_2) * dh[i];
+      }
+    }
+    else if (flgs->layer_type[l]==Softplus_type)
+    { net_value const* vs = v->s[l];
+      for (i = th; i<N_hidden; i+=NTH)
+      { ds[i] = dh[i] / (1+prec_exp(-vs[i]));
+      }
+    }
+    else if (flgs->layer_type[l]==Square_type)
+    { net_value const* vs = v->s[l];
+      for (i = th; i<N_hidden; i+=NTH)
+      { ds[i] = 2*vs[i] * dh[i];
+      }
+    }
+    else if (flgs->layer_type[l]==Cube_type)
+    { net_value const* vs = v->s[l];
+      for (i = th; i<N_hidden; i+=NTH)
+      { ds[i] = 3*vs[i]*vs[i] * dh[i];
+      }
+    }
+    else /* identity */
+    { for (i = th; i<N_hidden; i+=NTH)
+      { ds[i] = dh[i];
+      }
+    }
+
+  sync_layer:
+    if (l>start)
+    { __syncthreads();
+    }
+  }
+
+  /* Backpropagate to input layer (if needed). */
+
+  if (start<0)
+  {
+    if (th<0) goto sync_input;
+
+    for (i = th; i<a->N_inputs; i+=NTH)
+    { d->i[i] = 0;
+    }
+ 
+    for (l = 0; l<a->N_layers; l++)
+    { if (a->has_ih[l])
+      { if (a->input_config[l])
+        { sum_derivatives_config_gpu 
+            (th, d->s[l], d->i, w->ih[l], a->input_config[l]);
+        }
+        else 
+        { sum_derivatives_gpu
+            (th, d->s[l], a->N_hidden[l], d->i, a->N_inputs, w->ih[l],
+             flgs && flgs->any_omitted[l]? flgs->omit : 0, 1<<(l+1));
+        }
+      }
+    }
+
+    if (a->has_io)
+    { if (a->input_config[a->N_layers])
+      { sum_derivatives_config_gpu
+          (th, d->o, d->i, w->io, a->input_config[a->N_layers]);
+      }
+      else
+      { sum_derivatives_gpu 
+          (th, d->o, a->N_outputs, d->i, a->N_inputs, w->io,
+           flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1);
+      }
+    }
+
+  sync_input:
+    __syncthreads();
+  }
+}
+
+
+/* SUM UP CONTRIBUTIONS TO THE DERIVATIVES FROM ONE GROUP OF CONNECTIONS.  Adds 
+   the weighted sum of derivatives due to connections from source units to 
+   a given destination layer to the totals for the source layer. */
+
+__device__ static void sum_derivatives_gpu
+( int th,		/* Which thread, negative for surplus thread */
+  net_value const* dd,    /* Derivatives with respect to destination units */
+  int nd,		  /* Number of destination units */
+  net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
+  int ns,		  /* Number of source units */
+  net_param const* w,     /* Connection weights */
+  unsigned short const* omit,  /* Omit flags, null if not present */
+  int bit		  /* Bit to look at in omit flags */
+)
+{
+  net_value tv;
+  int i, j, k;
+
+  if (omit==0)
+  { if (nd==1)
+    { net_value d0 = dd[0];
+      for (i = th; i<ns; i+=NTH)
+      { ds[i] += w[i] * d0;
+      }
+    }
+    else
+    { for (i = th; i<ns; i+=NTH)
+      { k = i*nd;
+        tv = 0;
+        j = 3;
+        while (j<nd)
+        { tv += w[k+j-3] * dd[j-3];
+          tv += w[k+j-2] * dd[j-2];
+          tv += w[k+j-1] * dd[j-1];
+          tv += w[k+j-0] * dd[j-0];
+          j += 4;
+        }
+        j -= 3;
+        while (j<nd)
+        { tv += w[k+j] * dd[j];
+          j += 1;
+        }
+        ds[i] += tv;
+      }
+    }
+  }
+  else  /* omit is not absent */
+  { 
+    if (nd==1)
+    { net_value d0 = dd[0];
+      i = 3;
+      while (i<ns)
+      { if (! (omit[i-3] & bit)) ds[i-3] += *w++ * d0;
+        if (! (omit[i-2] & bit)) ds[i-2] += *w++ * d0;
+        if (! (omit[i-1] & bit)) ds[i-1] += *w++ * d0;
+        if (! (omit[i-0] & bit)) ds[i-0] += *w++ * d0;
+        i += 4;
+      }
+      i -= 3;
+      while (i<ns)
+      { if (! (omit[i] & bit)) ds[i] += *w++ * d0;
+        i += 1;
+      }
+    }
+    else
+    { for (i = 0; i<ns; i++)
+      { if ((omit) && ((omit)[i]&(bit))) continue;
+        tv = 0;
+        j = 3;
+        while (j<nd)
+        { tv += w[j-3] * dd[j-3];
+          tv += w[j-2] * dd[j-2];
+          tv += w[j-1] * dd[j-1];
+          tv += w[j-0] * dd[j-0];
+          j += 4;
+        }
+        j -= 3;
+        while (j<nd)
+        { tv += w[j] * dd[j];
+          j += 1;
+        }
+        w += nd;
+        ds[i] += tv;
+      }
+    }
+  }
+}
+
+
+/* SUM UP CONTRIBUTIONS TO THE DERIVATIVES FROM CONNECTIONS WITH CONFIGURATION.
+   Adds the weighted sum of derivatives due to connections from source units to
+   a given destination layer to the totals for the source layer. */
+
+__device__ static void sum_derivatives_config_gpu
+( int th,		/* Which thread, negative for surplus thread */
+  net_value const* dd,    /* Derivatives with respect to destination units */
+  net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
+  net_param const* w,     /* Connection weights */
+  net_config const* cf    /* Configuration for connections and weights */
+)
+{
+  net_connection *cn;
+  int i, j, k, c;
+
+  if (CONFIG_QUAD_S_4D_4W)
+  { cn = cf->quad_s_4d_4w;
+    cn = cf->quad_s_4d_4w_2;
+    { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+      { net_value w0 = w[k+0];
+        net_value w1 = w[k+1];
+        net_value w2 = w[k+2];
+        net_value w3 = w[k+3];
+        i = cn[c].s; j = cn[c].d;
+        ds[i] += (dd[j+0]*w0 + dd[j+2]*w2)      /* same order as SIMD */
+                   + (dd[j+1]*w1 + dd[j+3]*w3); /* instructions above */
+        i = cn[c+1].s; j = cn[c+1].d;
+        ds[i] += (dd[j+0]*w0 + dd[j+2]*w2)      /* same order as SIMD */
+                   + (dd[j+1]*w1 + dd[j+3]*w3); /* instructions above */
+      }
+    }
+  }
+
+  if (CONFIG_SINGLE4)
+  { 
+    cn = cf->single4_s;
+    for (c = 0; (k = cn[c].w) >= 0; c+=4)
+    { i = cn[c].s;
+      net_value dsi = ds[i];
+      j = cn[c].d;
+      dsi += dd[j] * w[k];
+      j = cn[c+1].d; k = cn[c+1].w; 
+      dsi += dd[j] * w[k];
+      j = cn[c+2].d; k = cn[c+2].w; 
+      dsi += dd[j] * w[k];
+      j = cn[c+3].d; k = cn[c+3].w; 
+      dsi += dd[j] * w[k];
+      ds[i] = dsi;
+    }
+
+    cn = cf->single4_d;
+    for (c = 0; (k = cn[c].w) >= 0; c+=4)
+    { net_value ddj = dd[cn[c].d];
+      i = cn[c].s;
+      ds[i] += ddj * w[k];
+      i = cn[c+1].s; k = cn[c+1].w; 
+      ds[i] += ddj * w[k];
+      i = cn[c+2].s; k = cn[c+2].w; 
+      ds[i] += ddj * w[k];
+      i = cn[c+3].s; k = cn[c+3].w; 
+      ds[i] += ddj * w[k];
+    }
+  }
+
+  cn = CONFIG_ORIGINAL ? cf->conn : cf->single;
+  for (c = 0; (k = cn[c].w) >= 0; c++)
+  { i = cn[c].s; j = cn[c].d;
+    ds[i] += dd[j] * w[k];
+  }
+}
+
+#endif

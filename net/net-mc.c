@@ -2113,8 +2113,10 @@ __global__ void forward_kernel
   { if (th>=0) 
     { int k;
       if (single_thread) /* must use one thread, as for computing deriv_h->o */
-      { for (k = 0; k<const_arch.N_outputs; k++)
-        { deriv_h->o[k] *= gr_weight;
+      { if (th==0)
+        { for (k = 0; k<const_arch.N_outputs; k++)
+          { deriv_h->o[k] *= gr_weight;
+          }
         }
       }
       else  /* must use multiple threads, as for computing deriv_h->o */ 
@@ -2161,7 +2163,9 @@ __global__ void backward_kernel
   // printf("Backward_kernel: block %d, thread %d\n",blockIdx.x,threadIdx.x);
 
   net_flags *flgs = const_has_flgs ? &const_flgs : 0;
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int i = x / NET_FUNC_GPU_THREADS;
+  int th = x - NET_FUNC_GPU_THREADS*i;
   int h = start + i;
 
   // printf("blk %d, thrd %d, th %d, i %d, h %d, o %d, start %d, end %d\n",
@@ -2170,12 +2174,19 @@ __global__ void backward_kernel
   net_values *train_vals_h = const_train_values+h;
   net_values *deriv_h;
 
-  if (h < end)
-  { 
-    deriv_h = const_deriv+h;
+  if (h >= end) th = -1;
 
-    net_back (train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
-              &const_arch, flgs, &const_params);
+  deriv_h = const_deriv+h;
+
+  if (NET_FUNC_GPU_THREADS==1)
+  { if (th>=0)
+    { net_back (train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
+                &const_arch, flgs, &const_params);
+    }
+  }
+  else
+  { net_back_gpu (th, train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
+                  &const_arch, flgs, &const_params);
   }
 }
 
@@ -2371,11 +2382,10 @@ static void net_training_cases_gpu
       forward_kernel <<<blks, blkcases*NET_FUNC_GPU_THREADS>>> 
         (energy ? case_energy : 0, i, i+n, en_weight, gr!=0, gr_weight);
 
-check_cuda_error (cudaDeviceSynchronize(), 
-                          "Synchronizing after launching forward kernel");
-
       if (gr)
-      { backward_kernel <<<blks, blkcases>>> (i, i+n);
+      { 
+        backward_kernel <<<blks, blkcases*NET_FUNC_GPU_THREADS>>>  (i, i+n);
+
         gradient_kernel <<<blks, blkcases>>> (group_grad, i, i+n);
       }
     }

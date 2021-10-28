@@ -1078,26 +1078,27 @@ __device__ static void sum_derivatives_gpu
     }
   }
   else  /* omit is not absent */
-  { 
-    if (nd==1)
+  { if (nd==1)
     { net_value d0 = dd[0];
-      i = 3;
-      while (i<ns)
-      { if (! (omit[i-3] & bit)) ds[i-3] += *w++ * d0;
-        if (! (omit[i-2] & bit)) ds[i-2] += *w++ * d0;
-        if (! (omit[i-1] & bit)) ds[i-1] += *w++ * d0;
-        if (! (omit[i-0] & bit)) ds[i-0] += *w++ * d0;
-        i += 4;
-      }
-      i -= 3;
-      while (i<ns)
-      { if (! (omit[i] & bit)) ds[i] += *w++ * d0;
-        i += 1;
+      k = 0;
+      for (i = th; i<ns; i+=NTH)
+      { while (k < i) 
+        { if (!(omit[k]&bit)) w += 1;
+          k += 1;
+        }
+        if (omit[i]&bit) continue;
+        ds[i] += *w * d0;
+        w += 1;
       }
     }
     else
-    { for (i = 0; i<ns; i++)
-      { if ((omit) && ((omit)[i]&(bit))) continue;
+    { k = 0;
+      for (i = th; i<ns; i+=NTH)
+      { while (k < i) 
+        { if (!(omit[k]&bit)) w += nd;
+          k += 1;
+        }
+        if (omit[i]&bit) continue;
         tv = 0;
         j = 3;
         while (j<nd)
@@ -1112,8 +1113,8 @@ __device__ static void sum_derivatives_gpu
         { tv += w[j] * dd[j];
           j += 1;
         }
-        w += nd;
         ds[i] += tv;
+        w += nd;
       }
     }
   }
@@ -1132,63 +1133,6 @@ __device__ static void sum_derivatives_config_gpu
   net_config const* cf    /* Configuration for connections and weights */
 )
 {
-  net_connection *cn;
-  int i, j, k, c;
-
-  if (CONFIG_QUAD_S_4D_4W)
-  { cn = cf->quad_s_4d_4w;
-    cn = cf->quad_s_4d_4w_2;
-    { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-      { net_value w0 = w[k+0];
-        net_value w1 = w[k+1];
-        net_value w2 = w[k+2];
-        net_value w3 = w[k+3];
-        i = cn[c].s; j = cn[c].d;
-        ds[i] += (dd[j+0]*w0 + dd[j+2]*w2)      /* same order as SIMD */
-                   + (dd[j+1]*w1 + dd[j+3]*w3); /* instructions above */
-        i = cn[c+1].s; j = cn[c+1].d;
-        ds[i] += (dd[j+0]*w0 + dd[j+2]*w2)      /* same order as SIMD */
-                   + (dd[j+1]*w1 + dd[j+3]*w3); /* instructions above */
-      }
-    }
-  }
-
-  if (CONFIG_SINGLE4)
-  { 
-    cn = cf->single4_s;
-    for (c = 0; (k = cn[c].w) >= 0; c+=4)
-    { i = cn[c].s;
-      net_value dsi = ds[i];
-      j = cn[c].d;
-      dsi += dd[j] * w[k];
-      j = cn[c+1].d; k = cn[c+1].w; 
-      dsi += dd[j] * w[k];
-      j = cn[c+2].d; k = cn[c+2].w; 
-      dsi += dd[j] * w[k];
-      j = cn[c+3].d; k = cn[c+3].w; 
-      dsi += dd[j] * w[k];
-      ds[i] = dsi;
-    }
-
-    cn = cf->single4_d;
-    for (c = 0; (k = cn[c].w) >= 0; c+=4)
-    { net_value ddj = dd[cn[c].d];
-      i = cn[c].s;
-      ds[i] += ddj * w[k];
-      i = cn[c+1].s; k = cn[c+1].w; 
-      ds[i] += ddj * w[k];
-      i = cn[c+2].s; k = cn[c+2].w; 
-      ds[i] += ddj * w[k];
-      i = cn[c+3].s; k = cn[c+3].w; 
-      ds[i] += ddj * w[k];
-    }
-  }
-
-  cn = CONFIG_ORIGINAL ? cf->conn : cf->single;
-  for (c = 0; (k = cn[c].w) >= 0; c++)
-  { i = cn[c].s; j = cn[c].d;
-    ds[i] += dd[j] * w[k];
-  }
 }
 
 #endif

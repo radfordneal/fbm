@@ -105,6 +105,11 @@ typedef struct
   net_connection *other_dgpu;	/* Other connections for dest, has 4 -1s */
   int start_other_dgpu[4];	/* Start indexes for sections in other_dgpu */
 
+  net_connection *quad_s_4d_4w_sgpu;  /* Four connections, same s, sequential
+                                         d & w, sorted by s, grouped s mod 4 */
+  net_connection *other_sgpu;	/* Other connections for dource, has 4 -1s */
+  int start_other_sgpu[4];	/* Start indexes for sections in other_sgpu */
+
   net_connection *all_gpu;	/* Pointer to block with items above */
   int all_gpu_length;		/* Length of 'all_gpu' block in use */
 

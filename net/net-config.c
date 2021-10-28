@@ -428,6 +428,19 @@ static int cmp_dmod4_d_w_s (const void *a0, const void *b0)
   return r;
 }
 
+static int cmp_smod4_s_w_d (const void *a0, const void *b0)
+{ net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
+  int r;
+  r = (int)(a->s&3) - (int)(b->s&3);
+  if (r!=0) return r;
+  r = (int)a->s - (int)b->s;
+  if (r!=0) return r;
+  r = (int)a->w - (int)b->w;
+  if (r!=0) return r;
+  r = (int)a->d - (int)b->d;
+  return r;
+}
+
 static int cmp_s_wmd_d (const void *a0, const void *b0)
 { net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
   int r;
@@ -490,6 +503,40 @@ static int copy_dmod4 (net_connection *dst, net_connection *src, int *start)
   while (src[i].w >= 0)
   { d = src[i].d;
     while (m != (d & 3)) 
+    { dst[j++].w = -1;
+      m += 1;
+      if (start && m<4) start[m] = j;
+    }
+    dst[j++] = src[i++];
+  }
+
+  while (m < 4)
+  { dst[j++].w = -1;
+    m += 1;
+    if (start && m<4) start[m] = j;
+  }
+
+  return j;
+}
+
+/* Copy connections already sorted by s mod 4 (terminated by w of -1), 
+   inserting  w of -1 after the end of each section.  Returns the number 
+   of connections, including the four with -1s.  Stores starting indexes
+   for section for each mod value in start, if it is not null. */
+
+static int copy_smod4 (net_connection *dst, net_connection *src, int *start)
+{
+  int i, j, s, m;
+
+  if (start) start[0] = 0;
+
+  i = 0;
+  j = 0;
+  m = 0;
+
+  while (src[i].w >= 0)
+  { s = src[i].s;
+    while (m != (s & 3)) 
     { dst[j++].w = -1;
       m += 1;
       if (start && m<4) start[m] = j;
@@ -640,8 +687,9 @@ static void net_config_sort (net_config *cf, int biases)
     a += jj+1;
   }
 
-  /* The quad_s_4d_4w connections are also used for gpu gradient computations,
-     but with extra -1 indicators for when the first weight mod 4 changes. */
+  /* The quad_s_4d_4w_wgpu connections are also used for gpu gradient
+     computations, but with extra -1 indicators for when the first
+     weight mod 4 changes. */
 
   if (!CONFIG_QUAD_S_4D_4W)
   { cf->quad_s_4d_4w_wgpu = all_gpu+a_gpu;
@@ -658,8 +706,8 @@ static void net_config_sort (net_config *cf, int biases)
     a_gpu += copy_wmod4 (cf->quad_s_4d_4w_2_wgpu, cf->quad_s_4d_4w_2, 0);
   }
 
-  /* Set up other connections (not in quad_s_4d_4w_wgpu) for use in gpu
-     gradient computations. */ 
+  /* Set up other connections (not in quad_s_4d_4w_wgpu) for use in
+     gpu gradient computations. */
 
   memcpy (tmp, rem, r * sizeof *tmp);  
   qsort (tmp, r, sizeof *tmp, cmp_wmod4_w_d_s);
@@ -679,8 +727,9 @@ static void net_config_sort (net_config *cf, int biases)
   cf->other_wgpu = all_gpu+a_gpu;
   a_gpu += copy_wmod4 (cf->other_wgpu, tmp, cf->start_other_wgpu);
 
-  /* Similarly, the quad_s_4d_4w connections are used for gpu function
-     computations, sorted by d, but a paired version is not set up. */
+  /* Similarly, the quad_s_4d_4w_dgpu connections are used for gpu
+     function computations, sorted by d, but a paired version is not
+     set up. */
 
   if (!CONFIG_QUAD_S_4D_4W)
   { cf->quad_s_4d_4w_dgpu = all_gpu+a_gpu;
@@ -694,13 +743,36 @@ static void net_config_sort (net_config *cf, int biases)
   }
 
   /* Set up other connections (not in quad_s_4d_4w_dgpu) for use in gpu
-     function computations. */
+     backward pass computations. */
 
   memcpy (tmp, rem, r * sizeof *tmp);  
   qsort (tmp, r, sizeof *tmp, cmp_dmod4_d_w_s);
   tmp[r].w = -1;
   cf->other_dgpu = all_gpu+a_gpu;
   a_gpu += copy_dmod4 (cf->other_dgpu, tmp, cf->start_other_dgpu);
+
+  /* And, the quad_s_4d_4w_sgpu connections are used for gpu backward pass
+     computations, sorted by s. */
+
+  if (!CONFIG_QUAD_S_4D_4W)
+  { cf->quad_s_4d_4w_sgpu = all_gpu+a_gpu;
+    all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
+    all_gpu[a_gpu++].w = -1; all_gpu[a_gpu++].w = -1;
+  }
+  else
+  { qsort (quad, j, sizeof *tmp, cmp_smod4_s_w_d);
+    cf->quad_s_4d_4w_sgpu = all_gpu+a_gpu;
+    a_gpu += copy_smod4 (cf->quad_s_4d_4w_sgpu, quad, 0);
+  }
+
+  /* Set up other connections (not in quad_s_4d_4w_sgpu) for use in gpu
+     backward pass computations. */
+
+  memcpy (tmp, rem, r * sizeof *tmp);  
+  qsort (tmp, r, sizeof *tmp, cmp_smod4_s_w_d);
+  tmp[r].w = -1;
+  cf->other_sgpu = all_gpu+a_gpu;
+  a_gpu += copy_smod4 (cf->other_sgpu, tmp, cf->start_other_sgpu);
 
   /* Find groups of four single connections with the same value for d, if
      this is enabled, for use in CPU computations.  Not done for biases. */
@@ -863,6 +935,9 @@ net_config *net_config_to_gpu (net_config *cf)
 
   dcf.quad_s_4d_4w_dgpu = dcf.all_gpu + (cf->quad_s_4d_4w_dgpu - cf->all_gpu);
   dcf.other_dgpu = dcf.all_gpu + (cf->other_dgpu - cf->all_gpu);
+
+  dcf.quad_s_4d_4w_sgpu = dcf.all_gpu + (cf->quad_s_4d_4w_sgpu - cf->all_gpu);
+  dcf.other_sgpu = dcf.all_gpu + (cf->other_sgpu - cf->all_gpu);
   
 
   net_config *dev_dcf;

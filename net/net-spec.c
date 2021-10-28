@@ -675,7 +675,7 @@ void print_config (net_config *cf, int biases)
   }
   printf("\n");
 
-  if (0)  /* can enable for debugging */
+  if (1)  /* can enable for debugging */
   { 
     int i, r;
 
@@ -730,6 +730,20 @@ void print_config (net_config *cf, int biases)
         { printf("%3d %3d-%-3d %3d-%-3d\n", cf->quad_s_4d_4w_dgpu[i].s, 
                       cf->quad_s_4d_4w_dgpu[i].d, cf->quad_s_4d_4w_dgpu[i].d+3,
                       cf->quad_s_4d_4w_dgpu[i].w, cf->quad_s_4d_4w_dgpu[i].w+3);
+          i += 1;
+        }
+        i += 1;
+        printf("\n");
+      }
+      printf("\n");
+      printf("quad_s_4d_4w_sgpu:\n");
+      i = 0;
+      for (r = 0; r<4; r++)
+      { printf("Source unit %d mod 4:\n",r);
+        while (cf->quad_s_4d_4w_sgpu[i].w >= 0)
+        { printf("%3d %3d-%-3d %3d-%-3d\n", cf->quad_s_4d_4w_sgpu[i].s, 
+                      cf->quad_s_4d_4w_sgpu[i].d, cf->quad_s_4d_4w_sgpu[i].d+3,
+                      cf->quad_s_4d_4w_sgpu[i].w, cf->quad_s_4d_4w_sgpu[i].w+3);
           i += 1;
         }
         i += 1;
@@ -800,6 +814,22 @@ void print_config (net_config *cf, int biases)
       while (cf->other_dgpu[i].w >= 0)
       { printf("%3d %3d %3d\n", 
                 cf->other_dgpu[i].s, cf->other_dgpu[i].d, cf->other_dgpu[i].w);
+        i += 1;
+      }
+      i += 1;
+      printf("\n");
+    }
+    printf("\n");
+    printf("other for sgpu:\n\n");
+    printf("start indexes: %d %d %d %d\n\n",
+            cf->start_other_sgpu[0], cf->start_other_sgpu[1],
+            cf->start_other_sgpu[2], cf->start_other_sgpu[3]);
+    i = 0;
+    for (r = 0; r<4; r++)
+    { printf("Source unit %d mod 4:\n",r);
+      while (cf->other_sgpu[i].w >= 0)
+      { printf("%3d %3d %3d\n", 
+                cf->other_sgpu[i].s, cf->other_sgpu[i].d, cf->other_sgpu[i].w);
         i += 1;
       }
       i += 1;

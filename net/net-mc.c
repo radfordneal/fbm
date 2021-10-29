@@ -2139,7 +2139,7 @@ __global__ void forward_kernel
       l = blockDim.x / NET_FUNC_GPU_THREADS;
       if (h+l > end) l = end-h;
       for (j = 0; j<l; j++)
-      { e += case_energy[h+j];
+      { e += case_energy[h-start+j];
       }
       *(const_block_energy + blockIdx.x) = -en_weight * e;
     }

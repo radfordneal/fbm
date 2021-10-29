@@ -3,7 +3,8 @@
 if [ x$1 == x ]; then echo "No first argument for using"; exit 1; fi
 if [ x$2 == x ]; then echo "No second argument for using"; exit 1; fi
 
-export PATH=`echo $PATH | sed s/bin-fbm/bin-$1/`
+export PRECISION=$1
+export PATH=`echo $PATH | sed s/bin-fbm/bin-$PRECISION/`
 
 if [ x$GPU != x ]; then
   export CUDA_VISIBLE_DEVICES=$GPU

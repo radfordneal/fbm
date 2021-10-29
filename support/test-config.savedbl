@@ -1,0 +1,1695 @@
+ 
+--- A
+ 
+
+Network Architecture:
+
+  Input layer:     size 5
+  Hidden layer 0:  size 4  tanh  cfg-i:%echo  3 1 1  4 2 1  1 1 2
+  Hidden layer 1:  size 3  tanh  cfg-h:%echo 1 2 1  2 1 1
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    7.000
+
+         Hidden Layer 1
+
+  Hidden-Hidden Weights:   8.000
+
+         Output Layer
+
+  Hidden1-Output Weights:  9.000
+
+Hidden layer 0 input weight configuration
+
+3 connections, 2 weights
+
+     3      1      1
+     4      2      1
+     1      1      2
+
+Hidden layer 1 hidden weight configuration
+
+2 connections, 1 weights
+
+     1      2      1
+     2      1      1
+
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 7.00:      +0.10  +0.20
+
+Hidden Layer 0 to Hidden Layer 1 Weights [2]
+
+ 8.00:      +0.30
+
+Hidden Layer 1 to Output Weights [3]
+
+ 9.00 9.00: +5.00
+
+      9.00: +6.00
+
+      9.00: +7.00
+
+Noise levels
+
+   5.00 -  5.00
+
+ 1.00000000e-01  2.00000000e-01  3.00000000e-01  5.00000000e+00  6.00000000e+00 
+  1.10000  1.20000  1.30000  1.40000  1.50000 +8.119467e-01
+0.811947
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.002000  Energy: 3.74
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   +0.10   -1.9729e-03  -1.9870e-03   -1.9800e+00  -1.9800e+00     0.0000
+     1   +0.20   -3.9242e-04  -3.9370e-04   -3.9306e-01  -3.9306e-01     0.0000
+     2   +0.30   -1.2459e-03  -1.2477e-03   -1.2468e+00  -1.2468e+00     0.0000
+     3   +5.00   +3.3459e-05  +3.3446e-05   +3.3453e-02  +3.3453e-02     0.0000
+     4   +6.00   +3.3723e-05  +3.3709e-05   +3.3716e-02  +3.3716e-02     0.0000
+     5   +7.00   +8.6426e-05  +8.6414e-05   +8.6420e-02  +8.6420e-02     0.0000
+
+Largest absolute log ratio: 0.0000
+
+ 
+--- B
+ 
+
+Network Architecture:
+
+  Input layer:     size 5
+  Hidden layer 0:  size 4  tanh  cfg-i:%echo  3 1 1  + + 1  1 1 +
+  Hidden layer 1:  size 3  tanh  cfg-h:%echo 1 2 1  +1 -1 1
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    7.000
+
+         Hidden Layer 1
+
+  Hidden-Hidden Weights:   8.000
+
+         Output Layer
+
+  Hidden1-Output Weights:  9.000
+
+Hidden layer 0 input weight configuration
+
+3 connections, 2 weights
+
+     3      1      1
+     4      2      1
+     1      1      2
+
+Hidden layer 1 hidden weight configuration
+
+2 connections, 1 weights
+
+     1      2      1
+     2      1      1
+
+
+Network Architecture:
+
+  Input layer:     size 2
+  Hidden layer 0:  size 3  tanh  cfg-i:%echo + + 1 = + + + -1 = 1 +2 -
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    2.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  3.000
+
+Hidden layer 0 input weight configuration
+
+4 connections, 2 weights
+
+     1      1      1
+     1      2      2
+     2      1      2
+     1      3      1
+
+ 
+--- C
+ 
+-- fully connected --
+
+Network Architecture:
+
+  Input layer:     size 2
+  Hidden layer 0:  size 2  tanh
+  Hidden layer 1:  size 2  tanh
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    3.000
+
+         Hidden Layer 1
+
+  Hidden-Hidden Weights:   4.000
+
+         Output Layer
+
+  Hidden1-Output Weights:  5.000
+  Output Biases:           10.000
+
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 3.00 3.00: -0.52  +0.29
+
+      3.00: -1.36  -5.00
+
+Hidden Layer 0 to Hidden Layer 1 Weights [2]
+
+ 4.00 4.00: +4.59  -3.13
+
+      4.00: -4.78  -0.75
+
+Hidden Layer 1 to Output Weights [3]
+
+ 5.00 5.00: -1.88
+
+      5.00: -6.00
+
+Output Biases [4]
+
+     10.00: -9.11
+
+Noise levels
+
+   1.98 -  1.98
+
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.002000  Energy: 54.02
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   -0.52   -4.5651e-05  -4.5810e-05   -4.5731e-02  -4.5731e-02     0.0000
+     1   +0.29   +3.1873e-05  +3.1762e-05   +3.1817e-02  +3.1817e-02     0.0000
+     2   -1.36   -1.3273e-04  -1.3295e-04   -1.3284e-01  -1.3284e-01     0.0000
+     3   -5.00   -5.5523e-04  -5.5534e-04   -5.5528e-01  -5.5528e-01     0.0000
+     4   +4.59   -8.6873e-03  -8.6849e-03   -8.6861e+00  -8.6861e+00     0.0000
+     5   -3.13   -2.4571e-04  -2.4567e-04   -2.4569e-01  -2.4569e-01     0.0000
+     6   -4.78   -9.2733e-03  -9.2709e-03   -9.2721e+00  -9.2721e+00     0.0000
+     7   -0.75   -9.6859e-05  -9.6822e-05   -9.6840e-02  -9.6840e-02     0.0000
+     8   -1.88   -9.8435e-04  -9.8440e-04   -9.8437e-01  -9.8437e-01     0.0000
+     9   -6.00   -5.1731e-03  -5.1734e-03   -5.1732e+00  -5.1732e+00     0.0000
+    10   -9.11   -5.0284e-03  -5.0287e-03   -5.0286e+00  -5.0286e+00     0.0000
+
+Largest absolute log ratio: 0.0000
+
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.002000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +0.03508   -4.5890e-02  -4.5572e-02     +2.50818
+     1   +0.03508   +3.1706e-02  +3.1928e-02     +3.00000
+     2   +0.02339   -1.3306e-01  -1.3262e-01     +2.13801
+     3   +0.02339   -5.5539e-01  -5.5517e-01     +3.00000
+     4   +0.39495   -8.6837e+00  -8.6885e+00   **********
+     5   +0.39495   -2.4566e-01  -2.4573e-01   **********
+     6   +0.39495   -9.2697e+00  -9.2745e+00   **********
+     7   +0.39495   -9.6803e-02  -9.6877e-02   **********
+     8   +1.84449   -9.8442e-01  -9.8432e-01     +4.53568
+     9   +1.84449   -5.1735e+00  -5.1730e+00     +1.84584
+    10   +1.94650   -5.0288e+00  -5.0283e+00     +1.94650
+
+  1.10000  1.20000 -1.564035e+01
+
+Network in file "log" with index 3
+
+Input to Hidden Layer 0 Weights [1]
+
+ 3.00 3.00: +2.58  -1.12
+
+      3.00: +1.71  -2.78
+
+Hidden Layer 0 to Hidden Layer 1 Weights [2]
+
+ 4.00 4.00: -0.27  -0.94
+
+      4.00: -3.25  +1.76
+
+Hidden Layer 1 to Output Weights [3]
+
+ 5.00 5.00:+11.78
+
+      5.00: -0.38
+
+Output Biases [4]
+
+     10.00: -7.46
+
+Noise levels
+
+   1.33 -  1.33
+
+ 
+-- fully connected the hard way --
+
+Network Architecture:
+
+  Input layer:     size 2
+  Hidden layer 0:  size 2  tanh  cfg-i:%echo  1 1 1  1 2 2  2 1 3  2 2 4
+  Hidden layer 1:  size 2  tanh  cfg-h:%echo 1 1 1  1 2 2  2 1 3  2 2 4
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    3.000
+
+         Hidden Layer 1
+
+  Hidden-Hidden Weights:   4.000
+
+         Output Layer
+
+  Hidden1-Output Weights:  5.000
+  Output Biases:           10.000
+
+Hidden layer 0 input weight configuration
+
+4 connections, 4 weights
+
+     1      1      1
+     1      2      2
+     2      1      3
+     2      2      4
+
+Hidden layer 1 hidden weight configuration
+
+4 connections, 4 weights
+
+     1      1      1
+     1      2      2
+     2      1      3
+     2      2      4
+
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 3.00:      -0.52  +0.29  -1.36  -5.00
+
+Hidden Layer 0 to Hidden Layer 1 Weights [2]
+
+ 4.00:      +4.59  -3.13  -4.78  -0.75
+
+Hidden Layer 1 to Output Weights [3]
+
+ 5.00 5.00: -1.88
+
+      5.00: -6.00
+
+Output Biases [4]
+
+     10.00: -9.11
+
+Noise levels
+
+   1.98 -  1.98
+
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.002000  Energy: 54.02
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   -0.52   -4.5651e-05  -4.5810e-05   -4.5731e-02  -4.5731e-02     0.0000
+     1   +0.29   +3.1873e-05  +3.1762e-05   +3.1817e-02  +3.1817e-02     0.0000
+     2   -1.36   -1.3273e-04  -1.3295e-04   -1.3284e-01  -1.3284e-01     0.0000
+     3   -5.00   -5.5523e-04  -5.5534e-04   -5.5528e-01  -5.5528e-01     0.0000
+     4   +4.59   -8.6873e-03  -8.6849e-03   -8.6861e+00  -8.6861e+00     0.0000
+     5   -3.13   -2.4571e-04  -2.4567e-04   -2.4569e-01  -2.4569e-01     0.0000
+     6   -4.78   -9.2733e-03  -9.2709e-03   -9.2721e+00  -9.2721e+00     0.0000
+     7   -0.75   -9.6859e-05  -9.6822e-05   -9.6840e-02  -9.6840e-02     0.0000
+     8   -1.88   -9.8435e-04  -9.8440e-04   -9.8437e-01  -9.8437e-01     0.0000
+     9   -6.00   -5.1731e-03  -5.1734e-03   -5.1732e+00  -5.1732e+00     0.0000
+    10   -9.11   -5.0284e-03  -5.0287e-03   -5.0286e+00  -5.0286e+00     0.0000
+
+Largest absolute log ratio: 0.0000
+
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.002000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +0.03508   -4.5890e-02  -4.5572e-02     +2.50818
+     1   +0.03508   +3.1706e-02  +3.1928e-02     +3.00000
+     2   +0.02339   -1.3306e-01  -1.3262e-01     +2.13801
+     3   +0.02339   -5.5539e-01  -5.5517e-01     +3.00000
+     4   +0.39495   -8.6837e+00  -8.6885e+00   **********
+     5   +0.39495   -2.4566e-01  -2.4573e-01   **********
+     6   +0.39495   -9.2697e+00  -9.2745e+00   **********
+     7   +0.39495   -9.6803e-02  -9.6877e-02   **********
+     8   +1.84449   -9.8442e-01  -9.8432e-01     +4.53568
+     9   +1.84449   -5.1735e+00  -5.1730e+00     +1.84584
+    10   +1.94650   -5.0288e+00  -5.0283e+00     +1.94650
+
+  1.10000  1.20000 -1.564035e+01
+
+Network in file "log" with index 3
+
+Input to Hidden Layer 0 Weights [1]
+
+ 3.00:      +2.58  -1.12  +1.71  -2.78
+
+Hidden Layer 0 to Hidden Layer 1 Weights [2]
+
+ 4.00:      -0.27  -0.94  -3.25  +1.76
+
+Hidden Layer 1 to Output Weights [3]
+
+ 5.00 5.00:+11.78
+
+      5.00: -0.38
+
+Output Biases [4]
+
+     10.00: -7.46
+
+Noise levels
+
+   1.33 -  1.33
+
+ 
+ 
+--- D
+ 
+-- fully connected --
+
+Network Architecture:
+
+  Input layer:     size 2
+  Hidden layer 0:  size 2  tanh
+  Hidden layer 1:  size 2  tanh
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    3.000:2.00
+
+         Hidden Layer 1
+
+  Hidden-Hidden Weights:   4.000:2.00
+
+         Output Layer
+
+  Hidden1-Output Weights:  5.000
+  Output Biases:           10.000
+
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 3.06 3.06: -1.47  +0.36
+
+      3.06: -4.59  +1.38
+
+Hidden Layer 0 to Hidden Layer 1 Weights [2]
+
+ 4.14 4.14: -1.56  -4.97
+
+      4.14: -3.77  -2.43
+
+Hidden Layer 1 to Output Weights [3]
+
+ 5.00 5.00: +4.09
+
+      5.00:-12.95
+
+Output Biases [4]
+
+     10.00: -8.71
+
+Noise levels
+
+   8.76 -  8.76
+
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.002000  Energy: 15.55
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   -1.47   -1.5664e-04  -1.5675e-04   -1.5669e-01  -1.5669e-01     0.0000
+     1   +0.36   +3.8577e-05  +3.8470e-05   +3.8523e-02  +3.8523e-02     0.0000
+     2   -4.59   -4.9042e-04  -4.9053e-04   -4.9047e-01  -4.9047e-01     0.0000
+     3   +1.38   +1.4729e-04  +1.4718e-04   +1.4724e-01  +1.4724e-01     0.0000
+     4   -1.56   -1.7378e-05  -1.7293e-05   -1.7335e-02  -1.7335e-02     0.0000
+     5   -4.97   -4.1091e-04  -4.1073e-04   -4.1082e-01  -4.1082e-01     0.0000
+     6   -3.77   -2.9325e-04  -2.9317e-04   -2.9321e-01  -2.9321e-01     0.0000
+     7   -2.43   -2.0034e-05  -1.9854e-05   -1.9944e-02  -1.9944e-02     0.0000
+     8   +4.09   +5.3933e-04  +5.3928e-04   +5.3931e-01  +5.3931e-01     0.0000
+     9  -12.95   -8.9773e-04  -8.9778e-04   -8.9776e-01  -8.9776e-01     0.0000
+    10   -8.71   -4.7170e-04  -4.7172e-04   -4.7171e-01  -4.7171e-01     0.0000
+
+Largest absolute log ratio: 0.0000
+
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.002000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +0.14924   -1.5680e-01  -1.5659e-01     +3.06023
+     1   +0.14924   +3.8416e-02  +3.8630e-02     +3.05977
+     2   +0.09956   -4.9058e-01  -4.9037e-01     +3.06023
+     3   +0.09956   +1.4713e-01  +1.4734e-01     +3.05919
+     4   +1.61310   -1.7251e-02  -1.7420e-02   **********
+     5   +1.61310   -4.1064e-01  -4.1100e-01   **********
+     6   +1.61310   -2.9312e-01  -2.9329e-01   **********
+     7   +1.61310   -1.9764e-02  -2.0124e-02   **********
+     8   +4.34198   +5.3926e-01  +5.3936e-01     +4.36710
+     9   +4.34198   -8.9781e-01  -8.9770e-01     +4.35505
+    10   +6.58771   -4.7173e-01  -4.7168e-01     +6.58771
+
+  1.10000  1.20000 -2.548764e+01
+
+Network in file "log" with index 3
+
+Input to Hidden Layer 0 Weights [1]
+
+ 2.91 2.91: -1.99  -1.27
+
+      2.91: +2.93  -3.74
+
+Hidden Layer 0 to Hidden Layer 1 Weights [2]
+
+ 3.92 3.92: -4.01  +7.47
+
+      3.92: +6.74  +0.85
+
+Hidden Layer 1 to Output Weights [3]
+
+ 5.00 5.00: -3.35
+
+      5.00: +1.51
+
+Output Biases [4]
+
+     10.00: +2.65
+
+Noise levels
+
+   3.78 -  3.78
+
+ 
+-- fully connected the hard way --
+
+Network Architecture:
+
+  Input layer:     size 2
+  Hidden layer 0:  size 2  tanh  cfg-i:%echo  1 1 1  1 2 2  2 1 3  2 2 4
+  Hidden layer 1:  size 2  tanh  cfg-h:%echo 1 1 1  1 2 2  2 1 3  2 2 4
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    3.000:2.00
+
+         Hidden Layer 1
+
+  Hidden-Hidden Weights:   4.000:2.00
+
+         Output Layer
+
+  Hidden1-Output Weights:  5.000
+  Output Biases:           10.000
+
+Hidden layer 0 input weight configuration
+
+4 connections, 4 weights
+
+     1      1      1
+     1      2      2
+     2      1      3
+     2      2      4
+
+Hidden layer 1 hidden weight configuration
+
+4 connections, 4 weights
+
+     1      1      1
+     1      2      2
+     2      1      3
+     2      2      4
+
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 3.06:      -1.47  +0.36  -4.59  +1.38
+
+Hidden Layer 0 to Hidden Layer 1 Weights [2]
+
+ 4.14:      -1.56  -4.97  -3.77  -2.43
+
+Hidden Layer 1 to Output Weights [3]
+
+ 5.00 5.00: +4.09
+
+      5.00:-12.95
+
+Output Biases [4]
+
+     10.00: -8.71
+
+Noise levels
+
+   8.76 -  8.76
+
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.002000  Energy: 15.55
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   -1.47   -1.5664e-04  -1.5675e-04   -1.5669e-01  -1.5669e-01     0.0000
+     1   +0.36   +3.8577e-05  +3.8470e-05   +3.8523e-02  +3.8523e-02     0.0000
+     2   -4.59   -4.9042e-04  -4.9053e-04   -4.9047e-01  -4.9047e-01     0.0000
+     3   +1.38   +1.4729e-04  +1.4718e-04   +1.4724e-01  +1.4724e-01     0.0000
+     4   -1.56   -1.7378e-05  -1.7293e-05   -1.7335e-02  -1.7335e-02     0.0000
+     5   -4.97   -4.1091e-04  -4.1073e-04   -4.1082e-01  -4.1082e-01     0.0000
+     6   -3.77   -2.9325e-04  -2.9317e-04   -2.9321e-01  -2.9321e-01     0.0000
+     7   -2.43   -2.0034e-05  -1.9854e-05   -1.9944e-02  -1.9944e-02     0.0000
+     8   +4.09   +5.3933e-04  +5.3928e-04   +5.3931e-01  +5.3931e-01     0.0000
+     9  -12.95   -8.9773e-04  -8.9778e-04   -8.9776e-01  -8.9776e-01     0.0000
+    10   -8.71   -4.7170e-04  -4.7172e-04   -4.7171e-01  -4.7171e-01     0.0000
+
+Largest absolute log ratio: 0.0000
+
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.002000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +0.14924   -1.5680e-01  -1.5659e-01     +3.06023
+     1   +0.14924   +3.8416e-02  +3.8630e-02     +3.05977
+     2   +0.09956   -4.9058e-01  -4.9037e-01     +3.06023
+     3   +0.09956   +1.4713e-01  +1.4734e-01     +3.05919
+     4   +1.61310   -1.7251e-02  -1.7420e-02   **********
+     5   +1.61310   -4.1064e-01  -4.1100e-01   **********
+     6   +1.61310   -2.9312e-01  -2.9329e-01   **********
+     7   +1.61310   -1.9764e-02  -2.0124e-02   **********
+     8   +4.34198   +5.3926e-01  +5.3936e-01     +4.36710
+     9   +4.34198   -8.9781e-01  -8.9770e-01     +4.35505
+    10   +6.58771   -4.7173e-01  -4.7168e-01     +6.58771
+
+  1.10000  1.20000 -2.548764e+01
+
+Network in file "log" with index 3
+
+Input to Hidden Layer 0 Weights [1]
+
+ 2.91:      -1.99  -1.27  +2.93  -3.74
+
+Hidden Layer 0 to Hidden Layer 1 Weights [2]
+
+ 3.92:      -4.01  +7.47  +6.74  +0.85
+
+Hidden Layer 1 to Output Weights [3]
+
+ 5.00 5.00: -3.35
+
+      5.00: +1.51
+
+Output Biases [4]
+
+     10.00: +2.65
+
+Noise levels
+
+   3.78 -  3.78
+
+ 
+ 
+--- E
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 8  identity  cfg-i:filter1
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    1.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  1.000
+  Output Biases:           1.000
+
+Hidden layer 0 input weight configuration
+
+24 connections, 3 weights
+
+     1      1      1
+     2      1      2
+     3      1      3
+     2      2      1
+     3      2      2
+     4      2      3
+     3      3      1
+     4      3      2
+     5      3      3
+     4      4      1
+     5      4      2
+     6      4      3
+     5      5      1
+     6      5      2
+     7      5      3
+     6      6      1
+     7      6      2
+     8      6      3
+     7      7      1
+     8      7      2
+     9      7      3
+     8      8      1
+     9      8      2
+    10      8      3
+
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 1.00:      -0.17  +0.10  -0.45
+
+Hidden Layer 0 to Output Weights [2]
+
+ 1.00 1.00: -1.67
+
+      1.00: +1.15
+
+      1.00: -0.78
+
+      1.00: -1.19
+
+      1.00: -0.19
+
+      1.00: -0.38
+
+      1.00: -1.20
+
+      1.00: -0.91
+
+Output Biases [3]
+
+      1.00: -0.59
+
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 8  identity  cfg-i:filter2
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    1.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  1.000
+  Output Biases:           1.000
+
+Hidden layer 0 input weight configuration
+
+24 connections, 3 weights
+
+     1      1      1
+     2      1      2
+     3      1      3
+     2      2      1
+     3      2      2
+     4      2      3
+     3      3      1
+     4      3      2
+     5      3      3
+     4      4      1
+     5      4      2
+     6      4      3
+     5      5      1
+     6      5      2
+     7      5      3
+     6      6      1
+     7      6      2
+     8      6      3
+     7      7      1
+     8      7      2
+     9      7      3
+     8      8      1
+     9      8      2
+    10      8      3
+
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 1.00:      -0.17  +0.10  -0.45
+
+Hidden Layer 0 to Output Weights [2]
+
+ 1.00 1.00: -1.67
+
+      1.00: +1.15
+
+      1.00: -0.78
+
+      1.00: -1.19
+
+      1.00: -0.19
+
+      1.00: -0.38
+
+      1.00: -1.20
+
+      1.00: -0.91
+
+Output Biases [3]
+
+      1.00: -0.59
+
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 8  identity  cfg-i:filter3
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    1.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  1.000
+  Output Biases:           1.000
+
+Hidden layer 0 input weight configuration
+
+24 connections, 3 weights
+
+     1      1      1
+     2      1      2
+     3      1      3
+     2      2      1
+     3      2      2
+     4      2      3
+     3      3      1
+     4      3      2
+     5      3      3
+     4      4      1
+     5      4      2
+     6      4      3
+     5      5      1
+     6      5      2
+     7      5      3
+     6      6      1
+     7      6      2
+     8      6      3
+     7      7      1
+     8      7      2
+     9      7      3
+     8      8      1
+     9      8      2
+    10      8      3
+
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 1.00:      -0.17  +0.10  -0.45
+
+Hidden Layer 0 to Output Weights [2]
+
+ 1.00 1.00: -1.67
+
+      1.00: +1.15
+
+      1.00: -0.78
+
+      1.00: -1.19
+
+      1.00: -0.19
+
+      1.00: -0.38
+
+      1.00: -1.20
+
+      1.00: -0.91
+
+Output Biases [3]
+
+      1.00: -0.59
+
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 8  identity  cfg-i:filter4
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    1.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  1.000
+  Output Biases:           1.000
+
+Hidden layer 0 input weight configuration
+
+24 connections, 3 weights
+
+     1      1      1
+     2      1      2
+     3      1      3
+     2      2      1
+     3      2      2
+     4      2      3
+     3      3      1
+     4      3      2
+     5      3      3
+     4      4      1
+     5      4      2
+     6      4      3
+     5      5      1
+     6      5      2
+     7      5      3
+     6      6      1
+     7      6      2
+     8      6      3
+     7      7      1
+     8      7      2
+     9      7      3
+     8      8      1
+     9      8      2
+    10      8      3
+
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 1.00:      -0.17  +0.10  -0.45
+
+Hidden Layer 0 to Output Weights [2]
+
+ 1.00 1.00: -1.67
+
+      1.00: +1.15
+
+      1.00: -0.78
+
+      1.00: -1.19
+
+      1.00: -0.19
+
+      1.00: -0.38
+
+      1.00: -1.20
+
+      1.00: -0.91
+
+Output Biases [3]
+
+      1.00: -0.59
+
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 8  identity  cfg-i:filter5
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    1.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  1.000
+  Output Biases:           1.000
+
+Hidden layer 0 input weight configuration
+
+24 connections, 3 weights
+
+     1      1      1
+     2      1      2
+     3      1      3
+     2      2      1
+     3      2      2
+     4      2      3
+     3      3      1
+     4      3      2
+     5      3      3
+     4      4      1
+     5      4      2
+     6      4      3
+     5      5      1
+     6      5      2
+     7      5      3
+     6      6      1
+     7      6      2
+     8      6      3
+     7      7      1
+     8      7      2
+     9      7      3
+     8      8      1
+     9      8      2
+    10      8      3
+
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 1.00:      -0.17  +0.10  -0.45
+
+Hidden Layer 0 to Output Weights [2]
+
+ 1.00 1.00: -1.67
+
+      1.00: +1.15
+
+      1.00: -0.78
+
+      1.00: -1.19
+
+      1.00: -0.19
+
+      1.00: -0.38
+
+      1.00: -1.20
+
+      1.00: -0.91
+
+Output Biases [3]
+
+      1.00: -0.59
+
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 8  identity  cfg-i:filter6
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    1.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  1.000
+  Output Biases:           1.000
+
+Hidden layer 0 input weight configuration
+
+24 connections, 3 weights
+
+     1      1      1
+     2      1      2
+     3      1      3
+     2      2      1
+     3      2      2
+     4      2      3
+     3      3      1
+     4      3      2
+     5      3      3
+     4      4      1
+     5      4      2
+     6      4      3
+     5      5      1
+     6      5      2
+     7      5      3
+     6      6      1
+     7      6      2
+     8      6      3
+     7      7      1
+     8      7      2
+     9      7      3
+     8      8      1
+     9      8      2
+    10      8      3
+
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 1.00:      -0.17  +0.10  -0.45
+
+Hidden Layer 0 to Output Weights [2]
+
+ 1.00 1.00: -1.67
+
+      1.00: +1.15
+
+      1.00: -0.78
+
+      1.00: -1.19
+
+      1.00: -0.19
+
+      1.00: -0.38
+
+      1.00: -1.20
+
+      1.00: -0.91
+
+Output Biases [3]
+
+      1.00: -0.59
+
+ 
+--- F
+ 
+
+Network Architecture:
+
+  Input layer:     size 5
+  Hidden layer 0:  size 4  tanh  cfg-i:%echo  2+1 1 1  5-1 2 1  +102-106+1 1 2
+  Hidden layer 1:  size 3  tanh  cfg-h:%echo 1 2 1  -477+478 1 1
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    7.000
+
+         Hidden Layer 1
+
+  Hidden-Hidden Weights:   8.000
+
+         Output Layer
+
+  Hidden1-Output Weights:  9.000
+
+Hidden layer 0 input weight configuration
+
+3 connections, 2 weights
+
+     3      1      1
+     4      2      1
+     1      1      2
+
+Hidden layer 1 hidden weight configuration
+
+2 connections, 1 weights
+
+     1      2      1
+     2      1      1
+
+ 
+--- G
+ 
+
+Network Architecture:
+
+  Input layer:     size 5
+  Hidden layer 0:  size 4  tanh  cfg-i:%echo  + + 1  = + +  + -1 =  1 +2 -
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    7.000
+
+         Output Layer
+
+
+Hidden layer 0 input weight configuration
+
+4 connections, 2 weights
+
+     1      1      1
+     1      2      2
+     2      1      2
+     1      3      1
+
+
+Network Architecture:
+
+  Input layer:     size 5
+  Hidden layer 0:  size 4  tanh  cfg-i:%echo  + + 1  = + +  + -1 =  7-6 +102-100 -
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    7.000
+
+         Output Layer
+
+
+Hidden layer 0 input weight configuration
+
+4 connections, 2 weights
+
+     1      1      1
+     1      2      2
+     2      1      2
+     1      3      1
+
+
+Network Architecture:
+
+  Input layer:     size 5
+  Hidden layer 0:  size 4  tanh  cfg-i:%echo  + + 1  = + +  + -1 =  1 +20+30-48 -10+9
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    7.000
+
+         Output Layer
+
+
+Hidden layer 0 input weight configuration
+
+4 connections, 2 weights
+
+     1      1      1
+     1      2      2
+     2      1      2
+     1      3      1
+
+ 
+--- H
+ 
+
+Network Architecture:
+
+  Input layer:     size 5
+  Hidden layer 0:  size 5  identity  cfg-b:%echo  3 1   = +   1 =  + +  + +
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Hidden Biases:           3.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  9.000
+
+Hidden layer 0 bias configuration
+
+5 connections, 4 biases
+
+     3      1
+     3      2
+     1      2
+     2      3
+     3      4
+
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Hidden Layer 0 Biases [1]
+
+      3.00: +0.10  +0.20  +0.30  +0.40
+
+Hidden Layer 0 to Output Weights [2]
+
+ 9.00 9.00: +5.00
+
+      9.00: +6.00
+
+      9.00: +7.00
+
+      9.00: +8.00
+
+      9.00: +9.00
+
+Noise levels
+
+   5.00 -  5.00
+
+ 1.00000000e-01  2.00000000e-01  3.00000000e-01  4.00000000e-01 
+ 5.00000000e+00  6.00000000e+00  7.00000000e+00  8.00000000e+00  9.00000000e+00 
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.002000  Energy: 4.13
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   +0.10   +2.0815e-04  +2.0608e-04   +2.0711e-01  +2.0711e-01     0.0000
+     1   +0.20   +3.6116e-04  +3.5529e-04   +3.5822e-01  +3.5822e-01     0.0000
+     2   +0.30   +2.0211e-04  +2.0056e-04   +2.0133e-01  +2.0133e-01     0.0000
+     3   +0.40   +2.4148e-04  +2.3941e-04   +2.4044e-01  +2.4044e-01     0.0000
+     4   +5.00   +6.7335e-05  +6.7321e-05   +6.7328e-02  +6.7328e-02     0.0000
+     5   +6.00   +8.2482e-05  +8.2466e-05   +8.2474e-02  +8.2474e-02     0.0000
+     6   +7.00   +1.0604e-04  +1.0600e-04   +1.0602e-01  +1.0602e-01     0.0000
+     7   +8.00   +9.8772e-05  +9.8759e-05   +9.8765e-02  +9.8765e-02     0.0000
+     8   +9.00   +1.1112e-04  +1.1110e-04   +1.1111e-01  +1.1111e-01     0.0000
+
+Largest absolute log ratio: 0.0000
+
+  1.10000  1.20000  1.30000  1.40000  1.50000 +2.000000e-01 +3.000000e-01 +7.000000e-01 +0.000000e+00 +0.000000e+00
+  1.10000  1.20000  1.30000  1.40000  1.50000 +7.700000e+00
+7.7
+ 
+--- I
+ 
+
+Network Architecture:
+
+  Input layer:     size 5
+  Hidden layer 0:  size 5  tanh  cfg-b:%echo  3 1   = +   1 =  + +  +3 +3
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Hidden Biases:           3.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  9.000
+
+Hidden layer 0 bias configuration
+
+5 connections, 6 biases
+
+     3      1
+     3      2
+     1      2
+     2      3
+     5      6
+
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Hidden Layer 0 Biases [1]
+
+      3.00: +0.10  +0.20  +0.30  +0.40  +0.50  +0.60
+
+Hidden Layer 0 to Output Weights [2]
+
+ 9.00 9.00: +5.00
+
+      9.00: +6.00
+
+      9.00: +7.00
+
+      9.00: +8.00
+
+      9.00: +9.00
+
+Noise levels
+
+   5.00 -  5.00
+
+ 1.00000000e-01  2.00000000e-01  3.00000000e-01  4.00000000e-01  5.00000000e-01  6.00000000e-01 
+ 5.00000000e+00  6.00000000e+00  7.00000000e+00  8.00000000e+00  9.00000000e+00 
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.002000  Energy: 4.29
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   +0.10   +6.7990e-04  +6.7854e-04   +6.7922e-01  +6.7922e-01     0.0000
+     1   +0.20   +1.1938e-03  +1.1892e-03   +1.1915e+00  +1.1915e+00     0.0000
+     2   +0.30   +6.0649e-04  +6.0551e-04   +6.0600e-01  +6.0600e-01     0.0000
+     3   +0.40   +4.4500e-05  +4.4389e-05   +4.4444e-02  +4.4444e-02     0.0000
+     4   +0.50   +5.5611e-05  +5.5500e-05   +5.5556e-02  +5.5556e-02     0.0000
+     5   +0.60   +7.3511e-04  +7.3408e-04   +7.3459e-01  +7.3460e-01     0.0000
+     6   +5.00   +8.2321e-05  +8.2307e-05   +8.2314e-02  +8.2314e-02     0.0000
+     7   +6.00   +1.0446e-04  +1.0445e-04   +1.0446e-01  +1.0446e-01     0.0000
+     8   +7.00   +1.1681e-04  +1.1679e-04   +1.1680e-01  +1.1680e-01     0.0000
+     9   +8.00   +9.8772e-05  +9.8759e-05   +9.8765e-02  +9.8765e-02     0.0000
+    10   +9.00   +1.6713e-04  +1.6711e-04   +1.6712e-01  +1.6712e-01     0.0000
+
+Largest absolute log ratio: 0.0000
+
+  1.10000  1.20000  1.30000  1.40000  1.50000 +1.973753e-01 +2.913126e-01 +2.913126e-01 +0.000000e+00 +5.370496e-01
+  1.10000  1.20000  1.30000  1.40000  1.50000 +9.607387e+00
+9.60739
+ 
+--- J
+ 
+
+Network Architecture:
+
+  Input layer:     size 5
+  Output layer:    size 5  cfg-b:%echo  3 1   = +   1 =  + +  +3 +3
+
+
+Prior Specifications:
+
+         Output Layer
+
+  Output Biases:           3.000
+
+Output layer bias configuration
+
+5 connections, 6 biases
+
+     3      1
+     3      2
+     1      2
+     2      3
+     5      6
+
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Output Biases [1]
+
+      3.00: +0.10  +0.20  +0.30  +0.40  +0.50  +0.60
+
+Noise levels
+
+   5.00 -  5.00  5.00  5.00  5.00  5.00
+
+ 1.00000000e-01  2.00000000e-01  3.00000000e-01  4.00000000e-01  5.00000000e-01  6.00000000e-01 
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.002000  Energy: 31.70
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   +0.10   -5.3681e-04  -5.3696e-04   -5.3689e-01  -5.3689e-01     0.0000
+     1   +0.20   -9.9768e-04  -9.9787e-04   -9.9778e-01  -9.9778e-01     0.0000
+     2   +0.30   -4.7459e-04  -4.7474e-04   -4.7467e-01  -4.7467e-01     0.0000
+     3   +0.40   +4.4500e-05  +4.4389e-05   +4.4444e-02  +4.4444e-02     0.0000
+     4   +0.50   +5.5611e-05  +5.5500e-05   +5.5556e-02  +5.5556e-02     0.0000
+     5   +0.60   -5.4926e-04  -5.4941e-04   -5.4933e-01  -5.4933e-01     0.0000
+
+Largest absolute log ratio: 0.0000
+
+  1.10000  1.20000  1.30000  1.40000  1.50000 +2.000000e-01 +3.000000e-01 +3.000000e-01 +0.000000e+00 +6.000000e-01
+0.2 0.3 0.3 0 0.6
+ 
+--- K
+ 
+
+Network Architecture:
+
+  Input layer:     size 5
+  Output layer:    size 5  cfg-i:%echo  2 3 1  4 1 2  5 2 1  1 1 3
+
+
+Prior Specifications:
+
+         Output Layer
+
+  Input-Output Weights:    3.000
+
+Output layer input weight configuration
+
+4 connections, 3 weights
+
+     2      3      1
+     4      1      2
+     5      2      1
+     1      1      3
+
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Output Weights [1]
+
+ 3.00:      +0.11  +0.22  +0.33
+
+Noise levels
+
+   5.00 -  5.00  5.00  5.00  5.00  5.00
+
+ 1.10000000e-01  2.20000000e-01  3.30000000e-01 
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.002000  Energy: 31.15
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   +0.11   -4.5888e-03  -4.5907e-03   -4.5898e+00  -4.5898e+00     0.0000
+     1   +0.22   -2.0230e-03  -2.0241e-03   -2.0236e+00  -2.0236e+00     0.0000
+     2   +0.33   -7.8240e-04  -7.8267e-04   -7.8253e-01  -7.8253e-01     0.0000
+
+Largest absolute log ratio: 0.0000
+
+ 10.00000 20.00000 30.00000 40.00000 50.00000 +1.210000e+01 +5.500000e+00 +2.200000e+00 +0.000000e+00 +0.000000e+00
+12.1 5.5 2.2 0 0
+ 
+--- L
+ 
+
+Network Architecture:
+
+  Input layer:     size 1
+  Hidden layer 0:  size 5  identity
+  Output layer:    size 1  cfg-h:%echo  1 1 1  5 1 1  2 1 2
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    3.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  4.000
+
+Output layer hidden weight configuration
+
+3 connections, 2 weights
+
+     1      1      1
+     5      1      1
+     2      1      2
+
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 3.00 3.00: +2.00  +3.00  +4.00  +5.00  +6.00
+
+Hidden Layer 0 to Output Weights [2]
+
+ 4.00:     +100.00 +10000.00
+
+Noise levels
+
+   5.00 -  5.00
+
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.002000  Energy: 3882508.21
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   +2.00   +4.9226e+00  +4.9226e+00   +4.9226e+03  +4.9226e+03     0.0000
+     1   +3.00   +4.9232e+02  +4.9216e+02   +4.9224e+05  +4.9224e+05     0.0000
+     2   +4.00   +4.4450e-04  +4.4439e-04   +4.4444e-01  +4.4444e-01     0.0000
+     3   +5.00   +5.5561e-04  +5.5550e-04   +5.5556e-01  +5.5556e-01     0.0000
+     4   +6.00   +4.9231e+00  +4.9231e+00   +4.9231e+03  +4.9231e+03     0.0000
+     5 +100.00   +4.0004e-01  +4.0004e-01   +4.0004e+02  +4.0004e+02     0.0000
+     6 +10000.00   +7.7267e-01  +7.7267e-01   +7.7267e+02  +7.7267e+02     0.0000
+
+Largest absolute log ratio: 0.0000
+
+ 10.00000 +2.000000e+01 +3.000000e+01 +4.000000e+01 +5.000000e+01 +6.000000e+01
+ 10.00000 +3.080000e+05
+308000
+ 
+--- M
+ 
+
+Network Architecture:
+
+  Input layer:     size 1
+  Hidden layer 0:  size 5  identity  cfg-i:%echo 1 3 1
+  Hidden layer 1:  size 4  identity  cfg-h:%echo 3 2 1
+  Output layer:    size 1  cfg-h1:%echo 2 1 1  cfg-h0:%echo 3 1 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    3.000
+
+         Hidden Layer 1
+
+  Hidden-Hidden Weights:   2.000
+
+         Output Layer
+
+  Hidden1-Output Weights:  5.000
+  Hidden0-Output Weights:  4.000
+
+Hidden layer 0 input weight configuration
+
+1 connections, 1 weights
+
+     1      3      1
+
+Hidden layer 1 hidden weight configuration
+
+1 connections, 1 weights
+
+     3      2      1
+
+Output layer hidden layer 1 weight configuration
+
+1 connections, 1 weights
+
+     2      1      1
+
+Output layer hidden layer 0 weight configuration
+
+1 connections, 1 weights
+
+     3      1      1
+
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 3.00:      +3.00
+
+Hidden Layer 0 to Hidden Layer 1 Weights [2]
+
+ 2.00:      +4.00
+
+Hidden Layer 1 to Output Weights [3]
+
+ 5.00:     +100.00
+
+Hidden Layer 0 to Output Weights [4]
+
+ 4.00:     +10000.00
+
+Noise levels
+
+   5.00 -  5.00
+
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.002000  Energy: 80982934.01
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   +3.00   +5.1920e+04  +5.1902e+04   +5.1911e+07  +5.1911e+07     0.0000
+     1   +4.00   +1.4974e+03  +1.4974e+03   +1.4974e+06  +1.4974e+06     0.0000
+     2 +100.00   +5.9901e+01  +5.9901e+01   +5.9901e+04  +5.9901e+04     0.0000
+     3 +10000.00   +1.5599e+01  +1.5599e+01   +1.5599e+04  +1.5599e+04     0.0000
+
+Largest absolute log ratio: 0.0000
+
+  2.00000 +0.000000e+00 +0.000000e+00 +6.000000e+00 +0.000000e+00 +0.000000e+00
+  2.00000 +0.000000e+00 +2.400000e+01 +0.000000e+00 +0.000000e+00
+  2.00000 +6.240000e+04

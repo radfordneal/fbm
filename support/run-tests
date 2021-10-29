@@ -1,10 +1,15 @@
 #!/bin/bash
 
-for test in test-func3 test-func2 test-func \
-            test-config test-sigmas test-adj \
-            test-ti test-im test-dyn; do
+if [ "x$@" == x ]; then
+  TESTS="test-func3 test-func2 test-func test-config test-sigmas test-adj \
+         test-ti test-im test-dyn"
+else
+  TESTS="$@"
+fi
+
+for test in $TESTS; do
   echo RUNNING $test
   $test >& $test.out
-  diff $test.save$1 $test.out 
+  diff $test.save$PRECISION $test.out 
   echo DONE $test
 done

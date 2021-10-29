@@ -85,6 +85,12 @@ static int max_cases_per_launch;        /* Largest number of cases handled by
 
 __global__ void forward_kernel
 (
+  int start,		/* Start of cases to look at */
+  int end 		/* End of cases to look at (index after last case) */
+);
+
+__global__ void energy_kernel
+(
   double *case_energy,  /* Places to store energy, null if not required */
   int start,		/* Start of cases to look at */
   int end, 		/* End of cases to look at (index after last case) */
@@ -772,6 +778,9 @@ void mc_app_initialize
     check_cuda_error (
       cudaFuncSetCacheConfig (forward_kernel, cudaFuncCachePreferL1),
       "Set cache config for forward_kernel");
+    check_cuda_error (
+      cudaFuncSetCacheConfig (energy_kernel, cudaFuncCachePreferL1),
+      "Set cache config for energy_kernel");
     check_cuda_error (
       cudaFuncSetCacheConfig (backward_kernel, cudaFuncCachePreferL1),
       "Set cache config for backward_kernel");
@@ -2058,23 +2067,18 @@ void cuda_setup
 
 #if __CUDACC__
 
-/* GPU PROCEDURE FOR FORWARD PASS AND ENERGY EVALUATION.
+/* GPU PROCEDURE FOR FORWARD PASS.
 
    References the const_... variables in GPU constant memory with things  
    such as the network architecture. */
 
 __global__ void forward_kernel
 (
-  double *case_energy,  /* Places to store energy, null if not required */
   int start,		/* Start of cases to look at */
-  int end, 		/* End of cases to look at (index after last case) */
-  double en_weight,	/* Weight for these cases for energy */
-  int need_deriv,	/* Need derivatives of energy w.r.t. output units? */
-  double gr_weight	/* Weight for these cases for gradient */
+  int end 		/* End of cases to look at (index after last case) */
 )
 { 
-  // printf("Forward_kernel/%d,%d: block %d, thread %d\n",
-  //         case_energy!=0,need_deriv,blockIdx.x,threadIdx.x);
+  // printf("Forward_kernel: block %d, thread %d\n",blockIdx.x,threadIdx.x);
 
   net_flags *flgs = const_has_flgs ? &const_flgs : 0;
   int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -2087,7 +2091,35 @@ __global__ void forward_kernel
   net_values *train_vals_h = const_train_values+h;
 
   net_func_gpu (th, train_vals_h, 0, &const_arch, flgs, &const_params);
+}
 
+
+/* GPU PROCEDURE FOR ENERGY EVALUATION.
+
+   References the const_... variables in GPU constant memory with things  
+   such as the network architecture. */
+
+__global__ void energy_kernel
+(
+  double *case_energy,  /* Places to store energy, null if not required */
+  int start,		/* Start of cases to look at */
+  int end, 		/* End of cases to look at (index after last case) */
+  double en_weight,	/* Weight for these cases for energy */
+  int need_deriv,	/* Need derivatives of energy w.r.t. output units? */
+  double gr_weight	/* Weight for these cases for gradient */
+)
+{ 
+  // printf("Energy_kernel/%d,%d: block %d, thread %d\n",
+  //         case_energy!=0,need_deriv,blockIdx.x,threadIdx.x);
+
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int i = x / NET_FUNC_GPU_THREADS;
+  int th = x - NET_FUNC_GPU_THREADS*i;
+  int h = start + i;
+
+  if (h >= end) th = -1;
+
+  net_values *train_vals_h = const_train_values+h;
   net_value *targ_h = const_train_targets + const_N_targets*h;
   net_values *deriv_h = need_deriv ? const_deriv+h : 0;
   double *log_prob_h = case_energy ? case_energy+i : 0;
@@ -2379,7 +2411,9 @@ static void net_training_cases_gpu
       check_cuda_error (cudaGetLastError(), 
                         "Before launching many_cases");
 
-      forward_kernel <<<blks, blkcases*NET_FUNC_GPU_THREADS>>> 
+      forward_kernel <<<blks, blkcases*NET_FUNC_GPU_THREADS>>> (i, i+n);
+
+      energy_kernel <<<blks, blkcases*NET_FUNC_GPU_THREADS>>> 
         (energy ? case_energy : 0, i, i+n, en_weight, gr!=0, gr_weight);
 
       if (gr)

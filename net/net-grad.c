@@ -50,7 +50,7 @@ HOSTDEV static void add_grad1_config (net_param *restrict, net_value const*,
                                       net_config const*);
 HOSTDEV static void add_grad2 (net_param *restrict, net_value const*, 
                                net_param const*, int, net_value const*, int,
-                               unsigned short const*, int);
+                               unsigned short const*, int, int);
 HOSTDEV static void add_grad2_config (net_param *restrict, net_value const*, 
                                       net_param const*, net_value const*,
                                       net_config const*);
@@ -73,7 +73,8 @@ HOSTDEV void net_add_grad
   net_values const*v,	/* Values for units in network for a case */
   net_values const*d,	/* Backpropagated derivatives for a case */
   net_arch const*a,	/* Network architecture */
-  net_flags const*flgs	/* Network flags, null if none */
+  net_flags const*flgs,	/* Network flags, null if none */
+  int sparse            /* Might source unit values often be zero? */
 )
 { 
   int l;
@@ -103,7 +104,8 @@ HOSTDEV void net_add_grad
       else
       { add_grad2 (g->ih[l], v->i, a->has_ti ? w->ti : 0, a->N_inputs, 
                    d->s[l], N_hidden, 
-                   flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1));
+                   flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
+                   sparse);
       }
     }
 
@@ -115,7 +117,7 @@ HOSTDEV void net_add_grad
       }
       else
       { add_grad2 (g->hh[l-1], v->h[l-1], a->has_th[l-1] ? w->th[l-1] : 0,
-          a->N_hidden[l-1], d->s[l], N_hidden, (unsigned short *)0, 0);
+          a->N_hidden[l-1], d->s[l], N_hidden, (unsigned short *)0, 0, 0);
       }
     }
 
@@ -131,7 +133,7 @@ HOSTDEV void net_add_grad
       }
       else
       { add_grad2 (g->ho[l], v->h[l], a->has_th[l] ? w->th[l] : 0,
-                   N_hidden, d->o, a->N_outputs, (unsigned short *) 0, 0);
+                   N_hidden, d->o, a->N_outputs, (unsigned short *) 0, 0, 0);
       }
     }
   }
@@ -144,7 +146,8 @@ HOSTDEV void net_add_grad
     else
     { add_grad2 (g->io, v->i, a->has_ti ? w->ti : 0, a->N_inputs, 
                  d->o, a->N_outputs, 
-                 flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1);
+                 flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
+                 sparse);
     }
   }
 
@@ -213,7 +216,7 @@ HOSTDEV static void add_grad1_config
 
 /* ADD TO GRADIENT FROM PRODUCT OF UNIT VALUE AND UNIT DERIVATIVE. */
 
-#define ADD_GRAD2(offset,omit) \
+#define ADD_GRAD2(offset,omit,sprs) \
 do \
 { net_value o; \
   int i, j; \
@@ -239,7 +242,7 @@ do \
       o = (offset); \
       if (omit) continue; \
       tv = v[i] + o; \
-      if (tv!=0)  \
+      if (!sprs || tv!=0)  \
       { j = 3; \
         while (j<nd) \
         { g[j-3] += tv * d[j-3]; \
@@ -261,7 +264,7 @@ do \
 
 #if FP64 && USE_SIMD_INTRINSICS && __AVX__
 
-#define ADD_GRAD2_00 \
+#define ADD_GRAD2_00(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -291,7 +294,7 @@ do \
       for (;;) \
       { if (i==nv) goto done; \
         TV = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (cast128d(TV), Z)) \
+        if (!sprs || _mm_ucomineq_sd (cast128d(TV), Z)) \
         { break; \
         } \
         i += 1; \
@@ -302,7 +305,7 @@ do \
       for (;;) \
       { if (i==nv) goto one_more; \
         TV2 = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (cast128d(TV2), Z)) \
+        if (!sprs || _mm_ucomineq_sd (cast128d(TV2), Z)) \
         { break; \
         } \
         i += 1; \
@@ -356,7 +359,7 @@ do \
 
 #elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
 
-#define ADD_GRAD2_00 \
+#define ADD_GRAD2_00(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -388,7 +391,7 @@ do \
       for (;;) \
       { if (i==nv) goto done; \
         TV = _mm_set1_pd (*(v+i)); \
-        if (_mm_ucomineq_sd (TV, Z)) \
+        if (!sprs || _mm_ucomineq_sd (TV, Z)) \
         { break; \
         } \
         i += 1; \
@@ -399,7 +402,7 @@ do \
       for (;;) \
       { if (i==nv) goto one_more; \
         TV2 = _mm_set1_pd (*(v+i)); \
-        if (_mm_ucomineq_sd (TV2, Z)) \
+        if (!sprs || _mm_ucomineq_sd (TV2, Z)) \
         { break; \
         } \
         i += 1; \
@@ -456,7 +459,7 @@ do \
 
 #elif FP32 && USE_SIMD_INTRINSICS && __AVX__
 
-#define ADD_GRAD2_00 \
+#define ADD_GRAD2_00(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -494,7 +497,7 @@ do \
     { for (;;) \
       { if (i==nv) goto done; \
         TV = _mm256_set1_ps (*(v+i)); \
-        if (_mm_ucomineq_ss (cast128f(TV), Z)) \
+        if (!sprs || _mm_ucomineq_ss (cast128f(TV), Z)) \
         { break; \
         } \
         i += 1; \
@@ -505,7 +508,7 @@ do \
       for (;;) \
       { if (i==nv) goto one_more; \
         TV2 = _mm256_set1_ps (*(v+i)); \
-        if (_mm_ucomineq_ss (cast128f(TV2), Z)) \
+        if (!sprs || _mm_ucomineq_ss (cast128f(TV2), Z)) \
         { break; \
         } \
         i += 1; \
@@ -573,7 +576,7 @@ do \
 
 #elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
 
-#define ADD_GRAD2_00 \
+#define ADD_GRAD2_00(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -604,7 +607,7 @@ do \
     { for (;;) \
       { if (i==nv) goto done; \
         TV = _mm_set1_ps (*(v+i)); \
-        if (_mm_ucomineq_ss (TV, Z)) \
+        if (!sprs || _mm_ucomineq_ss (TV, Z)) \
         { break; \
         } \
         i += 1; \
@@ -615,7 +618,7 @@ do \
       for (;;) \
       { if (i==nv) goto one_more; \
         TV2 = _mm_set1_ps (*(v+i)); \
-        if (_mm_ucomineq_ss (TV2, Z)) \
+        if (!sprs || _mm_ucomineq_ss (TV2, Z)) \
         { break; \
         } \
         i += 1; \
@@ -670,7 +673,7 @@ do \
 
 #else
 
-#define ADD_GRAD2_00 \
+#define ADD_GRAD2_00(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -693,7 +696,7 @@ do \
   { net_value tv; \
     for (i = 0; i<nv; i++) \
     { tv = v[i]; \
-      if (tv!=0)  \
+      if (!sprs || tv!=0)  \
       { j = 3; \
         while (j<nd) \
         { g[j-3] += tv * d[j-3]; \
@@ -723,23 +726,34 @@ HOSTDEV static void add_grad2
   net_value const* d,     /* Derivatives with respect to destination units */
   int nd,		  /* Number of destination units */
   unsigned short const* omit, /* Omit flags, null if not present */
-  int ob		  /* Bit to look at in omit flags */
+  int ob,		  /* Bit to look at in omit flags */
+  int sparse              /* Might source unit values often be zero? */
 )
 { 
-  if (omit==0)
-  { if (off==0)
-    { ADD_GRAD2_00;
+  if (sparse && off==0)
+  { if (omit==0)
+    { ADD_GRAD2_00(one_more1,done1,1);
     }
     else
-    { ADD_GRAD2(*off++,0);
+    { ADD_GRAD2(0,(*omit++)&ob,1);
     }
   }
-  else
-  { if (off==0)
-    { ADD_GRAD2(0,(*omit++)&ob);
+  else 
+  { if (omit==0)
+    { if (off==0)
+      { ADD_GRAD2_00(one_more2,done2,0);
+      }
+      else
+      { ADD_GRAD2(*off++,0,0);
+      }
     }
     else
-    { ADD_GRAD2(*off++,(*omit++)&ob);
+    { if (off==0)
+      { ADD_GRAD2(0,(*omit++)&ob,0);
+      }
+      else
+      { ADD_GRAD2(*off++,(*omit++)&ob,0);
+      }
     }
   }
 }

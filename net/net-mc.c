@@ -1837,7 +1837,8 @@ void net_training_cases
           }
           net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
                     arch, flgs, &params);
-          net_add_grad (grd, &params, &train_values[i], &deriv[i], arch, flgs);
+          net_add_grad (grd, &params, &train_values[i], &deriv[i], arch, flgs,
+                        sparse);
         }
     
         if (ot<=t1) break;
@@ -1896,7 +1897,7 @@ void net_training_cases
         net_back (train_vals_i, deriv_i, arch->has_ti ? -1 : 0,
                   arch, flgs, &params);
 
-        net_add_grad (grd, &params, train_vals_i, deriv_i, arch, flgs);
+        net_add_grad (grd, &params, train_vals_i, deriv_i, arch, flgs, sparse);
       }
     }
 

@@ -2090,7 +2090,7 @@ __global__ void forward_kernel
 
   net_values *train_vals_h = const_train_values+h;
 
-  net_func_gpu (th, train_vals_h, 0, &const_arch, flgs, &const_params);
+  net_func_gpu (th, train_vals_h, 0, &const_arch, flgs, &const_params, 0);
 }
 
 
@@ -2138,7 +2138,7 @@ __global__ void energy_kernel
   { net_value *scratch_h = const_scratch + const_arch.N_outputs*h;
     net_model_prob_gpu (th, train_vals_h, targ_h, log_prob_h, deriv_h, 
                         &const_arch, &const_model, const_noise, 
-                        scratch_h, Cheap_energy);
+                        scratch_h, Cheap_energy, 0);
   }
 
   if (need_deriv && gr_weight!=1)
@@ -2218,7 +2218,7 @@ __global__ void backward_kernel
   }
   else
   { net_back_gpu (th, train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
-                  &const_arch, flgs, &const_params);
+                  &const_arch, flgs, &const_params, 0);
   }
 }
 

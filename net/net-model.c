@@ -278,7 +278,7 @@ HOSTDEV void net_model_prob
    for survival models (type 'V').  The probability pointed to by 'pr'
    is updated by the thread with th==0; the derivative at index i in 'dp'
    is updated by the thread with th equal to i mod NET_FUNC_GPU_THREADS. 
-   Note that a syncthreads is NOT done after this. */
+   A syncthreads done after this if 'sync' is non-zero. */
 
 #if __CUDACC__
 
@@ -294,7 +294,8 @@ __device__ void net_model_prob_gpu
   model_specification const*m, /* Data model */
   net_sigma const*noise,/* Noise sigmas, or null */
   net_value *scratch,	/* Scratch memory for outputs */
-  int op		/* Can we ignore some factors? */
+  int op,		/* Can we ignore some factors? */
+  int sync		/* Sync threads after computation? */
 )
 {
   int N_outputs = a->N_outputs;
@@ -337,17 +338,17 @@ __device__ void net_model_prob_gpu
     case 'C':  /* Single class with multiple possible values */
     {
       if (isnan(*t))  /* target not observed */
-      { if (th<0) return;
+      { if (th<0) goto sync_e;
         if (dp) 
         { for (i = th; i<N_outputs; i+=NTH)
           { dp->o[i] = 0;
           }
         }
         if (pr && th==0) *pr = 0;
-        return;
+        goto sync_e;
       }
 
-      if (th<0) goto sync;
+      if (th<0) goto sync_c;
 
       net_value m, s;
 
@@ -360,10 +361,10 @@ __device__ void net_model_prob_gpu
       { scratch[i] = prec_exp (v->o[i] - m);
       }
 
-    sync:
+    sync_c:
       __syncthreads();
 
-      if (th<0) return;
+      if (th<0) goto sync_e;
 
       s = 0;
       for (i = 0; i<N_outputs; i++)
@@ -383,7 +384,7 @@ __device__ void net_model_prob_gpu
         }
       }
 
-      return;
+      goto sync_e;
     }
 
     case 'R':  /* Real-valued target */
@@ -445,8 +446,7 @@ __device__ void net_model_prob_gpu
     }
   }
 
-  /* Compute total log probability from scratch values.  (Not for class
-     models, which will have returned already above.) */
+  /* Compute total log probability from scratch values (except class models). */
 
   if (pr)
   { 
@@ -459,6 +459,15 @@ __device__ void net_model_prob_gpu
       }
       *pr = p;
     }
+  }
+
+  /* Synchronize threads if asked to - otherwise, threads have computed 
+     bits as described above, and can refer to the bits they computed without
+     synchronization. */
+
+sync_e:
+  if (sync)
+  { __syncthreads();
   }
 }
 

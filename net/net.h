@@ -348,14 +348,14 @@ HOSTDEV void net_func (net_values *restrict, int, net_arch const*,
                        net_flags const*, net_params const*);
 
 __device__ void net_func_gpu (int, net_values *restrict, int, net_arch const*, 
-                              net_flags const*, net_params const*);
+                              net_flags const*, net_params const*, int);
 
 HOSTDEV void net_back (net_values const*, net_values *restrict, int, 
                        net_arch const*, net_flags const*, net_params const*);
 
 __device__ void net_back_gpu (int, net_values const*, net_values *restrict, 
                               int, net_arch const*, net_flags const*, 
-                              net_params const*);
+                              net_params const*, int);
 
 HOSTDEV void net_add_grad (net_params *restrict, net_params const*, 
                            net_values const*, net_values const*, 
@@ -389,7 +389,7 @@ HOSTDEV void net_model_prob (net_values const*, net_value const*,
 __device__ void net_model_prob_gpu (int, net_values const*, net_value const*, 
                              double *restrict, net_values *restrict, 
                              net_arch const*, model_specification const*,
-                             net_sigma const*, net_value *, int);
+                             net_sigma const*, net_value *, int, int);
 
 void net_model_check (model_specification const*);
 

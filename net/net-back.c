@@ -892,7 +892,11 @@ __device__ static void sum_derivatives_config_gpu
 #define NTH (NET_FUNC_GPU_THREADS)      /* Short form for use here */
 
 
-/* BACKPROPAGATE ERROR DERIVATIVES, GPU VERSION. */
+/* BACKPROPAGATE ERROR DERIVATIVES, GPU VERSION.
+
+  Synchronize threads after last layer computation if asked to - otherwise, 
+  threads have computed values with index mod 4 equal to 'th', and can 
+  use those values without synchronization. */
 
 #if __CUDACC__
 
@@ -903,7 +907,8 @@ __device__ void net_back_gpu
   int start,		/* Earliest layer to find derivatives for */
   net_arch const*a,	/* Network architecture */
   net_flags const*flgs,	/* Network flags, null if none */
-  net_params const*w	/* Network parameters */
+  net_params const*w,	/* Network parameters */
+  int sync		/* Sync threads after last layer computation? */
 )
 {
   int l, i;
@@ -984,7 +989,7 @@ __device__ void net_back_gpu
     }
 
   sync_layer:
-    if (l>start)
+    if (l>start || sync)
     { __syncthreads();
     }
   }
@@ -1026,7 +1031,9 @@ __device__ void net_back_gpu
     }
 
   sync_input:
-    __syncthreads();
+    if (sync)
+    { __syncthreads();
+    }
   }
 }
 

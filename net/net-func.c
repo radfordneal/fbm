@@ -1436,7 +1436,12 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
    Thread 'th' is used to compute the units whose index is 'th' mod
    NET_FUNC_GPU_THREADS.  Consistent use of this scheme for the
    various componenets avoids any need to synchronize threads within
-   computations for a single layer. */
+   computations for a single layer. 
+
+   If 'sync' is non-zero, threads are synchronized after the outputs
+   are computed.  Otherwise, threads will have computed output values
+   with index mod 4 equal to 'th', and may use these values without
+   synchronization. */
 
 __device__ void net_func_gpu
 ( int th,		/* Thread index */
@@ -1444,7 +1449,8 @@ __device__ void net_func_gpu
   int start,		/* Number of hidden layers with known values */
   net_arch const* a,	/* Network architecture */
   net_flags const* flgs,/* Network flags, null if none */
-  net_params const* w	/* Network parameters */
+  net_params const* w,	/* Network parameters */
+  int sync		/* Sync threads after last layer computation? */
 )
 {
   int l, j;
@@ -1583,7 +1589,9 @@ __device__ void net_func_gpu
   }
 
 sync_output:
-  __syncthreads();
+  if (sync) 
+  { __syncthreads();
+  }
 }
 
 

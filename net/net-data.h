@@ -36,6 +36,8 @@ extern net_values *train_values;  /* Values for training cases */
 extern net_value *train_iblock;   /* Block of input values for training cases */
 extern net_value *train_targets;  /* True training case targets */
 
+extern double train_zero_frac;    /* Fraction of input values that are zero */
+
 extern int N_test;		  /* Number of test cases */
 
 extern net_values *test_values;	  /* Values associated with test cases */

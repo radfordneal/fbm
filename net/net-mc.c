@@ -136,6 +136,8 @@ static inline net_value sq (net_value x) { return x*x; }
 
 static int approx_count;	/* Number of entries in approx-file, 0 if none*/
 
+static int sparse;		/* Are input values sparse? */
+
 static int *approx_case; 	/* Data on how approximations are to be done  */
 static int *approx_times;	/*   as read from approx_file                 */
 
@@ -187,6 +189,8 @@ __constant__ int const_blkcases;   /* Copy of blkcases in constant memory */
 __constant__ net_arch const_arch;  /* Copy of dev_arch in constant memory */
 __constant__ net_flags const_flgs; /* Copy of flgs in constant memory */
 __constant__ int const_has_flgs;   /* Are flags present in const_flgs? */
+
+__constant__ int const_sparse;     /* Copy of sparse in constant memory */
 
 __constant__ model_specification const_model;  /* Constant copy of model */
 __constant__ model_survival const_surv;  /* Constant copy of surv */
@@ -524,6 +528,8 @@ void mc_app_initialize
     if (data_spec!=0)
     { 
       net_data_read (1, 0, arch, model, surv);
+
+      sparse = train_zero_frac > 0.7;  /* adjustable */
     
       deriv = (net_values *) chk_alloc (N_train, sizeof *deriv);
     
@@ -715,6 +721,9 @@ void mc_app_initialize
       cudaMemcpyToSymbol (const_arch, &dev_arch, sizeof dev_arch);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_arch");
+      cudaMemcpyToSymbol (const_sparse, &sparse, sizeof sparse);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_sparse");
       int has_flgs = flgs != 0;
       cudaMemcpyToSymbol (const_has_flgs, &has_flgs, sizeof has_flgs);
       check_cuda_error (cudaGetLastError(), 
@@ -2090,7 +2099,8 @@ __global__ void forward_kernel
 
   net_values *train_vals_h = const_train_values+h;
 
-  net_func_gpu (th, train_vals_h, 0, &const_arch, flgs, &const_params, 0);
+  net_func_gpu (th, train_vals_h, 0, &const_arch, flgs, &const_params, 
+                const_sparse, 0);
 }
 
 

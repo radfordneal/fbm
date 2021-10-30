@@ -1342,7 +1342,7 @@ __device__ static void net_store2_grad1_config
 __device__ static void net_store2_grad2 
         (int, net_param *restrict, net_value const*,  net_value const*, 
          net_param const*, int, net_value const*, net_value const*, int,
-         unsigned short const*, int);
+         unsigned short const*, int, int);
 __device__ static void net_store2_grad2_config 
         (int, net_param *restrict, net_value const*, net_value const*,
          net_param const*, net_value const*, net_value const*,
@@ -1397,7 +1397,7 @@ __device__ void net_store2_grad
       else
       { net_store2_grad2 (th, g->ih[l], v0->i, v1->i, a->has_ti ? w->ti : 0, 
                     a->N_inputs, d0->s[l], d1->s[l], N_hidden, 
-                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1));
+                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), 0);
       }
     }
 
@@ -1412,7 +1412,7 @@ __device__ void net_store2_grad
       { net_store2_grad2 (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], 
           a->has_th[l-1] ? w->th[l-1] : 0,
           a->N_hidden[l-1], d0->s[l], d1->s[l], N_hidden,
-          (unsigned short *)0, 0);
+          (unsigned short *)0, 0, 0);
       }
     }
 
@@ -1431,7 +1431,7 @@ __device__ void net_store2_grad
       { net_store2_grad2 (th, g->ho[l], v0->h[l], v1->h[l], 
                     a->has_th[l] ? w->th[l] : 0,
                     N_hidden, d0->o, d1->o, a->N_outputs, 
-                    (unsigned short *) 0, 0);
+                    (unsigned short *) 0, 0, 0);
       }
     }
   }
@@ -1445,7 +1445,7 @@ __device__ void net_store2_grad
     { net_store2_grad2 (th, g->io, v0->i, v1->i, a->has_ti ? w->ti : 0, 
                         a->N_inputs, d0->o, d1->o, a->N_outputs, 
                         flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0,
-                        1);
+                        1, 0);
     }
   }
 
@@ -1552,7 +1552,7 @@ __device__ static void net_store2_grad1_config
    only one destination unit, in which case it is based on the indexes
    for the source units. */
 
-#define NET_STORE2_GRAD2(has_off,has_omit,alllab,onelab) \
+#define NET_STORE2_GRAD2(has_off,has_omit,alllab,onelab,sprs) \
 do \
 { int i; \
   if (nd==1) \
@@ -1585,7 +1585,7 @@ do \
       } \
     } \
   } \
-  else \
+  else if (sprs) \
   { net_value tv0, tv1, tvh, o; \
     net_value const*dh; \
     int j; \
@@ -1618,6 +1618,19 @@ do \
       } \
     } \
   } \
+  else \
+  { net_value tv0, tv1, o; \
+    int j; \
+    for (i = 0; i<nv; i++, g+=nd) \
+    { if (has_omit && (omit[i]&ob)) continue; \
+      o = has_off ? off[i] : 0; \
+      tv0 = v0[i] + o; \
+      tv1 = v1[i] + o; \
+      for (j = th; j<nd; j+=2) \
+      { g[j] = tv0*d0[j] + tv1*d1[j]; \
+      } \
+    } \
+  } \
 } while (0)
 
 __device__ static void net_store2_grad2
@@ -1631,23 +1644,34 @@ __device__ static void net_store2_grad2
   net_value const* d1,    /* Derivatives with respect to destination units, 1 */
   int nd,		  /* Number of destination units */
   unsigned short const* omit, /* Omit flags, null if not present */
-  int ob		  /* Bit to look at in omit flags (mask, not number) */
+  int ob,		  /* Bit to look at in omit flags (mask, not number) */
+  int sparse              /* Might source unit values often be zero? */
 )
 { 
-  if (omit==0)
-  { if (off==0)
-    { NET_STORE2_GRAD2(0,0,all1,one1);
+  if (sparse && off==0)
+  { if (omit==0)
+    { NET_STORE2_GRAD2(0,0,all1s,one1s,1);
     }
     else
-    { NET_STORE2_GRAD2(1,0,all2,one2);
+    { NET_STORE2_GRAD2(0,1,all3s,one3s,1);
     }
   }
   else
-  { if (off==0)
-    { NET_STORE2_GRAD2(0,1,all3,one3);
+  { if (omit==0)
+    { if (off==0)
+      { NET_STORE2_GRAD2(0,0,all1,one1,0);
+      }
+      else
+      { NET_STORE2_GRAD2(1,0,all2,one2,0);
+      }
     }
     else
-    { NET_STORE2_GRAD2(1,1,all4,one4);
+    { if (off==0)
+      { NET_STORE2_GRAD2(0,1,all3,one3,0);
+      }
+      else
+      { NET_STORE2_GRAD2(1,1,all4,one4,0);
+      }
     }
   }
 }
@@ -1804,7 +1828,7 @@ __device__ static void net_store3_grad1_config (int, net_param *restrict,
 __device__ static void net_store3_grad2 (int, net_param *restrict, 
    net_value const*, net_value const*, net_value const*, net_param const*, int,
    net_value const*, net_value const*, net_value const*, 
-   int, unsigned short const*, int);
+   int, unsigned short const*, int, int);
 __device__ static void net_store3_grad2_config (int, net_param *restrict, 
    net_value const*, net_value const*, net_value const*, net_param const*,
    net_value const*, net_value const*, net_value const*, net_config const*);
@@ -1862,7 +1886,7 @@ __device__ void net_store3_grad
       { net_store3_grad2 (th, g->ih[l], v0->i, v1->i, v2->i,
                     a->has_ti ? w->ti : 0, a->N_inputs, 
                     d0->s[l], d1->s[l], d2->s[l], N_hidden, 
-                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1));
+                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), 0);
       }
     }
 
@@ -1877,7 +1901,7 @@ __device__ void net_store3_grad
       { net_store3_grad2 (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], v2->h[l-1],
           a->has_th[l-1] ? w->th[l-1] : 0,
           a->N_hidden[l-1], d0->s[l], d1->s[l], d2->s[l], N_hidden,
-          (unsigned short *)0, 0);
+          (unsigned short *)0, 0, 0);
       }
     }
 
@@ -1896,7 +1920,7 @@ __device__ void net_store3_grad
       { net_store3_grad2 (th, g->ho[l], v0->h[l], v1->h[l], v2->h[l],
                     a->has_th[l] ? w->th[l] : 0,
                     N_hidden, d0->o, d1->o, d2->o, a->N_outputs, 
-                    (unsigned short *) 0, 0);
+                    (unsigned short *) 0, 0, 0);
       }
     }
   }
@@ -1912,7 +1936,7 @@ __device__ void net_store3_grad
     { net_store3_grad2 (th, g->io, v0->i, v1->i, v2->i, a->has_ti ? w->ti : 0, 
                         a->N_inputs, d0->o, d1->o, d2->o, a->N_outputs, 
                         flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0,
-                        1);
+                        1, 0);
     }
   }
 
@@ -2022,7 +2046,7 @@ __device__ static void net_store3_grad1_config
    unless there is only one destination unit, in which case it is
    based on the indexes for the source units. */
 
-#define NET_STORE3_GRAD2(has_off,has_omit,alllab,onelab) \
+#define NET_STORE3_GRAD2(has_off,has_omit,alllab,onelab,sprs) \
 do \
 { int i; \
   if (nd==1) \
@@ -2056,7 +2080,7 @@ do \
       } \
     } \
   } \
-  else \
+  else if (sprs) \
   { net_value tv0, tv1, tv2, tvh, o; \
     net_value const*dh; \
     int j; \
@@ -2095,6 +2119,20 @@ do \
       } \
     } \
   } \
+  else \
+  { net_value tv0, tv1, tv2, o; \
+    int j; \
+    for (i = 0; i<nv; i++, g+=nd) \
+    { if (has_omit && (omit[i]&ob)) continue; \
+      o = has_off ? off[i] : 0; \
+      tv0 = v0[i] + o; \
+      tv1 = v1[i] + o; \
+      tv2 = v2[i] + o; \
+      for (j = th; j<nd; j+=2) \
+      { g[j] = tv0*d0[j] + tv1*d1[j] + tv2*d2[j]; \
+      } \
+    } \
+  } \
 } while (0)
 
 __device__ static void net_store3_grad2
@@ -2110,23 +2148,34 @@ __device__ static void net_store3_grad2
   net_value const* d2,    /* Derivatives with respect to destination units, 2 */
   int nd,		  /* Number of destination units */
   unsigned short const* omit, /* Omit flags, null if not present */
-  int ob		  /* Bit to look at in omit flags (mask, not number) */
+  int ob,		  /* Bit to look at in omit flags (mask, not number) */
+  int sparse              /* Might source unit values often be zero? */
 )
 { 
-  if (omit==0)
-  { if (off==0)
-    { NET_STORE3_GRAD2(0,0,all1,one1);
+  if (sparse && off==0)
+  { if (omit==0)
+    { NET_STORE3_GRAD2(0,0,all1s,one1s,1);
     }
     else
-    { NET_STORE3_GRAD2(1,0,all2,one2);
+    { NET_STORE3_GRAD2(0,1,all3s,one3s,1);
     }
   }
   else
-  { if (off==0)
-    { NET_STORE3_GRAD2(0,1,all3,one3);
+  { if (omit==0)
+    { if (off==0)
+      { NET_STORE3_GRAD2(0,0,all1,one1,0);
+      }
+      else
+      { NET_STORE3_GRAD2(1,0,all2,one2,0);
+      }
     }
     else
-    { NET_STORE3_GRAD2(1,1,all4,one4);
+    { if (off==0)
+      { NET_STORE3_GRAD2(0,1,all3,one3,0);
+      }
+      else
+      { NET_STORE3_GRAD2(1,1,all4,one4,0);
+      }
     }
   }
 }
@@ -2295,14 +2344,12 @@ __device__ static void net_store4_grad1_config (int, net_param *restrict,
    net_config const*);
 __device__ static void net_store4_grad2 (int, net_param *restrict, 
    net_value const*, net_value const*, net_value const*, net_value const*,
-   net_param const*, int,
-   net_value const*, net_value const*, net_value const*,  net_value const*, 
-   int, unsigned short const*, int);
+   net_param const*, int, net_value const*, net_value const*, net_value const*,
+   net_value const*, int, unsigned short const*, int, int);
 __device__ static void net_store4_grad2_config (int, net_param *restrict, 
    net_value const*, net_value const*, net_value const*, net_value const*,
-   net_param const*,
-   net_value const*, net_value const*, net_value const*, net_value const*,
-   net_config const*);
+   net_param const*, net_value const*, net_value const*, net_value const*, 
+   net_value const*, net_config const*);
 
 
 /* STORE SUM OF GRADIENT FROM FOUR CASES, USING FOUR THREADS.
@@ -2361,7 +2408,7 @@ __device__ void net_store4_grad
       { net_store4_grad2 (th, g->ih[l], v0->i, v1->i, v2->i, v3->i,
                     a->has_ti ? w->ti : 0, a->N_inputs, 
                     d0->s[l], d1->s[l], d2->s[l], d3->s[l], N_hidden, 
-                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1));
+                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), 0);
       }
     }
 
@@ -2377,7 +2424,7 @@ __device__ void net_store4_grad
           v0->h[l-1], v1->h[l-1], v2->h[l-1], v3->h[l-1],
           a->has_th[l-1] ? w->th[l-1] : 0,
           a->N_hidden[l-1], d0->s[l], d1->s[l], d2->s[l], d3->s[l], N_hidden,
-          (unsigned short *)0, 0);
+          (unsigned short *)0, 0, 0);
       }
     }
 
@@ -2398,7 +2445,7 @@ __device__ void net_store4_grad
       { net_store4_grad2 (th, g->ho[l], v0->h[l], v1->h[l], v2->h[l], v3->h[l],
                     a->has_th[l] ? w->th[l] : 0,
                     N_hidden, d0->o, d1->o, d2->o, d3->o, a->N_outputs, 
-                    (unsigned short *) 0, 0);
+                    (unsigned short *) 0, 0, 0);
       }
     }
   }
@@ -2415,7 +2462,7 @@ __device__ void net_store4_grad
                         a->has_ti ? w->ti : 0, a->N_inputs, 
                         d0->o, d1->o, d2->o, d3->o, a->N_outputs, 
                         flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0,
-                        1);
+                        1, 0);
     }
   }
 
@@ -2522,7 +2569,7 @@ __device__ static void net_store4_grad1_config
    destination unit, in which case it is based on the indexes for the
    source units. */
 
-#define NET_STORE4_GRAD2(has_off,has_omit,alllab,onelab) \
+#define NET_STORE4_GRAD2(has_off,has_omit,alllab,onelab,sprs) \
 do \
 { int i; \
   if (nd==1) \
@@ -2557,7 +2604,7 @@ do \
       } \
     } \
   } \
-  else \
+  else if (sprs) \
   { net_value tv0, tv1, tv2, tv3, tvh, o; \
     net_value const*dh; \
     int j; \
@@ -2602,6 +2649,21 @@ do \
       } \
     } \
   } \
+  else \
+  { net_value tv0, tv1, tv2, tv3, o; \
+    int j; \
+    for (i = 0; i<nv; i++, g+=nd) \
+    { if (has_omit && (omit[i]&ob)) continue; \
+      o = has_off ? off[i] : 0; \
+      tv0 = v0[i] + o; \
+      tv1 = v1[i] + o; \
+      tv2 = v2[i] + o; \
+      tv3 = v3[i] + o; \
+      for (j = th; j<nd; j+=4) \
+      { g[j] = tv0*d0[j] + tv1*d1[j] + tv2*d2[j] + tv3*d3[j]; \
+      } \
+    } \
+  } \
 } while (0)
 
 __device__ static void net_store4_grad2
@@ -2619,23 +2681,34 @@ __device__ static void net_store4_grad2
   net_value const* d3,    /* Derivatives with respect to destination units, 3 */
   int nd,		  /* Number of destination units */
   unsigned short const* omit, /* Omit flags, null if not present */
-  int ob		  /* Bit to look at in omit flags (mask, not number) */
+  int ob,		  /* Bit to look at in omit flags (mask, not number) */
+  int sparse		  /* Might source unit values often be zero? */
 )
 { 
-  if (omit==0)
-  { if (off==0)
-    { NET_STORE4_GRAD2(0,0,all1,one1);
+  if (sparse && off==0)
+  { if (omit==0)
+    { NET_STORE4_GRAD2(0,0,all1s,one1s,1);
     }
     else
-    { NET_STORE4_GRAD2(1,0,all2,one2);
+    { NET_STORE4_GRAD2(0,1,all3s,one3s,1);
     }
   }
   else
-  { if (off==0)
-    { NET_STORE4_GRAD2(0,1,all3,one3);
+  { if (omit==0)
+    { if (off==0)
+      { NET_STORE4_GRAD2(0,0,all1,one1,0);
+      }
+      else
+      { NET_STORE4_GRAD2(1,0,all2,one2,0);
+      }
     }
     else
-    { NET_STORE4_GRAD2(1,1,all4,one4);
+    { if (off==0)
+      { NET_STORE4_GRAD2(0,1,all3,one3,0);
+      }
+      else
+      { NET_STORE4_GRAD2(1,1,all4,one4,0);
+      }
     }
   }
 }

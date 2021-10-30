@@ -42,6 +42,8 @@ net_values *train_values;	/* Values for training cases */
 net_value *train_iblock;	/* Block of input values for training cases */
 net_value *train_targets;	/* True training case targets */
 
+double train_zero_frac;		/* Fraction of input values that are zero */
+
 int N_test;			/* Number of test cases */
 
 net_values *test_values;	/* Values associated with test cases */
@@ -91,6 +93,8 @@ void net_data_free (void)
    has already been read, it isn't read again.  This procedure also checks
    that the data specifications are consistent with the network architecture. 
 
+   When training data is read, train_zero_frac is computed.
+
    For survival models with non-constant hazard, the first input in a case, 
    representing time, is set to zero by this procedure. */
 
@@ -129,6 +133,15 @@ void net_data_read
     numin_spec (&ns, "data@1,0",1);
     numin_spec (&ns, data_spec->train_inputs, N_inputs);
     train_values = read_inputs(&ns, &N_train, arch, model, surv, &train_iblock);
+
+    int i, j;
+    train_zero_frac = 0;
+    for (i = 0; i<N_train; i++) 
+    { for (j = 0; j<arch->N_inputs; j++)
+      { if (train_values[i].i[j]==0) train_zero_frac += 1;
+      }
+    }
+    train_zero_frac /= N_train * arch->N_inputs;
 
     numin_spec (&ns, data_spec->train_targets, N_targets);
     train_targets = read_targets (&ns, N_train, arch);

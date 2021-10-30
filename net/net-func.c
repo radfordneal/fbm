@@ -1406,7 +1406,7 @@ __device__ static void bias_values_config_gpu (int, net_value *restrict, int,
 
 __device__ static void add_connections_gpu (int, net_value *restrict, int, 
                       net_value const*, int, net_param const*, net_param const*,
-                      unsigned short const*, int);
+                      unsigned short const*, int, int);
 
 __device__ static void add_connections_config_gpu (int, net_value *restrict, 
                                     net_value const*,
@@ -1450,10 +1450,13 @@ __device__ void net_func_gpu
   net_arch const* a,	/* Network architecture */
   net_flags const* flgs,/* Network flags, null if none */
   net_params const* w,	/* Network parameters */
+  int sparse,		/* Are input values sparse? */
   int sync		/* Sync threads after last layer computation? */
 )
 {
   int l, j;
+
+  if (a->has_ti) sparse = 0;
 
   /* Compute values for successive hidden layers. */
 
@@ -1487,7 +1490,7 @@ __device__ void net_func_gpu
       else
       { add_connections_gpu (th, sh, N_hidden, v->i, a->N_inputs, 
           w->ih[l], a->has_ti ? w->ti : 0, 
-          flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1));
+          flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), sparse);
       }
     }
 
@@ -1498,7 +1501,8 @@ __device__ void net_func_gpu
       }
       else
       { add_connections_gpu (th, sh, N_hidden, v->h[l-1], a->N_hidden[l-1],
-          w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0, (unsigned short *) 0, 0);
+          w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0, (unsigned short *) 0, 
+          0, 0);
       }
     }
 
@@ -1569,7 +1573,8 @@ __device__ void net_func_gpu
     else
     { add_connections_gpu (th, v->o, a->N_outputs, v->i, a->N_inputs,
                     w->io, a->has_ti ? w->ti : 0, 
-                    flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1);
+                    flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
+                    sparse);
     }
   }
 
@@ -1583,7 +1588,7 @@ __device__ void net_func_gpu
       else
       { add_connections_gpu (th, v->o, a->N_outputs, v->h[l], a->N_hidden[l], 
                              w->ho[l], a->has_th[l] ? w->th[l] : 0, 
-                             (unsigned short *) 0, 0);
+                             (unsigned short *) 0, 0, 0);
       }
     }
   }
@@ -1669,7 +1674,7 @@ __device__ static void bias_values_config_gpu
    due to connections from one source layer to the current unit values for
    the destination layer. */
 
-#define ADD_CONNECTIONS_GPU(offset,omit) \
+#define ADD_CONNECTIONS_GPU(offset,omit,sprs) \
 do \
 { int i, j; \
   net_param o; \
@@ -1686,7 +1691,7 @@ do \
       *s += sv; \
     } \
   } \
-  else \
+  else if (sprs) \
   { for (i = 0; i<ns; i++) \
     { o = (offset); \
       if (omit) continue; \
@@ -1695,6 +1700,17 @@ do \
       { for (j = th; j<nd; j+=NTH) \
         { s[j] += w[j] * tv; \
         } \
+      } \
+      w += nd; \
+    } \
+  } \
+  else \
+  { for (i = 0; i<ns; i++) \
+    { o = (offset); \
+      if (omit) continue; \
+      net_value tv = v[i] + o; \
+      for (j = th; j<nd; j+=NTH) \
+      { s[j] += w[j] * tv; \
       } \
       w += nd; \
     } \
@@ -1710,23 +1726,34 @@ __device__ static void add_connections_gpu
   net_param const* w,     /* Connection weights */
   net_param const* off,   /* Offsets to add to source unit values */
   unsigned short const* omit, /* Omit flags, null if not present/relevant */
-  int ob		  /* Bit to look at in omit flags */
+  int ob,		  /* Bit to look at in omit flags */
+  int sparse              /* Might source unit values often be zero? */
 )
 {
-  if (omit==0)
-  { if (off==0)
-    { ADD_CONNECTIONS_GPU(0,0);
+  if (sparse && off==0)
+  { if (omit==0)
+    { ADD_CONNECTIONS_GPU(0,0,1);
     }
     else
-    { ADD_CONNECTIONS_GPU(*off++,0);
+    { ADD_CONNECTIONS_GPU(0,(*omit++)&ob,1);
     }
   }
   else
-  { if (off==0)
-    { ADD_CONNECTIONS_GPU(0,(*omit++)&ob);
+  { if (omit==0)
+    { if (off==0)
+      { ADD_CONNECTIONS_GPU(0,0,0);
+      }
+      else
+      { ADD_CONNECTIONS_GPU(*off++,0,0);
+      }
     }
     else
-    { ADD_CONNECTIONS_GPU(*off++,(*omit++)&ob);
+    { if (off==0)
+      { ADD_CONNECTIONS_GPU(0,(*omit++)&ob,0);
+      }
+      else
+      { ADD_CONNECTIONS_GPU(*off++,(*omit++)&ob,0);
+      }
     }
   }
 }

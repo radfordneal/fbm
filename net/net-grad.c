@@ -1045,7 +1045,7 @@ __device__ static void store_grad1_config (net_param *restrict,
                                            net_value const*, net_config const*);
 __device__ static void store_grad2 (net_param *restrict, net_value const*, 
                                net_param const*, int, net_value const*, int,
-                               unsigned short const*, int);
+                               unsigned short const*, int, int);
 __device__ static void store_grad2_config (net_param *restrict, 
                                       net_value const*, 
                                       net_param const*, net_value const*,
@@ -1068,7 +1068,8 @@ __device__ void net_store_grad
   net_values const*v,	/* Values for units in network for a case */
   net_values const*d,	/* Backpropagated derivatives for a case */
   net_arch const*a,	/* Network architecture */
-  net_flags const*flgs	/* Network flags, null if none */
+  net_flags const*flgs,	/* Network flags, null if none */
+  int sparse            /* Might source unit values often be zero? */
 )
 {
   int l;
@@ -1098,7 +1099,8 @@ __device__ void net_store_grad
       else
       { store_grad2 (g->ih[l], v->i, a->has_ti ? w->ti : 0, a->N_inputs, 
                    d->s[l], N_hidden, 
-                   flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1));
+                   flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
+                   sparse);
       }
     }
 
@@ -1110,7 +1112,7 @@ __device__ void net_store_grad
       }
       else
       { store_grad2 (g->hh[l-1], v->h[l-1], a->has_th[l-1] ? w->th[l-1] : 0,
-          a->N_hidden[l-1], d->s[l], N_hidden, (unsigned short *)0, 0);
+          a->N_hidden[l-1], d->s[l], N_hidden, (unsigned short *)0, 0, 0);
       }
     }
 
@@ -1126,7 +1128,7 @@ __device__ void net_store_grad
       }
       else
       { store_grad2 (g->ho[l], v->h[l], a->has_th[l] ? w->th[l] : 0,
-                   N_hidden, d->o, a->N_outputs, (unsigned short *) 0, 0);
+                   N_hidden, d->o, a->N_outputs, (unsigned short *) 0, 0, 0);
       }
     }
   }
@@ -1139,7 +1141,8 @@ __device__ void net_store_grad
     else
     { store_grad2 (g->io, v->i, a->has_ti ? w->ti : 0, a->N_inputs, 
                  d->o, a->N_outputs, 
-                 flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1);
+                 flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
+                 sparse);
     }
   }
 
@@ -1186,7 +1189,7 @@ __device__ static void store_grad1_config
 
 /* STORE GRADIENT FROM PRODUCT OF UNIT VALUE AND UNIT DERIVATIVE. */
 
-#define STORE_GRAD2(offset,omit) \
+#define STORE_GRAD2(offset,omit,sprs) \
 do \
 { net_value tv, o; \
   int i, j; \
@@ -1211,7 +1214,7 @@ do \
     { o = (offset); \
       if (omit) continue; \
       tv = v[i] + o; \
-      if (tv==0) \
+      if (sprs && tv==0) \
       { for (j = 0; j<nd; j++) g[j] = 0; \
       } \
       else \
@@ -1234,7 +1237,7 @@ do \
   } \
 } while (0)
 
-#define STORE_GRAD2_00 \
+#define STORE_GRAD2_00(sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -1257,7 +1260,7 @@ do \
   { net_value tv; \
     for (i = 0; i<nv; i++) \
     { tv = v[i]; \
-      if (tv==0) \
+      if (sprs && tv==0) \
       { for (j = 0; j<nd; j++) g[j] = 0; \
       } \
       else \
@@ -1288,23 +1291,34 @@ __device__ static void store_grad2
   net_value const* d,     /* Derivatives with respect to destination units */
   int nd,		  /* Number of destination units */
   unsigned short const* omit, /* Omit flags, null if not present */
-  int ob		  /* Bit to look at in omit flags */
+  int ob,		  /* Bit to look at in omit flags */
+  int sparse            /* Might source unit values often be zero? */
 )
 { 
-  if (omit==0)
-  { if (off==0)
-    { STORE_GRAD2_00;
+  if (sparse && off==0)
+  { if (omit==0)
+    { STORE_GRAD2_00(1);
     }
     else
-    { STORE_GRAD2(*off++,0);
+    { STORE_GRAD2(0,(*omit++)&ob,1);
     }
   }
   else
-  { if (off==0)
-    { STORE_GRAD2(0,(*omit++)&ob);
+  { if (omit==0)
+    { if (off==0)
+      { STORE_GRAD2_00(0);
+      }
+      else
+      { STORE_GRAD2(*off++,0,0);
+      }
     }
     else
-    { STORE_GRAD2(*off++,(*omit++)&ob);
+    { if (off==0)
+      { STORE_GRAD2(0,(*omit++)&ob,0);
+      }
+      else
+      { STORE_GRAD2(*off++,(*omit++)&ob,0);
+      }
     }
   }
 }
@@ -1366,7 +1380,8 @@ __device__ void net_store2_grad
   net_values const*d0,	/* Backpropagated derivatives for case 0 */
   net_values const*d1,	/* Backpropagated derivatives for case 1 */
   net_arch const*a,	/* Network architecture */
-  net_flags const*flgs 	/* Network flags, null if none */
+  net_flags const*flgs,	/* Network flags, null if none */
+  int sparse            /* Might source unit values often be zero? */
 )
 { 
   int l;
@@ -1397,7 +1412,8 @@ __device__ void net_store2_grad
       else
       { net_store2_grad2 (th, g->ih[l], v0->i, v1->i, a->has_ti ? w->ti : 0, 
                     a->N_inputs, d0->s[l], d1->s[l], N_hidden, 
-                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), 0);
+                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
+                    sparse);
       }
     }
 
@@ -1445,7 +1461,7 @@ __device__ void net_store2_grad
     { net_store2_grad2 (th, g->io, v0->i, v1->i, a->has_ti ? w->ti : 0, 
                         a->N_inputs, d0->o, d1->o, a->N_outputs, 
                         flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0,
-                        1, 0);
+                        1, sparse);
     }
   }
 
@@ -1853,7 +1869,8 @@ __device__ void net_store3_grad
   net_values const*d1,	/* Backpropagated derivatives for case 1 */
   net_values const*d2,	/* Backpropagated derivatives for case 2 */
   net_arch const*a,	/* Network architecture */
-  net_flags const*flgs 	/* Network flags, null if none */
+  net_flags const*flgs,	/* Network flags, null if none */
+  int sparse            /* Might source unit values often be zero? */
 )
 { 
   int l;
@@ -1886,7 +1903,8 @@ __device__ void net_store3_grad
       { net_store3_grad2 (th, g->ih[l], v0->i, v1->i, v2->i,
                     a->has_ti ? w->ti : 0, a->N_inputs, 
                     d0->s[l], d1->s[l], d2->s[l], N_hidden, 
-                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), 0);
+                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
+                    sparse);
       }
     }
 
@@ -1936,7 +1954,7 @@ __device__ void net_store3_grad
     { net_store3_grad2 (th, g->io, v0->i, v1->i, v2->i, a->has_ti ? w->ti : 0, 
                         a->N_inputs, d0->o, d1->o, d2->o, a->N_outputs, 
                         flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0,
-                        1, 0);
+                        1, sparse);
     }
   }
 
@@ -2373,7 +2391,8 @@ __device__ void net_store4_grad
   net_values const*d2,	/* Backpropagated derivatives for case 2 */
   net_values const*d3,	/* Backpropagated derivatives for case 3 */
   net_arch const*a,	/* Network architecture */
-  net_flags const*flgs 	/* Network flags, null if none */
+  net_flags const*flgs,	/* Network flags, null if none */
+  int sparse            /* Might source unit values often be zero? */
 )
 { 
   int l;
@@ -2408,7 +2427,8 @@ __device__ void net_store4_grad
       { net_store4_grad2 (th, g->ih[l], v0->i, v1->i, v2->i, v3->i,
                     a->has_ti ? w->ti : 0, a->N_inputs, 
                     d0->s[l], d1->s[l], d2->s[l], d3->s[l], N_hidden, 
-                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), 0);
+                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), 
+                    sparse);
       }
     }
 
@@ -2462,7 +2482,7 @@ __device__ void net_store4_grad
                         a->has_ti ? w->ti : 0, a->N_inputs, 
                         d0->o, d1->o, d2->o, d3->o, a->N_outputs, 
                         flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0,
-                        1, 0);
+                        1, sparse);
     }
   }
 

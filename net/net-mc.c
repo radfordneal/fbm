@@ -529,7 +529,7 @@ void mc_app_initialize
     { 
       net_data_read (1, 0, arch, model, surv);
 
-      sparse = train_zero_frac > 0.7;  /* adjustable */
+      sparse = train_zero_frac > 0.4;  /* adjustable */
     
       deriv = (net_values *) chk_alloc (N_train, sizeof *deriv);
     
@@ -1171,7 +1171,7 @@ static void gibbs_noise
   int i, j;
 
   for (i = 0; i<N_train; i++) 
-  { net_func (&train_values[i], 0, arch, flgs, &params);
+  { net_func (&train_values[i], 0, arch, flgs, &params, sparse);
   }
 
   pr = &model->noise;
@@ -1275,7 +1275,7 @@ static void rgrid_met_noise
   int i, j;
 
   for (i = 0; i<N_train; i++) 
-  { net_func (&train_values[i], 0, arch, flgs, &params);
+  { net_func (&train_values[i], 0, arch, flgs, &params, sparse);
   }
 
   pr = &model->noise;
@@ -1814,7 +1814,7 @@ void net_training_cases
     
       for (;;)
       {
-        net_func (&train_values[i], 0, arch, flgs, &params);
+        net_func (&train_values[i], 0, arch, flgs, &params, sparse);
         
         net_value fudged_target 
                     = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
@@ -1867,7 +1867,7 @@ void net_training_cases
         // printf("train_values[%d]->i[1] = %f\n",i,train_vals_i->i[1]);
       }
 
-      net_func (train_vals_i, 0, arch, flgs, &params);
+      net_func (train_vals_i, 0, arch, flgs, &params, sparse);
 
       if (DEBUG_NET_TRAINING_CASES)
       { printf("train_values[%d]->o[0] = %f\n",i,train_vals_i->o[0]);

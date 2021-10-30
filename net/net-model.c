@@ -693,7 +693,7 @@ void net_model_guess
  
           for (;;)
           {
-            net_func (v, 0, a, flgs, params);
+            net_func (v, 0, a, flgs, params, 1);
             h = exp(v->o[0]);
             
             if (type==0)

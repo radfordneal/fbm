@@ -165,9 +165,9 @@ int main
         { width = low_width==0 ? high_width*i/n_pairs
                 : low_width*pow(high_width/low_width,(double)i/n_pairs);
           v1->i[0] = centre + width/2;
-          net_func (v1, 0, a, flgs, w);
+          net_func (v1, 0, a, flgs, w, 1);
           v2->i[0] = centre - width/2;
-          net_func (v2, 0, a, flgs, w);
+          net_func (v2, 0, a, flgs, w, 1);
           for (j = 0; j<a->N_hidden[a->N_layers-1]; j++)
           { f1 = v1->h[a->N_layers-1][j];
             f2 = v2->h[a->N_layers-1][j];
@@ -184,9 +184,9 @@ int main
         { width = low_width==0 ? high_width*i/n_pairs
                 : low_width*pow(high_width/low_width,(double)i/n_pairs);
           v1->i[0] = centre + width/2;
-          net_func (v1, 0, a, flgs, w);
+          net_func (v1, 0, a, flgs, w, 1);
           v2->i[0] = centre - width/2;
-          net_func (v2, 0, a, flgs, w);
+          net_func (v2, 0, a, flgs, w, 1);
           f1 = v1->o[0];
           f2 = v2->o[0];
           dvar[i] += (f1-f2)*(f1-f2);

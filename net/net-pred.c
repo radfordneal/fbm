@@ -149,7 +149,7 @@ int pred_app_use_index (void)
 
     if (m==0 || m->type!='V' || sv->hazard_type=='C')
     {
-      net_func (&test_values[i], 0, a, flgs, w);
+      net_func (&test_values[i], 0, a, flgs, w, 1);
     }
     
     if (have_targets) 
@@ -179,7 +179,7 @@ int pred_app_use_index (void)
 
         for (;;)
         {
-          net_func (&test_values[i], 0, a, flgs, w);
+          net_func (&test_values[i], 0, a, flgs, w, 1);
           
           ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
 

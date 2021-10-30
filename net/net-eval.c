@@ -244,7 +244,7 @@ int main
   
     for (;;)
     {
-      net_func (v, 0, a, flgs, w);
+      net_func (v, 0, a, flgs, w, 1);
   
       for (i = 0; i<a->N_inputs; i++) printf(" %8.5f",v->i[i]);
   

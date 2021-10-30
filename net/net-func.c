@@ -63,7 +63,7 @@ HOSTDEV static void bias_values_config (net_value *restrict, int,
 
 HOSTDEV static void add_connections (net_value *restrict, int, net_value const*,
                              int, net_param const*, net_param const*,
-                             unsigned short const*, int);
+                             unsigned short const*, int, int);
 
 HOSTDEV static void add_connections_config (net_value *restrict, 
                                     net_value const*,
@@ -83,7 +83,8 @@ HOSTDEV void net_func
   int start,		/* Number of hidden layers with known values */
   net_arch const* a,	/* Network architecture */
   net_flags const* flgs,/* Network flags, null if none */
-  net_params const* w	/* Network parameters */
+  net_params const* w,	/* Network parameters */
+  int sparse		/* Are input values sparse? */
 )
 {
   int l, j;
@@ -116,7 +117,7 @@ HOSTDEV void net_func
       else
       { add_connections (sh, N_hidden, v->i, a->N_inputs, 
           w->ih[l], a->has_ti ? w->ti : 0, 
-          flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1));
+          flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), sparse);
       }
     }
 
@@ -127,7 +128,8 @@ HOSTDEV void net_func
       }
       else
       { add_connections (sh, N_hidden, v->h[l-1], a->N_hidden[l-1],
-          w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0, (unsigned short *) 0, 0);
+          w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0, (unsigned short *) 0, 0,
+          0);
       }
     }
 
@@ -474,7 +476,8 @@ HOSTDEV void net_func
     else
     { add_connections (v->o, a->N_outputs, v->i, a->N_inputs,
                     w->io, a->has_ti ? w->ti : 0, 
-                    flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1);
+                    flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
+                    sparse);
     }
   }
 
@@ -487,7 +490,8 @@ HOSTDEV void net_func
       }
       else
       { add_connections (v->o, a->N_outputs, v->h[l], a->N_hidden[l], w->ho[l],
-                         a->has_th[l] ? w->th[l] : 0, (unsigned short *) 0, 0);
+                         a->has_th[l] ? w->th[l] : 0, (unsigned short *) 0, 0,
+                         0);
       }
     }
   }
@@ -563,7 +567,7 @@ HOSTDEV static void bias_values_config
    due to connections from one source layer to the current unit values for
    the destination layer. */
 
-#define ADD_CONNECTIONS(offset,omit) \
+#define ADD_CONNECTIONS(offset,omit,sprs) \
 do \
 { int i, j; \
   net_param o; \
@@ -578,7 +582,7 @@ do \
     } \
     *s += sv; \
   } \
-  else \
+  else if (sprs) \
   { for (i = 0; i<ns; i++) \
     { o = (offset); \
       if (omit) continue; \
@@ -591,11 +595,22 @@ do \
       w += nd; \
     } \
   } \
+  else \
+  { for (i = 0; i<ns; i++) \
+    { o = (offset); \
+      if (omit) continue; \
+      net_value tv = v[i] + o; \
+      for (j = 0; j<nd; j++) \
+      { s[j] += w[j] * tv; \
+      } \
+      w += nd; \
+    } \
+  } \
 } while (0)
 
 #if FP64 && USE_SIMD_INTRINSICS && __AVX__
 
-#define ADD_CONNECTIONS00 \
+#define ADD_CONNECTIONS00(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -627,7 +642,7 @@ do \
     { for (;;) \
       { if (i==ns) goto done; \
         TV = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (cast128d(TV), Z128d)) \
+        if (!sprs || _mm_ucomineq_sd (cast128d(TV), Z128d)) \
         { break; \
         } \
         i += 1; \
@@ -638,7 +653,7 @@ do \
       for (;;) \
       { if (i==ns) goto one_more; \
         TV2 = _mm256_broadcast_sd (v+i); \
-        if (_mm_ucomineq_sd (cast128d(TV2), Z128d)) \
+        if (!sprs || _mm_ucomineq_sd (cast128d(TV2), Z128d)) \
         { break; \
         } \
         i += 1; \
@@ -695,7 +710,7 @@ do \
 
 #elif FP64 && USE_SIMD_INTRINSICS && __SSE3__
 
-#define ADD_CONNECTIONS00 \
+#define ADD_CONNECTIONS00(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -720,7 +735,7 @@ do \
     { for (;;) \
       { if (i==ns) goto done; \
         TV = _mm_set1_pd (*(v+i)); \
-        if (_mm_ucomineq_sd (TV, Z128d)) \
+        if (!sprs || _mm_ucomineq_sd (TV, Z128d)) \
         { break; \
         } \
         i += 1; \
@@ -731,7 +746,7 @@ do \
       for (;;) \
       { if (i==ns) goto one_more; \
         TV2 = _mm_set1_pd (*(v+i)); \
-        if (_mm_ucomineq_sd (TV2, Z128d)) \
+        if (!sprs || _mm_ucomineq_sd (TV2, Z128d)) \
         { break; \
         } \
         i += 1; \
@@ -773,7 +788,7 @@ do \
 
 #elif FP32 && USE_SIMD_INTRINSICS && __AVX__
 
-#define ADD_CONNECTIONS00 \
+#define ADD_CONNECTIONS00(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) /* this part same as SSE3 code, could be improved */ \
@@ -816,7 +831,7 @@ do \
     { for (;;) \
       { if (i==ns) goto done; \
         TV = _mm256_set1_ps (*(v+i)); \
-        if (_mm_ucomineq_ss (cast128f(TV), Z)) \
+        if (!sprs || _mm_ucomineq_ss (cast128f(TV), Z)) \
         { break; \
         } \
         i += 1; \
@@ -827,7 +842,7 @@ do \
       for (;;) \
       { if (i==ns) goto one_more; \
         TV2 = _mm256_set1_ps (*(v+i)); \
-        if (_mm_ucomineq_ss (cast128f(TV2), Z)) \
+        if (!sprs || _mm_ucomineq_ss (cast128f(TV2), Z)) \
         { break; \
         } \
         i += 1; \
@@ -899,7 +914,7 @@ do \
 
 #elif FP32 && USE_SIMD_INTRINSICS && __SSE3__
 
-#define ADD_CONNECTIONS00 \
+#define ADD_CONNECTIONS00(one_more,done,sprs) \
 do \
 { int i, j; \
   __m128 Z = _mm_setzero_ps(); \
@@ -941,7 +956,7 @@ do \
     { for (;;) \
       { if (i==ns) goto done; \
         TV = _mm_set1_ps (*(v+i)); \
-        if (_mm_ucomineq_ss (TV, Z)) \
+        if (!sprs || _mm_ucomineq_ss (TV, Z)) \
         { break; \
         } \
         i += 1; \
@@ -952,7 +967,7 @@ do \
       for (;;) \
       { if (i==ns) goto one_more; \
         TV2 = _mm_set1_ps (*(v+i)); \
-        if (_mm_ucomineq_ss (TV2, Z)) \
+        if (!sprs || _mm_ucomineq_ss (TV2, Z)) \
         { break; \
         } \
         i += 1; \
@@ -1031,7 +1046,7 @@ do \
 
 #else
 
-#define ADD_CONNECTIONS00 ADD_CONNECTIONS(0,0)
+#define ADD_CONNECTIONS00(lab1,lab2,sprs) ADD_CONNECTIONS(0,0,sprs)
 
 #endif
 
@@ -1043,23 +1058,34 @@ HOSTDEV static void add_connections
   net_param const* w,     /* Connection weights */
   net_param const* off,   /* Offsets to add to source unit values */
   unsigned short const* omit, /* Omit flags, null if not present/relevant */
-  int ob		  /* Bit to look at in omit flags */
+  int ob,		  /* Bit to look at in omit flags */
+  int sparse		  /* Are input values sparse? */
 )
 {
-  if (omit==0)
-  { if (off==0)
-    { ADD_CONNECTIONS00;
+  if (sparse && off==0)
+  { if (omit==0)
+    { ADD_CONNECTIONS00(one_more1,done1,1);
     }
     else
-    { ADD_CONNECTIONS(*off++,0);
+    { ADD_CONNECTIONS(0,(*omit++)&ob,1);
     }
   }
   else
-  { if (off==0)
-    { ADD_CONNECTIONS(0,(*omit++)&ob);
+  { if (omit==0)
+    { if (off==0)
+      { ADD_CONNECTIONS00(one_more2,done2,0);
+      }
+      else
+      { ADD_CONNECTIONS(*off++,0,0);
+      }
     }
     else
-    { ADD_CONNECTIONS(*off++,(*omit++)&ob);
+    { if (off==0)
+      { ADD_CONNECTIONS(0,(*omit++)&ob,0);
+      }
+      else
+      { ADD_CONNECTIONS(*off++,(*omit++)&ob,0);
+      }
     }
   }
 }

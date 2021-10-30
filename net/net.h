@@ -345,7 +345,7 @@ void net_prior_max_second (net_params *, net_sigmas *, net_arch *, net_flags *,
                            net_priors *);
 
 HOSTDEV void net_func (net_values *restrict, int, net_arch const*, 
-                       net_flags const*, net_params const*);
+                       net_flags const*, net_params const*, int);
 
 __device__ void net_func_gpu (int, net_values *restrict, int, net_arch const*, 
                               net_flags const*, net_params const*, int, int);

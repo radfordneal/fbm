@@ -791,17 +791,15 @@ do \
 #define ADD_CONNECTIONS00(one_more,done,sprs) \
 do \
 { int i, j; \
-  if (nd==1) /* this part same as SSE3 code, could be improved */ \
-  { __m128 Z = _mm_setzero_ps(); \
-    __m128 SV = Z; \
+  if (nd==1) \
+  { __m256 SV256 = _mm256_setzero_ps(); \
     i = 7; \
     while (i<ns) \
-    { SV = _mm_add_ps (SV, _mm_mul_ps (_mm_loadu_ps(v+i-7), \
-                                       _mm_loadu_ps(w+i-7))); \
-      SV = _mm_add_ps (SV, _mm_mul_ps (_mm_loadu_ps(v+i-3), \
-                                       _mm_loadu_ps(w+i-3))); \
+    { SV256 = _mm256_add_ps (SV256, _mm256_mul_ps (_mm256_loadu_ps(v+i-7), \
+                                                   _mm256_loadu_ps(w+i-7))); \
       i += 8; \
     } \
+    __m128 SV = _mm_add_ps (cast128f(SV256), _mm256_extractf128_ps(SV256,1)); \
     i -= 4; \
     if (i<ns) \
     { SV = _mm_add_ps (SV, _mm_mul_ps (_mm_loadu_ps(v+i-3), \
@@ -812,7 +810,8 @@ do \
     S = _mm_add_ps (SV, _mm_movehl_ps(SV,SV)); \
     i -= 2; \
     if (i<ns) \
-    { S = _mm_add_ps (S, _mm_mul_ps (_mm_loadl_pi (Z, (__m64 *)(v+i-1)), \
+    { __m128 Z = _mm_setzero_ps(); \
+      S = _mm_add_ps (S, _mm_mul_ps (_mm_loadl_pi (Z, (__m64 *)(v+i-1)), \
                                      _mm_loadl_pi (Z, (__m64 *)(w+i-1)))); \
       i += 2; \
     } \

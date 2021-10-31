@@ -19,7 +19,42 @@
 #define __device__
 #endif
 
-#define THREADS_PER_CASE 4
+
+/* VARIOUS ADJUSTABLE CONSTANTS.  Note that FP32 and FP64, specifying precision
+   must be set by the build process. */
+
+#define SPARSE_THRESHOLD 0.3 /* Do sparse handling for training inputs if 
+                                fraction of zero inputs is greater than this */
+
+#define TYPICAL_VALUES_ALL_ONE 0  /* Set to 1 to disable simulation of squared
+                                     hidden unit values, thereby reverting to 
+                                     the old stepsize heuristic */
+/* For GPU computations: */
+
+#define THREADS_PER_CASE 4   /* Number of GPU threads used per training case;
+                                must be a power of two */
+
+#define GROUP_SHIFT 2        /* Log2 of number of threads in a group for
+                                computing gradients, must be 0, 1, or 2 */
+
+#define GROUP_SIZE (1<<GROUP_SHIFT)  /* Number of threads in a grad group */
+#define GROUP_MASK (GROUP_SIZE-1)
+
+#define GRAD_ALIGN_BYTES 64  /* Alignment for gradient blocks in GPU, bytes
+                                  - must be a power of two, minimum of 8 */
+
+#define GRAD_ALIGN_ELEMENTS (GRAD_ALIGN_BYTES / 4 / (1+FP64))
+
+#define PIN_MEMORY 2         /* 0 = no host memory is pinned, 
+                                1 = parameters going to gpu only,
+                                2 = parameters + energy & deriv from gpu */
+
+#define MAX_THREADS 128      /* Limit on # of threads in a block, to avoid
+			        exceeding the per-block register use limit
+			        (max 255 reg/thread, min 32K reg/block) */
+
+#define DEFAULT_BLKCASES 16  /* Default, if not set by BLKCASES env var */
+#define DEFAULT_MAXBLKS	1000 /* Default, if not set by MAXBLKS env var */
 
 
 /* FUNCTIONS WITH SPECIFIED PRECISION. */

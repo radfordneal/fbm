@@ -36,36 +36,9 @@
 #include "intrinsics-use.h"
 
 
-/* SETTING TO DISABLE SIMULATION OF "TYPICAL" SQUARED VALUES. */
-
-#define TYPICAL_VALUES_ALL_ONE 0  /* Set to 1 to disable simulation of values,
-                                     thereby reverting to the old heuristic */
-
 /* CUDA SETTINGS. */
 
 #if __CUDACC__
-
-#define PIN_MEMORY 2		/* 0 = no host memory is pinned, 
-                                   1 = parameters going to gpu only,
-                                   2 = parameters + energy & deriv from gpu */
-
-#define GRAD_ALIGN_BYTES 64	/* Alignment for gradient blocks in GPU, bytes
-                                     - must be a power of two, minimum of 8 */
-
-#define GRAD_ALIGN_ELEMENTS (GRAD_ALIGN_BYTES / 4 / (1+FP64))
-
-#define GROUP_SHIFT 2		/* Log2 of number of threads in a group, must
-                                   be set to 0, 1, or 2 */
-
-#define GROUP_SIZE (1<<GROUP_SHIFT)  /* Number of threads in a group */
-#define GROUP_MASK (GROUP_SIZE-1)
-
-#define MAX_THREADS 128		/* Limit on # of threads in a block, to avoid
-				   exceeding the per-block register use limit
-				   (max 255 reg/thread, min 32K reg/block) */
-
-#define DEFAULT_BLKCASES 32	/* Default, if not set by BLKCASES env var */
-#define DEFAULT_MAXBLKS	1000	/* Default, if not set by MAXBLKS env var */
 
 static int blkcases = DEFAULT_BLKCASES;	/* Number of cases handled per block */
 static int maxblks = DEFAULT_MAXBLKS;	/* Max number of blocks per kernel */
@@ -529,7 +502,7 @@ void mc_app_initialize
     { 
       net_data_read (1, 0, arch, model, surv);
 
-      sparse = train_zero_frac > 0.4;  /* adjustable */
+      sparse = train_zero_frac > SPARSE_THRESHOLD;
     
       deriv = (net_values *) chk_alloc (N_train, sizeof *deriv);
     

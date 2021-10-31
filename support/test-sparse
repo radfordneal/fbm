@@ -1,0 +1,38 @@
+#!/bin/bash
+
+echo " "; echo "--- A"; echo " "
+
+net-spec log 5 1 / io=10
+(echo 0 1 1 0 0 3; echo 0 0 0 1 0 6; echo 1 0 0 0 1 5) >data
+data-spec log 5 1 / data .
+model-spec log real 1
+net-gen log fix - <<end
+1 2 3 4 5 
+end
+net-display log 0
+net-tbl -h o0@b log 0
+net-grad-test log 0 0.125
+
+echo " "; echo "--- B"; echo " "
+
+net-spec log 5 5 / io=10
+( echo 0 1 1 0 0 3 51 61 -6 6
+  echo 0 0 0 1 0 6 38 41 -2 4
+  echo 1 0 0 0 1 5 57 66 -8 3) >data
+data-spec log 5 5 / data .
+model-spec log real 1
+net-gen log fix - <<end
+1 10 11 -1 5
+2 20 23 -2 4
+3 30 37 -3 3
+4 40 41 -4 2
+5 50 54 -5 1
+end
+net-display log 0
+net-tbl -h o0@ log 0
+net-tbl -h o1@ log 0
+net-tbl -h o2@ log 0
+net-tbl -h o3@ log 0
+net-tbl -h o4@ log 0
+net-tbl -h b@ log 0
+net-grad-test log 0 0.125

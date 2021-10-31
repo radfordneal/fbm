@@ -970,35 +970,35 @@ do \
       j = 7; \
       while (j<nd) \
       { __m128 S = _mm_loadu_ps(s+j-7); \
-        S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadu_ps(w+j-7))); \
-        S = _mm_add_ps (S, _mm_mul_ps (TV2, _mm_loadu_ps(w2+j-7))); \
+        S = FMA_ps (TV, _mm_loadu_ps(w+j-7), S); \
+        S = FMA_ps (TV2, _mm_loadu_ps(w2+j-7), S); \
         _mm_storeu_ps (s+j-7, S); \
         S = _mm_loadu_ps(s+j-3); \
-        S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadu_ps(w+j-3))); \
-        S = _mm_add_ps (S, _mm_mul_ps (TV2, _mm_loadu_ps(w2+j-3))); \
+        S = FMA_ps (TV, _mm_loadu_ps(w+j-3), S); \
+        S = FMA_ps (TV2, _mm_loadu_ps(w2+j-3), S); \
         _mm_storeu_ps (s+j-3, S); \
         j += 8; \
       } \
       j -= 4; \
       if (j<nd) \
       { __m128 S = _mm_loadu_ps(s+j-3); \
-        S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadu_ps(w+j-3))); \
-        S = _mm_add_ps (S, _mm_mul_ps (TV2, _mm_loadu_ps(w2+j-3))); \
+        S = FMA_ps (TV, _mm_loadu_ps(w+j-3), S); \
+        S = FMA_ps (TV2, _mm_loadu_ps(w2+j-3), S); \
         _mm_storeu_ps (s+j-3, S); \
         j += 4; \
       } \
       j -= 2; \
       if (j<nd) \
       { __m128 S = _mm_loadl_pi (Z, (__m64 *)(s+j-1)); \
-        S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadl_pi(Z,(__m64 *)(w+j-1)))); \
-        S = _mm_add_ps (S, _mm_mul_ps (TV2,_mm_loadl_pi(Z,(__m64*)(w2+j-1)))); \
+        S = FMA_ps (TV, _mm_loadl_pi(Z,(__m64 *)(w+j-1)), S); \
+        S = FMA_ps (TV2,_mm_loadl_pi(Z,(__m64*)(w2+j-1)), S); \
         _mm_storel_pi ((__m64 *)(s+j-1), S); \
         j += 2; \
       } \
       if (j<=nd) \
       { __m128 S = _mm_load_ss(s+j-1); \
-        S = _mm_add_ss (S, _mm_mul_ss (TV, _mm_load_ss(w+j-1))); \
-        S = _mm_add_ss (S, _mm_mul_ss (TV2, _mm_load_ss(w2+j-1))); \
+        S = FMA_ss (TV, _mm_load_ss(w+j-1), S); \
+        S = FMA_ss (TV2, _mm_load_ss(w2+j-1), S); \
         _mm_store_ss (s+j-1, S); \
       } \
       i += 1; \
@@ -1008,30 +1008,30 @@ do \
     j = 7; \
     while (j<nd) \
     { __m128 S = _mm_loadu_ps(s+j-7); \
-      S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadu_ps(w+j-7))); \
+      S = FMA_ps (TV, _mm_loadu_ps(w+j-7), S); \
       _mm_storeu_ps (s+j-7, S); \
       S = _mm_loadu_ps(s+j-3); \
-      S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadu_ps(w+j-3))); \
+      S = FMA_ps (TV, _mm_loadu_ps(w+j-3), S); \
       _mm_storeu_ps (s+j-3, S); \
       j += 8; \
     } \
     j -= 4; \
     if (j<nd) \
     { __m128 S = _mm_loadu_ps(s+j-3); \
-      S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadu_ps(w+j-3))); \
+      S = FMA_ps (TV, _mm_loadu_ps(w+j-3), S); \
       _mm_storeu_ps (s+j-3, S); \
       j += 4; \
     } \
     j -= 2; \
     if (j<nd) \
     { __m128 S = _mm_loadl_pi (Z, (__m64 *)(s+j-1)); \
-      S = _mm_add_ps (S, _mm_mul_ps (TV, _mm_loadl_pi (Z, (__m64 *)(w+j-1)))); \
+      S = FMA_ps (TV, _mm_loadl_pi (Z, (__m64 *)(w+j-1)), S); \
       _mm_storel_pi ((__m64 *)(s+j-1), S); \
       j += 2; \
     } \
     if (j<=nd) \
     { __m128 S = _mm_load_ss(s+j-1); \
-      S = _mm_add_ss (S, _mm_mul_ss (TV, _mm_load_ss(w+j-1))); \
+      S = FMA_ss (TV, _mm_load_ss(w+j-1), S); \
       _mm_store_ss (s+j-1, S); \
     } \
   done: ; \

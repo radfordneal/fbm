@@ -277,12 +277,12 @@ HOSTDEV void net_model_prob
 /* VERSION OF NET_MODEL_PROB USING MULTIPLE GPU THREADS.  Must not be used
    for survival models (type 'V').  The probability pointed to by 'pr'
    is updated by the thread with th==0; the derivative at index i in 'dp'
-   is updated by the thread with th equal to i mod NET_FUNC_GPU_THREADS. 
+   is updated by the thread with th equal to i mod THREADS_PER_CASE. 
    A syncthreads done after this if 'sync' is non-zero. */
 
 #if __CUDACC__
 
-#define NTH (NET_FUNC_GPU_THREADS)  /* Short form for here */
+#define NTH (THREADS_PER_CASE)  /* Short form for here */
 
 __device__ void net_model_prob_gpu
 ( int th,		/* Thread index, if negative, just sync */

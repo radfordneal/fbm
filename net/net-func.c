@@ -1479,7 +1479,7 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
                                     net_param const*, net_param const*,
                                     net_config const*);
 
-#define NTH (NET_FUNC_GPU_THREADS)	/* Short form for use here */
+#define NTH (THREADS_PER_CASE)	/* Short form for use here */
 
 
 /* EVALUATE NETWORK FUNCTION FOR GIVEN INPUTS.  The inputs are taken from
@@ -1489,7 +1489,7 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
 
    This version uses four GPU threads to do the computation.  It
    is called from each of these threads, with 'th' set to 0 up to 
-   NET_FUNC_GPU_THREADS-1.  If called with a negative 'th' (done
+   THREADS_PER_CASE-1.  If called with a negative 'th' (done
    when there are spare threads at end of training set), it just 
    skips to the synchronization points.
   
@@ -1500,7 +1500,7 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
    make the __syncthreads calls here.
 
    Thread 'th' is used to compute the units whose index is 'th' mod
-   NET_FUNC_GPU_THREADS.  Consistent use of this scheme for the
+   THREADS_PER_CASE.  Consistent use of this scheme for the
    various componenets avoids any need to synchronize threads within
    computations for a single layer. 
 

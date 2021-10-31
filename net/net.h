@@ -19,7 +19,7 @@
 #define __device__
 #endif
 
-#define NET_FUNC_GPU_THREADS 4
+#define THREADS_PER_CASE 4
 
 
 /* FUNCTIONS WITH SPECIFIED PRECISION. */

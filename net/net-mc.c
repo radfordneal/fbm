@@ -341,8 +341,8 @@ void mc_app_initialize
           exit(1);
         }
       }
-      if (blkcases*NET_FUNC_GPU_THREADS > MAX_THREADS)
-      { blkcases = MAX_THREADS / NET_FUNC_GPU_THREADS;
+      if (blkcases*THREADS_PER_CASE > MAX_THREADS)
+      { blkcases = MAX_THREADS / THREADS_PER_CASE;
         fprintf(stderr,"BLKCASES too large, reduced to %d\n",blkcases);
       }
       char *e_maxblks = getenv("MAXBLKS");
@@ -1927,9 +1927,9 @@ void net_training_cases
    argument (case_energy, null if energy is not required).
 
    Network values and energies for each individual case handled by a
-   block are computed using NET_FUNC_GPU_THREADS.  The number of
+   block are computed using THREADS_PER_CASE.  The number of
    threads in a block used for this computation is therefore
-   NET_FUNC_GPU_THREADS times the number of cases handled by a block.
+   THREADS_PER_CASE times the number of cases handled by a block.
 
    GPU memory is also allocated here to store computed gradients. The
    GPU stores the total gradient for a block in const_block_grad,
@@ -2092,8 +2092,8 @@ __global__ void forward_kernel
 
   net_flags *flgs = const_has_flgs ? &const_flgs : 0;
   int x = blockIdx.x * blockDim.x + threadIdx.x;
-  int i = x / NET_FUNC_GPU_THREADS;
-  int th = x - NET_FUNC_GPU_THREADS*i;
+  int i = x / THREADS_PER_CASE;
+  int th = x - THREADS_PER_CASE*i;
   int h = start + i;
 
   if (h >= end) th = -1;
@@ -2124,8 +2124,8 @@ __global__ void energy_kernel
   //         case_energy!=0,need_deriv,blockIdx.x,threadIdx.x);
 
   int x = blockIdx.x * blockDim.x + threadIdx.x;
-  int i = x / NET_FUNC_GPU_THREADS;
-  int th = x - NET_FUNC_GPU_THREADS*i;
+  int i = x / THREADS_PER_CASE;
+  int th = x - THREADS_PER_CASE*i;
   int h = start + i;
 
   if (h >= end) th = -1;
@@ -2135,7 +2135,7 @@ __global__ void energy_kernel
   net_values *deriv_h = need_deriv ? const_deriv+h : 0;
   double *log_prob_h = case_energy ? case_energy+i : 0;
 
-  int single_thread = NET_FUNC_GPU_THREADS==1 
+  int single_thread = THREADS_PER_CASE==1 
                        || const_arch.N_outputs < 2 /* adjustable */
                        || const_model.type=='V';
   if (single_thread)
@@ -2163,7 +2163,7 @@ __global__ void energy_kernel
         }
       }
       else  /* must use multiple threads, as for computing deriv_h->o */ 
-      { for (k = th; k<const_arch.N_outputs; k += NET_FUNC_GPU_THREADS)
+      { for (k = th; k<const_arch.N_outputs; k += THREADS_PER_CASE)
         { deriv_h->o[k] *= gr_weight;
         }
       }
@@ -2179,7 +2179,7 @@ __global__ void energy_kernel
     if (threadIdx.x==0)
     { double e = 0;
       int j, l;
-      l = blockDim.x / NET_FUNC_GPU_THREADS;
+      l = blockDim.x / THREADS_PER_CASE;
       if (h+l > end) l = end-h;
       for (j = 0; j<l; j++)
       { e += case_energy[h-start+j];
@@ -2207,8 +2207,8 @@ __global__ void backward_kernel
 
   net_flags *flgs = const_has_flgs ? &const_flgs : 0;
   int x = blockIdx.x * blockDim.x + threadIdx.x;
-  int i = x / NET_FUNC_GPU_THREADS;
-  int th = x - NET_FUNC_GPU_THREADS*i;
+  int i = x / THREADS_PER_CASE;
+  int th = x - THREADS_PER_CASE*i;
   int h = start + i;
 
   // printf("blk %d, thrd %d, th %d, i %d, h %d, o %d, start %d, end %d\n",
@@ -2221,7 +2221,7 @@ __global__ void backward_kernel
 
   deriv_h = const_deriv+h;
 
-  if (NET_FUNC_GPU_THREADS==1)
+  if (THREADS_PER_CASE==1)
   { if (th>=0)
     { net_back (train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
                 &const_arch, flgs, &const_params);
@@ -2422,14 +2422,14 @@ static void net_training_cases_gpu
       check_cuda_error (cudaGetLastError(), 
                         "Before launching many_cases");
 
-      forward_kernel <<<blks, blkcases*NET_FUNC_GPU_THREADS>>> (i, i+n);
+      forward_kernel <<<blks, blkcases*THREADS_PER_CASE>>> (i, i+n);
 
-      energy_kernel <<<blks, blkcases*NET_FUNC_GPU_THREADS>>> 
+      energy_kernel <<<blks, blkcases*THREADS_PER_CASE>>> 
         (energy ? case_energy : 0, i, i+n, en_weight, gr!=0, gr_weight);
 
       if (gr)
       { 
-        backward_kernel <<<blks, blkcases*NET_FUNC_GPU_THREADS>>>  (i, i+n);
+        backward_kernel <<<blks, blkcases*THREADS_PER_CASE>>>  (i, i+n);
 
         gradient_kernel <<<blks, blkcases>>> (group_grad, i, i+n);
       }

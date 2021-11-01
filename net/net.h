@@ -162,6 +162,9 @@ typedef struct
 #define Max_layers 15  /* Maximum number of hidden layers in a network - no more
                           than 15, due to keeping flags in an unsigned short */
 
+#define Max_nonseq 16  /* Maximum number of non-sequential connections between
+                          hidden layers */
+
 typedef struct
 { 
   int N_inputs;			/* Number of input units */
@@ -181,10 +184,20 @@ typedef struct
   int has_ah[Max_layers];	/* Do hidden layers have adjustments? */
   int has_ao;			/* Does output layer have adjustments? */
 
-  net_config *input_config[Max_layers+1];   /* Pointers used during program,  */
-  net_config *bias_config[Max_layers+1];    /*   but set to zero in log file  */
-  net_config *hidden_config[2*Max_layers];  /*   hidden_config[0] is unused   */
-} net_arch;                                 /*   hh first, then ho (reversed) */
+  unsigned short has_nsq[Max_layers]; /* Bit vectors specifying which earlier
+                                         hidden layers have a non-sequential 
+                                         connection to this one.  (Note that 
+                                         nsq[0] nd nsq[1] must be all 0.) */
+
+  net_config *input_config[Max_layers+1]; /* Pointers used during program,    */
+  net_config *bias_config[Max_layers+1];  /*  but set to zero in log file.    */
+  net_config *hidden_config[2*Max_layers];/*  In hidden_config, 0 is unused,  */
+                                          /*  has hh first, then ho (reversed)*/
+
+  net_config *nonseq_config[Max_nonseq];  /* Pointers used in program, in 
+                                             same order as net_prior nsq */
+
+} net_arch;
 
 
 /* FLAGS MODIFYING ARCHITECTURE.  This record records extra flags modifying
@@ -217,8 +230,12 @@ typedef struct
                                    /* Below with +1 for output layer, at end */
   short input_config[Max_layers+1]; /* Index of input config file, 0 if none */
   short bias_config[Max_layers+1];  /* Index of bias config file, 0 if none */
+
   short hidden_config[2*Max_layers];/* Index of hidden config file, 0 if none */
                                     /*   has hh first, then ho (reversed) */
+
+  short nonseq_config[Max_nonseq]; /* Index of non-sequential config file name,
+                                      0 if none, order as in net_priors nsq */
 
   char config_files[2000];         /* Names of files for input/hidden configs */
 
@@ -245,6 +262,11 @@ typedef struct
   prior_spec ho[Max_layers];	/* Priors for hidden to output weights */
   prior_spec io;		/* Prior for input to output weights */
   prior_spec bo;		/* Prior for biases of output units */
+
+  prior_spec nsq[Max_nonseq];	/* Priors for weights for non-sequential 
+				   hidden-to-hidden connections, in order by
+				   destination layer and then source layer,
+				   by what exists according to has_nsq */
 
   double ah[Max_layers];	/* Alphas for adjustments of hidden units */
   double ao;			/* Alpha for adjustments of output units */
@@ -286,6 +308,8 @@ typedef struct
   net_sigma *ho[Max_layers];	/* ... for hidden to output weights */
   net_sigma *io;		/* ... for input to output weights */
 
+  net_sigma *nsq[Max_nonseq];	/* Points to sigmas for non-sequential weigths*/
+
   net_sigma *ah[Max_layers];	/* Pointers to adjustments for hidden units */
   net_sigma *ao;		/* ... for output units */
 
@@ -323,6 +347,8 @@ typedef struct
   net_param *ho[Max_layers];	/* Hidden to output weights */
   net_param *io;		/* Input to output weights */
   net_param *bo;		/* Biases of output units */
+
+  net_param *nsq[Max_nonseq];	/* Weights for non-sequential connections */
 
 } net_params;
 

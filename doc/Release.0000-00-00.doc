@@ -22,44 +22,53 @@ Feature changes in the version:
    net-spec.doc and net-config.doc for details, as well as the
    tutorial example in Ex-image.doc.
 
-2) Hidden layers may now use the 'softplus' activation function, given
+2) Non-sequential hidden layer connections are now supported - ie,
+   hidden layers can now connect to later hidden layers other than
+   their immediate successor.  The number of such non-sequential
+   connections is limited to 16.  (Note that non-sequential
+   connections from inputs and to outputs were already allowed.)
+
+3) Hidden layers may now use the 'softplus' activation function, given
    by h(u) = log(1+exp(u)), the 'square' activation function, given by
    h(u) = x^2, or the 'cube' activation function, given by h(u) = x^3,
    in addition to the previous options of tanh, sin, or identity.  The
    activaton function may be specified as documented in net-spec.doc.
 
-3) The sample-hyper operation for neural network models can now take
+4) The sample-hyper operation for neural network models can now take
    an argument in order to restrict the updates to the hyperparameters
    controlling a single group of parameters.  This may be useful in
    the initial stages of sampling, to avoid some hyperparameters
    taking on bad values when the data has not yet been fit well.
 
-4) The net-eval program can now optionally display the values of
+5) The net-eval program can now optionally display the values of
    hidden units in some layer, instead of the final output.
 
-5) The data-spec command now has an optional -e argument that causes
+6) The data-spec command now has an optional -e argument that causes
    the training and test inputs and targets read to be echoed to
    standard output.  This can be useful in checking that the data
    source is specified correctly.
 
-6) New C0, C1, and Cn for n>1 quantities are now defined, to help assess
+7) New C0, C1, and Cn for n>1 quantities are now defined, to help assess
    how well metropolis and hybrid updates are exploring the distribution.
    (But note that these are masked for mixture models, where they have
    another meaning.)
 
-7) The net-gen program has been extended to allow parameters to be set
+8) The net-gen program has been extended to allow parameters to be set
    from standard input, rather than being set to zero, or randomly,
 
-8) The xxx-tbl commands can now take a -f argument, causes them to
+9) The xxx-tbl commands can now take a -f argument, causes them to
    continually follow iterations being added to the last log file
    specified, rather than finishing when EOF is encountered.  This is
    useful if the output is piped to a plotting program that is capable
    of following continuing input, updating the plot in real time.
 
-9) The maximum number of hidden layers in a neural network is now 15
-   (up from 7 before).
+10) The old (positional) syntax for net-spec is no longer allowed.  It
+    would not have supported non-sequential hidden layer connections.
 
-10) The maximum number of iterations that can be used when making
+11) The maximum number of hidden layers in a neural network is now 15
+    (up from 7 before).
+
+12) The maximum number of iterations that can be used when making
     predictions with the median has been increased from 200 to 1000.
 
 Performance changes in this version:

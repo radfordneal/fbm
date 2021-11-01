@@ -147,6 +147,11 @@ Each unit in the input and hidden layers may have an offset, added to
 its output.  Any of these sets of parameters may be missing in any
 particular network, which has the same effect as their being zero.
 
+(The software now also supports connecting a hidden layer to an
+earlier hidden layer other than the immediately preceeding one.  Such
+non-sequential connections are handled in the obvious way, with this
+extension not otherwise noted in this presentation.)
+
 The interpretation of the output units is determined by the data
 model, described below.
 

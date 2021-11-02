@@ -48,9 +48,11 @@ void net_print_params
   model_specification *m /* Data model, may be null */
 )
 {
-  int i, j, l, g;
+  int i, j, l, ls, nsqi, g;
+  unsigned bits;
   char ps[1000];
 
+  nsqi = 0;
   g = 1; 
 
   if (a->has_ti)
@@ -61,6 +63,29 @@ void net_print_params
 
   for (l = 0; l<a->N_layers; l++)
   {
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        printf("\nHidden Layer %d to Hidden Layer %d Weights [%d]\n\n",
+                ls,l,g++);
+        if (s!=0) printf("%5.2f",*s->nsq_cm[nsqi]);
+        if (a->nonseq_config[nsqi])
+        { if (s!=0) printf(":     ");
+          print_param_array(w->nsq[nsqi], a->nonseq_config[nsqi]->N_wts, s!=0);
+        }
+        else
+        { for (i = 0; i<a->N_hidden[ls]; i++)
+          { if (i>0) printf("\n");
+            if (s!=0 && i>0) printf("     ");
+            if (s!=0) printf(" %4.2f:",s->nsq[nsqi][i]);
+            print_param_array
+              (w->nsq[nsqi]+a->N_hidden[l]*i, a->N_hidden[l], s!=0);
+          }
+        }
+        nsqi += 1;
+      }
+    }
+
     if (l>0 && a->has_hh[l-1])
     { printf("\nHidden Layer %d to Hidden Layer %d Weights [%d]\n\n",l-1,l,g++);
       if (s!=0) printf("%5.2f",*s->hh_cm[l-1]);
@@ -214,8 +239,10 @@ void net_print_sigmas
   model_specification *m /* Data model, may be null */
 )
 {
-  int l, g;
+  int l, ls, nsqi, g;
+  unsigned bits;
 
+  nsqi = 0;
   g = 1;
 
   if (a->has_ti)
@@ -225,6 +252,17 @@ void net_print_sigmas
 
   for (l = 0; l<a->N_layers; l++)
   {
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        printf("\nHidden Layer %d to Hidden Layer %d Weights [%d]\n\n",
+                ls,l,g++);
+        printf("%7.2f - ",*s->nsq_cm[nsqi]);
+        print_sigma_array(s->nsq[nsqi],a->N_hidden[ls]);
+        nsqi += 1;
+      }
+    }
+
     if (l>0 && a->has_hh[l-1])
     { printf("\nHidden Layer %d to Hidden Layer %d Weights [%d]\n\n",l-1,l,g++);
       printf("%7.2f - ",*s->hh_cm[l-1]);

@@ -84,7 +84,10 @@ void net_prior_generate
   double out_value	/* Use specific value for centre for output weights */
 )
 { 
-  int l, i;
+  int l, ls, nsqi, i;
+  unsigned bits;
+
+  nsqi = 0;
 
   if (a->has_ti) 
   { pick_unit_params (w->ti, s->ti_cm, a->N_inputs, 0, p->ti, centre, value);
@@ -101,6 +104,23 @@ void net_prior_generate
     if (a->has_ah[l])
     { for (i = 0; i<a->N_hidden[l]; i++)
       { s->ah[l][i] = centre ? 1.0 : prior_pick_sigma(1.0,p->ah[l]);
+      }
+    }
+
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        if (a->nonseq_config[nsqi])
+        { pick_weights_config (w->nsq[nsqi], s->nsq_cm[nsqi], s->nsq[nsqi],
+                               a->N_hidden[ls], a->nonseq_config[nsqi]->N_wts,
+                               p->nsq[nsqi], centre, value);
+        }
+        else
+        { pick_weights (w->nsq[nsqi], s->nsq_cm[nsqi], s->nsq[nsqi], 
+                        a->N_hidden[ls], a->N_hidden[l], 
+                        s->ah[l], p->nsq[nsqi], centre, value);
+        }
+        nsqi += 1;
       }
     }
 

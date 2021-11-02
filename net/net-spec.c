@@ -180,15 +180,15 @@ int main
     nsqi = 0;
     for (l = 0; l<a->N_layers; l++)
     { printf("\n         Hidden Layer %d\n\n",l);
-      if (l>0 && a->has_hh[l-1])
-      { printf("  Hidden-Hidden Weights:  %s\n", prior_show(ps,p->hh[l-1]));
-      }
       int lp;
       for (lp = 0; lp<l; lp++)
       { if ((a->has_nsq[l]>>lp) & 1)
         { printf("  Hidden%d-Hidden Weights: %s\n", 
                   lp, prior_show(ps,p->nsq[nsqi++]));
         }
+      }
+      if (l>0 && a->has_hh[l-1])
+      { printf("  Hidden-Hidden Weights:  %s\n", prior_show(ps,p->hh[l-1]));
       }
       if (a->has_ih[l]) 
       { printf("  Input-Hidden Weights:   %s\n", prior_show(ps,p->ih[l]));

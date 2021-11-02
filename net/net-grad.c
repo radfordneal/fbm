@@ -77,7 +77,10 @@ HOSTDEV void net_add_grad
   int sparse            /* Might source unit values often be zero? */
 )
 { 
-  int l;
+  int l, ls, nsqi;
+  unsigned bits;
+
+  nsqi = 0;
 
   if (a->has_ti) 
   { add_grad1 (g->ti, d->i, a->N_inputs);
@@ -106,6 +109,22 @@ HOSTDEV void net_add_grad
                    d->s[l], N_hidden, 
                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
                    sparse);
+      }
+    }
+
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        if (a->nonseq_config[nsqi])
+        { add_grad2_config
+              (g->nsq[nsqi], v->h[ls], a->has_th[ls] ? w->th[ls] : 0,
+              d->s[l], a->nonseq_config[nsqi]);
+        }
+        else
+        { add_grad2 (g->nsq[nsqi], v->h[ls], a->has_th[ls] ? w->th[ls] : 0,
+            a->N_hidden[ls], d->s[l], N_hidden, (unsigned short *)0, 0, 0);
+        }
+        nsqi += 1;
       }
     }
 

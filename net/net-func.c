@@ -87,9 +87,12 @@ HOSTDEV void net_func
   int sparse		/* Are input values sparse? */
 )
 {
-  int l, j;
+  int l, ls, nsqi, j;
+  unsigned bits;
 
   /* Compute values for successive hidden layers. */
+
+  nsqi = 0;
 
   for (l = start; l<a->N_layers; l++)
   {
@@ -118,6 +121,22 @@ HOSTDEV void net_func
       { add_connections (sh, N_hidden, v->i, a->N_inputs, 
           w->ih[l], a->has_ti ? w->ti : 0, 
           flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), sparse);
+      }
+    }
+
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        if (a->nonseq_config[nsqi])
+        { add_connections_config (sh, v->h[ls], w->nsq[nsqi], 
+            a->has_th[ls] ? w->th[ls] : 0, a->nonseq_config[nsqi]);
+        }
+        else
+        { add_connections (sh, N_hidden, v->h[ls], a->N_hidden[ls],
+            w->nsq[nsqi], a->has_th[ls] ? w->th[ls] : 0, 
+            (unsigned short *) 0, 0, 0);
+        }
+        nsqi += 1;
       }
     }
 

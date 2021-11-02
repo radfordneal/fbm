@@ -10,7 +10,9 @@ The networks handled have connections from a set of real-valued input
 units to each of zero or more layers of real-valued hidden units.
 Each hidden layer (except the last) has connections to the next hidden
 layer. The output layer has connections from the input layer and from
-the hidden layers.
+the hidden layers.  Non-sequential cnnections, between hidden layers
+that aren't ajacent, are also possible.  The number of hidden layers
+is currently limited to fifteen.
 
 This architecture is diagramed below, for a network with three hidden
 layers:
@@ -25,19 +27,19 @@ layers:
      ------------------        |             |                    | 
     |  Hidden layer 0  |       |             |                    |
      ------------------        |             |                    | 
-         |       |             |             |                    |
-         |       ---------     |             |                    |
-         |                |    |             |                    |
-         |                v    v             |                    |
-         |           ------------------      |                    |
-         |          |  Hidden layer 1  |     |                    |
-         |           ------------------      |                    |
-         |                |     |            |                    |
-         |                |     ----------   |                    |   
-         |                |               |  |                    |
-         |                |               v  v                    |
-         |                |        ------------------             |
-         |                |       |  Hidden layer 2  |            |
+         |   |   |             |             |                    |
+         |   |   ---------     |             |                    |
+         |   |            |    |             |                    |
+         |   |            v    v             |                    |
+         |   |       ------------------      |                    |
+         |   |      |  Hidden layer 1  |     |                    |
+         |   |       ------------------      |                    |
+         |   |            |     |            |                    |
+         |   |            |     ----------   |                    |   
+         |   |            |               |  |                    |
+         |   |            |               v  v                    |
+         |   |            |        ------------------             |
+         |    ------------+------>|  Hidden layer 2  |            |
          |                |        ------------------             |
          |                |                   |                   |
          |                |                   ---------------     |
@@ -50,27 +52,30 @@ layers:
                                                -----------------------
 
 Any of the connection groups shown above may be absent, which is the
-same as their weights all being zero.
+same as their weights all being zero.  The number of non-sequential
+connections between hidden layers, such as the connection from hidden
+layer 0 to hidden layer 2 above, is limited (to sixteen at present).
 
 Layers are by default fully connected to units in the layers feeding
-into them.  However, a layer feeding into a hidden layer may have
-connections specified by a configuration file, as described in
+into them.  However, connections between layers may have their weight
+configurations specified by a configuration file, as described in
 net-config.doc.  This allows for sparse connections, for connections
 with shared weights, and in particular for convolutional connections.
 
 The hidden units may use the 'tanh' activation function, an activation
-function involving 'sin', the 'softplus' activation function, or the
-identity activation function.  Nominally, the output units are
-real-valued and use the identity activation function, but discrete
-outputs and non-linearities may be obtained in effect with some data
-models (see below).
+function involving 'sin', the 'softplus' activation function, square
+or cube activation functions, or the identity activation function.
+Nominally, the output units are real-valued and use the identity
+activation function, but discrete outputs and non-linearities may be
+obtained in effect with some data models (see below).
 
 Each hidden and output unit has a "bias" that is added to its other
 inputs before the activation function is applied.  Each input and
 hidden unit has an "offset" that is added to its output after the
 activation function is applied (or just to the specified input value,
 for input units).  Like connections, biases and offsets may also be
-absent if desired.
+absent if desired.  Biases may also have a configuration (eg, with
+sharing) specified by a configuration file.
 
 A hierarchical scheme of prior distributions is used for the weights,
 biases, offsets and gains in a network, in which the priors for all

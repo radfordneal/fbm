@@ -1105,7 +1105,10 @@ __device__ void net_store_grad
   int sparse            /* Might source unit values often be zero? */
 )
 {
-  int l;
+  int l, ls, nsqi;
+  unsigned bits;
+
+  nsqi = 0;
 
   if (a->has_ti) 
   { store_grad1 (g->ti, d->i, a->N_inputs);
@@ -1134,6 +1137,22 @@ __device__ void net_store_grad
                    d->s[l], N_hidden, 
                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
                    sparse);
+      }
+    }
+
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        if (a->nonseq_config[nsqi])
+        { store_grad2_config
+              (g->nsq[nsqi], v->h[ls], a->has_th[ls] ? w->th[ls] : 0,
+              d->s[l], a->nonseq_config[nsqi]);
+        }
+        else
+        { store_grad2 (g->nsq[nsqi], v->h[ls], a->has_th[ls] ? w->th[ls] : 0,
+            a->N_hidden[ls], d->s[l], N_hidden, (unsigned short *)0, 0, 0);
+        }
+        nsqi += 1;
       }
     }
 

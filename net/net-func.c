@@ -93,6 +93,14 @@ HOSTDEV void net_func
   /* Compute values for successive hidden layers. */
 
   nsqi = 0;
+  for (l = 0; l<start; l++)
+  { for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        nsqi += 1;
+      }
+    }
+  }
 
   for (l = start; l<a->N_layers; l++)
   {
@@ -1539,11 +1547,24 @@ __device__ void net_func_gpu
   int sync		/* Sync threads after last layer computation? */
 )
 {
-  int l, j;
+  int l, ls, nsqi, j;
+  unsigned bits;
+
+  nsqi = 0;
+  for (l = 0; l<start; l++)
+  { for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        nsqi += 1;
+      }
+    }
+  }
 
   if (a->has_ti) sparse = 0;
 
   /* Compute values for successive hidden layers. */
+
+  nsqi = 0;
 
   for (l = start; l<a->N_layers; l++)
   {
@@ -1576,6 +1597,22 @@ __device__ void net_func_gpu
       { add_connections_gpu (th, sh, N_hidden, v->i, a->N_inputs, 
           w->ih[l], a->has_ti ? w->ti : 0, 
           flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), sparse);
+      }
+    }
+
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        if (a->nonseq_config[nsqi])
+        { add_connections_config_gpu (th, sh, v->h[ls], w->nsq[nsqi],
+            a->has_th[ls] ? w->th[ls] : 0, a->nonseq_config[nsqi]);
+        }
+        else
+        { add_connections_gpu (th, sh, N_hidden, v->h[ls], a->N_hidden[ls],
+            w->nsq[nsqi], a->has_th[ls] ? w->th[ls] : 0,
+            (unsigned short *) 0, 0, 0);
+        }
+        nsqi += 1;
       }
     }
 

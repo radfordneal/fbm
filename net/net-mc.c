@@ -469,7 +469,20 @@ void mc_app_initialize
         }
       }
       for (l = 1; l<2*arch->N_layers; l++)
-      { if (arch->hidden_config[l])
+      { unsigned bits;
+        int nsqi = 0;
+        int ls;
+        for (ls = 0, bits = arch->has_nsq[l]; bits!=0; ls++, bits>>=1)
+        { if (bits&1)
+          { if (ls>=l-1) abort();
+            if (arch->nonseq_config[nsqi])
+            { dev_arch.nonseq_config[nsqi] = 
+                net_config_to_gpu (arch->nonseq_config[nsqi]);
+            }
+            nsqi += 1;
+          }
+        }
+        if (arch->hidden_config[l])
         { dev_arch.hidden_config[l] = net_config_to_gpu(arch->hidden_config[l]);
         }
       }
@@ -2543,22 +2556,36 @@ static void net_training_cases_gpu
       { training_kernel <<<blks, blkcases*THREADS_PER_CASE>>>
           (energy ? case_energy : 0, gr ? group_grad : 0,
            i, i+n, en_weight, gr_weight);
+        if (0) check_cuda_error (cudaDeviceSynchronize(), 
+                 "Synchronizing after launching training_kernel");
       }
 #     elif SPLIT_KERNELS==1
       { forward_kernel <<<blks, blkcases*THREADS_PER_CASE>>> (i, i+n);
+        if (0) check_cuda_error (cudaDeviceSynchronize(), 
+                 "Synchronizing after launching forward_kernel");
         energy_kernel <<<blks, blkcases*THREADS_PER_CASE>>> 
           (energy ? case_energy : 0, i, i+n, en_weight, gr!=0, gr_weight);
+        if (0) check_cuda_error (cudaDeviceSynchronize(), 
+                 "Synchronizing after launching energy_kernel");
         if (gr)
         { backward_kernel <<<blks, blkcases*THREADS_PER_CASE>>>  (i, i+n);
+          if (0) check_cuda_error (cudaDeviceSynchronize(), 
+                   "Synchronizing after launching backward_kernel");
           gradient_kernel <<<blks, blkcases>>> (group_grad, i, i+n);
+          if (0) check_cuda_error (cudaDeviceSynchronize(), 
+                   "Synchronizing after launching gradient_kernel");
         }
       }
 #     else /* SPLIT_KERNELS is 2 */
       { nongrad_kernel <<<blks, blkcases*THREADS_PER_CASE>>>
           (energy ? case_energy : 0, gr ? group_grad : 0,
            i, i+n, en_weight, gr_weight);
+        if (0) check_cuda_error (cudaDeviceSynchronize(), 
+                 "Synchronizing after launching nongrad_kernel");
         if (gr)
         { gradient_kernel <<<blks, blkcases>>> (group_grad, i, i+n);
+          if (0) check_cuda_error (cudaDeviceSynchronize(), 
+                   "Synchronizing after launching gradient_kernel");
         }
       }
 #     endif

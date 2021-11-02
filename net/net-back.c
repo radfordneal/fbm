@@ -939,7 +939,18 @@ __device__ void net_back_gpu
   int sync		/* Sync threads after last layer computation? */
 )
 {
-  int l, i;
+  int l, ls, ld, i;
+
+  char ns[Max_nonseq][Max_nonseq];
+  unsigned bits;
+  int nsqi = 0;
+  for (l = 0; l<a->N_layers; l++)
+  { for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (ls>=l-1) abort();
+      ns[ls][l] = nsqi;
+      nsqi += 1;
+    }
+  }
 
   /* Backpropagate through hidden layers. */
 
@@ -965,6 +976,21 @@ __device__ void net_back_gpu
       { sum_derivatives_gpu 
           (th, d->o, a->N_outputs, dh, N_hidden, 
            w->ho[l], (unsigned short *) 0, 0);
+      }
+    }
+
+    for (ld = l+1; ld<a->N_layers; ld++)
+    { if ((a->has_nsq[ld]>>l) & 1)
+      { nsqi = ns[l][ld];
+        if (a->nonseq_config[nsqi])
+        { sum_derivatives_config_gpu
+            (th, d->s[ld], dh, w->nsq[nsqi], a->nonseq_config[nsqi]);
+        }
+        else
+        { sum_derivatives_gpu
+            (th, d->s[ld], a->N_hidden[ld], dh, N_hidden,
+             w->nsq[nsqi], (unsigned short *) 0, 0);
+        }
       }
     }
 

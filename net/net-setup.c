@@ -51,8 +51,8 @@ unsigned net_setup_sigma_count
   model_specification *m /* Data model */
 )
 { 
-  unsigned count;
-  int l;
+  unsigned count, b;
+  int l, ls;
 
   count = 0;
 
@@ -60,11 +60,19 @@ unsigned net_setup_sigma_count
   
   for (l = 0; l<a->N_layers; l++)
   { 
+    for (ls = 0, b = a->has_nsq[l]; b!=0; ls++, b>>=1)
+    { if (b&1)
+      { if (ls>=l-1) abort();
+        count += 1 + a->N_hidden[ls];
+      }
+    }
+
     if (l>0 && a->has_hh[l-1]) count += 1 + a->N_hidden[l-1];
 
     if (a->has_ih[l]) 
     { count += 1 + not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1));
     }
+
     if (a->has_bh[l]) count += 1;
     if (a->has_ah[l]) count += a->N_hidden[l];
     if (a->has_th[l]) count += 1;
@@ -93,15 +101,32 @@ unsigned net_setup_param_count
   net_flags *flgs	/* Network flags, null if none */
 )
 {
-  unsigned count;
-  int l;
+  unsigned count, b;
+  int l, ls, nsqi;
 
   count = 0;
  
   if (a->has_ti) count += a->N_inputs;
 
+  nsqi = 0;
   for (l = 0; l<a->N_layers; l++)
   {
+    for (ls = 0, b = a->has_nsq[l]; b!=0; ls++, b>>=1)
+    { if (b&1)
+      { if (ls>=l-1) abort();
+        if (flgs && flgs->nonseq_config[nsqi])
+        { a->nonseq_config[nsqi] = 
+            net_config_read (flgs->config_files + flgs->nonseq_config[nsqi],
+                             a->N_hidden[ls], a->N_hidden[l]);
+          count += a->nonseq_config[nsqi]->N_wts;
+        }
+        else
+        { count += a->N_hidden[ls]*a->N_hidden[l];
+        }
+        nsqi += 1;
+      }
+    }
+
     if (l>0 && a->has_hh[l-1])
     { if (flgs && flgs->hidden_config[l])
       { a->hidden_config[l] = 
@@ -250,14 +275,27 @@ void net_setup_sigma_pointers
 )
 { 
   net_sigma *b;
-  int l;
+  unsigned bits;
+  int l, ls;
+  int nsqi;
 
   b = s->sigma_block;
+  nsqi = 0;
 
   s->ti_cm = a->has_ti ? b++ : 0;
 
   for (l = 0; l<a->N_layers; l++)
   {
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        s->nsq_cm[nsqi] = b++;
+        s->nsq[nsqi] = b;
+        b += a->N_hidden[ls];
+        nsqi += 1;
+      }
+    }
+
     if (l>0)
     { s->hh_cm[l-1] = a->has_hh[l-1] ? b++ : 0;
       s->hh[l-1] = 0;
@@ -335,9 +373,12 @@ void net_setup_param_pointers
 )
 {
   net_param *b;
-  int l;
+  unsigned bits;
+  int l, ls;
+  int nsqi;
 
   b = w->param_block;
+  nsqi = 0;
 
   w->ti = 0;
   if (a->has_ti)
@@ -347,6 +388,16 @@ void net_setup_param_pointers
 
   for (l = 0; l<a->N_layers; l++)
   {
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        w->nsq[nsqi] = b;
+        b += a->nonseq_config[nsqi] ? a->nonseq_config[nsqi]->N_wts
+              : a->N_hidden[ls]*a->N_hidden[l];
+        nsqi += 1;
+      }
+    }
+
     if (l>0)
     { w->hh[l-1] = 0;
       if (a->has_hh[l-1]) 
@@ -417,7 +468,8 @@ void net_replicate_param_pointers
 )
 {
   net_params *w1, *w2;
-  int i, l;
+  int i, l, ls, nsqi;
+  unsigned bits;
 
   for (i = 1; i<n; i++)
   { 
@@ -429,7 +481,14 @@ void net_replicate_param_pointers
 
     if (a->has_ti) w2->ti = w1->ti + offset;
     for (l = 0; l<a->N_layers; l++)
-    { if (l>0)
+    { for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+      { if (bits&1)
+        { if (ls>=l-1) abort();
+          w2->nsq[nsqi] = w1->nsq[nsqi] + offset;
+          nsqi += 1;
+        }
+      }
+      if (l>0)
       { if (a->has_hh[l-1]) w2->hh[l-1] = w1->hh[l-1] + offset;
       }
       if (a->has_ih[l]) w2->ih[l] = w1->ih[l] + offset;
@@ -534,13 +593,15 @@ int net_setup_hyper_group
   int *adj		/* Set to whether this is a group of adjustments */
 )
 { 
-  int i, l;
+  int i, l, ls, nsqi;
+  unsigned bits;
 
   *adj = 0;
 
   if (grp<1) return 0;
 
   i = 0;
+  nsqi = 0;
 
   if (a->has_ti) 
   { *offset = i; 
@@ -550,6 +611,16 @@ int net_setup_hyper_group
 
   for (l = 0; l<a->N_layers; l++)
   {
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        *offset = i;
+        i += 1 + a->N_hidden[ls];
+        nsqi += 1;
+        if (--grp==0) goto done;
+      }
+    }
+
     if (l>0)
     { if (a->has_hh[l-1]) 
       { *offset = i; 
@@ -629,15 +700,17 @@ int net_setup_param_group
   int *offset,		/* Set to offset of group within block */
   int *number,		/* Set to number of items in group */
   int *source,		/* Set to number of source units associated with group,
-                             or to zero if it's a one-dimensional group */
+                           or to zero if it's a one-dimensional group */
   int *configured	/* Set to 1 if group has configured connections */
 )
 { 
-  int i, l;
+  int i, l, ls, nsqi;
+  unsigned bits;
 
   if (grp<1) return 0;
 
   i = 0;
+  nsqi = 0;
 
   if (a->has_ti) 
   { *offset = i; 
@@ -649,6 +722,19 @@ int net_setup_param_group
 
   for (l = 0; l<a->N_layers; l++)
   {
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        *offset = i;
+        *source = a->N_hidden[ls];
+        *configured = a->nonseq_config[nsqi]!=0;
+        i += *configured ? a->nonseq_config[l]->N_wts 
+                         : *source * a->N_hidden[l]; 
+        nsqi += 1;
+        if (--grp==0) goto done;
+      }
+    }
+
     if (l>0)
     { if (a->has_hh[l-1]) 
       { *offset = i; 

@@ -308,7 +308,8 @@ typedef struct
   net_sigma *ho[Max_layers];	/* ... for hidden to output weights */
   net_sigma *io;		/* ... for input to output weights */
 
-  net_sigma *nsq[Max_nonseq];	/* Points to sigmas for non-sequential weigths*/
+  net_sigma *nsq_cm[Max_nonseq];/* Points to common sigmas nonseq weights*/
+  net_sigma *nsq[Max_nonseq];	/* Points to sigmas for non-sequential weights*/
 
   net_sigma *ah[Max_layers];	/* Pointers to adjustments for hidden units */
   net_sigma *ao;		/* ... for output units */

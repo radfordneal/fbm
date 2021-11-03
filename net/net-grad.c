@@ -1436,7 +1436,11 @@ __device__ void net_store2_grad
   int sparse            /* Might source unit values often be zero? */
 )
 { 
-  int l;
+  int l, ls, nsqi;
+  unsigned bits;
+
+  nsqi = 0;
+
   if (a->has_ti) 
   { net_store2_grad1 (th, g->ti, d0->i, d1->i, a->N_inputs);
   }
@@ -1466,6 +1470,25 @@ __device__ void net_store2_grad
                     a->N_inputs, d0->s[l], d1->s[l], N_hidden, 
                     flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
                     sparse);
+      }
+    }
+
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        if (a->nonseq_config[nsqi])
+        { net_store2_grad2_config
+              (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], 
+               a->has_th[ls] ? w->th[ls] : 0,
+               d0->s[l], d1->s[l], a->nonseq_config[nsqi]);
+        }
+        else
+        { net_store2_grad2 (th, g->nsq[nsqi], v0->h[ls], v1->h[ls],
+            a->has_th[ls] ? w->th[ls] : 0,
+            a->N_hidden[ls], d0->s[l], d1->s[l], N_hidden, 
+            (unsigned short *)0, 0, 0);
+        }
+        nsqi += 1;
       }
     }
 
@@ -1925,7 +1948,11 @@ __device__ void net_store3_grad
   int sparse            /* Might source unit values often be zero? */
 )
 { 
-  int l;
+  int l, ls, nsqi;
+  unsigned bits;
+
+  nsqi = 0;
+
   if (a->has_ti) 
   { net_store3_grad1 (th, g->ti, d0->i, d1->i, d2->i, a->N_inputs);
   }
@@ -1957,6 +1984,25 @@ __device__ void net_store3_grad
                     d0->s[l], d1->s[l], d2->s[l], N_hidden, 
                     flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
                     sparse);
+      }
+    }
+
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        if (a->nonseq_config[nsqi])
+        { net_store3_grad2_config
+              (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], v2->h[ls],
+               a->has_th[ls] ? w->th[ls] : 0,
+               d0->s[l], d1->s[l], d2->s[l], a->nonseq_config[nsqi]);
+        }
+        else
+        { net_store3_grad2 (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], v2->h[ls],
+            a->has_th[ls] ? w->th[ls] : 0,
+            a->N_hidden[ls], d0->s[l], d1->s[l], d2->s[l], N_hidden,
+            (unsigned short *)0, 0, 0);
+        }
+        nsqi += 1;
       }
     }
 
@@ -2447,7 +2493,11 @@ __device__ void net_store4_grad
   int sparse            /* Might source unit values often be zero? */
 )
 { 
-  int l;
+  int l, ls, nsqi;
+  unsigned bits;
+
+  nsqi = 0;
+
   if (a->has_ti) 
   { net_store4_grad1 (th, g->ti, d0->i, d1->i, d2->i, d3->i, a->N_inputs);
   }
@@ -2481,6 +2531,26 @@ __device__ void net_store4_grad
                     d0->s[l], d1->s[l], d2->s[l], d3->s[l], N_hidden, 
                     flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), 
                     sparse);
+      }
+    }
+
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        if (a->nonseq_config[nsqi])
+        { net_store4_grad2_config
+              (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], v2->h[ls], v3->h[ls],
+               a->has_th[ls] ? w->th[ls] : 0,
+               d0->s[l], d1->s[l], d2->s[l], d3->s[l], a->nonseq_config[nsqi]);
+        }
+        else
+        { net_store4_grad2 (th, g->nsq[nsqi], 
+            v0->h[ls], v1->h[ls], v2->h[ls], v3->h[ls],
+            a->has_th[ls] ? w->th[ls] : 0,
+            a->N_hidden[ls], d0->s[l], d1->s[l], d2->s[l], d3->s[l], N_hidden,
+            (unsigned short *)0, 0, 0);
+        }
+        nsqi += 1;
       }
     }
 

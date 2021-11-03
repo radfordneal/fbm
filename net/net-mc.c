@@ -204,7 +204,7 @@ static net_values *dev_train_values; /* Value structures in GPU memory */
 
 static net_values *dev_deriv;	/* GPU copy  of derivatives for training cases*/
 
-static double *dev_scratch;	/* GPU scratch memory, for each training case */
+static double *dev_scratch;	/* GPU scratch memory, for each case in launch*/
 
 __constant__ int const_N_train;    /* Copy of N_train in constant memory */
 __constant__ int const_N_inputs;   /* Copy of N_inputs in constant memory */
@@ -666,6 +666,23 @@ void mc_app_initialize
       }
     }
 
+    /* Figure out stuff about blocksizes and numbers of blocks for
+       launching of CUDA kernels. */
+
+#   if __CUDACC__
+    { 
+      if (N_train>0)
+      { n_launches = (N_train + blkcases*maxblks-1) / (blkcases*maxblks);
+        max_cases_per_launch = (N_train + n_launches - 1) / n_launches;
+        max_blocks_per_launch = (max_cases_per_launch + blkcases-1) / blkcases;
+        max_cases_per_launch = max_blocks_per_launch * blkcases;
+        if (show_info)
+        { printf ("With %d cases, need %d launches, max %d blocks/launch\n",
+                  N_train, n_launches, max_blocks_per_launch);
+        }
+      }
+#     endif
+
     /* Copy training inputs and training targets to GPU memory, and allocate
        space on GPU for values in all training cases, with pointers set up. */
 
@@ -731,7 +748,8 @@ void mc_app_initialize
           (dev_deriv, tmp_values, sz, cudaMemcpyHostToDevice),
         "copy to dev_deriv");
 
-      sz = SCRATCH_PER_CASE(arch->N_outputs) * N_train * sizeof *dev_scratch;
+      sz = SCRATCH_PER_CASE(arch->N_outputs) * max_cases_per_launch 
+                                             * sizeof *dev_scratch;
       check_cuda_error (cudaMalloc (&dev_scratch, sz),
                         "cudaMalloc of dev_scratch");
 
@@ -803,24 +821,10 @@ void mc_app_initialize
     }
 #   endif
 
-    /* Figure out stuff about blocksizes and numbers of blocks for
-       launching of CUDA kernels. */
-
-#   if __CUDACC__
-    { 
-      if (N_train>0)
-      { n_launches = (N_train + blkcases*maxblks-1) / (blkcases*maxblks);
-        max_cases_per_launch = (N_train + n_launches - 1) / n_launches;
-        max_blocks_per_launch = (max_cases_per_launch + blkcases-1) / blkcases;
-        max_cases_per_launch = max_blocks_per_launch * blkcases;
-        if (show_info)
-        { printf ("With %d cases, need %d launches, max %d blocks/launch\n",
-                  N_train, n_launches, max_blocks_per_launch);
-        }
-      }
-
       /* Set GPU to use memory for L1 cache rather than for shared memory when
          executing the kernels (which don't use shared memory). */
+
+#   if __CUDACC__
 
 #     if SPLIT_KERNELS==0
       { check_cuda_error (
@@ -2001,8 +2005,8 @@ void net_training_cases
    Computations for a group are done using GROUP_SIZE threads (or
    perhaps fewer at the end of a block).
    
-   As an optimization, gradient for the first group of training cases
-   in a block are stored directly in const_block_grad, with results
+   As an optimization, gradients for the first group of training cases
+   in each block are stored directly in const_block_grad, with results
    for other cases/pairs then being added to that.  (Space for the
    first group of cases in a block is nevertheless redundantly
    allocated, which might actually be good for performance, by
@@ -2013,8 +2017,8 @@ void net_training_cases
    mentioned above is re-used.  (So the allocations here are all that
    are required.)
 
-   The memory allocated here (except temporarily for use her) is never
-   freed (until program termination).  
+   The memory allocated here (except temporarily for use here) is 
+   never freed (until program termination).  
 */
 
 #if __CUDACC__
@@ -2245,11 +2249,11 @@ __global__ void energy_kernel
     }
   }
   else
-  { net_value *scratch_h = 
-      const_scratch + SCRATCH_PER_CASE(const_arch.N_outputs) * h;
+  { net_value *scratch_i = 
+      const_scratch + SCRATCH_PER_CASE(const_arch.N_outputs) * i;
     net_model_prob_gpu (th, train_vals_h, targ_h, log_prob_h, deriv_h, 
                         &const_arch, &const_model, const_noise, 
-                        scratch_h, Cheap_energy, 0);
+                        scratch_i, Cheap_energy, 0);
   }
 
   if (KDEBUG) 

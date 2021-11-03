@@ -550,3 +550,143 @@ Log file: log  Index: 0  Delta: 0.001000  Energy: 8.73
 
 Largest absolute log ratio: 0.0000
 
+ 
+--- E
+ 
+
+Network Architecture:
+
+  Input layer:     size 1
+  Hidden layer 0:  size 2  tanh
+  Hidden layer 1:  size 1  tanh
+  Hidden layer 2:  size 2  tanh  cfg-h0:%echo 1 1 1
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    1.000
+
+         Hidden Layer 1
+
+  Input-Hidden Weights:    2.000
+
+         Hidden Layer 2
+
+  Hidden0-Hidden Weights:  7.000
+  Hidden-Hidden Weights:   3.000
+
+         Output Layer
+
+  Hidden2-Output Weights:  4.000
+
+Hidden layer 2 hidden0 weight configuration
+
+1 connections, 1 weights
+
+     1      1      1
+
+Number of training cases: 4
+
+Network in file "log" with index 0 (sigmas only)
+
+Input to Hidden Layer 0 Weights [1]
+
+   1.00 -  1.00
+
+Input to Hidden Layer 1 Weights [2]
+
+   2.00 -  2.00
+
+Hidden Layer 0 to Hidden Layer 2 Weights [3]
+
+   7.00 -  7.00  7.00
+
+Hidden Layer 1 to Hidden Layer 2 Weights [4]
+
+   3.00 -  3.00
+
+Hidden Layer 2 to Output Weights [5]
+
+   4.00 -  4.00  4.00
+
+Noise levels
+
+   1.00 -  1.00
+
+
+Network in file "log" with index 0 (parameters only)
+
+Input to Hidden Layer 0 Weights [1]
+
+ +2.000  -1.000
+
+Input to Hidden Layer 1 Weights [2]
+
+ +3.000
+
+Hidden Layer 0 to Hidden Layer 2 Weights [3]
+
+ +1.500
+
+Hidden Layer 1 to Hidden Layer 2 Weights [4]
+
+ -1.000  -2.000
+
+Hidden Layer 2 to Output Weights [5]
+
+ +3.000
+
+ +2.000
+
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 1.00 1.00: +2.00  -1.00
+
+Input to Hidden Layer 1 Weights [2]
+
+ 2.00 2.00: +3.00
+
+Hidden Layer 0 to Hidden Layer 2 Weights [3]
+
+ 7.00:      +1.50
+
+Hidden Layer 1 to Hidden Layer 2 Weights [4]
+
+ 3.00 3.00: -1.00  -2.00
+
+Hidden Layer 2 to Output Weights [5]
+
+ 4.00 4.00: +3.00
+
+      4.00: +2.00
+
+Noise levels
+
+   1.00 -  1.00
+
+       o0@0            o0@1            o0@2            o0@3     
+-7.86456379e-01  1.19705411e+00 -1.48341505e+00 -1.37942687e+00 
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.001000  Energy: 13.98
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   +2.00   -1.5122e-03  -1.5141e-03   -3.0263e+00  -3.0263e+00     0.0000
+     1   -1.00   -4.9987e-04  -5.0013e-04   -1.0000e+00  -1.0000e+00     0.0000
+     2   +3.00   +1.5284e-03  +1.5286e-03   +3.0570e+00  +3.0570e+00     0.0000
+     3   +1.50   -6.3560e-03  -6.3611e-03   -1.2717e+01  -1.2717e+01     0.0000
+     4   -1.00   -7.6475e-03  -7.6545e-03   -1.5302e+01  -1.5302e+01     0.0000
+     5   -2.00   -8.9686e-04  -8.9642e-04   -1.7933e+00  -1.7933e+00     0.0000
+     6   +3.00   -5.9940e-04  -5.9947e-04   -1.1989e+00  -1.1989e+00     0.0000
+     7   +2.00   +3.0857e-03  +3.0849e-03   +6.1706e+00  +6.1706e+00     0.0000
+
+Largest absolute log ratio: 0.0000
+

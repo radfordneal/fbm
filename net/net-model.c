@@ -275,10 +275,17 @@ HOSTDEV void net_model_prob
 
 
 /* VERSION OF NET_MODEL_PROB USING MULTIPLE GPU THREADS.  Must not be used
-   for survival models (type 'V').  The probability pointed to by 'pr'
-   is updated by the thread with th==0; the derivative at index i in 'dp'
-   is updated by the thread with th equal to i mod THREADS_PER_CASE. 
-   A syncthreads done after this if 'sync' is non-zero. */
+   for survival models (type 'V').  
+
+   The probability pointed to by 'pr' is updated by the thread with
+   th==0.
+
+   The derivative at index i in 'dp' is computed by the thread with 'th'
+   equal to i mod THREADS_PER_CASE.
+
+   A __syncthreads call is made after these computations are done if
+   'sync' is non-zero.  If threads are not synchronized, only the
+   threads that computed a value can reliably access it. */
 
 #if __CUDACC__
 
@@ -293,7 +300,7 @@ __device__ void net_model_prob_gpu
   net_arch const*a,	/* Network architecture */
   model_specification const*m, /* Data model */
   net_sigma const*noise,/* Noise sigmas, or null */
-  net_value *scratch,	/* Scratch memory for outputs */
+  net_value *scratch,	/* Scratch memory, for twice number of outputs */
   int op,		/* Can we ignore some factors? */
   int sync		/* Sync threads after computation? */
 )
@@ -350,25 +357,46 @@ __device__ void net_model_prob_gpu
 
       if (th<0) goto sync_c;
 
-      net_value m, s;
-
-      m = v->o[0];
-      for (i = 1; i<N_outputs; i++)
-      { if (v->o[i]>m) m = v->o[i];
-      }
-
       for (i = th; i<N_outputs; i+=NTH)
-      { scratch[i] = prec_exp (v->o[i] - m);
+      { if (v->o[i]>88 || v->o[i]<-88) /* exp overflows/underflows with FP32 */
+        { scratch[i] = 0;
+          scratch[i+N_outputs] = v->o[i];
+        }
+        else
+        { scratch[i] = prec_exp (v->o[i]);
+          scratch[i+N_outputs] = 0;
+        }
       }
 
     sync_c:
-      __syncthreads();
+      if (NTH>1)
+      { __syncthreads();
+      }
 
       if (th<0) goto sync_e;
 
-      s = 0;
-      for (i = 0; i<N_outputs; i++)
-      { s += scratch[i];
+      net_value m;
+
+      m = scratch[N_outputs];
+      for (i = 1; i<N_outputs; i++)
+      { if (scratch[i+N_outputs]>m)
+        { m = scratch[i+N_outputs];
+        }
+      }
+
+      net_value s = 0;
+
+      if (m==0)  /* no big ones, not all small ones */
+      {  for (i = 0; i<N_outputs; i++)
+         { s += scratch[i];
+         }
+      }
+      else  /* some big ones, or all small ones - can ignore normal ones */
+      { for (i = 0; i<N_outputs; i++)
+         { if (scratch[i+N_outputs]!=0)
+           { s += prec_exp (scratch[i+N_outputs] - m);
+           }
+         }
       }
 
       if (pr && th==0) 
@@ -379,7 +407,15 @@ __device__ void net_model_prob_gpu
       { s = 1/s;
         int w = *t;
         for (i = th; i<N_outputs; i+=NTH)
-        { dp->o[i] = scratch[i] * s;
+        { if (m==0) 
+          { dp->o[i] = s * scratch[i];
+          }
+          else if (scratch[i+N_outputs]==0)
+          { dp->o[i] = 0;
+          }
+          else
+          { dp->o[i] = s * prec_exp (scratch[i+N_outputs] - m);
+          }
           if (i==w) dp->o[i] -= 1;
         }
       }
@@ -450,7 +486,9 @@ __device__ void net_model_prob_gpu
 
   if (pr)
   { 
-    __syncthreads();
+    if (NTH>1 && N_outputs>1) 
+    { __syncthreads();
+    }
 
     if (th==0)
     { double p = 0;
@@ -461,12 +499,12 @@ __device__ void net_model_prob_gpu
     }
   }
 
-  /* Synchronize threads if asked to - otherwise, threads have computed 
-     bits as described above, and can refer to the bits they computed without
-     synchronization. */
+  /* Synchronize threads if asked to - otherwise, threads have
+     computed parts as described above, and can refer to the parts
+     they computed without synchronization. */
 
 sync_e:
-  if (sync)
+  if (NTH>1 && sync)
   { __syncthreads();
   }
 }

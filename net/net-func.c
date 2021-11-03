@@ -1509,32 +1509,36 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
 #define NTH (THREADS_PER_CASE)	/* Short form for use here */
 
 
-/* EVALUATE NETWORK FUNCTION FOR GIVEN INPUTS.  The inputs are taken from
-   the net_values structure passed.  When 'start' is greater than zero, the
-   correct unit values for that number of hidden layers are assumed to be
-   already present in the net_values structure. 
+/* EVALUATE NETWORK FUNCTION FOR GIVEN INPUTS.  The inputs are taken
+   from the net_values structure passed.  When 'start' is greater than
+   zero, the correct unit values for that number of hidden layers are
+   assumed to be already present in the net_values structure.
 
-   This version uses four GPU threads to do the computation.  It
-   is called from each of these threads, with 'th' set to 0 up to 
-   THREADS_PER_CASE-1.  If called with a negative 'th' (done
-   when there are spare threads at end of training set), it just 
-   skips to the synchronization points.
+   This version uses THREADS_PER_CASE (value 1, 2, or 4) GPU threads
+   to do the computation.  It should be called from each of these
+   threads, with 'th' set to 0 up to THREADS_PER_CASE-1.  If called
+   with a negative 'th' (done when there are spare threads at end of
+   training set), it just skips to the synchronization points.
   
    Layers are computed in sequence, using all threads, with a
    __syncthreads call after each layer's computations, so that all
-   threads will correctly see all values when computing the next layer.
-   Note that ALL threads must call this function so that all will
-   make the __syncthreads calls here.
+   threads will correctly see all values when computing the next
+   layer.  Note that ALL threads must call this function so that all
+   will make the __syncthreads calls here.
 
    Thread 'th' is used to compute the units whose index is 'th' mod
-   THREADS_PER_CASE.  Consistent use of this scheme for the
-   various componenets avoids any need to synchronize threads within
-   computations for a single layer. 
+   THREADS_PER_CASE.  Consistent use of this scheme for the various
+   componenets avoids any need to synchronize threads within
+   computations for a single layer.
 
    If 'sync' is non-zero, threads are synchronized after the outputs
-   are computed.  Otherwise, threads will have computed output values
-   with index mod 4 equal to 'th', and may use these values without
-   synchronization. */
+   are computed (if necessary).  Without synchronization, thread 'th'
+   will have computed output values with index mod THREADS_PER_CASE
+   equal to 'th', and may use these values without synchronization. 
+
+   Synchronization is avoided when there is only one thread - note
+   that this means that outputs for different cases will not have been
+   synchronized. */
 
 __device__ void net_func_gpu
 ( int th,		/* Thread index */
@@ -1549,6 +1553,8 @@ __device__ void net_func_gpu
 {
   int l, ls, nsqi, j;
   unsigned bits;
+
+  /* Find location of non-sequential configurations at layer 'start'. */
 
   nsqi = 0;
   for (l = 0; l<start; l++)
@@ -1573,6 +1579,8 @@ __device__ void net_func_gpu
     net_value *vh = v->h[l];
 
     if (th<0) goto sync_layer;
+
+    /* Find summed inputs into each hidden unit in the layer. */
 
     if (a->has_bh[l])
     { if (a->bias_config[l])
@@ -1665,8 +1673,11 @@ __device__ void net_func_gpu
       }
     }
 
+    /* Synchronize threads so that up-to-date values computed for this
+       layer will be seen by all threads. */
+
   sync_layer:
-    __syncthreads();
+    if (NTH>1) __syncthreads();
   }
 
   /* Compute values for the outputs. */
@@ -1715,8 +1726,11 @@ __device__ void net_func_gpu
     }
   }
 
+  /* Synchronize threads so outputs will be seen by all threads, if asked to,
+     and necessary. */
+
 sync_output:
-  if (sync) 
+  if (NTH>1 && sync) 
   { __syncthreads();
   }
 }

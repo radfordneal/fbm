@@ -62,6 +62,10 @@ static int max_blocks_per_launch;	/* Largest number of blocks for one
                                            CUDA kernel launch */
 static int max_cases_per_launch;        /* Largest number of cases handled by
 					   one CUDA kernel launch */
+
+#define SCRATCH_PER_CASE(Nout) (2*(Nout)) /* Amount of GPU scratch memory per 
+                                             case, as function of N_outputs */
+
 #endif
 
 
@@ -200,7 +204,7 @@ static net_values *dev_train_values; /* Value structures in GPU memory */
 
 static net_values *dev_deriv;	/* GPU copy  of derivatives for training cases*/
 
-static double *dev_scratch;  /* GPU scratch memory, for outputs for all cases */
+static double *dev_scratch;	/* GPU scratch memory, for each training case */
 
 __constant__ int const_N_train;    /* Copy of N_train in constant memory */
 __constant__ int const_N_inputs;   /* Copy of N_inputs in constant memory */
@@ -727,7 +731,7 @@ void mc_app_initialize
           (dev_deriv, tmp_values, sz, cudaMemcpyHostToDevice),
         "copy to dev_deriv");
 
-      sz = N_train * arch->N_outputs * sizeof *dev_scratch;
+      sz = SCRATCH_PER_CASE(arch->N_outputs) * N_train * sizeof *dev_scratch;
       check_cuda_error (cudaMalloc (&dev_scratch, sz),
                         "cudaMalloc of dev_scratch");
 
@@ -2241,7 +2245,8 @@ __global__ void energy_kernel
     }
   }
   else
-  { net_value *scratch_h = const_scratch + const_arch.N_outputs*h;
+  { net_value *scratch_h = 
+      const_scratch + SCRATCH_PER_CASE(const_arch.N_outputs) * h;
     net_model_prob_gpu (th, train_vals_h, targ_h, log_prob_h, deriv_h, 
                         &const_arch, &const_model, const_noise, 
                         scratch_h, Cheap_energy, 0);

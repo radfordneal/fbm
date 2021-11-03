@@ -1,0 +1,25 @@
+#!/bin/bash
+
+echo " "; echo "--- A"; echo " "
+
+net-spec log 3 5 / io=1000
+model-spec log class
+cat >data <<end
+1 0 0  0
+0 1 0  1
+0 0 1  2
+end
+data-spec log 3 1 5 / data .
+net-gen log fix - <<end
+3 -100 3 3 3
+-100 -1000 -100 -1000 -1000
+-100 0 -100 0 100
+end
+net-display log 0
+net-tbl -h o0@ log 0
+net-tbl -h o1@ log 0
+net-tbl -h o2@ log 0
+net-tbl -h o3@ log 0
+net-tbl -h o4@ log 0
+net-pred n log 0 / data 
+net-grad-test log 0 0.01

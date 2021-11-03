@@ -736,7 +736,7 @@ void mc_app_initialize
         }
       }
 
-      sz = N_train * sizeof *dev_deriv;
+      sz = max_cases_per_launch * sizeof *dev_deriv;
       check_cuda_error (cudaMalloc (&dev_deriv, sz),
                         "cudaMalloc of dev_deriv");
       check_cuda_error (cudaMemcpy 
@@ -2229,7 +2229,7 @@ __global__ void energy_kernel
   }
 
   net_value *targ_h = const_train_targets + const_N_targets*h;
-  net_values *deriv_h = need_deriv ? const_deriv+h : 0;
+  net_values *deriv_i = need_deriv ? const_deriv+i : 0;
   double *log_prob_h = case_energy ? case_energy+i : 0;
 
   int single_thread = THREADS_PER_CASE==1 
@@ -2237,7 +2237,7 @@ __global__ void energy_kernel
                        || const_model.type=='V';
   if (single_thread)
   { if (th==0) 
-    { net_model_prob (train_vals_h, targ_h, log_prob_h, deriv_h, 
+    { net_model_prob (train_vals_h, targ_h, log_prob_h, deriv_i, 
                       &const_arch, &const_model, &const_surv, const_noise, 
                       Cheap_energy);
     }
@@ -2245,7 +2245,7 @@ __global__ void energy_kernel
   else
   { net_value *scratch_i = 
       const_scratch + SCRATCH_PER_CASE(const_arch.N_outputs) * i;
-    net_model_prob_gpu (th, train_vals_h, targ_h, log_prob_h, deriv_h, 
+    net_model_prob_gpu (th, train_vals_h, targ_h, log_prob_h, deriv_i, 
                         &const_arch, &const_model, const_noise, 
                         scratch_i, Cheap_energy, 0);
   }
@@ -2283,16 +2283,16 @@ __global__ void energy_kernel
   if (gr_weight!=1)
   { if (th>=0) 
     { int k;
-      if (single_thread) /* must use one thread, as for computing deriv_h->o */
+      if (single_thread) /* must use one thread, as for computing deriv_i->o */
       { if (th==0)
         { for (k = 0; k<const_arch.N_outputs; k++)
-          { deriv_h->o[k] *= gr_weight;
+          { deriv_i->o[k] *= gr_weight;
           }
         }
       }
-      else  /* must use multiple threads, as for computing deriv_h->o */ 
+      else  /* must use multiple threads, as for computing deriv_i->o */ 
       { for (k = th; k<const_arch.N_outputs; k += THREADS_PER_CASE)
-        { deriv_h->o[k] *= gr_weight;
+        { deriv_i->o[k] *= gr_weight;
         }
       }
     }
@@ -2314,11 +2314,11 @@ __global__ void backward_kernel
   int h = start + i;
 
   net_values *train_vals_h = const_train_values+h;
-  net_values *deriv_h;
+  net_values *deriv_i;
 
   if (h >= end) th = -1;
 
-  deriv_h = const_deriv+h;
+  deriv_i = const_deriv+i;
 
 #else
 
@@ -2333,12 +2333,12 @@ __global__ void backward_kernel
 
   if (THREADS_PER_CASE==1)
   { if (th>=0)
-    { net_back (train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
+    { net_back (train_vals_h, deriv_i, const_arch.has_ti ? -1 : 0,
                 &const_arch, flgs, &const_params);
     }
   }
   else
-  { net_back_gpu (th, train_vals_h, deriv_h, const_arch.has_ti ? -1 : 0,
+  { net_back_gpu (th, train_vals_h, deriv_i, const_arch.has_ti ? -1 : 0,
                   &const_arch, flgs, &const_params, 0);
   }
 
@@ -2354,7 +2354,7 @@ __global__ void gradient_kernel
 { 
   net_flags *flgs = const_has_flgs ? &const_flgs : 0;
   int th, i, h;
-  net_values *train_vals_h, *deriv_h;
+  net_values *train_vals_h, *deriv_i;
 
 #else
 
@@ -2385,10 +2385,10 @@ __global__ void gradient_kernel
 
   if (h < end)
   {
-    deriv_h = const_deriv+h;
+    deriv_i = const_deriv+i;
 
     net_values *train_vals_b = train_vals_h-th;
-    net_values *deriv_b = deriv_h-th;
+    net_values *deriv_b = deriv_i-th;
 
     ggrad = threadIdx.x < GROUP_SIZE ? const_block_grad + blockIdx.x
              : group_grad + o;

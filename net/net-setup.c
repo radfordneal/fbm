@@ -480,6 +480,8 @@ void net_replicate_param_pointers
     w2->param_block = w1->param_block + offset;
 
     if (a->has_ti) w2->ti = w1->ti + offset;
+
+    nsqi = 0;
     for (l = 0; l<a->N_layers; l++)
     { for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
       { if (bits&1)
@@ -495,9 +497,11 @@ void net_replicate_param_pointers
       if (a->has_bh[l]) w2->bh[l] = w1->bh[l] + offset;
       if (a->has_th[l]) w2->th[l] = w1->th[l] + offset;
     }
+
     for (l = a->N_layers-1; l>=0; l--)
     { if (a->has_ho[l]) w2->ho[l] = w1->ho[l] + offset;
     }
+
     if (a->has_io) w2->io = w1->io + offset;
     if (a->has_bo) w2->bo = w1->bo + offset;
   }

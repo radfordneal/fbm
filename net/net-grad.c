@@ -1093,7 +1093,11 @@ __device__ static void store_grad2_config (net_param *restrict,
 
    One can economize by not bothering to compute the derivatives of the 
    error with respect to the input unit values if the network does not
-   have input offset parameters. */
+   have input offset parameters. 
+
+   Assumes any thread synchronization has been done that's needed to
+   make derivatives with respect to unit values accessible to the
+   thread executing here. */
 
 __device__ void net_store_grad
 ( net_params *restrict g, /* Gradient with respect to parameters to add to */
@@ -1421,7 +1425,12 @@ __device__ static void net_store2_grad2_config
    This eliminates any need for thread synchronization, even if the
    gradient is produced incrementally by adding several terms, since
    there is no overlap in the set of places the two threads store to.
-   Such a consistent even/odd scheme may also improve performance. */
+   Such a consistent even/odd scheme may also improve performance. 
+
+   Assumes any thread synchronization has been done that's needed to
+   make derivatives with respect to unit values accessible to all the
+   threads executing here.
+*/
 
 __device__ void net_store2_grad
 ( int th,		/* Which thread (0 or 1) */
@@ -1931,7 +1940,13 @@ __device__ static void net_store3_grad2_config (int, net_param *restrict,
    This eliminates any need for thread synchronization, even if the
    gradient is produced incrementally by adding several terms, since
    there is no overlap in the set of places the two threads store to.
-   Such a consistent even/odd scheme may also improve performance. */
+   Such a consistent even/odd scheme may also improve performance. 
+
+   Assumes any thread synchronization has been done that's needed to
+   make derivatives with respect to unit values accessible to all the
+   threads executing here.
+*/
+
 
 __device__ void net_store3_grad
 ( int th,		/* Which thread (0 or 1) */
@@ -2474,7 +2489,12 @@ __device__ static void net_store4_grad2_config (int, net_param *restrict,
    eliminates any need for thread synchronization, even if the
    gradient is produced by adding several terms, since there is no
    overlap in the set of places the four threads store to.  Such a
-   consistent scheme may also improve performance. */
+   consistent scheme may also improve performance.
+
+   Assumes any thread synchronization has been done that's needed to
+   make derivatives with respect to unit values accessible to all the
+   threads executing here.
+*/
 
 __device__ void net_store4_grad
 ( int th,		/* Which thread (0, 1, 2, or 3) */

@@ -2219,7 +2219,7 @@ __global__ void energy_kernel
 
 #else
 
-  __syncthreads();
+  // if (THREADS_PER_CASE>1) __syncthreads();
 
   int need_deriv = group_grad != 0;
 
@@ -2324,7 +2324,7 @@ __global__ void backward_kernel
 
 #else
 
-  __syncthreads();
+  if (THREADS_PER_CASE>1) __syncthreads();
 
 #endif
 
@@ -2360,7 +2360,7 @@ __global__ void gradient_kernel
 
 #else
 
-  __syncthreads();
+  if (THREADS_PER_CASE>1) __syncthreads();
 
 #endif
 

@@ -285,7 +285,10 @@ HOSTDEV void net_model_prob
 
    A __syncthreads call is made after these computations are done if
    'sync' is non-zero.  If threads are not synchronized, only the
-   threads that computed a value can reliably access it. */
+   threads that computed a value can reliably access it. 
+
+   Assumes that on entry the i'th output is accessible to thread 'th'
+   if i mod THREADS_PER_CASE is 'th'. */
 
 #if __CUDACC__
 

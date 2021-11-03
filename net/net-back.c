@@ -922,9 +922,13 @@ __device__ static void sum_derivatives_config_gpu
 
 /* BACKPROPAGATE ERROR DERIVATIVES, GPU VERSION.
 
-  Synchronize threads after last layer computation if asked to - otherwise, 
-  threads have computed values with index mod 4 equal to 'th', and can 
-  use those values without synchronization. */
+   Assumes that threads have been synchronized on entry, so that
+   d->o[i] is accessible to all threads for all i.
+
+   Synchronizes threads after last layer computation if asked to;
+   otherwise, thread 'th' will have computed values of d->s[i] with i
+   mod THREAD_PER_CASE equal to 'th', and can use those values without
+   synchronization later. */
 
 #if __CUDACC__
 
@@ -940,6 +944,8 @@ __device__ void net_back_gpu
 )
 {
   int l, ls, ld, i;
+
+  /* Find location of non-sequential configurations at layer 'start'. */
 
   char ns[Max_nonseq][Max_nonseq];
   unsigned bits;
@@ -1043,7 +1049,7 @@ __device__ void net_back_gpu
     }
 
   sync_layer:
-    if (l>start || sync)
+    if (NTH>1 && (l>start || sync))
     { __syncthreads();
     }
   }
@@ -1085,7 +1091,7 @@ __device__ void net_back_gpu
     }
 
   sync_input:
-    if (sync)
+    if (NTH>1 && sync)
     { __syncthreads();
     }
   }

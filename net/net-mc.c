@@ -202,7 +202,7 @@ static net_param *dev_block_grad_params; /* Parameter block of dev_block_grad */
 static net_value *dev_train_targets; /* Copy of train_targets in GPU memory */
 static net_values *dev_train_values; /* Value structures in GPU memory */
 
-static net_values *dev_deriv;	/* GPU copy  of derivatives for training cases*/
+static net_values *dev_deriv;	/* GPU space for derivs of cases in launch */
 
 static double *dev_scratch;	/* GPU scratch memory, for each case in launch*/
 
@@ -570,14 +570,9 @@ void mc_app_initialize
 
       sparse = train_zero_frac > SPARSE_THRESHOLD;
     
-      deriv = (net_values *) chk_alloc (N_train, sizeof *deriv);
-    
-      value_block = 
-        (net_value *) chk_alloc (value_count*N_train, sizeof *value_block);
-    
-      for (i = 0; i<N_train; i++) 
-      { net_setup_value_pointers(&deriv[i], value_block+value_count*i, arch, 0);
-      }
+      deriv = (net_values *) chk_alloc (1, sizeof *deriv);
+      value_block = (net_value *) chk_alloc (value_count, sizeof *value_block);
+      net_setup_value_pointers(deriv, value_block, arch, 0);
     
       for (j = 0; j<arch->N_inputs; j++)
       { for (i = 0; i<N_train; i++)
@@ -1881,7 +1876,7 @@ void net_training_cases
         double log_prob;
     
         net_model_prob(&train_values[i], &fudged_target,
-                       &log_prob, grd ? &deriv[i] : 0, arch, model, surv, 
+                       &log_prob, grd ? deriv : 0, arch, model, surv, 
                        noise, Cheap_energy);
     
         if (energy)
@@ -1891,12 +1886,12 @@ void net_training_cases
         if (grd)
         { if (gr_weight!=1)
           { for (k = 0; k<arch->N_outputs; k++)
-            { deriv[i].o[k] *= gr_weight;
+            { deriv->o[k] *= gr_weight;
             }
           }
-          net_back (&train_values[i], &deriv[i], arch->has_ti ? -1 : 0,
+          net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
                     arch, flgs, &params);
-          net_add_grad (grd, &params, &train_values[i], &deriv[i], arch, flgs,
+          net_add_grad (grd, &params, &train_values[i], deriv, arch, flgs,
                         sparse);
         }
     
@@ -1920,7 +1915,6 @@ void net_training_cases
     else /* Everything except piecewise-constant hazard model */
     { 
       net_values *train_vals_i = train_values+i;
-      net_values *deriv_i = grd ? deriv+i : 0;
 
       if (DEBUG_NET_TRAINING_CASES)
       { printf("train_values[%d]->i[0] = %f\n",i,train_vals_i->i[0]);
@@ -1935,7 +1929,7 @@ void net_training_cases
 
       double log_prob;
       net_model_prob (train_vals_i, train_targets+N_targets*i, &log_prob, 
-                      deriv_i, arch, model, surv, noise, Cheap_energy);
+                      grd ? deriv : 0, arch, model, surv, noise, Cheap_energy);
 
       if (DEBUG_NET_TRAINING_CASES)
       { printf("log_prob = %f\n",log_prob);
@@ -1949,14 +1943,14 @@ void net_training_cases
       { 
         if (gr_weight!=1)
         { for (k = 0; k<arch->N_outputs; k++)
-          { deriv_i->o[k] *= gr_weight;
+          { deriv->o[k] *= gr_weight;
           }
         }
 
-        net_back (train_vals_i, deriv_i, arch->has_ti ? -1 : 0,
+        net_back (train_vals_i, deriv, arch->has_ti ? -1 : 0,
                   arch, flgs, &params);
 
-        net_add_grad (grd, &params, train_vals_i, deriv_i, arch, flgs, sparse);
+        net_add_grad (grd, &params, train_vals_i, deriv, arch, flgs, sparse);
       }
     }
 

@@ -92,7 +92,7 @@ int main
     flgs = logg.data['F'];
 
     printf("Network Architecture:\n\n");
-  
+
     printf ("  Input layer:     size %d\n", a->N_inputs);  
 
     nsqi = 0;
@@ -458,6 +458,8 @@ int main
 
   if (*ap==0 || strcmp(*ap++,"/")!=0) usage();
 
+  nsqi = 0;
+
   while (*ap!=0)
   {
     char *pr;
@@ -470,7 +472,6 @@ int main
  
     l = -1;
     ls = -1;
-    nsqi = 0;
 
     if (sscanf(*ap,"ti%c",&eq)==1 && eq=='=')
     { if (strcmp(pr,"-")!=0)

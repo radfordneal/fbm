@@ -2932,12 +2932,14 @@ void mc_app_stepsizes
 )
 { 
   double inv_temp, w;
-  int i, j, k, l;
+  int i, j, k, l, ls, nsqi;
+  unsigned bits;
 
   inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
 
   /* Find "typical" squared values for hidden units. */
 
+  nsqi = 0;
   for (l = 0; l<arch->N_layers; l++)
   { net_value *typl = typical.h[l];
     double alpha, var_adj;
@@ -2991,6 +2993,28 @@ void mc_app_stepsizes
             { typl[j] += var_adj * (train_sumsq[i]/N_train)*sq(sigmas.ih[l][i]);
             }
           }
+        }
+      }
+      for (ls = 0, bits = arch->has_nsq[l]; bits!=0; ls++, bits>>=1)
+      { if (bits&1)
+        { if (ls>=l-1) abort();
+          alpha = priors->nsq[nsqi].alpha[2];
+          var_adj = alpha==0 ? 1 : alpha<3 ? 3 : alpha/(alpha-2);
+          if (arch->nonseq_config[nsqi])
+          { for (k = 0; k<arch->nonseq_config[nsqi]->N_conn; k++)
+            { i = arch->nonseq_config[nsqi]->conn[k].s;
+              j = arch->nonseq_config[nsqi]->conn[k].d;
+              typl[j] += var_adj * sq (typical.h[ls][i] * *sigmas.nsq_cm[nsqi]);
+            }
+          }
+          else
+          { for (j = 0; j<arch->N_hidden[l]; j++)
+            { for (i = 0; i<arch->N_hidden[ls]; i++)
+              { typl[j] += var_adj * sq(typical.h[ls][i] * sigmas.nsq[nsqi][i]);
+              }
+            }
+          }
+          nsqi += 1;
         }
       }
       if (l>0 && arch->has_hh[l-1])
@@ -3059,6 +3083,16 @@ void mc_app_stepsizes
     }
   }
 
+  char ns[Max_nonseq][Max_nonseq];
+  nsqi = 0;
+  for (l = 0; l<arch->N_layers; l++)
+  { for (ls = 0, bits = arch->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (ls>=l-1) abort();
+      ns[ls][l] = nsqi;
+      nsqi += 1;
+    }
+  }
+
   for (l = arch->N_layers-1; l>=0; l--)
   { 
     for (i = 0; i<arch->N_hidden[l]; i++)
@@ -3081,6 +3115,30 @@ void mc_app_stepsizes
           { w = sigmas.ho[l][i];
             if (sigmas.ao!=0) w *= sigmas.ao[j];
             seconds.h[l][i] += (w*w) * seconds.o[j];
+          }
+        }
+      }
+    }
+
+    int ld;
+    for (ld = l+1; ld<arch->N_layers; ld++)
+    { if ((arch->has_nsq[ld]>>l) & 1)
+      { nsqi = ns[l][ld];
+        if (arch->nonseq_config[nsqi])
+        { net_sigma w = *sigmas.nsq_cm[nsqi];
+          for (k = 0; k<arch->nonseq_config[nsqi]->N_conn; k++)
+          { i = arch->nonseq_config[nsqi]->conn[k].s;
+            j = arch->nonseq_config[nsqi]->conn[k].d;
+            seconds.h[l][i] += (w*w) * seconds.s[ld][j];
+          }
+        }
+        else
+        { for (i = 0; i<arch->N_hidden[l]; i++)
+          { for (j = 0; j<arch->N_hidden[ld]; j++)
+            { net_sigma w = sigmas.nsq[nsqi][i];
+              if (sigmas.ah[ld]!=0) w *= sigmas.ah[ld][j];
+              seconds.h[l][i] += (w*w) * seconds.s[ld][j];
+            }
           }
         }
       }

@@ -17,7 +17,7 @@ CC = gcc               # C compiler to use
 
 # Options when compiling .c files
 
-CFLAGS = -g -O3 -march=native -mtune=native \
+CFLAGS = -g -O0 -march=native -mtune=native \
          -Wno-logical-op-parentheses -Wno-absolute-value -Wno-unused-result \
          -DUSE_SIMD_INTRINSICS -DUSE_FMA \
          -DUSE_SLEEF -ffp-contract=off   # USE_SLEEF requires -ffp-contract=off

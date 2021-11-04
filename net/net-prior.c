@@ -610,7 +610,10 @@ void net_prior_max_second
   net_priors *p		/* Network priors */
 )
 {
-  int i, k, l;
+  int i, k, l, ls, nsqi;
+  unsigned bits;
+
+  nsqi = 0;
 
   if (a->has_ti) 
   { max_second (d->ti, a->N_inputs, *s->ti_cm, 0, p->ti.alpha[1]);
@@ -651,15 +654,32 @@ void net_prior_max_second
       }
     }
 
-    if (l<a->N_layers-1 && a->has_hh[l]) 
-    { if (a->hidden_config[l+1])
-      { max_second (d->hh[l], a->hidden_config[l+1]->N_wts, *s->hh_cm[l],
-                    0, p->hh[l].alpha[2]);
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        if (a->nonseq_config[nsqi])
+        { max_second (d->nsq[nsqi], a->nonseq_config[nsqi]->N_wts, 
+                      *s->nsq_cm[nsqi], 0, p->nsq[nsqi].alpha[2]);
+        }
+        else
+        { for (i = 0; i<a->N_hidden[ls]; i++)
+          { max_second (d->nsq[nsqi] + i*a->N_hidden[l], a->N_hidden[l],
+                        s->nsq[nsqi][i], s->ah[l], p->nsq[nsqi].alpha[2]);
+          }
+        }
+        nsqi += 1;
+      }
+    }
+
+    if (l>0 && a->has_hh[l-1]) 
+    { if (a->hidden_config[l])
+      { max_second (d->hh[l-1], a->hidden_config[l]->N_wts, *s->hh_cm[l-1],
+                    0, p->hh[l-1].alpha[2]);
       }
       else
-      { for (i = 0; i<a->N_hidden[l]; i++)
-        { max_second (d->hh[l] + i*a->N_hidden[l+1], a->N_hidden[l+1], 
-                      s->hh[l][i], s->ah[l+1], p->hh[l].alpha[2]);
+      { for (i = 0; i<a->N_hidden[l-1]; i++)
+        { max_second (d->hh[l-1] + i*a->N_hidden[l], a->N_hidden[l], 
+                      s->hh[l-1][i], s->ah[l], p->hh[l-1].alpha[2]);
         }
       }
     }

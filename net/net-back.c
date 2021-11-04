@@ -71,6 +71,8 @@ HOSTDEV void net_back
 {
   int l, ls, ld, i;
 
+  /* Find locations of non-sequential configurations. */
+
   char ns[Max_nonseq][Max_nonseq];
   unsigned bits;
   int nsqi = 0;
@@ -83,8 +85,6 @@ HOSTDEV void net_back
   }
 
   /* Backpropagate through hidden layers. */
-
-  nsqi = 0;
 
   for (l = a->N_layers-1; l>=0 && l>=start; l--)
   { 
@@ -945,7 +945,7 @@ __device__ void net_back_gpu
 {
   int l, ls, ld, i;
 
-  /* Find location of non-sequential configurations at layer 'start'. */
+  /* Find locations of non-sequential configurations. */
 
   char ns[Max_nonseq][Max_nonseq];
   unsigned bits;

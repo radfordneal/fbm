@@ -390,7 +390,8 @@ void net_prior_prob
   int op		/* Can we ignore some factors? */
 )
 {
-  int l, i, k;
+  int l, ls, i, k, nsqi;
+  unsigned bits;
 
   if (lp!=0)  
   { *lp = 0;
@@ -402,11 +403,32 @@ void net_prior_prob
     }
   }
 
+  nsqi = 0;
+
   if (a->has_ti) compute_prior (w->ti, a->N_inputs, lp, dp ? dp->ti : 0, 
                                 *s->ti_cm, p->ti.alpha[1], 0, op);
 
   for (l = 0; l<a->N_layers; l++)
   {
+    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        if (a->nonseq_config[nsqi])
+        { compute_prior (w->nsq[nsqi], a->nonseq_config[nsqi]->N_wts, lp,
+                         dp ? dp->hh[ls] : 0, 
+                         *s->nsq_cm[nsqi], p->nsq[nsqi].alpha[2], 0, op);
+        }
+        else
+        { for (i = 0; i<a->N_hidden[ls]; i++)
+          { compute_prior (w->nsq[nsqi] + i*a->N_hidden[l], a->N_hidden[l], lp, 
+                          dp ? dp->nsq[nsqi] + i*a->N_hidden[l] : 0, 
+                          s->nsq[nsqi][i], p->nsq[nsqi].alpha[2], s->ah[l], op);
+          }
+        }
+        nsqi += 1;
+      }
+    }
+
     if (l>0 && a->has_hh[l-1]) 
     { if (a->hidden_config[l])
       { compute_prior (w->hh[l-1], a->hidden_config[l]->N_wts, lp,

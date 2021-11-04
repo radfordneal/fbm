@@ -924,7 +924,8 @@ int mc_app_sample
 )
 {
   int sample_hyper, sample_noise, rgrid_hyper, rgrid_noise;
-  int l, pm0, grp;
+  int l, ls, nsqi, pm0, grp;
+  unsigned bits;
 
   grp = 0;
   pm0 = pm;
@@ -972,11 +973,31 @@ int mc_app_sample
   {
     if (arch->has_ti) rgrid_met_unit (pm, it, params.ti, sigmas.ti_cm, 0,
                                       arch->N_inputs, &priors->ti);
-  
+    nsqi = 0;  
     for (l = 0; l<arch->N_layers; l++)
     {
+      for (ls = 0, bits = arch->has_nsq[l]; bits!=0; ls++, bits>>=1)
+      { if (bits&1)
+        { if (ls>=l-1) abort();
+          if (arch->nonseq_config[nsqi])
+          { rgrid_met_conn_config (pm, it,
+                        params.nsq[nsqi], sigmas.nsq_cm[nsqi], sigmas.nsq[nsqi],
+                        arch->N_hidden[ls], arch->nonseq_config[nsqi]->N_wts,
+                        &priors->nsq[nsqi]);
+          }
+          else
+          { rgrid_met_conn (pm, it,
+                        params.nsq[nsqi], sigmas.nsq_cm[nsqi], sigmas.nsq[nsqi],
+                        sigmas.ah[l], arch->N_hidden[ls], arch->N_hidden[l], 
+                        &priors->nsq[nsqi]);
+          }
+          nsqi += 1;
+        }
+      }
+
       if (l>0)
-      { if (arch->has_hh[l-1]) 
+      { 
+        if (arch->has_hh[l-1]) 
         { if (arch->hidden_config[l])
           { rgrid_met_conn_config (pm, it,
                         params.hh[l-1], sigmas.hh_cm[l-1], sigmas.hh[l-1], 
@@ -1078,8 +1099,28 @@ int mc_app_sample
                   arch->N_inputs, &priors->ti);
     }
   
+    nsqi = 0;  
     for (l = 0; l<arch->N_layers; l++)
     {
+      for (ls = 0, bits = arch->has_nsq[l]; bits!=0; ls++, bits>>=1)
+      { if (bits&1)
+        { if (ls>=l-1) abort();
+          if (arch->nonseq_config[nsqi])
+          { gibbs_conn_config (sample_hyper, 
+                        params.nsq[nsqi], sigmas.nsq_cm[nsqi], sigmas.nsq[nsqi],
+                        arch->N_hidden[ls], arch->nonseq_config[nsqi]->N_wts,
+                        &priors->nsq[nsqi]);
+          }
+          else
+          { gibbs_conn (sample_hyper, 
+                        params.nsq[nsqi], sigmas.nsq_cm[nsqi], sigmas.nsq[nsqi],
+                        sigmas.ah[l], arch->N_hidden[ls], arch->N_hidden[l], 
+                        &priors->nsq[nsqi]);
+          }
+          nsqi += 1;
+        }
+      }
+
       if (l>0)
       { if (arch->has_hh[l-1] && THISGRP) 
         { if (arch->hidden_config[l])

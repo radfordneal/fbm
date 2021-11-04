@@ -415,7 +415,7 @@ void net_prior_prob
       { if (ls>=l-1) abort();
         if (a->nonseq_config[nsqi])
         { compute_prior (w->nsq[nsqi], a->nonseq_config[nsqi]->N_wts, lp,
-                         dp ? dp->hh[ls] : 0, 
+                         dp ? dp->nsq[nsqi] : 0, 
                          *s->nsq_cm[nsqi], p->nsq[nsqi].alpha[2], 0, op);
         }
         else

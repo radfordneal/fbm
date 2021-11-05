@@ -1,4 +1,0 @@
-#!/bin/bash
-
-time time-$1 2>&1 | diff time-$1.save -
-

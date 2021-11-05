@@ -1,0 +1,23 @@
+Commit: 51bb418af64588cf02dbe16fe4f9375effd7bcf4
+
+Running exi3 with dbl-gpu on P620:
+
+Number of training cases: 499
+Precision: FP64, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+Quadro P620, Compute Capability 6.1, 4 processors, 1.9 GBytes
+Specified 16 cases per block, max 1000 blocks per launch
+With 499 cases, need 1 launches, max 32 blocks/launch
+Precision: FP64, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+Quadro P620, Compute Capability 6.1, 4 processors, 1.9 GBytes
+Specified 16 cases per block, max 1000 blocks per launch
+With 499 cases, need 1 launches, max 32 blocks/launch
+
+Number of iterations used: 6
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.379+-0.005
+Fraction of guesses that were wrong:    0.6500+-0.0479
+Average squared error guessing mean:    0.74621+-0.00257
+
+elapsed 115.26s

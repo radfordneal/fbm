@@ -1,0 +1,17 @@
+Commit: 51bb418af64588cf02dbe16fe4f9375effd7bcf4
+
+Running exi3 with dbl:
+
+Number of training cases: 499
+Precision: FP64, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+Precision: FP64, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+
+Number of iterations used: 6
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.385+-0.006
+Fraction of guesses that were wrong:    0.7300+-0.0446
+Average squared error guessing mean:    0.74923+-0.00327
+
+elapsed 55.43s

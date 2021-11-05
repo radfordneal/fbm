@@ -1,0 +1,17 @@
+Commit: 51bb418af64588cf02dbe16fe4f9375effd7bcf4
+
+Running exi3 with flt:
+
+Number of training cases: 499
+Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+
+Number of iterations used: 6
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.322+-0.032
+Fraction of guesses that were wrong:    0.6200+-0.0488
+Average squared error guessing mean:    0.71750+-0.01516
+
+elapsed 37.45s

@@ -1,0 +1,23 @@
+Commit: 51bb418af64588cf02dbe16fe4f9375effd7bcf4
+
+Running exi2 with flt-gpu on A4000:
+
+Number of training cases: 4999
+Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+NVIDIA RTX A4000, Compute Capability 8.6, 48 processors, 14.7 GBytes
+Specified 16 cases per block, max 1000 blocks per launch
+With 4999 cases, need 1 launches, max 313 blocks/launch
+Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+NVIDIA RTX A4000, Compute Capability 8.6, 48 processors, 14.7 GBytes
+Specified 16 cases per block, max 1000 blocks per launch
+With 4999 cases, need 1 launches, max 313 blocks/launch
+
+Number of iterations used: 2
+
+Number of test cases: 100
+
+Average log probability of targets:    -0.756+-0.107
+Fraction of guesses that were wrong:    0.2700+-0.0446
+Average squared error guessing mean:    0.38772+-0.04793
+
+elapsed 1.95s

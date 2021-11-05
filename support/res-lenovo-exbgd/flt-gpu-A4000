@@ -1,0 +1,19 @@
+Commit: 962e3f6934804968a2fa6758cce8d9c90c906d42
+
+Running exbgd with flt-gpu on A4000:
+
+Number of training cases: 800
+Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+NVIDIA RTX A4000, Compute Capability 8.6, 48 processors, 14.7 GBytes
+Specified 16 cases per block, max 1000 blocks per launch
+With 800 cases, need 1 launches, max 50 blocks/launch
+
+Number of iterations used: 1
+
+Number of test cases: 500
+
+Average log probability of targets:    -0.238+-0.025
+Fraction of guesses that were wrong:    0.1120+-0.0141
+Average squared error guessing mean:    0.07571+-0.00848
+
+elapsed 4.34s

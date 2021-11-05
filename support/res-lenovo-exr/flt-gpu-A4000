@@ -1,0 +1,25 @@
+Commit: 47e426a46ebfb098b560069d11d67fbce1889cdb
+
+Running exr with flt-gpu on A4000:
+
+Number of training cases: 100
+Number of test cases: 1000
+Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+NVIDIA RTX A4000, Compute Capability 8.6, 48 processors, 14.7 GBytes
+Specified 16 cases per block, max 1000 blocks per launch
+With 100 cases, need 1 launches, max 7 blocks/launch
+Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+NVIDIA RTX A4000, Compute Capability 8.6, 48 processors, 14.7 GBytes
+Specified 16 cases per block, max 1000 blocks per launch
+With 100 cases, need 1 launches, max 7 blocks/launch
+ 
+Predictions after running for 1000 iterations:
+
+Number of iterations used: 80
+
+Number of test cases: 1000
+
+Average log probability of targets:     0.825+-0.023
+Average squared error guessing mean:    0.01662+-0.00259
+
+elapsed 3.65s

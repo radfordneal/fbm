@@ -1,0 +1,23 @@
+Commit: 47e426a46ebfb098b560069d11d67fbce1889cdb
+
+Running exb with flt-gpu on A4000:
+
+Number of training cases: 300
+Number of test cases: 1000
+Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+NVIDIA RTX A4000, Compute Capability 8.6, 48 processors, 14.7 GBytes
+Specified 16 cases per block, max 1000 blocks per launch
+With 300 cases, need 1 launches, max 19 blocks/launch
+Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+NVIDIA RTX A4000, Compute Capability 8.6, 48 processors, 14.7 GBytes
+Specified 16 cases per block, max 1000 blocks per launch
+With 300 cases, need 1 launches, max 19 blocks/launch
+
+Number of iterations used: 20
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.239+-0.016
+Fraction of guesses that were wrong:    0.1050+-0.0097
+
+elapsed 1.25s

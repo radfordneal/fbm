@@ -1,0 +1,17 @@
+Commit: 47e426a46ebfb098b560069d11d67fbce1889cdb
+
+Running exc with dbl:
+
+Number of training cases: 400
+Number of test cases: 1000
+Precision: FP64, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+Precision: FP64, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+
+Number of iterations used: 30
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.465+-0.022
+Fraction of guesses that were wrong:    0.1950+-0.0125
+
+elapsed 3.47s

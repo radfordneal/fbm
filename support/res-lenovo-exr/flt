@@ -1,0 +1,19 @@
+Commit: 47e426a46ebfb098b560069d11d67fbce1889cdb
+
+Running exr with flt:
+
+Number of training cases: 100
+Number of test cases: 1000
+Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+ 
+Predictions after running for 1000 iterations:
+
+Number of iterations used: 80
+
+Number of test cases: 1000
+
+Average log probability of targets:     0.824+-0.023
+Average squared error guessing mean:    0.01834+-0.00322
+
+elapsed 0.87s

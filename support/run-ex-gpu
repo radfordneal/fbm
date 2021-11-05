@@ -1,0 +1,34 @@
+#!/bin/bash
+
+if [ x$1 == x ]; then
+  echo "Usage: run-ex-gpu <ex>..."
+  exit 1
+fi
+
+if [ x$SYSTEM == x ]; then
+  dir=res
+else
+  dir=res-$SYSTEM
+fi
+
+if [ x$GPUNAME == x ]; then
+  GPUNAME=gpu
+  unset GPU
+else
+  eval GPU=\$$GPUNAME
+  export GPU
+fi
+
+export INFO=1
+
+for w in dbl-gpu flt-gpu; do
+  for p in $@; do 
+    mkdir -p $dir-$p
+    ( echo -n "Commit: "; git rev-parse HEAD
+      echo; echo Running $p with $w on $GPUNAME:; echo
+      using $w /bin/time -f "elapsed %es" $p
+    ) >& $dir-$p/$w-$GPUNAME
+    echo -n For $p with $w on $GPUNAME:\ 
+    grep "^elapsed " $dir-$p/$w-$GPUNAME
+  done
+done

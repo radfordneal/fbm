@@ -1,0 +1,25 @@
+Commit: d7676bcd2f4978c6542bd37a7f35ea67e312f6cd
+
+Running exr with dbl-gpu on K20c:
+
+Number of training cases: 100
+Number of test cases: 1000
+Precision: FP64, SIMD features: SSE2 SSE3 SSE4.2
+Tesla K20c, Compute Capability 3.5, 13 processors, 4.6 GBytes ECC
+Specified 16 cases per block, max 1000 blocks per launch
+With 100 cases, need 1 launches, max 7 blocks/launch
+Precision: FP64, SIMD features: SSE2 SSE3 SSE4.2
+Tesla K20c, Compute Capability 3.5, 13 processors, 4.6 GBytes ECC
+Specified 16 cases per block, max 1000 blocks per launch
+With 100 cases, need 1 launches, max 7 blocks/launch
+ 
+Predictions after running for 1000 iterations:
+
+Number of iterations used: 80
+
+Number of test cases: 1000
+
+Average log probability of targets:     0.845+-0.020
+Average squared error guessing mean:    0.01570+-0.00229
+
+elapsed 11.42s

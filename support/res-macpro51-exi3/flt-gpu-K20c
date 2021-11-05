@@ -1,0 +1,23 @@
+Commit: c0642a045a5696d4aefe9442fe9593ec0ec82ad5
+
+Running exi3 with flt-gpu on K20c:
+
+Number of training cases: 499
+Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2
+Tesla K20c, Compute Capability 3.5, 13 processors, 4.6 GBytes ECC
+Specified 16 cases per block, max 1000 blocks per launch
+With 499 cases, need 1 launches, max 32 blocks/launch
+Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2
+Tesla K20c, Compute Capability 3.5, 13 processors, 4.6 GBytes ECC
+Specified 16 cases per block, max 1000 blocks per launch
+With 499 cases, need 1 launches, max 32 blocks/launch
+
+Number of iterations used: 6
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.382+-0.005
+Fraction of guesses that were wrong:    0.7000+-0.0461
+Average squared error guessing mean:    0.74804+-0.00237
+
+elapsed 122.76s

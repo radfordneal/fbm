@@ -12,7 +12,7 @@ else
 fi
 
 if [ x$GPUNAME == x ]; then
-  GPUNAME=gpu
+  GPUNAME=default
   unset GPU
 else
   eval GPU=\$$GPUNAME

@@ -1,0 +1,16 @@
+Commit: c0642a045a5696d4aefe9442fe9593ec0ec82ad5
+
+Running exbgd with flt:
+
+Number of training cases: 800
+Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2
+
+Number of iterations used: 1
+
+Number of test cases: 500
+
+Average log probability of targets:    -0.238+-0.025
+Fraction of guesses that were wrong:    0.1120+-0.0141
+Average squared error guessing mean:    0.07571+-0.00848
+
+elapsed 19.13s

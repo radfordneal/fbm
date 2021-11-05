@@ -21,7 +21,19 @@ fi
 
 export INFO=1
 
-for w in dbl-gpu flt-gpu; do
+PROG=`echo $0 | sed s@.*/@@`
+if [ $PROG == run-ex-gpu ]; then
+  WHAT="dbl-gpu flt-gpu"
+elif [ $PROG == run-ex-flt-gpu ]; then
+  WHAT=flt-gpu
+elif [ $PROG == run-ex-dbl-gpu ]; then
+  WHAT=dbl-gpu
+else
+  echo Something wrong! $PROG
+  exit 1
+fi
+
+for w in $WHAT; do
   for p in $@; do 
     mkdir -p $dir-$p
     ( echo -n "Commit: "; git rev-parse HEAD

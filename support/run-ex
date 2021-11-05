@@ -13,7 +13,19 @@ fi
 
 export INFO=1
 
-for w in dbl flt; do
+PROG=`echo $0 | sed s@.*/@@`
+if [ $PROG == run-ex ]; then
+  WHAT="dbl flt"
+elif [ $PROG == run-ex-flt ]; then
+  WHAT=flt
+elif [ $PROG == run-ex-dbl ]; then
+  WHAT=dbl
+else
+  echo Something wrong! $PROG
+  exit 1
+fi
+
+for w in $WHAT; do
   for p in $@; do 
     mkdir -p $dir-$p
     ( echo -n "Commit: "; git rev-parse HEAD

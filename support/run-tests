@@ -9,7 +9,7 @@ fi
 
 for test in $TESTS; do
   echo RUNNING $test
-  $test >& $test.out
-  diff $test.save$PRECISION $test.out 
+  $test >& out/$test
+  diff save/$PRECISION/$test out/$test
   echo DONE $test
 done

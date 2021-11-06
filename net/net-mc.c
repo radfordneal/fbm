@@ -2181,6 +2181,16 @@ void cuda_setup
 
 #define KDEBUG 0        /* Set to 1 to enable debug output below */
 
+#define KERNEL_PRELUDE \
+  net_flags *flgs = const_has_flgs ? &const_flgs : 0; \
+  int x = blockIdx.x * blockDim.x + threadIdx.x; \
+  int i = x / THREADS_PER_CASE; \
+  int th = x - THREADS_PER_CASE*i; \
+  int h = start + i; \
+  net_values *train_vals_h = const_train_values+h; \
+  if (h >= end) th = -1;
+
+
 #if SPLIT_KERNELS==0
 
 __global__ void training_kernel
@@ -2216,20 +2226,12 @@ __global__ void forward_kernel
 #endif
 
 { 
+  KERNEL_PRELUDE
+
   if (KDEBUG) 
   { printf("Forward op: block %d, thread %d, start %d, end %d\n",
             blockIdx.x,threadIdx.x,start,end);
   }
-
-  net_flags *flgs = const_has_flgs ? &const_flgs : 0;
-  int x = blockIdx.x * blockDim.x + threadIdx.x;
-  int i = x / THREADS_PER_CASE;
-  int th = x - THREADS_PER_CASE*i;
-  int h = start + i;
-
-  if (h >= end) th = -1;
-
-  net_values *train_vals_h = const_train_values+h;
 
   net_func_gpu (th, train_vals_h, 0, &const_arch, flgs, &const_params, 
                 const_sparse, 0);
@@ -2247,14 +2249,7 @@ __global__ void energy_kernel
   double gr_weight	/* Weight for these cases for gradient */
 )
 {
-  int x = blockIdx.x * blockDim.x + threadIdx.x;
-  int i = x / THREADS_PER_CASE;
-  int th = x - THREADS_PER_CASE*i;
-  int h = start + i;
-
-  if (h >= end) th = -1;
-
-  net_values *train_vals_h = const_train_values+h;
+  KERNEL_PRELUDE
 
 #else
 
@@ -2348,18 +2343,9 @@ __global__ void backward_kernel
   int end		/* End of cases to look at (index after last case) */
 )
 {
-  net_flags *flgs = const_has_flgs ? &const_flgs : 0;
-  int x = blockIdx.x * blockDim.x + threadIdx.x;
-  int i = x / THREADS_PER_CASE;
-  int th = x - THREADS_PER_CASE*i;
-  int h = start + i;
+  KERNEL_PRELUDE
 
-  net_values *train_vals_h = const_train_values+h;
-  net_values *deriv_i;
-
-  if (h >= end) th = -1;
-
-  deriv_i = const_deriv+i;
+  net_values *deriv_i = const_deriv+i;
 
 #else
 

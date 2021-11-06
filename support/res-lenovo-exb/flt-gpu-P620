@@ -1,4 +1,4 @@
-Commit: d7f4632eba9f66249ee8a59d15af87aa5b6d8ea5
+Commit: a35c2c071955d3b8910923b1be8e07897ce92f32
 
 Running exb with flt-gpu on P620:
 
@@ -17,7 +17,7 @@ Number of iterations used: 20
 
 Number of test cases: 1000
 
-Average log probability of targets:    -0.241+-0.018
-Fraction of guesses that were wrong:    0.1070+-0.0098
+Average log probability of targets:    -0.239+-0.016
+Fraction of guesses that were wrong:    0.1050+-0.0097
 
 elapsed 3.07s

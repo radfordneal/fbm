@@ -1827,6 +1827,19 @@ do \
       w += nd; \
     } \
   } \
+  else if (nd==1) \
+  { if (th==0) \
+    { net_value sv = 0; \
+      for (i = 0; i<ns; i++) \
+      { o = (offset); \
+        if (!(omit)) \
+        { sv += (v[i] + o) * *w; \
+          w += 1; \
+        } \
+      } \
+      s[j] += sv; \
+    } \
+  } \
   else \
   { for (j = th; j<nd; j+=NTH) \
     { net_value sv = s[j]; \

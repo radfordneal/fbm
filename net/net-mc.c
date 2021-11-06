@@ -2181,13 +2181,13 @@ void cuda_setup
 
 #define KDEBUG 0        /* Set to 1 to enable debug output below */
 
-#define KERNEL_PRELUDE \
+#define KERNEL_PRELUDE(thrds) \
   net_flags *flgs = const_has_flgs ? &const_flgs : 0; \
-  int x = blockIdx.x * blockDim.x + threadIdx.x; \
-  int i = x / THREADS_PER_CASE; \
-  int th = x - THREADS_PER_CASE*i; \
+  int m = threadIdx.x / (thrds); \
+  int i = blockIdx.x*const_blkcases + m; \
   int h = start + i; \
   net_values *train_vals_h = const_train_values+h; \
+  int th = threadIdx.x & ((thrds)-1); \
   if (h >= end) th = -1;
 
 
@@ -2226,7 +2226,7 @@ __global__ void forward_kernel
 #endif
 
 { 
-  KERNEL_PRELUDE
+  KERNEL_PRELUDE(THREADS_PER_CASE)
 
   if (KDEBUG) 
   { printf("Forward op: block %d, thread %d, start %d, end %d\n",
@@ -2249,7 +2249,7 @@ __global__ void energy_kernel
   double gr_weight	/* Weight for these cases for gradient */
 )
 {
-  KERNEL_PRELUDE
+  KERNEL_PRELUDE(THREADS_PER_CASE)
 
 #else
 
@@ -2343,7 +2343,7 @@ __global__ void backward_kernel
   int end		/* End of cases to look at (index after last case) */
 )
 {
-  KERNEL_PRELUDE
+  KERNEL_PRELUDE(THREADS_PER_CASE)
 
   net_values *deriv_i = const_deriv+i;
 
@@ -2369,6 +2369,9 @@ __global__ void backward_kernel
                   &const_arch, flgs, &const_params, 0);
   }
 
+//# define GTHREADS THREADS_PER_CASE
+# define GTHREADS 1
+
 #if SPLIT_KERNELS!=0
 
 }
@@ -2379,9 +2382,9 @@ __global__ void gradient_kernel
   int end		/* End of cases to look at (index after last case) */
 )
 { 
-  net_flags *flgs = const_has_flgs ? &const_flgs : 0;
-  int th, i, h;
-  net_values *train_vals_h, *deriv_i;
+  KERNEL_PRELUDE(GTHREADS)
+
+  net_values *deriv_i = const_deriv+i;
 
 #else
 
@@ -2396,24 +2399,18 @@ __global__ void gradient_kernel
 
   unsigned total_params = const_params.total_params;
   int o = blockIdx.x*((const_blkcases+GROUP_MASK)>>GROUP_SHIFT) 
-           + (threadIdx.x>>GROUP_SHIFT);
+           + (threadIdx.x/(GROUP_SIZE*GTHREADS));
 
-  if (threadIdx.x >= const_blkcases)
+  if (m >= const_blkcases)
   { goto grad_reduce;
   }
 
-  th = threadIdx.x & GROUP_MASK;
-  i = blockIdx.x * const_blkcases + threadIdx.x;
-  h = start + i;
-
-  train_vals_h = const_train_values+h;
+  th = threadIdx.x & (GROUP_SIZE*GTHREADS - 1);
 
   net_params *restrict ggrad;
 
   if (h < end)
   {
-    deriv_i = const_deriv+i;
-
     net_values *train_vals_b = train_vals_h-th;
     net_values *deriv_b = deriv_i-th;
 

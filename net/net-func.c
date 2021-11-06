@@ -1814,20 +1814,7 @@ __device__ static void bias_values_config_gpu
 do \
 { int i, j; \
   net_param o; \
-  if (nd==1) \
-  { if (th==0) \
-    { net_value sv = 0; \
-      for (i = 0; i<ns; i++) \
-      { o = (offset); \
-        if (!(omit)) \
-        { sv += (v[i] + o) * *w; \
-          w += 1; \
-        } \
-      } \
-      *s += sv; \
-    } \
-  } \
-  else if (sprs) \
+  if (sprs && nd>NTH) \
   { for (i = 0; i<ns; i++) \
     { o = (offset); \
       if (omit) continue; \
@@ -1841,14 +1828,17 @@ do \
     } \
   } \
   else \
-  { for (i = 0; i<ns; i++) \
-    { o = (offset); \
-      if (omit) continue; \
-      net_value tv = v[i] + o; \
-      for (j = th; j<nd; j+=NTH) \
-      { s[j] += w[j] * tv; \
+  { for (j = th; j<nd; j+=NTH) \
+    { net_value sv = s[j]; \
+      const net_param *wj = w+j; \
+      for (i = 0; i<ns; i++) \
+      { o = (offset); \
+        if (!(omit)) \
+        { sv += (v[i] + o) * *wj; \
+          wj += nd; \
+        } \
       } \
-      w += nd; \
+      s[j] = sv; \
     } \
   } \
 } while (0)

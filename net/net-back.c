@@ -1125,20 +1125,10 @@ __device__ static void sum_derivatives_gpu
     }
     else
     { for (i = th; i<ns; i+=NTH)
-      { k = i*nd;
+      { const net_param *ww = w+i*nd;
         tv = 0;
-        j = 3;
-        while (j<nd)
-        { tv += w[k+j-3] * dd[j-3];
-          tv += w[k+j-2] * dd[j-2];
-          tv += w[k+j-1] * dd[j-1];
-          tv += w[k+j-0] * dd[j-0];
-          j += 4;
-        }
-        j -= 3;
-        while (j<nd)
-        { tv += w[k+j] * dd[j];
-          j += 1;
+        for (j = 0; j<nd; j++)
+        { tv += ww[j] * dd[j];
         }
         ds[i] += tv;
       }
@@ -1167,18 +1157,8 @@ __device__ static void sum_derivatives_gpu
         }
         if (omit[i]&bit) continue;
         tv = 0;
-        j = 3;
-        while (j<nd)
-        { tv += w[j-3] * dd[j-3];
-          tv += w[j-2] * dd[j-2];
-          tv += w[j-1] * dd[j-1];
-          tv += w[j-0] * dd[j-0];
-          j += 4;
-        }
-        j -= 3;
-        while (j<nd)
+        for (j = 0; j<nd; j++)
         { tv += w[j] * dd[j];
-          j += 1;
         }
         ds[i] += tv;
         w += nd;

@@ -1872,10 +1872,10 @@ void net_training_cases
   int k;
 
 # if __CUDACC__
-  { if (n > 1)
+  { if (n > 0)
     { net_training_cases_gpu (energy, grd, i, n, en_weight, gr_weight);
-      return;
     }
+    return;
   }
 # endif
 

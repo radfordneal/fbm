@@ -1143,9 +1143,11 @@ __device__ static void sum_derivatives_gpu
         { if (!(omit[k]&bit)) w += 1;
           k += 1;
         }
-        if (omit[i]&bit) continue;
+        if (omit[i]&bit) 
+        { k += 1;
+          continue;
+        }
         ds[i] += *w * d0;
-        w += 1;
       }
     }
     else
@@ -1155,13 +1157,15 @@ __device__ static void sum_derivatives_gpu
         { if (!(omit[k]&bit)) w += nd;
           k += 1;
         }
-        if (omit[i]&bit) continue;
+        if (omit[i]&bit) 
+        { k += 1;
+          continue;
+        }
         tv = 0;
         for (j = 0; j<nd; j++)
         { tv += w[j] * dd[j];
         }
         ds[i] += tv;
-        w += nd;
       }
     }
   }

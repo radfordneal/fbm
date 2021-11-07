@@ -1810,15 +1810,12 @@ __device__ static void bias_values_config_gpu
    due to connections from one source layer to the current unit values for
    the destination layer. */
 
-#define ADD_CONNECTIONS_GPU(offset,omit,sprs) \
+#define ADD_CONNECTIONS_GPU(off,sprs) \
 do \
 { int i, j; \
-  net_param o; \
   if (sprs && nd>NTH) \
   { for (i = 0; i<ns; i++) \
-    { o = (offset); \
-      if (omit) continue; \
-      net_value tv = v[i] + o; \
+    { net_value tv = off ? v[i] + off[i] : v[i]; \
       if (tv!=0)  \
       { for (j = th; j<nd; j+=NTH) \
         { s[j] += w[j] * tv; \
@@ -1831,11 +1828,8 @@ do \
   { if (th==0) \
     { net_value sv = 0; \
       for (i = 0; i<ns; i++) \
-      { o = (offset); \
-        if (!(omit)) \
-        { sv += (v[i] + o) * *w; \
-          w += 1; \
-        } \
+      { sv += off ? (v[i] + off[i]) * *w : v[i] * *w; \
+        w += 1; \
       } \
       s[j] += sv; \
     } \
@@ -1845,10 +1839,52 @@ do \
     { net_value sv = s[j]; \
       const net_param *wj = w+j; \
       for (i = 0; i<ns; i++) \
-      { o = (offset); \
-        if (!(omit)) \
-        { sv += (v[i] + o) * *wj; \
-          wj += nd; \
+      { sv += off ? (v[i] + off[i]) * *wj : v[i] * *wj; \
+        wj += nd; \
+      } \
+      s[j] = sv; \
+    } \
+  } \
+} while (0)
+
+#define ADD_CONNECTIONS_OMIT_GPU(off,sprs) \
+do \
+{ int i, j; \
+  if (sprs && nd>NTH) \
+  { for (i = 0; i<ns; i++) \
+    { if (omit[i]&ob) continue; \
+      net_value tv = off ? v[i] + off[i] : v[i]; \
+      if (tv!=0)  \
+      { for (j = th; j<nd; j+=NTH) \
+        { s[j] += w[j] * tv; \
+        } \
+      } \
+      w += nd; \
+    } \
+  } \
+  else if (nd==1) \
+  { if (th==0) \
+    { net_value sv = 0; \
+      for (i = 0; i<ns; i++) \
+      { if (omit[i]&ob) continue; \
+        sv += off ? (v[i] + off[i]) * *w : v[i] * *w; \
+        w += 1; \
+      } \
+      s[j] += sv; \
+    } \
+  } \
+  else \
+  { for (j = th; j<nd; j+=NTH) \
+    { net_value sv = s[j]; \
+      const net_param *wj = w+j; \
+      int k = 0; \
+      for (i = 0; i<ns; i++) \
+      { while (k < i) \
+        { if (!(omit[i]&ob)) wj += nd; \
+          k += 1; \
+        } \
+        if (!(omit[i]&ob)) \
+        { sv += off ? (v[i] + off[i]) * *wj : v[i] * *wj; \
         } \
       } \
       s[j] = sv; \
@@ -1871,27 +1907,27 @@ __device__ static void add_connections_gpu
 {
   if (sparse && off==0)
   { if (omit==0)
-    { ADD_CONNECTIONS_GPU(0,0,1);
+    { ADD_CONNECTIONS_GPU(((char*)0),1);
     }
     else
-    { ADD_CONNECTIONS_GPU(0,(*omit++)&ob,1);
+    { ADD_CONNECTIONS_OMIT_GPU(((char*)0),1);
     }
   }
   else
   { if (omit==0)
     { if (off==0)
-      { ADD_CONNECTIONS_GPU(0,0,0);
+      { ADD_CONNECTIONS_GPU(((char*)0),0);
       }
       else
-      { ADD_CONNECTIONS_GPU(*off++,0,0);
+      { ADD_CONNECTIONS_GPU(off,0);
       }
     }
     else
     { if (off==0)
-      { ADD_CONNECTIONS_GPU(0,(*omit++)&ob,0);
+      { ADD_CONNECTIONS_OMIT_GPU(((char*)0),0);
       }
       else
-      { ADD_CONNECTIONS_GPU(*off++,(*omit++)&ob,0);
+      { ADD_CONNECTIONS_OMIT_GPU(off,0);
       }
     }
   }

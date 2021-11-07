@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 if [ x$1 == x ]; then
   echo "Usage: run-ex <ex>..."
   exit 1

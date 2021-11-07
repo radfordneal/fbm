@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+for ex in exr exb exc exbgd exi1 exi2 exi3; do
+  echo RUNNING $ex on CPU
+  run-ex $ex
+  for GPUNAME in $GPULIST; do
+    echo RUNNING $ex on $GPUNAME
+    run-ex-gpu $ex
+  done
+done

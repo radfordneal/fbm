@@ -1,4 +1,4 @@
-Commit: a35c2c071955d3b8910923b1be8e07897ce92f32
+Commit: 6d6667309cbd5ba6533259f48e95d7854481f681
 
 Running exbgd with flt-gpu on K40c:
 
@@ -16,4 +16,4 @@ Average log probability of targets:    -0.238+-0.025
 Fraction of guesses that were wrong:    0.1120+-0.0141
 Average squared error guessing mean:    0.07571+-0.00848
 
-elapsed 12.43s
+elapsed 12.42s

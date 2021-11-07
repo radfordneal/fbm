@@ -1816,7 +1816,7 @@ do \
   if (sprs && nd>NTH) \
   { for (i = 0; i<ns; i++) \
     { net_value tv = off ? v[i] + off[i] : v[i]; \
-      if (tv!=0)  \
+      if (tv!=0) \
       { for (j = th; j<nd; j+=NTH) \
         { s[j] += w[j] * tv; \
         } \
@@ -1827,9 +1827,17 @@ do \
   else if (nd==1) \
   { if (th==0) \
     { net_value sv = 0; \
-      for (i = 0; i<ns; i++) \
-      { sv += off ? (v[i] + off[i]) * *w : v[i] * *w; \
-        w += 1; \
+      if (off) \
+      { for (i = 0; i<ns; i++) \
+        { sv += (v[i] + off[i]) * *w; \
+          w += 1; \
+        } \
+      } \
+      else \
+      { for (i = 0; i<ns; i++) \
+        { sv += v[i] * *w; \
+          w += 1; \
+        } \
       } \
       s[j] += sv; \
     } \
@@ -1838,9 +1846,17 @@ do \
   { for (j = th; j<nd; j+=NTH) \
     { net_value sv = s[j]; \
       const net_param *wj = w+j; \
-      for (i = 0; i<ns; i++) \
-      { sv += off ? (v[i] + off[i]) * *wj : v[i] * *wj; \
-        wj += nd; \
+      if (off) \
+      { for (i = 0; i<ns; i++) \
+        { sv += (v[i] + off[i]) * *wj; \
+          wj += nd; \
+        } \
+      } \
+      else \
+      { for (i = 0; i<ns; i++) \
+        { sv += v[i] * *wj; \
+          wj += nd; \
+        } \
       } \
       s[j] = sv; \
     } \

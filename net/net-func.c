@@ -1842,15 +1842,6 @@ do \
       s[j] += sv; \
     } \
   } \
-  else if (ns<4) \
-  { for (i = 0; i<ns; i++) \
-    { net_value tv = off ? v[i] + off[i] : v[i]; \
-      for (j = th; j<nd; j+=NTH) \
-      { s[j] += w[j] * tv; \
-      } \
-      w += nd; \
-    } \
-  } \
   else \
   { for (j = th; j<nd; j+=NTH) \
     { net_value sv = s[j]; \
@@ -1877,38 +1868,25 @@ do \
 { int i, j; \
   if (sprs && nd>NTH) \
   { for (i = 0; i<ns; i++) \
-    { if (!(omit[i]&ob)) \
-      { net_value tv = off ? v[i] + off[i] : v[i]; \
-        if (tv!=0) \
-        { for (j = th; j<nd; j+=NTH) \
-          { s[j] += w[j] * tv; \
-          } \
+    { if (omit[i]&ob) continue; \
+      net_value tv = off ? v[i] + off[i] : v[i]; \
+      if (tv!=0)  \
+      { for (j = th; j<nd; j+=NTH) \
+        { s[j] += w[j] * tv; \
         } \
-        w += nd; \
       } \
+      w += nd; \
     } \
   } \
   else if (nd==1) \
   { if (th==0) \
     { net_value sv = 0; \
       for (i = 0; i<ns; i++) \
-      { if (!(omit[i]&ob)) \
-        { sv += off ? (v[i] + off[i]) * *w : v[i] * *w; \
-          w += 1; \
-        } \
+      { if (omit[i]&ob) continue; \
+        sv += off ? (v[i] + off[i]) * *w : v[i] * *w; \
+        w += 1; \
       } \
       s[j] += sv; \
-    } \
-  } \
-  else if (ns<4) \
-  { for (i = 0; i<ns; i++) \
-    { if (!(omit[i]&ob)) \
-      { net_value tv = off ? v[i] + off[i] : v[i]; \
-        for (j = th; j<nd; j+=NTH) \
-        { s[j] += w[j] * tv; \
-        } \
-        w += nd; \
-      } \
     } \
   } \
   else \

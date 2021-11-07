@@ -31,13 +31,18 @@
                                      the old stepsize heuristic */
 /* For GPU computations: */
 
-#define THREADS_PER_CASE 4   /* Number of GPU threads used per training case;
-                                must be a power of two */
+#define THREADS_PER_CASE 4   /* Number of GPU threads used per training case
+                                for value computaton; must be a power of two */
 
-#define GROUP_SHIFT 2        /* Log2 of number of threads in a group for
+#define GRAD_THREADS_PER_CASE 1  /* Number of GPU threads per training case
+                                    for gradient computation and reduction;
+                                    must be a power of two, less than or equal
+                                    to THREADS_PER_CASE */
+
+#define GROUP_SHIFT 2        /* Log2 of number of training case in a group for
                                 computing gradients, must be 0, 1, or 2 */
 
-#define GROUP_SIZE (1<<GROUP_SHIFT)  /* Number of threads in a grad group */
+#define GROUP_SIZE (1<<GROUP_SHIFT)  /* Number of cases in a gradient group */
 #define GROUP_MASK (GROUP_SIZE-1)
 
 #define GRAD_ALIGN_BYTES 64  /* Alignment for gradient blocks in GPU, bytes

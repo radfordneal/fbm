@@ -48,7 +48,7 @@
    (gradient) as a separate kernel (allowing it to not have the extra
    threads it doesn't use). */
 
-#define SPLIT_KERNELS 1   /* 0 = one kernel for all five parts
+#define SPLIT_KERNELS 2   /* 0 = one kernel for all five parts
                              1 = five kernels for the five parts
                              2 = first three together, two gradient separate */
 
@@ -2244,7 +2244,7 @@ __global__ void forward_kernel
   KERNEL_PRELUDE(THREADS_PER_CASE)
 
   if (KDEBUG) 
-  { printf("Forward op: block %d, thread %d, start %d, end %d\n",
+  { printf("Forward computation: block %d, thread %d, start %d, end %d\n",
             blockIdx.x,threadIdx.x,start,end);
   }
 
@@ -2275,7 +2275,7 @@ __global__ void energy_kernel
 #endif
 
   if (KDEBUG) 
-  { printf("Energy op/%d,%d: block %d, thread %d, start %d, end %d\n",
+  { printf("Energy computation/%d,%d: block %d, thread %d, start %d, end %d\n",
             case_energy!=0,need_deriv,blockIdx.x,threadIdx.x,start,end);
   }
 
@@ -2369,7 +2369,7 @@ __global__ void backward_kernel
 #endif
 
   if (KDEBUG) 
-  { printf("Backward op: block %d, thread %d, start %d, end %d\n",
+  { printf("Backward computation: block %d, thread %d, start %d, end %d\n",
             blockIdx.x,threadIdx.x,start,end);
   }
 
@@ -2384,9 +2384,6 @@ __global__ void backward_kernel
                   &const_arch, flgs, &const_params, 0);
   }
 
-//# define GTHREADS THREADS_PER_CASE
-# define GTHREADS 1
-
 #if SPLIT_KERNELS==1
 
 }
@@ -2397,7 +2394,7 @@ __global__ void gradient_comp_kernel
   int end		/* End of cases to look at (index after last case) */
 )
 { 
-  KERNEL_PRELUDE(GTHREADS)
+  KERNEL_PRELUDE(GRAD_THREADS_PER_CASE)
 
   net_values *deriv_i = const_deriv+i;
 
@@ -2411,7 +2408,7 @@ __global__ void gradient_kernel
   int end		/* End of cases to look at (index after last case) */
 )
 { 
-  KERNEL_PRELUDE(GTHREADS)
+  KERNEL_PRELUDE(GRAD_THREADS_PER_CASE)
 
   net_values *deriv_i = const_deriv+i;
 
@@ -2422,42 +2419,44 @@ __global__ void gradient_kernel
 #endif
 
   if (KDEBUG)
-  { printf("Gradient op: block %d, thread %d, start %d, end %d\n",
-            blockIdx.x,threadIdx.x,start,end);
+  { printf(
+     "Gradient comp: block %d, thread %d, start %d, end %d, m %d, i %d, h %d\n",
+      blockIdx.x,threadIdx.x,start,end,m,i,h);
   }
 
-  int o = blockIdx.x*((const_blkcases+GROUP_MASK)>>GROUP_SHIFT) 
-           + (threadIdx.x/(GROUP_SIZE*GTHREADS));
+  int thm = m & GROUP_MASK;
+
+  int o = blockIdx.x * ((const_blkcases+GROUP_MASK)>>GROUP_SHIFT) 
+            + (m>>GROUP_SHIFT);
 
   if (m >= const_blkcases)
   { goto grad_reduce;
   }
 
-  th = threadIdx.x & (GROUP_SIZE*GTHREADS - 1);
+  th = threadIdx.x & (GROUP_SIZE*GRAD_THREADS_PER_CASE - 1);
 
   net_params *restrict ggrad;
 
   if (h < end)
   {
-    net_values *train_vals_b = train_vals_h-th;
-    net_values *deriv_b = deriv_i-th;
+    net_values *train_vals_b = train_vals_h-thm;
+    net_values *deriv_b = deriv_i-thm;
 
-    ggrad = threadIdx.x < GROUP_SIZE ? const_block_grad + blockIdx.x
-             : group_grad + o;
+    ggrad = m < GROUP_SIZE ? const_block_grad + blockIdx.x : group_grad + o;
 
     int r = GROUP_SIZE;
     if (GROUP_SIZE>1)
-    { if (r > end - (h-th))
-      { r = end - (h-th);
+    { if (r > end - (h-thm))
+      { r = end - (h-thm);
       }
-      if (threadIdx.x-th + r > const_blkcases)
-      { r = const_blkcases - (threadIdx.x-th);
+      if ((m-thm) + r > const_blkcases)
+      { r = const_blkcases - (m-thm);
       }
     }
 
     if (KDEBUG) 
-    { printf("Grad %d %d: h %d, end %d, r %d, th %d\n",
-              blockIdx.x,threadIdx.x,h,end,r,th);
+    { printf("Grad %d %d: h %d, end %d, o %d, r %d, thm %d\n",
+              blockIdx.x, threadIdx.x, h, end, o, r, thm);
     }
 
     switch (r)
@@ -2488,10 +2487,12 @@ __global__ void gradient_kernel
         break;
       }
       default: /* 4 */
-      { net_store4_grad (th, ggrad, &const_params, 
-           train_vals_b, train_vals_b+1, train_vals_b+2, train_vals_b+3,
-           deriv_b, deriv_b+1, deriv_b+2, deriv_b+3,
-           &const_arch, flgs, const_sparse);
+      { if (th<4)
+        { net_store4_grad (th, ggrad, &const_params, 
+             train_vals_b, train_vals_b+1, train_vals_b+2, train_vals_b+3,
+             deriv_b, deriv_b+1, deriv_b+2, deriv_b+3,
+             &const_arch, flgs, const_sparse);
+        }
         break;
       }
     }
@@ -2509,20 +2510,20 @@ __global__ void gradient_reduction_kernel
   int end               /* End of cases to look at (index after last case) */
 )
 {
-  KERNEL_PRELUDE(GTHREADS)
+  KERNEL_PRELUDE(GRAD_THREADS_PER_CASE)
 
 #endif
-
-  if (KDEBUG)
-  { printf("Gradient reduction op: block %d, thread %d, start %d, end %d\n",
-            blockIdx.x,threadIdx.x,start,end);
-  }
 
   /* Reduction of all threads to single energy/gradient.  May be done using all 
      threads in the block (including ones not used above). */
 
   if (KDEBUG)
-  { printf("Gradient reduction: block %d, thread %d\n",blockIdx.x,threadIdx.x);
+  { printf("Gradient reduction: block %d, thread %d, start %d, end %d\n",
+            blockIdx.x,threadIdx.x,start,end);
+  }
+
+  if (const_blkcases<=GROUP_SIZE)
+  { return;
   }
 
   unsigned total_params = const_params.total_params;
@@ -2631,38 +2632,43 @@ static void net_training_cases_gpu
 #     if SPLIT_KERNELS==0
       { training_kernel <<<blks, blkcases*THREADS_PER_CASE>>>
           (energy ? case_energy : 0, gr ? group_grad : 0,
-           i, i+n, en_weight, gr_weight);
+           i, i+cases, en_weight, gr_weight);
         if (0) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching training_kernel");
       }
 #     elif SPLIT_KERNELS==1
-      { forward_kernel <<<blks, blkcases*THREADS_PER_CASE>>> (i, i+n);
+      { forward_kernel <<<blks, blkcases*THREADS_PER_CASE>>> (i, i+cases);
         if (0) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching forward_kernel");
         energy_kernel <<<blks, blkcases*THREADS_PER_CASE>>> 
-          (energy ? case_energy : 0, i, i+n, en_weight, gr!=0, gr_weight);
+          (energy ? case_energy : 0, i, i+cases, en_weight, gr!=0, gr_weight);
         if (0) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching energy_kernel");
         if (gr)
-        { backward_kernel <<<blks, blkcases*THREADS_PER_CASE>>>  (i, i+n);
+        { backward_kernel <<<blks, blkcases*THREADS_PER_CASE>>>  (i, i+cases);
           if (0) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching backward_kernel");
-          gradient_comp_kernel <<<blks, blkcases>>> (group_grad, i, i+n);
+          gradient_comp_kernel <<<blks, blkcases*GRAD_THREADS_PER_CASE>>>
+            (group_grad, i, i+cases);
           if (0) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching gradient_comp_kernel");
-          gradient_reduction_kernel <<<blks, blkcases>>> (group_grad, i, i+n);
-          if (0) check_cuda_error (cudaDeviceSynchronize(), 
-                   "Synchronizing after launching gradient_reduction_kernel");
+          if (blkcases>GROUP_SIZE)
+          { gradient_reduction_kernel <<<blks, blkcases*GRAD_THREADS_PER_CASE>>>
+              (group_grad, i, i+cases);
+            if (0) check_cuda_error (cudaDeviceSynchronize(), 
+                     "Synchronizing after launching gradient_reduction_kernel");
+          }
         }
       }
 #     else /* SPLIT_KERNELS is 2 */
       { nongrad_kernel <<<blks, blkcases*THREADS_PER_CASE>>>
           (energy ? case_energy : 0, gr ? group_grad : 0,
-           i, i+n, en_weight, gr_weight);
+           i, i+cases, en_weight, gr_weight);
         if (0) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching nongrad_kernel");
         if (gr)
-        { gradient_kernel <<<blks, blkcases>>> (group_grad, i, i+n);
+        { gradient_kernel <<<blks, blkcases*GRAD_THREADS_PER_CASE>>> 
+            (group_grad, i, i+cases);
           if (0) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching gradient_kernel");
         }

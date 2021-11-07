@@ -38,18 +38,19 @@
 
 #if __CUDACC__
 
-/* HOW GPU COMPUTATIONS ARE SPLIT INTO KERNELS.  The computation consists
-   of four parts: forward pass, model/energy evaluation, backward pass,
-   gradient computation (last two not always wanted).  The setting of
-   SPLIT_KERNELS controls whether they are all done as separate kernels
-   (useful for profiling how long they take), all done as one kernel 
-   (minimizing launch overhead), or the first three are done as one kernel
-   and the last (gradient) as a separate kernel (allowing it to not have
-   the extra threads it doesn't use). */
+/* HOW GPU COMPUTATIONS ARE SPLIT INTO KERNELS.  The computation
+   consists of five parts: forward pass, model/energy evaluation,
+   backward pass, gradient computation, gradient reduction (last three
+   not always wanted).  The setting of SPLIT_KERNELS controls whether
+   they are all done as separate kernels (useful for profiling how
+   long they take), all done as one kernel (minimizing launch
+   overhead), or the first three are done as one kernel and the last
+   (gradient) as a separate kernel (allowing it to not have the extra
+   threads it doesn't use). */
 
-#define SPLIT_KERNELS 2   /* 0 = one kernel for all four parts
-                             1 = four kernels for the four parts
-                             2 = first three together, gradient separate */
+#define SPLIT_KERNELS 1   /* 0 = one kernel for all five parts
+                             1 = five kernels for the five parts
+                             2 = first three together, two gradient separate */
 
 /* CUDA-RELATED VARIABLES. */
 
@@ -72,6 +73,20 @@ static int max_cases_per_launch;        /* Largest number of cases handled by
 /* FORWARD DECLARATIONS OF CUDA KERNELS. */
 
 #if __CUDACC__
+
+#if SPLIT_KERNELS==0
+
+__global__ void training_kernel
+(
+  double *case_energy,  /* Places to store energy, null if not required */
+  net_params *group_grad, /* Places to store gradient, null if not required */
+  int start,		/* Start of cases to look at */
+  int end, 		/* End of cases to look at (index after last case) */
+  double en_weight,	/* Weight for these cases for energy */
+  double gr_weight	/* Weight for these cases for gradient */
+);
+
+#endif
 
 #if SPLIT_KERNELS==1
 
@@ -97,29 +112,18 @@ __global__ void backward_kernel
   int end		/* End of cases to look at (index after last case) */
 );
 
-#endif
-
-#if SPLIT_KERNELS!=0
-
-__global__ void gradient_kernel
+__global__ void gradient_comp_kernel
 (
-  net_params *group_grad, /* Places to store gradient, null if not required */
+  net_params *group_grad, /* Places to store gradient */
   int start,		/* Start of cases to look at */
   int end		/* End of cases to look at (index after last case) */
 );
 
-#endif
-
-#if SPLIT_KERNELS==0
-
-__global__ void training_kernel
+__global__ void gradient_reduction_kernel
 (
-  double *case_energy,  /* Places to store energy, null if not required */
-  net_params *group_grad, /* Places to store gradient, null if not required */
+  net_params *group_grad, /* Places to store gradient */
   int start,		/* Start of cases to look at */
-  int end, 		/* End of cases to look at (index after last case) */
-  double en_weight,	/* Weight for these cases for energy */
-  double gr_weight	/* Weight for these cases for gradient */
+  int end		/* End of cases to look at (index after last case) */
 );
 
 #endif
@@ -134,6 +138,13 @@ __global__ void nongrad_kernel
   int end, 		/* End of cases to look at (index after last case) */
   double en_weight,	/* Weight for these cases for energy */
   double gr_weight	/* Weight for these cases for gradient */
+);
+
+__global__ void gradient_kernel
+(
+  net_params *group_grad, /* Places to store gradient */
+  int start,		/* Start of cases to look at */
+  int end		/* End of cases to look at (index after last case) */
 );
 
 #endif
@@ -837,8 +848,12 @@ void mc_app_initialize
           cudaFuncSetCacheConfig (backward_kernel, cudaFuncCachePreferL1),
           "Set cache config for backward_kernel");
         check_cuda_error (
-          cudaFuncSetCacheConfig (gradient_kernel, cudaFuncCachePreferL1),
-          "Set cache config for gradient_kernel");
+          cudaFuncSetCacheConfig (gradient_comp_kernel, cudaFuncCachePreferL1),
+          "Set cache config for gradient_comp_kernel");
+        check_cuda_error (
+          cudaFuncSetCacheConfig (gradient_reduction_kernel, 
+                                  cudaFuncCachePreferL1),
+          "Set cache config for gradient_reduction_kernel");
       }
 #     else  /* SPLIT_KERNELS is 2 */
       { check_cuda_error (
@@ -2372,7 +2387,21 @@ __global__ void backward_kernel
 //# define GTHREADS THREADS_PER_CASE
 # define GTHREADS 1
 
-#if SPLIT_KERNELS!=0
+#if SPLIT_KERNELS==1
+
+}
+__global__ void gradient_comp_kernel
+(
+  net_params *group_grad, /* Places to store gradient */
+  int start,		/* Start of cases to look at */
+  int end		/* End of cases to look at (index after last case) */
+)
+{ 
+  KERNEL_PRELUDE(GTHREADS)
+
+  net_values *deriv_i = const_deriv+i;
+
+#elif SPLIT_KERNELS==2
 
 }
 __global__ void gradient_kernel
@@ -2397,7 +2426,6 @@ __global__ void gradient_kernel
             blockIdx.x,threadIdx.x,start,end);
   }
 
-  unsigned total_params = const_params.total_params;
   int o = blockIdx.x*((const_blkcases+GROUP_MASK)>>GROUP_SHIFT) 
            + (threadIdx.x/(GROUP_SIZE*GTHREADS));
 
@@ -2469,14 +2497,35 @@ __global__ void gradient_kernel
     }
   }
 
+grad_reduce: ;
+
+#if SPLIT_KERNELS==1
+
+}
+__global__ void gradient_reduction_kernel
+(
+  net_params *group_grad, /* Places to store gradient */
+  int start,            /* Start of cases to look at */
+  int end               /* End of cases to look at (index after last case) */
+)
+{
+  KERNEL_PRELUDE(GTHREADS)
+
+#endif
+
+  if (KDEBUG)
+  { printf("Gradient reduction op: block %d, thread %d, start %d, end %d\n",
+            blockIdx.x,threadIdx.x,start,end);
+  }
+
   /* Reduction of all threads to single energy/gradient.  May be done using all 
      threads in the block (including ones not used above). */
-
-grad_reduce:
 
   if (KDEBUG)
   { printf("Gradient reduction: block %d, thread %d\n",blockIdx.x,threadIdx.x);
   }
+
+  unsigned total_params = const_params.total_params;
 
   int n_blk_res;	/* Max number of energy/grad results in a block */
   int n_results;	/* Number of energy/grad results in this block, less
@@ -2598,9 +2647,12 @@ static void net_training_cases_gpu
         { backward_kernel <<<blks, blkcases*THREADS_PER_CASE>>>  (i, i+n);
           if (0) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching backward_kernel");
-          gradient_kernel <<<blks, blkcases>>> (group_grad, i, i+n);
+          gradient_comp_kernel <<<blks, blkcases>>> (group_grad, i, i+n);
           if (0) check_cuda_error (cudaDeviceSynchronize(), 
-                   "Synchronizing after launching gradient_kernel");
+                   "Synchronizing after launching gradient_comp_kernel");
+          gradient_reduction_kernel <<<blks, blkcases>>> (group_grad, i, i+n);
+          if (0) check_cuda_error (cudaDeviceSynchronize(), 
+                   "Synchronizing after launching gradient_reduction_kernel");
         }
       }
 #     else /* SPLIT_KERNELS is 2 */

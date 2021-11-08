@@ -48,7 +48,7 @@
    (gradient) as a separate kernel (allowing it to not have the extra
    threads it doesn't use). */
 
-#define SPLIT_KERNELS 2   /* 0 = one kernel for all five parts
+#define SPLIT_KERNELS 0   /* 0 = one kernel for all five parts
                              1 = five kernels for the five parts
                              2 = first three together, two gradient separate */
 
@@ -2548,16 +2548,16 @@ __global__ void gradient_reduction_kernel
   { 
     __syncthreads();  /* all __syncthreads calls must be done by all threads! */
 
-    if (threadIdx.x >= const_blkcases)
+    if (threadIdx.x >= const_blkcases*GRAD_THREADS_PER_CASE)
     { continue;
     }
 
-    base = (threadIdx.x>>GROUP_SHIFT) & ~(2*stride-1);
-    base_worker = base<<GROUP_SHIFT;
+    base = (threadIdx.x / (GROUP_SIZE*GRAD_THREADS_PER_CASE)) & ~(2*stride-1);
+    base_worker = base * (GROUP_SIZE*GRAD_THREADS_PER_CASE);
     this_worker = threadIdx.x - base_worker;
-    workers = 2*GROUP_SIZE*stride;
-    if (base_worker+workers >= const_blkcases)
-    { workers = const_blkcases - base_worker;
+    workers = 2*GROUP_SIZE*GRAD_THREADS_PER_CASE*stride;
+    if (base_worker+workers >= const_blkcases*GRAD_THREADS_PER_CASE)
+    { workers = const_blkcases*GRAD_THREADS_PER_CASE - base_worker;
     }
 
     if (base+stride < n_results)

@@ -2429,10 +2429,6 @@ __global__ void gradient_kernel
   int o = blockIdx.x * ((const_blkcases+GROUP_MASK)>>GROUP_SHIFT) 
             + (m>>GROUP_SHIFT);
 
-  if (m >= const_blkcases)
-  { goto grad_reduce;
-  }
-
   th = threadIdx.x & (GROUP_SIZE*GRAD_THREADS_PER_CASE - 1);
 
   net_params *restrict ggrad;

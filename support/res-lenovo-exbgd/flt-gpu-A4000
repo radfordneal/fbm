@@ -1,4 +1,4 @@
-Commit: 939dd6982c96e70ed9cb449a5fab978bf4a58e03
+Commit: 06716e423a79cf5a45a90673e5aded2fd74012b8
 
 Running exbgd with flt-gpu on A4000:
 
@@ -16,4 +16,4 @@ Average log probability of targets:    -0.238+-0.025
 Fraction of guesses that were wrong:    0.1120+-0.0141
 Average squared error guessing mean:    0.07571+-0.00848
 
-elapsed 3.32s
+elapsed 3.31s

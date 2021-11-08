@@ -2544,15 +2544,11 @@ __global__ void gradient_reduction_kernel
   { n_results = n_blk_res;
   }
 
-  for (stride = 1; stride < n_blk_res; stride <<= 1)
+  for (stride = 1; stride < n_results; stride <<= 1)
   { 
-    __syncthreads();  /* all calls must be done by all threads! */
+    __syncthreads();  /* all __syncthreads calls must be done by all threads! */
 
     if (threadIdx.x >= const_blkcases)
-    { continue;
-    }
-
-    if (stride >= n_results)
     { continue;
     }
 

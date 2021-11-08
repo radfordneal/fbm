@@ -613,11 +613,12 @@ static void net_config_sort (net_config *cf, int biases)
   int a = 0;
 
   /* For use in gpu computations, we set up somewhat different sets of
-     connections.  There are actually two sets, sorted by weight and by 
-     destination, used for gradient and function computations, respectively. */
+     connections.  There are actually three sets, sorted by weight,
+     destination, and source, used for gradient, forward, and
+     backwards computations, respectively. */
 
   net_connection *all_gpu = (net_connection *) 
-                               chk_alloc(2*(n+20), sizeof *all_gpu);
+                               chk_alloc(3*(n+20), sizeof *all_gpu);
   int a_gpu = 0;
 
   /* Temporary storage. */

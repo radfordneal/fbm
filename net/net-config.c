@@ -452,12 +452,14 @@ static int cmp_s_wmd_d (const void *a0, const void *b0)
   return r;
 }
 
-/* Copy connections already sorted by w mod 4 (terminated by w of -1), 
+/* Copy connections already sorted by w mod M (terminated by w of -1), 
    inserting  w of -1 after the end of each section.  Returns the number 
-   of connections, including the four with -1s.  Stores starting indexes
-   for section for each mod value in start, if it is not null. */
+   of connections, including the M with -1s.  Stores starting indexes
+   for section for each mod value in start, if it is not null.  M must
+   be a power of two. */
 
-static int copy_wmod4 (net_connection *dst, net_connection *src, int *start)
+static int copy_wmod 
+  (net_connection *dst, net_connection *src, int *start, int M)
 {
   int i, j, w, m;
 
@@ -468,29 +470,31 @@ static int copy_wmod4 (net_connection *dst, net_connection *src, int *start)
   m = 0;
 
   while ((w = src[i].w) >= 0)
-  { while (m != (w & 3)) 
+  { while (m != (w & (M-1))) 
     { dst[j++].w = -1;
       m += 1;
-      if (start && m<4) start[m] = j;
+      if (start && m<M) start[m] = j;
     }
     dst[j++] = src[i++];
   }
 
-  while (m < 4)
+  while (m < M)
   { dst[j++].w = -1;
     m += 1;
-    if (start && m<4) start[m] = j;
+    if (start && m<M) start[m] = j;
   }
 
   return j;
 }
 
-/* Copy connections already sorted by d mod 4 (terminated by w of -1), 
+/* Copy connections already sorted by d mod M (terminated by w of -1), 
    inserting  w of -1 after the end of each section.  Returns the number 
-   of connections, including the four with -1s.  Stores starting indexes
-   for section for each mod value in start, if it is not null. */
+   of connections, including the M with -1s.  Stores starting indexes
+   for section for each mod value in start, if it is not null.  M must
+   be a power of two. */
 
-static int copy_dmod4 (net_connection *dst, net_connection *src, int *start)
+static int copy_dmod 
+  (net_connection *dst, net_connection *src, int *start, int M)
 {
   int i, j, d, m;
 
@@ -502,29 +506,31 @@ static int copy_dmod4 (net_connection *dst, net_connection *src, int *start)
 
   while (src[i].w >= 0)
   { d = src[i].d;
-    while (m != (d & 3)) 
+    while (m != (d & (M-1))) 
     { dst[j++].w = -1;
       m += 1;
-      if (start && m<4) start[m] = j;
+      if (start && m<M) start[m] = j;
     }
     dst[j++] = src[i++];
   }
 
-  while (m < 4)
+  while (m < M)
   { dst[j++].w = -1;
     m += 1;
-    if (start && m<4) start[m] = j;
+    if (start && m<M) start[m] = j;
   }
 
   return j;
 }
 
-/* Copy connections already sorted by s mod 4 (terminated by w of -1), 
+/* Copy connections already sorted by s mod M (terminated by w of -1), 
    inserting  w of -1 after the end of each section.  Returns the number 
-   of connections, including the four with -1s.  Stores starting indexes
-   for section for each mod value in start, if it is not null. */
+   of connections, including the M with -1s.  Stores starting indexes
+   for section for each mod value in start, if it is not null.  M must
+   be a power of two. */
 
-static int copy_smod4 (net_connection *dst, net_connection *src, int *start)
+static int copy_smod 
+  (net_connection *dst, net_connection *src, int *start, int M)
 {
   int i, j, s, m;
 
@@ -536,18 +542,18 @@ static int copy_smod4 (net_connection *dst, net_connection *src, int *start)
 
   while (src[i].w >= 0)
   { s = src[i].s;
-    while (m != (s & 3)) 
+    while (m != (s & (M-1))) 
     { dst[j++].w = -1;
       m += 1;
-      if (start && m<4) start[m] = j;
+      if (start && m<M) start[m] = j;
     }
     dst[j++] = src[i++];
   }
 
-  while (m < 4)
+  while (m < M)
   { dst[j++].w = -1;
     m += 1;
-    if (start && m<4) start[m] = j;
+    if (start && m<M) start[m] = j;
   }
 
   return j;
@@ -701,9 +707,9 @@ static void net_config_sort (net_config *cf, int biases)
   }
   else
   { cf->quad_s_4d_4w_wgpu = all_gpu+a_gpu;
-    a_gpu += copy_wmod4 (cf->quad_s_4d_4w_wgpu, cf->quad_s_4d_4w, 0);
+    a_gpu += copy_wmod (cf->quad_s_4d_4w_wgpu, cf->quad_s_4d_4w, 0, 4);
     cf->quad_s_4d_4w_2_wgpu = all_gpu+a_gpu;
-    a_gpu += copy_wmod4 (cf->quad_s_4d_4w_2_wgpu, cf->quad_s_4d_4w_2, 0);
+    a_gpu += copy_wmod (cf->quad_s_4d_4w_2_wgpu, cf->quad_s_4d_4w_2, 0, 4);
   }
 
   /* Set up other connections (not in quad_s_4d_4w_wgpu) for use in
@@ -721,11 +727,11 @@ static void net_config_sort (net_config *cf, int biases)
   else
   { copy_pairs (tmp, tmp2, 0, 0);
     cf->other_2_wgpu = all_gpu+a_gpu;
-    a_gpu += copy_wmod4 (cf->other_2_wgpu, tmp2, cf->start_other_2_wgpu);
+    a_gpu += copy_wmod (cf->other_2_wgpu, tmp2, cf->start_other_2_wgpu, 4);
   }
 
   cf->other_wgpu = all_gpu+a_gpu;
-  a_gpu += copy_wmod4 (cf->other_wgpu, tmp, cf->start_other_wgpu);
+  a_gpu += copy_wmod (cf->other_wgpu, tmp, cf->start_other_wgpu, 4);
 
   /* Similarly, the quad_s_4d_4w_dgpu connections are used for gpu
      function computations, sorted by d, but a paired version is not
@@ -739,7 +745,7 @@ static void net_config_sort (net_config *cf, int biases)
   else
   { qsort (quad, j, sizeof *tmp, cmp_dmod4_d_w_s);
     cf->quad_s_4d_4w_dgpu = all_gpu+a_gpu;
-    a_gpu += copy_dmod4 (cf->quad_s_4d_4w_dgpu, quad, 0);
+    a_gpu += copy_dmod (cf->quad_s_4d_4w_dgpu, quad, 0, 4);
   }
 
   /* Set up other connections (not in quad_s_4d_4w_dgpu) for use in gpu
@@ -749,7 +755,7 @@ static void net_config_sort (net_config *cf, int biases)
   qsort (tmp, r, sizeof *tmp, cmp_dmod4_d_w_s);
   tmp[r].w = -1;
   cf->other_dgpu = all_gpu+a_gpu;
-  a_gpu += copy_dmod4 (cf->other_dgpu, tmp, cf->start_other_dgpu);
+  a_gpu += copy_dmod (cf->other_dgpu, tmp, cf->start_other_dgpu, 4);
 
   /* And, the quad_s_4d_4w_sgpu connections are used for gpu backward pass
      computations, sorted by s. */
@@ -762,7 +768,7 @@ static void net_config_sort (net_config *cf, int biases)
   else
   { qsort (quad, j, sizeof *tmp, cmp_smod4_s_w_d);
     cf->quad_s_4d_4w_sgpu = all_gpu+a_gpu;
-    a_gpu += copy_smod4 (cf->quad_s_4d_4w_sgpu, quad, cf->start_quad_sgpu);
+    a_gpu += copy_smod (cf->quad_s_4d_4w_sgpu, quad, cf->start_quad_sgpu, 4);
   }
 
   /* Set up other connections (not in quad_s_4d_4w_sgpu) for use in gpu
@@ -772,7 +778,7 @@ static void net_config_sort (net_config *cf, int biases)
   qsort (tmp, r, sizeof *tmp, cmp_smod4_s_w_d);
   tmp[r].w = -1;
   cf->other_sgpu = all_gpu+a_gpu;
-  a_gpu += copy_smod4 (cf->other_sgpu, tmp, cf->start_other_sgpu);
+  a_gpu += copy_smod (cf->other_sgpu, tmp, cf->start_other_sgpu, 4);
 
   /* Find groups of four single connections with the same value for d, if
      this is enabled, for use in CPU computations.  Not done for biases. */

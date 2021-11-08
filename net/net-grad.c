@@ -2746,27 +2746,27 @@ do \
     net_value d30 = d3[0]; \
     if (has_omit && has_off) \
     { net_value o; \
-      for (i = th; i<nv; i+=4) \
+      for (i = th; i<nv; i+=GTH) \
       { if (omit[i]&ob) continue; \
         o = off[i]; \
         g[i] = (v0[i]+o)*d00 + (v1[i]+o)*d10 + (v2[i]+o)*d20 + (v3[i]+o)*d30; \
       } \
     } \
     else if (has_omit) \
-    { for (i = th; i<nv; i+=4) \
+    { for (i = th; i<nv; i+=GTH) \
       { if (omit[i]&ob) continue; \
         g[i] = v0[i]*d00 + v1[i]*d10 + v2[i]*d20 + v3[i]*d30; \
       } \
     } \
     else if (has_off) \
     { net_value o; \
-      for (i = th; i<nv; i+=4) \
+      for (i = th; i<nv; i+=GTH) \
       { o = off[i]; \
         g[i] = (v0[i]+o)*d00 + (v1[i]+o)*d10 + (v2[i]+o)*d20 + (v3[i]+o)*d30; \
       } \
     } \
     else \
-    { for (i = th; i<nv; i+=4) \
+    { for (i = th; i<nv; i+=GTH) \
       { g[i] = v0[i]*d00 + v1[i]*d10 + v2[i]*d20 + v3[i]*d30; \
       } \
     } \
@@ -2801,17 +2801,17 @@ do \
       { tvh = tv3; dh = d3; \
         goto onelab; \
       } \
-      for (j = th; j<nd; j+=4) \
+      for (j = th; j<nd; j+=GTH) \
       { g[j] = 0; \
       } \
       continue; \
     onelab: \
-      for (j = th; j<nd; j+=4) \
+      for (j = th; j<nd; j+=GTH) \
       { g[j] = tvh * dh[j]; \
       } \
       continue; \
     alllab: \
-      for (j = th; j<nd; j+=4) \
+      for (j = th; j<nd; j+=GTH) \
       { g[j] = tv0*d0[j] + tv1*d1[j] + tv2*d2[j] + tv3*d3[j]; \
       } \
     } \
@@ -2826,7 +2826,7 @@ do \
       tv1 = v1[i] + o; \
       tv2 = v2[i] + o; \
       tv3 = v3[i] + o; \
-      for (j = th; j<nd; j+=4) \
+      for (j = th; j<nd; j+=GTH) \
       { g[j] = tv0*d0[j] + tv1*d1[j] + tv2*d2[j] + tv3*d3[j]; \
       } \
     } \
@@ -2852,8 +2852,6 @@ __device__ static void net_store4_grad2
   int sparse		  /* Might source unit values often be zero? */
 )
 { 
-  if (th>=4) return;
-
   if (sparse && off==0)
   { if (omit==0)
     { NET_STORE4_GRAD2(0,0,all1s,one1s,1);

@@ -2483,6 +2483,9 @@ __device__ static void net_store4_grad2_config (int, net_param *restrict,
    net_value const*, net_config const*);
 
 
+#define GTH (GROUP_SIZE*GRAD_THREADS_PER_CASE)  /* shortcut for use here */
+
+
 /* STORE SUM OF GRADIENT FROM FOUR CASES, USING FOUR THREADS.
    Thread 'th' handles indexes congruent to 'th' mod 4, with the exact
    meaning of this depending on the kind of parameter group.  This
@@ -2654,7 +2657,7 @@ __device__ static void net_store4_grad1
 )
 { 
   int i;
-  for (i = th; i<n; i+=4)
+  for (i = th; i<n; i+=GTH)
   { g[i] = d0[i] + d1[i] + d2[i] + d3[i];
   }
 }
@@ -2677,6 +2680,8 @@ __device__ static void net_store4_grad1_config
 )
 { net_connection *cn;
   int c, j, j2, k, m, ix;
+
+  if (th>=4) return;
 
   for (k = th; k<cf->N_wts; k+=4)
   { g[k] = 0;
@@ -2847,6 +2852,8 @@ __device__ static void net_store4_grad2
   int sparse		  /* Might source unit values often be zero? */
 )
 { 
+  if (th>=4) return;
+
   if (sparse && off==0)
   { if (omit==0)
     { NET_STORE4_GRAD2(0,0,all1s,one1s,1);
@@ -2899,6 +2906,8 @@ __device__ static void net_store4_grad2_config
 {
   net_connection *cn;
   int i, i2, j, j2, k, c;
+
+  if (th>=4) return;
 
   for (k = th; k<cf->N_wts; k+=4)
   { g[k] = 0;

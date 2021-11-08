@@ -2483,12 +2483,10 @@ __global__ void gradient_kernel
         break;
       }
       default: /* 4 */
-      { if (th<4)
-        { net_store4_grad (th, ggrad, &const_params, 
-             train_vals_b, train_vals_b+1, train_vals_b+2, train_vals_b+3,
-             deriv_b, deriv_b+1, deriv_b+2, deriv_b+3,
-             &const_arch, flgs, const_sparse);
-        }
+      { net_store4_grad (th, ggrad, &const_params, 
+           train_vals_b, train_vals_b+1, train_vals_b+2, train_vals_b+3,
+           deriv_b, deriv_b+1, deriv_b+2, deriv_b+3,
+           &const_arch, flgs, const_sparse);
         break;
       }
     }

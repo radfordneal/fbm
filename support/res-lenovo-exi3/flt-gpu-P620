@@ -1,4 +1,4 @@
-Commit: 5a6f9fede04ece0092f088487b34892e6df454c6
+Commit: 939dd6982c96e70ed9cb449a5fab978bf4a58e03
 
 Running exi3 with flt-gpu on P620:
 
@@ -20,4 +20,4 @@ Average log probability of targets:    -1.382+-0.005
 Fraction of guesses that were wrong:    0.7000+-0.0461
 Average squared error guessing mean:    0.74804+-0.00237
 
-elapsed 58.93s
+elapsed 70.43s

@@ -1,4 +1,4 @@
-Commit: 5a6f9fede04ece0092f088487b34892e6df454c6
+Commit: 939dd6982c96e70ed9cb449a5fab978bf4a58e03
 
 Running exi3 with flt:
 
@@ -14,4 +14,4 @@ Average log probability of targets:    -1.322+-0.032
 Fraction of guesses that were wrong:    0.6200+-0.0488
 Average squared error guessing mean:    0.71750+-0.01516
 
-elapsed 37.59s
+elapsed 36.68s

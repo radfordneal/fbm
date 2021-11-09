@@ -40,7 +40,7 @@ echo " "; echo "--- E"; echo " "
 
 net-spec log 36 80 cfg-i:iconfig 4 / ti=0.3 ih=0.1 bh=0.5 ho=0.3 bo=0.7
 model-spec log class
-data-spec log 36 1 4 / ../ex-image/idata@1:100 .
+data-spec log 36 1 4 / ../ex-image/idata@1:99 .
 net-gen log 0
 net-grad-test log 0 0.001
 net-pred nmp log 0 / ../ex-image/idata@1:10 .

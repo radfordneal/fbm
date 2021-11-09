@@ -1023,7 +1023,6 @@ HOSTDEV static void add_grad2_config
         g[k] += si * d[j];
       }
     }
-
     cn = cf->single4_d;
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
@@ -1419,13 +1418,13 @@ __device__ static void net_store2_grad2_config
          net_config const*);
 
 
-/* STORE SUM OF GRADIENT FROM A PAIR OF CASES, USING A PAIR OF THREADS.  
-   Thread 0 handles even indexes; thread 1 handles odd indexes, with
-   the exact meaning of this depending on the kind of parameter group.
-   This eliminates any need for thread synchronization, even if the
-   gradient is produced incrementally by adding several terms, since
-   there is no overlap in the set of places the two threads store to.
-   Such a consistent even/odd scheme may also improve performance. 
+/* STORE SUM OF GRADIENT FROM A PAIR OF CASES.  Threads handle indexes
+   equal to their 'th' mod GTH.  The exact meaning of this may depend
+   on the kind of parameter group.  This eliminates any need for
+   thread synchronization, even if the gradient is produced
+   incrementally by adding several terms, since there is no overlap in
+   the set of places the two threads store to.  Such a consistent may
+   also improve performance.
 
    Assumes any thread synchronization has been done that's needed to
    make derivatives with respect to unit values accessible to all the
@@ -1433,7 +1432,7 @@ __device__ static void net_store2_grad2_config
 */
 
 __device__ void net_store2_grad
-( int th,		/* Which thread (0 or 1) */
+( int th,		/* Which thread (0 to GTH-1) */
   net_params *restrict g, /* Gradient with respect to parameters to store to */
   net_params const*w,	/* Network parameters (only offsets used) */
   net_values const*v0,	/* Values for units in network for case 0 */
@@ -1561,11 +1560,11 @@ __device__ void net_store2_grad
 }
 
 
-/* STORE GRADIENT FOR BIASES FOR 2 CASES.  The even/odd scheme is
+/* STORE GRADIENT FOR BIASES FOR 2 CASES.  The thread mod scheme is
    based on indexes for the biases/destination units. */
 
 __device__ static void net_store2_grad1
-( int th,		  /* Which thread (0 or 1) */
+( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const* d0,    /* Derivatives with respect to unit values, case 0 */
   net_value const* d1,    /* Derivatives with respect to unit values, case 1 */
@@ -1573,20 +1572,19 @@ __device__ static void net_store2_grad1
 )
 { 
   int i;
-  for (i = th; i<n; i+=2)
+  for (i = th; i<n; i+=GTH)
   { g[i] = d0[i] + d1[i];
   }
 }
 
 
-/* STORE GRADIENT FOR BIASES FOR 2 CASES, WITH CONFIGURATION.
-   The even/odd scheme is based on indexes for the biases.  Note that the
-   connections in quad_s_4d_4w_wgpu, other_wgpu, and other_2_wgpu come in
-   four sections, with bias indexes mod 4 of 0 to 3 (for the first
-   bias, for quad). */
+/* STORE GRADIENT FOR BIASES FOR 2 CASES, WITH CONFIGURATION.  The
+   thread mod scheme is based on indexes for the biases.  Note that
+   the connections in quad_s_4d_4w_wgpu, other_wgpu, and other_2_wgpu
+   come in GTH sections. */
 
 __device__ static void net_store2_grad1_config
-( int th,		  /* Which thread (0 or 1) */
+( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const* d0,    /* Derivatives with respect to unit values, case 0 */
   net_value const* d1,    /* Derivatives with respect to unit values, case 1 */
@@ -1595,7 +1593,7 @@ __device__ static void net_store2_grad1_config
 { net_connection *cn;
   int c, j, j2, k, m, ix;
 
-  for (k = th; k<cf->N_wts; k+=2)
+  for (k = th; k<cf->N_wts; k+=GTH)
   { g[k] = 0;
   }
 
@@ -1626,28 +1624,24 @@ __device__ static void net_store2_grad1_config
   }
 
   cn = cf->other_wgpu;
-  for (m = 0; m<4; m+=2)
-  { c = cf->start_other_wgpu[th+m];
-    for (;;)
-    { j = cn[c].d; k = cn[c].w; c += 1;
-      if (k<0) break;
-      g[k] += d0[j] + d1[j];
-    }
+  c = cf->start_other_wgpu[th];
+  for (;;)
+  { j = cn[c].d; k = cn[c].w; c += 1;
+    if (k<0) break;
+    g[k] += d0[j] + d1[j];
   }
   cn = cf->other_2_wgpu;
-  for (m = 0; m<4; m+=2)
-  { c = cf->start_other_2_wgpu[th+m];
-    for (;;)
-    { j = cn[c].d; k = cn[c].w; c += 1;
-      if (k<0) break;
-      j2 = cn[c].d; c += 1;
-      g[k] += (d0[j] + d1[j]) + (d0[j2] + d1[j2]);
-    }
+  c = cf->start_other_2_wgpu[th];
+  for (;;)
+  { j = cn[c].d; k = cn[c].w; c += 1;
+    if (k<0) break;
+    j2 = cn[c].d; c += 1;
+    g[k] += (d0[j] + d1[j]) + (d0[j2] + d1[j2]);
   }
 }
 
 
-/* STORE GRADIENT FOR WEIGHTS FOR 2 CASES.  The even/odd scheme is
+/* STORE GRADIENT FOR WEIGHTS FOR 2 CASES.  The thread mod scheme is
    based on the indexes for the destination units, unless there is
    only one destination unit, in which case it is based on the indexes
    for the source units. */
@@ -1660,27 +1654,27 @@ do \
     net_value d10 = d1[0]; \
     if (has_omit && has_off) \
     { net_value o; \
-      for (i = th; i<nv; i+=2) \
+      for (i = th; i<nv; i+=GTH) \
       { if (omit[i]&ob) continue; \
         o = off[i]; \
         g[i] = (v0[i]+o)*d00 + (v1[i]+o)*d10; \
       } \
     } \
     else if (has_omit) \
-    { for (i = th; i<nv; i+=2) \
+    { for (i = th; i<nv; i+=GTH) \
       { if (omit[i]&ob) continue; \
         g[i] = v0[i]*d00 + v1[i]*d10; \
       } \
     } \
     else if (has_off) \
     { net_value o; \
-      for (i = th; i<nv; i+=2) \
+      for (i = th; i<nv; i+=GTH) \
       { o = off[i]; \
         g[i] = (v0[i]+o)*d00 + (v1[i]+o)*d10; \
       } \
     } \
     else \
-    { for (i = th; i<nv; i+=2) \
+    { for (i = th; i<nv; i+=GTH) \
       { g[i] = v0[i]*d00 + v1[i]*d10; \
       } \
     } \
@@ -1703,17 +1697,17 @@ do \
       { tvh = tv1; dh = d1; \
         goto onelab; \
       } \
-      for (j = th; j<nd; j+=2) \
+      for (j = th; j<nd; j+=GTH) \
       { g[j] = 0; \
       } \
       continue; \
     onelab: \
-      for (j = th; j<nd; j+=2) \
+      for (j = th; j<nd; j+=GTH) \
       { g[j] = tvh * dh[j]; \
       } \
       continue; \
     alllab: \
-      for (j = th; j<nd; j+=2) \
+      for (j = th; j<nd; j+=GTH) \
       { g[j] = tv0*d0[j] + tv1*d1[j]; \
       } \
     } \
@@ -1726,7 +1720,7 @@ do \
       o = has_off ? off[i] : 0; \
       tv0 = v0[i] + o; \
       tv1 = v1[i] + o; \
-      for (j = th; j<nd; j+=2) \
+      for (j = th; j<nd; j+=GTH) \
       { g[j] = tv0*d0[j] + tv1*d1[j]; \
       } \
     } \
@@ -1734,7 +1728,7 @@ do \
 } while (0)
 
 __device__ static void net_store2_grad2
-( int th,		  /* Which thread (0 or 1) */
+( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const* v0,    /* Source unit values, case 0 */
   net_value const* v1,    /* Source unit values, case 1 */
@@ -1777,14 +1771,13 @@ __device__ static void net_store2_grad2
 }
 
 
-/* STORE GRADIENT FOR WEIGHTS FOR 2 CASES, WITH CONFIGURATION. 
-   The even/odd scheme is based on the indexes for the weights.  
-   Note that the connections in quad_s_4d_4w_wgpu, other_wgpu, and
-   other_2_wgpu come in four sections, with weight indexes mod 4 of 
-   0 to 3 (for the first weight, for quad). */
+/* STORE GRADIENT FOR WEIGHTS FOR 2 CASES, WITH CONFIGURATION.  The
+   thread mod scheme is based on the indexes for the weights.  Note
+   that the connections in quad_s_4d_4w_wgpu, other_wgpu, and
+   other_2_wgpu come in GTH sections. */
 
 __device__ static void net_store2_grad2_config
-( int th,		  /* Which thread (0 or 1) */
+( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to add to */
   net_value const* s0,    /* Source unit values, case 0 */
   net_value const* s1,    /* Source unit values, case 1 */
@@ -1797,7 +1790,7 @@ __device__ static void net_store2_grad2_config
   net_connection *cn;
   int i, i2, j, j2, k, c, m, ix;
 
-  for (k = th; k<cf->N_wts; k+=2)
+  for (k = th; k<cf->N_wts; k+=GTH)
   { g[k] = 0;
   }
 
@@ -1870,46 +1863,42 @@ __device__ static void net_store2_grad2_config
   }
 
   cn = cf->other_wgpu;
-  for (m = 0; m<4; m+=2)
-  { c = cf->start_other_wgpu[th+m];
-    if (off)
-    { for (;;)
-      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        if (k<0) break;
-        net_param o = off[i];
-        g[k] = g[k] + (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j];
-      }
+  c = cf->start_other_wgpu[th];
+  if (off)
+  { for (;;)
+    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      net_param o = off[i];
+      g[k] = g[k] + (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j];
     }
-    else
-    { for (;;)
-      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        if (k<0) break;
-        g[k] = g[k] + s0[i]*d0[j] + s1[i]*d1[j];
-      }
+  }
+  else
+  { for (;;)
+    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      g[k] = g[k] + s0[i]*d0[j] + s1[i]*d1[j];
     }
   }
   cn = cf->other_2_wgpu;
-  for (m = 0; m<4; m+=2)
-  { c = cf->start_other_2_wgpu[th+m];
-    if (off)
-    { for (;;)
-      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        if (k<0) break;
-        net_param o = off[i];
-        i2 = cn[c].s; j2 = cn[c].d; c += 1;
-        net_param o2 = off[i2];
-        g[k] = g[k] + (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j]
-                    + (s0[i2]+o2)*d0[j2] + (s1[i2]+o2)*d1[j2];
-      }
+  c = cf->start_other_2_wgpu[th];
+  if (off)
+  { for (;;)
+    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      net_param o = off[i];
+      i2 = cn[c].s; j2 = cn[c].d; c += 1;
+      net_param o2 = off[i2];
+      g[k] = g[k] + (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j]
+                  + (s0[i2]+o2)*d0[j2] + (s1[i2]+o2)*d1[j2];
     }
-    else
-    { for (;;)
-      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        if (k<0) break;
-        i2 = cn[c].s; j2 = cn[c].d; c += 1;
-        g[k] = g[k] + s0[i]*d0[j] + s1[i]*d1[j]
-                    + s0[i2]*d0[j2] + s1[i2]*d1[j2];
-      }
+  }
+  else
+  { for (;;)
+    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      i2 = cn[c].s; j2 = cn[c].d; c += 1;
+      g[k] = g[k] + s0[i]*d0[j] + s1[i]*d1[j]
+                  + s0[i2]*d0[j2] + s1[i2]*d1[j2];
     }
   }
 }
@@ -1934,13 +1923,13 @@ __device__ static void net_store3_grad2_config (int, net_param *restrict,
    net_value const*, net_value const*, net_value const*, net_config const*);
 
 
-/* STORE SUM OF GRADIENT FROM THREE CASES, USING A PAIR OF THREADS.  
-   Thread 0 handles even indexes; thread 1 handles odd indexes, with
-   the exact meaning of this depending on the kind of parameter group.
-   This eliminates any need for thread synchronization, even if the
-   gradient is produced incrementally by adding several terms, since
-   there is no overlap in the set of places the two threads store to.
-   Such a consistent even/odd scheme may also improve performance. 
+/* STORE SUM OF GRADIENT FROM THREE CASES.  Threads handle indexes
+   equal to their 'th' mod GTH.  The exact meaning of this may depend
+   on the kind of parameter group.  This eliminates any need for
+   thread synchronization, even if the gradient is produced
+   incrementally by adding several terms, since there is no overlap in
+   the set of places the two threads store to.  Such a consistent may
+   also improve performance.
 
    Assumes any thread synchronization has been done that's needed to
    make derivatives with respect to unit values accessible to all the
@@ -1949,7 +1938,7 @@ __device__ static void net_store3_grad2_config (int, net_param *restrict,
 
 
 __device__ void net_store3_grad
-( int th,		/* Which thread (0 or 1) */
+( int th,		/* Which thread (0 to GTH-1) */
   net_params *restrict g, /* Gradient with respect to parameters to store to */
   net_params const*w,	/* Network parameters (only offsets used) */
   net_values const*v0,	/* Values for units in network for case 0 */
@@ -2082,11 +2071,11 @@ __device__ void net_store3_grad
   }
 }
 
-/* STORE GRADIENT FOR BIASES FOR 3 CASES.  The even/odd scheme is
+/* STORE GRADIENT FOR BIASES FOR 3 CASES.  The thread mod scheme is
    based on indexes for the biases/destination units. */
 
 __device__ static void net_store3_grad1
-( int th,		  /* Which thread (0 or 1) */
+( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const* d0,    /* Derivatives with respect to unit values, case 0 */
   net_value const* d1,    /* Derivatives with respect to unit values, case 1 */
@@ -2095,20 +2084,19 @@ __device__ static void net_store3_grad1
 )
 { 
   int i;
-  for (i = th; i<n; i+=2)
+  for (i = th; i<n; i+=GTH)
   { g[i] = d0[i] + d1[i] + d2[i];
   }
 }
 
 
-/* STORE GRADIENT FOR BIASES FOR 3 CASES, WITH CONFIGURATION.
-   The even/odd scheme is based on indexes for the biases.  Note that the
-   connections in quad_s_4d_4w_wgpu, other_wgpu, and other_2_wgpu come in
-   four sections, with bias indexes mod 4 of 0 to 3 (for the first
-   bias, for quad). */
+/* STORE GRADIENT FOR BIASES FOR 3 CASES, WITH CONFIGURATION.  The
+   thread mod scheme is based on indexes for the biases.  Note that
+   the connections in quad_s_4d_4w_wgpu, other_wgpu, and other_2_wgpu
+   come in GTH sections. */
 
 __device__ static void net_store3_grad1_config
-( int th,		  /* Which thread (0 or 1) */
+( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const* d0,    /* Derivatives with respect to unit values, case 0 */
   net_value const* d1,    /* Derivatives with respect to unit values, case 1 */
@@ -2118,7 +2106,7 @@ __device__ static void net_store3_grad1_config
 { net_connection *cn;
   int c, j, j2, k, m, ix;
 
-  for (k = th; k<cf->N_wts; k+=2)
+  for (k = th; k<cf->N_wts; k+=GTH)
   { g[k] = 0;
   }
 
@@ -2151,31 +2139,27 @@ __device__ static void net_store3_grad1_config
   }
 
   cn = cf->other_wgpu;
-  for (m = 0; m<4; m+=2)
-  { c = cf->start_other_wgpu[th+m];
-    for (;;)
-    { j = cn[c].d; k = cn[c].w; c += 1;
-      if (k<0) break;
-      g[k] += d0[j] + d1[j] + d2[j];
-    }
+  c = cf->start_other_wgpu[th];
+  for (;;)
+  { j = cn[c].d; k = cn[c].w; c += 1;
+    if (k<0) break;
+    g[k] += d0[j] + d1[j] + d2[j];
   }
   cn = cf->other_2_wgpu;
-  for (m = 0; m<4; m+=2)
-  { c = cf->start_other_2_wgpu[th+m];
-    for (;;)
-    { j = cn[c].d; k = cn[c].w; c += 1;
-      if (k<0) break;
-      j2 = cn[c].d; c += 1;
-      g[k] += (d0[j] + d1[j] + d2[j]) + (d0[j2] + d1[j2] + d2[j2]);
-    }
+  c = cf->start_other_2_wgpu[th];
+  for (;;)
+  { j = cn[c].d; k = cn[c].w; c += 1;
+    if (k<0) break;
+    j2 = cn[c].d; c += 1;
+    g[k] += (d0[j] + d1[j] + d2[j]) + (d0[j2] + d1[j2] + d2[j2]);
   }
 }
 
 
-/* STORE GRADIENT FOR WEIGHTS FOR 3 CASES, USING 2 THREADS.  The
-   even/odd scheme is based on the indexes for the destination units,
-   unless there is only one destination unit, in which case it is
-   based on the indexes for the source units. */
+/* STORE GRADIENT FOR WEIGHTS FOR 3 CASES.  The thread mod scheme is
+   based on the indexes for the destination units, unless there is
+   only one destination unit, in which case it is based on the indexes
+   for the source units. */
 
 #define NET_STORE3_GRAD2(has_off,has_omit,alllab,onelab,sprs) \
 do \
@@ -2186,27 +2170,27 @@ do \
     net_value d20 = d2[0]; \
     if (has_omit && has_off) \
     { net_value o; \
-      for (i = th; i<nv; i+=2) \
+      for (i = th; i<nv; i+=GTH) \
       { if (omit[i]&ob) continue; \
         o = off[i]; \
         g[i] = (v0[i]+o)*d00 + (v1[i]+o)*d10 + (v2[i]+o)*d20; \
       } \
     } \
     else if (has_omit) \
-    { for (i = th; i<nv; i+=2) \
+    { for (i = th; i<nv; i+=GTH) \
       { if (omit[i]&ob) continue; \
         g[i] = v0[i]*d00 + v1[i]*d10 + v2[i]*d20; \
       } \
     } \
     else if (has_off) \
     { net_value o; \
-      for (i = th; i<nv; i+=2) \
+      for (i = th; i<nv; i+=GTH) \
       { o = off[i]; \
         g[i] = (v0[i]+o)*d00 + (v1[i]+o)*d10 + (v2[i]+o)*d20; \
       } \
     } \
     else \
-    { for (i = th; i<nv; i+=2) \
+    { for (i = th; i<nv; i+=GTH) \
       { g[i] = v0[i]*d00 + v1[i]*d10 + v2[i]*d20; \
       } \
     } \
@@ -2235,17 +2219,17 @@ do \
       { tvh = tv2; dh = d2; \
         goto onelab; \
       } \
-      for (j = th; j<nd; j+=2) \
+      for (j = th; j<nd; j+=GTH) \
       { g[j] = 0; \
       } \
       continue; \
     onelab: \
-      for (j = th; j<nd; j+=2) \
+      for (j = th; j<nd; j+=GTH) \
       { g[j] = tvh * dh[j]; \
       } \
       continue; \
     alllab: \
-      for (j = th; j<nd; j+=2) \
+      for (j = th; j<nd; j+=GTH) \
       { g[j] = tv0*d0[j] + tv1*d1[j] + tv2*d2[j]; \
       } \
     } \
@@ -2259,7 +2243,7 @@ do \
       tv0 = v0[i] + o; \
       tv1 = v1[i] + o; \
       tv2 = v2[i] + o; \
-      for (j = th; j<nd; j+=2) \
+      for (j = th; j<nd; j+=GTH) \
       { g[j] = tv0*d0[j] + tv1*d1[j] + tv2*d2[j]; \
       } \
     } \
@@ -2267,7 +2251,7 @@ do \
 } while (0)
 
 __device__ static void net_store3_grad2
-( int th,		  /* Which thread (0 or 1) */
+( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const* v0,    /* Source unit values, case 0 */
   net_value const* v1,    /* Source unit values, case 1 */
@@ -2312,14 +2296,13 @@ __device__ static void net_store3_grad2
 }
 
 
-/* STORE GRADIENT FOR WEIGHTS FOR 2 CASES, WITH CONFIGURATION.
-   The even/odd scheme is based on the indexes for the weights.
-   Note that the connections in quad_s_4d_4w_wgpu, other_wgpu, and
-   other_2_wgpu come in four sections, with weight indexes mod 4 of
-   0 to 3 (for the first weight, for quad). */
+/* STORE GRADIENT FOR WEIGHTS FOR 2 CASES, WITH CONFIGURATION.  The
+   thread mod scheme is based on the indexes for the weights.  Note
+   that the connections in quad_s_4d_4w_wgpu, other_wgpu, and
+   other_2_wgpu come in GTH sections. */
 
 __device__ static void net_store3_grad2_config
-( int th,		  /* Which thread (0 or 1) */
+( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to add to */
   net_value const* s0,    /* Source unit values, case 0 */
   net_value const* s1,    /* Source unit values, case 1 */
@@ -2334,7 +2317,7 @@ __device__ static void net_store3_grad2_config
   net_connection *cn;
   int i, i2, j, j2, k, c, m, ix;
 
-  for (k = th; k<cf->N_wts; k+=2)
+  for (k = th; k<cf->N_wts; k+=GTH)
   { g[k] = 0;
   }
 
@@ -2416,46 +2399,42 @@ __device__ static void net_store3_grad2_config
   }
 
   cn = cf->other_wgpu;
-  for (m = 0; m<4; m+=2)
-  { c = cf->start_other_wgpu[th+m];
-    if (off)
-    { for (;;)
-      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        if (k<0) break;
-        net_param o = off[i];
-        g[k] = g[k] + (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j] + (s2[i]+o)*d2[j];
-      }
+  c = cf->start_other_wgpu[th];
+  if (off)
+  { for (;;)
+    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      net_param o = off[i];
+      g[k] = g[k] + (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j] + (s2[i]+o)*d2[j];
     }
-    else
-    { for (;;)
-      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        if (k<0) break;
-        g[k] = g[k] + s0[i]*d0[j] + s1[i]*d1[j] + s2[i]*d2[j];
-      }
+  }
+  else
+  { for (;;)
+    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      g[k] = g[k] + s0[i]*d0[j] + s1[i]*d1[j] + s2[i]*d2[j];
     }
   }
   cn = cf->other_2_wgpu;
-  for (m = 0; m<4; m+=2)
-  { c = cf->start_other_2_wgpu[th+m];
-    if (off)
-    { for (;;)
-      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        if (k<0) break;
-        net_param o = off[i];
-        i2 = cn[c].s; j2 = cn[c].d; c += 1;
-        net_param o2 = off[i2];
-        g[k] = g[k] + (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j] + (s2[i]+o)*d2[j]
-                 + (s0[i2]+o2)*d0[j2] + (s1[i2]+o2)*d1[j2] + (s2[i2]+o2)*d2[j2];
-      }
+  c = cf->start_other_2_wgpu[th];
+  if (off)
+  { for (;;)
+    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      net_param o = off[i];
+      i2 = cn[c].s; j2 = cn[c].d; c += 1;
+      net_param o2 = off[i2];
+      g[k] = g[k] + (s0[i]+o)*d0[j] + (s1[i]+o)*d1[j] + (s2[i]+o)*d2[j]
+               + (s0[i2]+o2)*d0[j2] + (s1[i2]+o2)*d1[j2] + (s2[i2]+o2)*d2[j2];
     }
-    else
-    { for (;;)
-      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        if (k<0) break;
-        i2 = cn[c].s; j2 = cn[c].d; c += 1;
-        g[k] = g[k] + s0[i]*d0[j] + s1[i]*d1[j] + s2[i]*d2[j]
-                    + s0[i2]*d0[j2] + s1[i2]*d1[j2] + s2[i2]*d2[j2];
-      }
+  }
+  else
+  { for (;;)
+    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      i2 = cn[c].s; j2 = cn[c].d; c += 1;
+      g[k] = g[k] + s0[i]*d0[j] + s1[i]*d1[j] + s2[i]*d2[j]
+                  + s0[i2]*d0[j2] + s1[i2]*d1[j2] + s2[i2]*d2[j2];
     }
   }
 }
@@ -2483,16 +2462,13 @@ __device__ static void net_store4_grad2_config (int, net_param *restrict,
    net_value const*, net_config const*);
 
 
-#define GTH (GROUP_SIZE*GRAD_THREADS_PER_CASE)  /* shortcut for use here */
-
-
-/* STORE SUM OF GRADIENT FROM FOUR CASES, USING FOUR THREADS.
-   Thread 'th' handles indexes congruent to 'th' mod 4, with the exact
-   meaning of this depending on the kind of parameter group.  This
-   eliminates any need for thread synchronization, even if the
-   gradient is produced by adding several terms, since there is no
-   overlap in the set of places the four threads store to.  Such a
-   consistent scheme may also improve performance.
+/* STORE SUM OF GRADIENT FROM FOUR CASES.  Threads handle indexes
+   equal to their 'th' mod GTH.  The exact meaning of this may depend
+   on the kind of parameter group.  This eliminates any need for
+   thread synchronization, even if the gradient is produced
+   incrementally by adding several terms, since there is no overlap in
+   the set of places the two threads store to.  Such a consistent may
+   also improve performance.
 
    Assumes any thread synchronization has been done that's needed to
    make derivatives with respect to unit values accessible to all the
@@ -2500,7 +2476,7 @@ __device__ static void net_store4_grad2_config (int, net_param *restrict,
 */
 
 __device__ void net_store4_grad
-( int th,		/* Which thread (0, 1, 2, or 3) */
+( int th,		/* Which thread (0 to GTH-1) */
   net_params *restrict g, /* Gradient with respect to parameters to store to */
   net_params const*w,	/* Network parameters (only offsets used) */
   net_values const*v0,	/* Values for units in network for case 0 */
@@ -2643,11 +2619,11 @@ __device__ void net_store4_grad
 }
 
 
-/* STORE GRADIENT FOR BIASES FOR 4 CASES.  The mod 4 scheme is
+/* STORE GRADIENT FOR BIASES FOR 4 CASES.  The thread mod scheme is
    based on indexes for the biases/destination units. */
 
 __device__ static void net_store4_grad1
-( int th,		  /* Which thread (0, 1, 2, or 3) */
+( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const* d0,    /* Derivatives with respect to unit values, case 0 */
   net_value const* d1,    /* Derivatives with respect to unit values, case 1 */
@@ -2663,14 +2639,13 @@ __device__ static void net_store4_grad1
 }
 
 
-/* STORE GRADIENT FOR BIASES FOR 4 CASES, WITH CONFIGURATION.
-   The mod 4 scheme is based on indexes for the biases.  Note that the
-   connections in quad_s_4d_4w_wgpu, other_wgpu, and other_2_wgpu come in
-   four sections, with bias indexes mod 4 of 0 to 3 (for the first
-   bias, for quad). */
+/* STORE GRADIENT FOR BIASES FOR 4 CASES, WITH CONFIGURATION.  The
+   thread mod scheme is based on indexes for the biases.  Note that
+   the connections in quad_s_4d_4w_wgpu, other_wgpu, and other_2_wgpu
+   come in GTH sections. */
 
 __device__ static void net_store4_grad1_config
-( int th,		  /* Which thread (0, 1, 2, or 3) */
+( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const* d0,    /* Derivatives with respect to unit values, case 0 */
   net_value const* d1,    /* Derivatives with respect to unit values, case 1 */
@@ -2681,9 +2656,9 @@ __device__ static void net_store4_grad1_config
 { net_connection *cn;
   int c, j, j2, k, m, ix;
 
-  if (th>=4) return;
+  // if (th>=4) return;
 
-  for (k = th; k<cf->N_wts; k+=4)
+  for (k = th; k<cf->N_wts; k+=GTH)
   { g[k] = 0;
   }
 
@@ -2731,10 +2706,10 @@ __device__ static void net_store4_grad1_config
 }
 
 
-/* STORE GRADIENT FOR WEIGHTS FOR 4 CASES.  The mod 4 scheme is based
-   on the indexes for the destination units, unless there is only one
-   destination unit, in which case it is based on the indexes for the
-   source units. */
+/* STORE GRADIENT FOR WEIGHTS FOR 4 CASES.  The thread mod scheme is
+   based on the indexes for the destination units, unless there is
+   only one destination unit, in which case it is based on the indexes
+   for the source units. */
 
 #define NET_STORE4_GRAD2(has_off,has_omit,alllab,onelab,sprs) \
 do \
@@ -2834,7 +2809,7 @@ do \
 } while (0)
 
 __device__ static void net_store4_grad2
-( int th,		  /* Which thread (0, 1, 2, or 3) */
+( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const* v0,    /* Source unit values, case 0 */
   net_value const* v1,    /* Source unit values, case 1 */
@@ -2881,14 +2856,13 @@ __device__ static void net_store4_grad2
 }
 
 
-/* STORE GRADIENT FOR WEIGHTS FOR 4 CASES, WITH CONFIGURATION, USING 4 THREADS.
-   The mod 4 scheme is based on the indexes for the weights.  Note that 
-   the connections in quad_s_4d_4w_wgpu, other_wgpu, and other_2_wgpu come in 
-   four sections, with weight indexes mod 4 of 0 to 3 (for the first weight, 
-   for quad). */
+/* STORE GRADIENT FOR WEIGHTS FOR 4 CASES, WITH CONFIGURATION.  The
+   thread mod scheme is based on the indexes for the weights.  Note
+   that the connections in quad_s_4d_4w_wgpu, other_wgpu, and
+   other_2_wgpu come in GTH sections. */
 
 __device__ static void net_store4_grad2_config
-( int th,		  /* Which thread (0,1, 2, or 3) */
+( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to add to */
   net_value const* s0,    /* Source unit values, case 0 */
   net_value const* s1,    /* Source unit values, case 1 */
@@ -2905,9 +2879,9 @@ __device__ static void net_store4_grad2_config
   net_connection *cn;
   int i, i2, j, j2, k, c;
 
-  if (th>=4) return;
+  // if (th>=4) return;
 
-  for (k = th; k<cf->N_wts; k+=4)
+  for (k = th; k<cf->N_wts; k+=GTH)
   { g[k] = 0;
   }
  

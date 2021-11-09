@@ -292,8 +292,6 @@ HOSTDEV void net_model_prob
 
 #if __CUDACC__
 
-#define NTH (THREADS_PER_CASE)  /* Short form for here */
-
 __device__ void net_model_prob_gpu
 ( int th,		/* Thread index, if negative, just sync */
   net_values const*v,	/* Values for units in network */

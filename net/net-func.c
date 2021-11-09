@@ -1506,8 +1506,6 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
                                     net_param const*, net_param const*,
                                     net_config const*);
 
-#define NTH (THREADS_PER_CASE)	/* Short form for use here */
-
 
 /* EVALUATE NETWORK FUNCTION FOR GIVEN INPUTS.  The inputs are taken
    from the net_values structure passed.  When 'start' is greater than

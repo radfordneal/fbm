@@ -917,8 +917,6 @@ __device__ static void sum_derivatives_config_gpu
     (int, net_value const*, net_value *restrict,
      net_param const*, net_config const*);
 
-#define NTH (THREADS_PER_CASE)      /* Short form for use here */
-
 
 /* BACKPROPAGATE ERROR DERIVATIVES, GPU VERSION.
 

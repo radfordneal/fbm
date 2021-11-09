@@ -382,6 +382,12 @@ void mc_app_initialize
       { blkcases = MAX_THREADS / THREADS_PER_CASE;
         fprintf(stderr,"BLKCASES too large, reduced to %d\n",blkcases);
       }
+      if ((blkcases&GROUP_MASK)!=0)
+      { blkcases = (blkcases|GROUP_MASK) + 1;
+        fprintf(stderr,
+      "BLKCASES not a multiple of gradient groups size (%d), increased to %d\n",
+          GROUP_SIZE, blkcases);
+      }
       char *e_maxblks = getenv("MAXBLKS");
       if (e_maxblks)
       { if (sscanf(e_maxblks,"%d%c",&maxblks,&junk)!=1)
@@ -2188,7 +2194,7 @@ void cuda_setup
 
 /* GPU CODE FOR FORWARD, MODEL/ENERGY, BACKWARD, AND GRADIENT COMPUTATION.
 
-   Done as one CUDA kernel, or split into three or four kernels, according 
+   Done as one CUDA kernel, or split into four or five kernels, according 
    to the setting of SPLIT_KERNELS.
 
    References the const_... variables in GPU constant memory with things  
@@ -2433,7 +2439,7 @@ __global__ void gradient_kernel
 
   net_params *restrict ggrad;
 
-  if (h < end)
+  if (h-thm < end)
   {
     net_values *train_vals_b = train_vals_h-thm;
     net_values *deriv_b = deriv_i-thm;
@@ -2451,13 +2457,13 @@ __global__ void gradient_kernel
     }
 
     if (KDEBUG) 
-    { printf("Grad %d %d: h %d, end %d, o %d, r %d, thm %d\n",
-              blockIdx.x, threadIdx.x, h, end, o, r, thm);
+    { printf("Grad %d %d: m %d, h %d, end %d, o %d, r %d, thm %d\n",
+              blockIdx.x, threadIdx.x, m, h, end, o, r, thm);
     }
 
     switch (r)
     { case 1: 
-      { if (th<1)
+      { if (th<1) 
         { net_store_grad (ggrad, &const_params, 
                           train_vals_b, deriv_b, 
                           &const_arch, flgs, const_sparse);
@@ -2465,21 +2471,17 @@ __global__ void gradient_kernel
         break;
       }
       case 2: 
-      { if (th<2)
-        { net_store2_grad (th, ggrad, &const_params, 
-                           train_vals_b, train_vals_b+1,
-                           deriv_b, deriv_b+1,
-                           &const_arch, flgs, const_sparse);
-        }
+      { net_store2_grad (th, ggrad, &const_params, 
+                         train_vals_b, train_vals_b+1,
+                         deriv_b, deriv_b+1,
+                         &const_arch, flgs, const_sparse);
         break;
       }
       case 3: 
-      { if (th<2) /* yes, 2, not 3 */
-        { net_store3_grad (th, ggrad, &const_params, 
-                           train_vals_b, train_vals_b+1, train_vals_b+2,
-                           deriv_b, deriv_b+1, deriv_b+2,
-                           &const_arch, flgs, const_sparse);
-        }
+      { net_store3_grad (th, ggrad, &const_params, 
+                         train_vals_b, train_vals_b+1, train_vals_b+2,
+                         deriv_b, deriv_b+1, deriv_b+2,
+                         &const_arch, flgs, const_sparse);
         break;
       }
       default: /* 4 */
@@ -2491,8 +2493,6 @@ __global__ void gradient_kernel
       }
     }
   }
-
-grad_reduce: ;
 
 #if SPLIT_KERNELS==1
 
@@ -2508,16 +2508,16 @@ __global__ void gradient_reduction_kernel
 
 #endif
 
+  if (const_blkcases<=GROUP_SIZE)
+  { return;
+  }
+
   /* Reduction of all threads to single energy/gradient.  May be done using all 
      threads in the block (including ones not used above). */
 
   if (KDEBUG)
   { printf("Gradient reduction: block %d, thread %d, start %d, end %d\n",
             blockIdx.x,threadIdx.x,start,end);
-  }
-
-  if (const_blkcases<=GROUP_SIZE)
-  { return;
   }
 
   unsigned total_params = const_params.total_params;

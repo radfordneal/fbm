@@ -281,3 +281,55 @@ net-grad-test log 0 0.002
 net-eval log 0 / 2 2 0 h0
 net-eval log 0 / 2 2 0 h1
 net-eval log 0 / 2 2 0 
+
+echo " "; echo "--- N"; echo " "
+
+cat >cfg-b <<end
+1 17
+2 18
+3 19
+4 20
+4 1
+5 2
+6 3
+7 4
+8 5
+9 6
+10 7
+11 8
+12 9
+14 10
+15 11
+16 12
+17 13
+19 7
+17 2
+2 10
+3 11
+4 12
+5 13
+end
+cat >data <<end
+1 43330
+2 43310
+3 43360
+1 43350
+end
+net-spec log 1 20 identity cfg-b:cfg-b 1 / bh=1 ho=1
+net-spec log config+
+data-spec log 1 1 / data .
+model-spec log real 1
+net-gen log fix - <<end
+100 101 102 103 104 105 106 107 108 109 
+110 111 112 113 114 115 116 117 118 119
+10 11 12 13 14 15 16 17 18 19
+20 21 22 23 24 25 26 27 28 29
+end
+net-display log 0
+net-eval log 0 / 0 0 0 h0
+net-eval log 0 / 0 0 0 
+calc "116*10+(117+109)*11+(118+110)*12+(119+100+111)*13 + \
+      (101+112)*14+102*15+103*16+104*17 + \
+      105*18+106*19+107*20+108*21 + \
+      109*23+110*24+111*25+112*26 + 106*28 + 101*26"
+net-grad-test log 0 0.002

@@ -45,8 +45,8 @@
    they are all done as separate kernels (useful for profiling how
    long they take), all done as one kernel (minimizing launch
    overhead), or the first three are done as one kernel and the last
-   (gradient) as a separate kernel (allowing it to not have the extra
-   threads it doesn't use). */
+   two as a separate kernel (allowing it to not have extra threads it
+   doesn't use, if GTH<NTH). */
 
 #define SPLIT_KERNELS 0   /* 0 = one kernel for all five parts
                              1 = five kernels for the five parts
@@ -333,23 +333,47 @@ void mc_app_initialize
                          && strcmp(e,"0")!=0;
 
     if (show_info)
-    { fprintf (stderr, "Precision: %s, SIMD features: %s\n",
+    { fprintf (stderr, 
+               "Prec: %s%s%s%s%s%s, Cfg-op: %s%s%s\n",
                FP32 ? "FP32" : "FP64",
 #              if __AVX2__ && __FMA__
-                 "SSE2 SSE3 SSE4.2 AVX AVX2 FMA");
+                 ", Has: SSE2 SSE3 SSE4.2 AVX AVX2 FMA",
 #              elif __AVX2__
-                 "SSE2 SSE3 SSE4.2 AVX AVX2");
+                 ", Has: SSE2 SSE3 SSE4.2 AVX AVX2",
 #              elif __AVX__
-                 "SSE2 SSE3 SSE4.2 AVX");
+                 ", Has: SSE2 SSE3 SSE4.2 AVX",
 #              elif __SSE4_2__
-                 "SSE2 SSE3 SSE4.2");
+                 ", Has: SSE2 SSE3 SSE4.2",
 #              elif __SSE3__
-                 "SSE2 SSE3");
+                 ", Has: SSE2 SSE3",
 #              elif __SSE2__
-                 "SSE2");
+                 ", Has: SSE2",
 #              else
-                 "none");
+                 "",
 #              endif
+#              if __SSE2__ && USE_SIMD_INTRINSICS || USE_SLEEF
+                 ", Use:",
+#              else
+                 "",
+#              endif
+#              if __SSE2__ && USE_SIMD_INTRINSICS
+                 " SIMD",
+#              else
+                 "",
+#              endif
+#              if __FMA__ && USE_SIMD_INTRINSICS && USE_FMA
+                 " FMA",
+#              else
+                 "",
+#              endif
+#              if USE_SLEEF
+                 " SLEEF",
+#              else
+                 "",
+#              endif
+               CONFIG_ORIGINAL ? "O" : "",
+               CONFIG_SINGLE4 ? "S" : "",
+               CONFIG_QUAD_S_4D_4W ? (MAKE_QUAD_PAIRS ? "Q2" : "Q") : "");
     }
 
 #   if __CUDACC__
@@ -401,8 +425,9 @@ void mc_app_initialize
       }
 
       if (show_info)
-      { printf ("Specified %d cases per block, max %d blocks per launch\n",
-                 blkcases, maxblks);
+      { printf (
+"Specified %d cases per block, max %d blocks per launch, threads/case: %d,%d\n",
+          blkcases, maxblks, THREADS_PER_CASE, GRAD_THREADS_PER_CASE);
       }
     }
 #   endif

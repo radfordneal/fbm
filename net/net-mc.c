@@ -334,22 +334,22 @@ void mc_app_initialize
 
     if (show_info)
     { fprintf (stderr, 
-               "Prec: %s%s%s%s%s%s, Cfg-op: %s%s%s\n",
+               "Precision: %s%s%s%s%s%s, Cfg: %s%s%s-%s%s\n",
                FP32 ? "FP32" : "FP64",
 #              if __AVX2__ && __FMA__
-                 ", Has: SSE2 SSE3 SSE4.2 AVX AVX2 FMA",
+                 ", SIMD capability: AVX2 FMA",
 #              elif __AVX2__
-                 ", Has: SSE2 SSE3 SSE4.2 AVX AVX2",
+                 ", SIMD capability: AVX2",
 #              elif __AVX__
-                 ", Has: SSE2 SSE3 SSE4.2 AVX",
+                 ", SIMD capability: AVX",
 #              elif __SSE4_2__
-                 ", Has: SSE2 SSE3 SSE4.2",
+                 ", SIMD capability: SSE4.2",
 #              elif __SSE3__
-                 ", Has: SSE2 SSE3",
+                 ", SIMD capability: SSE3",
 #              elif __SSE2__
-                 ", Has: SSE2",
+                 ", SIMD capability: SSE2",
 #              else
-                 "",
+                 ", SIMD capability: none",
 #              endif
 #              if __SSE2__ && USE_SIMD_INTRINSICS || USE_SLEEF
                  ", Use:",
@@ -373,7 +373,10 @@ void mc_app_initialize
 #              endif
                CONFIG_ORIGINAL ? "O" : "",
                CONFIG_SINGLE4 ? "S" : "",
-               CONFIG_QUAD_S_4D_4W ? (MAKE_QUAD_PAIRS ? "Q2" : "Q") : "");
+               CONFIG_QUAD_S_4D_4W ? (MAKE_QUAD_PAIRS ? "Q2" : "Q") : "",
+               CONFIG_QUAD_GPU_S_4D_4W 
+                 ? (MAKE_QUAD_GPU_PAIRS ?  "Q2" : "Q") : "",
+               MAKE_OTHER_GPU_PAIRS ? "O2" : "O");
     }
 
 #   if __CUDACC__

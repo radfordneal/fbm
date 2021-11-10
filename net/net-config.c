@@ -717,7 +717,7 @@ static void net_config_sort (net_config *cf, int biases)
   memcpy (tmp, quad, (j+1) * sizeof *tmp);
   qsort (tmp, j, sizeof *tmp, cmp_wmodGTH_w_d_s);
     
-  if (!CONFIG_QUAD_S_4D_4W)
+  if (!CONFIG_QUAD_GPU_S_4D_4W)
   { cf->quad_s_4d_4w_wgpu = all_gpu+a_gpu;
     for (e = 0; e<GTH; e++)
     { all_gpu[a_gpu++].w = -1;
@@ -731,7 +731,7 @@ static void net_config_sort (net_config *cf, int biases)
   }
   else
   { int jj = j;
-    if (!MAKE_QUAD_PAIRS)
+    if (!MAKE_QUAD_GPU_PAIRS)
     { cf->quad_s_4d_4w_2_wgpu = all_gpu+a_gpu;
       for (e = 0; e<GTH; e++)
       { all_gpu[a_gpu++].w = -1;
@@ -756,7 +756,7 @@ static void net_config_sort (net_config *cf, int biases)
   qsort (tmp, r, sizeof *tmp, cmp_wmodGTH_w_d_s);
   tmp[r].w = -1;
 
-  if (!MAKE_OTHER_PAIRS)
+  if (!MAKE_OTHER_GPU_PAIRS)
   { int e;
     cf->other_2_wgpu = all_gpu+a_gpu;
     for (e = 0; e<GTH; e++)
@@ -777,7 +777,7 @@ static void net_config_sort (net_config *cf, int biases)
      function computations, sorted by d, but a paired version is not
      set up. In sections by d mod 4. */
 
-  if (!CONFIG_QUAD_S_4D_4W)
+  if (!CONFIG_QUAD_GPU_S_4D_4W)
   { int e;
     cf->quad_s_4d_4w_dgpu = all_gpu+a_gpu;
     for (e = 0; e<4; e++) all_gpu[a_gpu++].w = -1;
@@ -800,7 +800,7 @@ static void net_config_sort (net_config *cf, int biases)
   /* And, the quad_s_4d_4w_sgpu connections are used for gpu backward pass
      computations, sorted by s. In sections by s mod 4. */
 
-  if (!CONFIG_QUAD_S_4D_4W)
+  if (!CONFIG_QUAD_GPU_S_4D_4W)
   { int e;
     cf->quad_s_4d_4w_sgpu = all_gpu+a_gpu;
     for (e = 0; e<4; e++) all_gpu[a_gpu++].w = -1;

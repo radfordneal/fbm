@@ -583,10 +583,12 @@ void mc_app_initialize
     /* Set up second derivative and typical value structures. */
 
     value_block = (net_value *) chk_alloc (value_count, sizeof *value_block);
-    net_setup_value_pointers (&seconds, value_block, arch, 0);
+    net_setup_value_pointers_aligned (&seconds, value_block, arch, 
+                                      NET_VALUE_ALIGN_ELEMENTS, 0);
 
     value_block = (net_value *) chk_alloc (value_count, sizeof *value_block);
-    net_setup_value_pointers (&typical, value_block, arch, 0);
+    net_setup_value_pointers_aligned (&typical, value_block, arch, 
+                                      NET_VALUE_ALIGN_ELEMENTS, 0);
   
     /* Read training data, if any, and allocate space for derivatives. */
   
@@ -614,7 +616,8 @@ void mc_app_initialize
     
       deriv = (net_values *) chk_alloc (1, sizeof *deriv);
       value_block = (net_value *) chk_alloc (value_count, sizeof *value_block);
-      net_setup_value_pointers(deriv, value_block, arch, 0);
+      net_setup_value_pointers_aligned (deriv, value_block, arch, 
+                                        NET_VALUE_ALIGN_ELEMENTS, 0);
     
       for (j = 0; j<arch->N_inputs; j++)
       { for (i = 0; i<N_train; i++)
@@ -745,8 +748,9 @@ void mc_app_initialize
       check_cuda_error (cudaMalloc (&vblk, sz), "cudaMalloc of vblk for train");
 
       for (i = 0; i<N_train; i++) 
-      { net_setup_value_pointers (&tmp_values[i], vblk+value_count_noin*i, arch,
-                                  iblk+N_inputs*i);
+      { net_setup_value_pointers_aligned 
+             (&tmp_values[i], vblk+value_count_noin*i, arch,
+              NET_VALUE_ALIGN_ELEMENTS, iblk+N_inputs*i);
       }
 
       sz = N_train * sizeof *dev_train_values;
@@ -768,13 +772,15 @@ void mc_app_initialize
 
       if (arch->has_ti)  /* Must allow for derivatives w.r.t. inputs */
       { for (i = 0; i<N_train; i++) 
-        { net_setup_value_pointers(&tmp_values[i], vblk+value_count*i, arch, 0);
+        { net_setup_value_pointers_aligned (&tmp_values[i], vblk+value_count*i,
+                                            arch, NET_VALUE_ALIGN_ELEMENTS, 0);
         }
       }
       else  /* Derivatives w.r.t. inputs will not be taken */
       { for (i = 0; i<N_train; i++) 
-        { net_setup_value_pointers (&tmp_values[i], vblk+value_count_noin*i, 
-            arch, iblk+N_inputs*i /* should not be used */);
+        { net_setup_value_pointers_aligned 
+            (&tmp_values[i], vblk+value_count_noin*i, 
+             arch, NET_VALUE_ALIGN_ELEMENTS, iblk+N_inputs*i /* not used */);
         }
       }
 

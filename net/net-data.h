@@ -15,7 +15,7 @@
 
 
 /* ALIGNMENT FOR VALUE STRUCTURES.  Used when allocating structures when data
-   is read. */
+   is read.  May be used for other value structures as well. */
 
 #define NET_VALUE_ALIGN_BYTES 16   /* Alignment for value arrays, in bytes
                                        - must be power of two, minimum of 8 */

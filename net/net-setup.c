@@ -42,6 +42,10 @@
 */
 
 
+#define ALIGN(o,a) (((o)+(a)-1)&~((a)-1))  /* Align o to a multiple of a, which
+                                              must be a power of two */
+
+
 /* RETURN NUMBER OF HYPERPARAMETERS.  Returns the number of 'sigma' values
    for a network with the given architecture. */
    
@@ -243,14 +247,13 @@ unsigned net_setup_value_count_aligned
 )
 { 
   unsigned count = 0;
-  int m = align-1;
   int l;
 
-  if (include_inputs) count += (a->N_inputs+m)&~m;
-  count += (a->N_outputs+m)&~m;
+  if (include_inputs) count += ALIGN(a->N_inputs,align);
+  count += ALIGN(a->N_outputs,align);
 
   for (l = 0; l<a->N_layers; l++)
-  { count += 2 * ((a->N_hidden[l]+m)&~m);
+  { count += 2 * ALIGN(a->N_hidden[l],align);
   }
 
   return count;
@@ -540,7 +543,6 @@ void net_setup_value_pointers
   }
 
   v->o = b;
-  // b += a->N_outputs; // not necessary
 }
 
 
@@ -558,7 +560,6 @@ void net_setup_value_pointers_aligned
   net_value *inputs	/* Input values, 0 if part of value block */
 )
 {
-  int m = align-1;
   int l;
 
   if (inputs)
@@ -566,18 +567,17 @@ void net_setup_value_pointers_aligned
   }
   else
   { v->i = b;
-    b += (a->N_inputs+m)&~m;
+    b += ALIGN(a->N_inputs,align);
   }
 
   for (l = 0; l<a->N_layers; l++)
   { v->h[l] = b;
-    b += (a->N_hidden[l]+m)&~m;
+    b += ALIGN(a->N_hidden[l],align);
     v->s[l] = b;
-    b += (a->N_hidden[l]+m)&~m;
+    b += ALIGN(a->N_hidden[l],align);
   }
 
   v->o = b;
-  // b += (a->N_outputs+m)&~m; // not necessary
 }
 
 

@@ -2075,3 +2075,385 @@ Log file: log  Index: 0  Delta: 0.002000  Energy: 125123.68
 
 Largest absolute log ratio: 0.0000
 
+ 
+--- O
+ 
+
+Network Architecture:
+
+  Input layer:     size 1
+  Hidden layer 0:  size 20  identity  cfg-i:cfg-i
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    1.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  1.000
+
+Hidden layer 0 input weight configuration
+
+23 connections, 20 weights
+
+     1      1     17
+     1      2     18
+     1      3     19
+     1      4     20
+     1      4      1
+     1      5      2
+     1      6      3
+     1      7      4
+     1      8      5
+     1      9      6
+     1     10      7
+     1     11      8
+     1     12      9
+     1     14     10
+     1     15     11
+     1     16     12
+     1     17     13
+     1     19      7
+     1     17      2
+     1      2     10
+     1      3     11
+     1      4     12
+     1      5     13
+
+quad_s_4d_4w:
+  0   3-6     0-3  
+  0   7-10    4-7  
+  0   0-3    16-19 
+
+quad_s_4d_4w_2 (pairs with same w):
+  0   1-4     9-12 
+  0  13-16    9-12 
+
+quad_s_4d_4w_wgpu:
+start indexes: 0 3 4 5 6 8 9 10 11 12 13 14 15 16 17 18
+First weight 0 mod 16:
+  0   3-6     0-3  
+  0   0-3    16-19 
+
+First weight 1 mod 16:
+
+First weight 2 mod 16:
+
+First weight 3 mod 16:
+
+First weight 4 mod 16:
+  0   7-10    4-7  
+
+First weight 5 mod 16:
+
+First weight 6 mod 16:
+
+First weight 7 mod 16:
+
+First weight 8 mod 16:
+
+First weight 9 mod 16:
+
+First weight 10 mod 16:
+
+First weight 11 mod 16:
+
+First weight 12 mod 16:
+
+First weight 13 mod 16:
+
+First weight 14 mod 16:
+
+First weight 15 mod 16:
+
+
+quad_s_4d_4w_2_wgpu:
+start indexes: 0 1 2 3 4 5 6 7 8 9 12 13 14 15 16 17
+First weight 0 mod 16:
+
+First weight 1 mod 16:
+
+First weight 2 mod 16:
+
+First weight 3 mod 16:
+
+First weight 4 mod 16:
+
+First weight 5 mod 16:
+
+First weight 6 mod 16:
+
+First weight 7 mod 16:
+
+First weight 8 mod 16:
+
+First weight 9 mod 16:
+  0   1-4     9-12 
+  0  13-16    9-12 
+
+First weight 10 mod 16:
+
+First weight 11 mod 16:
+
+First weight 12 mod 16:
+
+First weight 13 mod 16:
+
+First weight 14 mod 16:
+
+First weight 15 mod 16:
+
+
+quad_s_4d_4w_dgpu:
+First destination unit 0 mod 4:
+  0   0-3    16-19 
+
+First destination unit 1 mod 4:
+  0   1-4     9-12 
+  0  13-16    9-12 
+
+First destination unit 2 mod 4:
+
+First destination unit 3 mod 4:
+  0   3-6     0-3  
+  0   7-10    4-7  
+
+
+quad_s_4d_4w_sgpu:
+Source unit 0 mod 4:
+  0   3-6     0-3  
+  0   7-10    4-7  
+  0   1-4     9-12 
+  0  13-16    9-12 
+  0   0-3    16-19 
+
+Source unit 1 mod 4:
+
+Source unit 2 mod 4:
+
+Source unit 3 mod 4:
+
+single4_s:
+single4_d:
+
+single:
+  0  11   8
+  0  16   1
+  0  18   6
+
+other for wgpu:
+start indexes: 0 1 3 4 5 6 7 9 10 12 13 14 15 16 17 18
+Weight 0 mod 16:
+
+Weight 1 mod 16:
+  0  16   1
+
+Weight 2 mod 16:
+
+Weight 3 mod 16:
+
+Weight 4 mod 16:
+
+Weight 5 mod 16:
+
+Weight 6 mod 16:
+  0  18   6
+
+Weight 7 mod 16:
+
+Weight 8 mod 16:
+  0  11   8
+
+Weight 9 mod 16:
+
+Weight 10 mod 16:
+
+Weight 11 mod 16:
+
+Weight 12 mod 16:
+
+Weight 13 mod 16:
+
+Weight 14 mod 16:
+
+Weight 15 mod 16:
+
+
+other_2 for wgpu (pairs with same w):
+start indexes: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+Weight 0 mod 16:
+
+Weight 1 mod 16:
+
+Weight 2 mod 16:
+
+Weight 3 mod 16:
+
+Weight 4 mod 16:
+
+Weight 5 mod 16:
+
+Weight 6 mod 16:
+
+Weight 7 mod 16:
+
+Weight 8 mod 16:
+
+Weight 9 mod 16:
+
+Weight 10 mod 16:
+
+Weight 11 mod 16:
+
+Weight 12 mod 16:
+
+Weight 13 mod 16:
+
+Weight 14 mod 16:
+
+Weight 15 mod 16:
+
+
+other for dgpu:
+
+start indexes: 0 2 3 5
+
+Destination unit 0 mod 4:
+  0  16   1
+
+Destination unit 1 mod 4:
+
+Destination unit 2 mod 4:
+  0  18   6
+
+Destination unit 3 mod 4:
+  0  11   8
+
+
+other for sgpu:
+
+start indexes: 0 4 5 6
+
+Source unit 0 mod 4:
+  0  16   1
+  0  18   6
+  0  11   8
+
+Source unit 1 mod 4:
+
+Source unit 2 mod 4:
+
+Source unit 3 mod 4:
+
+Number of training cases: 4
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 1.00:     +100.00 +101.00 +102.00 +103.00 +104.00 +105.00 +106.00 +107.00 +108.00 +109.00
+           +110.00 +111.00 +112.00 +113.00 +114.00 +115.00 +116.00 +117.00 +118.00 +119.00
+
+Hidden Layer 0 to Output Weights [2]
+
+ 1.00 1.00:+10.00
+
+      1.00:+11.00
+
+      1.00:+12.00
+
+      1.00:+13.00
+
+      1.00:+14.00
+
+      1.00:+15.00
+
+      1.00:+16.00
+
+      1.00:+17.00
+
+      1.00:+18.00
+
+      1.00:+19.00
+
+      1.00:+20.00
+
+      1.00:+21.00
+
+      1.00:+22.00
+
+      1.00:+23.00
+
+      1.00:+24.00
+
+      1.00:+25.00
+
+      1.00:+26.00
+
+      1.00:+27.00
+
+      1.00:+28.00
+
+      1.00:+29.00
+
+Noise levels
+
+   1.00 -  1.00
+
+  1.00000 +1.160000e+02 +2.260000e+02 +2.280000e+02 +3.300000e+02 +2.130000e+02 +1.020000e+02 +1.030000e+02 +1.040000e+02 +1.050000e+02 +1.060000e+02 +1.070000e+02 +1.080000e+02 +0.000000e+00 +1.090000e+02 +1.100000e+02 +1.110000e+02 +2.130000e+02 +0.000000e+00 +1.060000e+02 +0.000000e+00
+  1.00000 +4.334000e+04
+43340
+
+Comparison of computed gradient with finite differences
+
+Log file: log  Index: 0  Delta: 0.002000  Energy: 125123.68
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0 +100.00   +2.3034e-01  +2.2966e-01   +2.3000e+02  +2.3000e+02     0.0000
+     1 +101.00   +5.0420e-01  +4.9780e-01   +5.0100e+02  +5.0100e+02     0.0000
+     2 +102.00   +2.5245e-01  +2.5155e-01   +2.5200e+02  +2.5200e+02     0.0000
+     3 +103.00   +2.6351e-01  +2.6249e-01   +2.6300e+02  +2.6300e+02     0.0000
+     4 +104.00   +2.7458e-01  +2.7342e-01   +2.7400e+02  +2.7400e+02     0.0000
+     5 +105.00   +2.8565e-01  +2.8435e-01   +2.8500e+02  +2.8500e+02     0.0000
+     6 +106.00   +5.8042e-01  +5.7158e-01   +5.7600e+02  +5.7600e+02     0.0000
+     7 +107.00   +3.0780e-01  +3.0620e-01   +3.0700e+02  +3.0700e+02     0.0000
+     8 +108.00   +3.1888e-01  +3.1712e-01   +3.1800e+02  +3.1800e+02     0.0000
+     9 +109.00   +4.5131e-01  +4.4669e-01   +4.4900e+02  +4.4900e+02     0.0000
+    10 +110.00   +4.7259e-01  +4.6741e-01   +4.7000e+02  +4.7000e+02     0.0000
+    11 +111.00   +4.9389e-01  +4.8811e-01   +4.9100e+02  +4.9100e+02     0.0000
+    12 +112.00   +5.1520e-01  +5.0880e-01   +5.1200e+02  +5.1200e+02     0.0000
+    13 +113.00   +1.1300e-01  +1.1300e-01   +1.1300e+02  +1.1300e+02     0.0000
+    14 +114.00   +1.1400e-01  +1.1400e-01   +1.1400e+02  +1.1400e+02     0.0000
+    15 +115.00   +1.1500e-01  +1.1500e-01   +1.1500e+02  +1.1500e+02     0.0000
+    16 +116.00   +2.1620e-01  +2.1580e-01   +2.1600e+02  +2.1600e+02     0.0000
+    17 +117.00   +2.2724e-01  +2.2676e-01   +2.2700e+02  +2.2700e+02     0.0000
+    18 +118.00   +2.3829e-01  +2.3771e-01   +2.3800e+02  +2.3800e+02     0.0000
+    19 +119.00   +2.4934e-01  +2.4866e-01   +2.4900e+02  +2.4900e+02     0.0000
+    20  +10.00   +1.1969e+00  +1.1431e+00   +1.1700e+03  +1.1700e+03     0.0000
+    21  +11.00   +2.3732e+00  +2.1688e+00   +2.2710e+03  +2.2710e+03     0.0000
+    22  +12.00   +2.3960e+00  +2.1880e+00   +2.2920e+03  +2.2920e+03     0.0000
+    23  +13.00   +3.5308e+00  +3.0952e+00   +3.3130e+03  +3.3130e+03     0.0000
+    24  +14.00   +2.2347e+00  +2.0533e+00   +2.1440e+03  +2.1440e+03     0.0000
+    25  +15.00   +1.0558e+00  +1.0142e+00   +1.0350e+03  +1.0350e+03     0.0000
+    26  +16.00   +1.0672e+00  +1.0248e+00   +1.0460e+03  +1.0460e+03     0.0000
+    27  +17.00   +1.0786e+00  +1.0354e+00   +1.0570e+03  +1.0570e+03     0.0000
+    28  +18.00   +1.0901e+00  +1.0459e+00   +1.0680e+03  +1.0680e+03     0.0000
+    29  +19.00   +1.1015e+00  +1.0565e+00   +1.0790e+03  +1.0790e+03     0.0000
+    30  +20.00   +1.1129e+00  +1.0671e+00   +1.0900e+03  +1.0900e+03     0.0000
+    31  +21.00   +1.1243e+00  +1.0777e+00   +1.1010e+03  +1.1010e+03     0.0000
+    32  +22.00   +2.2001e-02  +2.1999e-02   +2.2000e+01  +2.2000e+01     0.0000
+    33  +23.00   +1.1368e+00  +1.0892e+00   +1.1130e+03  +1.1130e+03     0.0000
+    34  +24.00   +1.1482e+00  +1.0998e+00   +1.1240e+03  +1.1240e+03     0.0000
+    35  +25.00   +1.1596e+00  +1.1104e+00   +1.1350e+03  +1.1350e+03     0.0000
+    36  +26.00   +2.2467e+00  +2.0653e+00   +2.1560e+03  +2.1560e+03     0.0000
+    37  +27.00   +2.7001e-02  +2.6999e-02   +2.7000e+01  +2.7000e+01     0.0000
+    38  +28.00   +1.1105e+00  +1.0655e+00   +1.0880e+03  +1.0880e+03     0.0000
+    39  +29.00   +2.9000e-02  +2.9000e-02   +2.9000e+01  +2.9000e+01     0.0000
+
+Largest absolute log ratio: 0.0000
+

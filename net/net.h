@@ -113,7 +113,7 @@ typedef struct
 				/*     --- meant only for testing --       */
 
 #define CONFIG_SINGLE4		(!CONFIG_ORIGINAL && 1)
-#define CONFIG_QUAD_S_4D_4W	(!CONFIG_ORIGINAL && 0)
+#define CONFIG_QUAD_S_4D_4W	(!CONFIG_ORIGINAL && 1)
 
 #define MAKE_QUAD_PAIRS 1	/* Make quad_s_4d_4w_2 versions with pairs? */
 #define MAKE_OTHER_PAIRS 1	/* Make other_2 version with pairs? */
@@ -135,12 +135,13 @@ typedef struct
   net_connection *all;		/* Pointer to block with items above */
   int all_length;		/* Length of 'all' block in use */
 
-  net_connection *quad_s_4d_4w_wgpu;  /* GPU grad version, four -1 terminators*/
-  net_connection *quad_s_4d_4w_2_wgpu;/* GPU grad version, four -1 terminators*/
-  net_connection *other_wgpu;	/* Other connections for grad, has 4 -1s */
+  net_connection *quad_s_4d_4w_wgpu;  /* GPU grad version, GTH -1 terminators*/
+  int start_quad_wgpu[GTH];	/* Starts for sections in quad_s_4d_4w_wgpu */
+  net_connection *quad_s_4d_4w_2_wgpu;/* GPU grad version, GTH -1 terminators*/
+  int start_quad_2_wgpu[GTH];	/* Starts for sections in quad_s_4d_4w_2_wgpu */
+  net_connection *other_wgpu;	/* Other connections for grad, has GTH -1s */
   int start_other_wgpu[GTH];	/* Start indexes for sections in other_wgpu */
-  net_connection *other_2_wgpu;	/* Pairs of other connections, same w for pair,
-                                   has 4 -1s for sections differing in w mod 4*/
+  net_connection *other_2_wgpu;	/* Pairs of other connections, same w for pair*/
   int start_other_2_wgpu[GTH];	/* Start indexes for sections in other_2_wgpu */
 
   net_connection *quad_s_4d_4w_dgpu;  /* Four connections, same s, sequential

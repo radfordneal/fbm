@@ -709,9 +709,14 @@ void print_config (net_config *cf, int biases)
       }
       printf("\n");
       printf("quad_s_4d_4w_wgpu:\n");
+      printf("start indexes:");
+      for (r = 0; r<GTH; r++)
+      { printf(" %d",cf->start_quad_wgpu[r]);
+      }
+      printf("\n");
       i = 0;
-      for (r = 0; r<4; r++)
-      { printf("First weight %d mod 4:\n",r);
+      for (r = 0; r<GTH; r++)
+      { printf("First weight %d mod %d:\n",r,GTH);
         while (cf->quad_s_4d_4w_wgpu[i].w >= 0)
         { printf("%3d %3d-%-3d %3d-%-3d\n", cf->quad_s_4d_4w_wgpu[i].s, 
                       cf->quad_s_4d_4w_wgpu[i].d, cf->quad_s_4d_4w_wgpu[i].d+3,
@@ -723,9 +728,14 @@ void print_config (net_config *cf, int biases)
       }
       printf("\n");
       printf("quad_s_4d_4w_2_wgpu:\n");
+      printf("start indexes:");
+      for (r = 0; r<GTH; r++)
+      { printf(" %d",cf->start_quad_2_wgpu[r]);
+      }
+      printf("\n");
       i = 0;
-      for (r = 0; r<4; r++)
-      { printf("First weight %d mod 4:\n",r);
+      for (r = 0; r<GTH; r++)
+      { printf("First weight %d mod %d:\n",r,GTH);
         while (cf->quad_s_4d_4w_2_wgpu[i].w >= 0)
         { printf("%3d %3d-%-3d %3d-%-3d\n", cf->quad_s_4d_4w_2_wgpu[i].s, 
                   cf->quad_s_4d_4w_2_wgpu[i].d, cf->quad_s_4d_4w_2_wgpu[i].d+3,
@@ -786,7 +796,7 @@ void print_config (net_config *cf, int biases)
     }
     printf("\n");
 
-    printf("other for wgpu:\n\n");
+    printf("other for wgpu:\n");
     printf("start indexes:");
     for (r = 0; r<GTH; r++)
     { printf(" %d",cf->start_other_wgpu[r]);
@@ -804,7 +814,7 @@ void print_config (net_config *cf, int biases)
       printf("\n");
     }
     printf("\n");
-    printf("other_2 for wgpu (pairs with same w):\n\n");
+    printf("other_2 for wgpu (pairs with same w):\n");
     printf("start indexes:");
     for (r = 0; r<GTH; r++)
     { printf(" %d",cf->start_other_2_wgpu[r]);

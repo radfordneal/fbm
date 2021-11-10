@@ -681,7 +681,7 @@ static void net_config_sort (net_config *cf, int biases)
       }
     }
 
-    qsort (quad, j, sizeof *tmp, cmp_wmod4_w_d_s);
+    qsort (quad, j, sizeof *quad, cmp_wmod4_w_d_s);
     quad[j].w = -1;
 
     memcpy (tmp, quad, (j+1) * sizeof *tmp);
@@ -713,19 +713,40 @@ static void net_config_sort (net_config *cf, int biases)
      computations, but with extra -1 indicators for when the first
      weight mod GTH changes. */
 
+  int e;
+  memcpy (tmp, quad, (j+1) * sizeof *tmp);
+  qsort (tmp, j, sizeof *tmp, cmp_wmodGTH_w_d_s);
+    
   if (!CONFIG_QUAD_S_4D_4W)
-  { int e;
-    cf->quad_s_4d_4w_wgpu = all_gpu+a_gpu;
-    for (e = 0; e<GTH; e++) all_gpu[a_gpu++].w = -1;
+  { cf->quad_s_4d_4w_wgpu = all_gpu+a_gpu;
+    for (e = 0; e<GTH; e++)
+    { all_gpu[a_gpu++].w = -1;
+      cf->start_quad_wgpu[e] = e;
+    }
     cf->quad_s_4d_4w_2_wgpu = all_gpu+a_gpu;
-    for (e = 0; e<GTH; e++) all_gpu[a_gpu++].w = -1;
+    for (e = 0; e<GTH; e++)
+    { all_gpu[a_gpu++].w = -1;
+      cf->start_quad_2_wgpu[e] = e;
+    }
   }
   else
-  { qsort (quad, j, sizeof *tmp, cmp_wmodGTH_w_d_s);
+  { int jj = j;
+    if (!MAKE_QUAD_PAIRS)
+    { cf->quad_s_4d_4w_2_wgpu = all_gpu+a_gpu;
+      for (e = 0; e<GTH; e++)
+      { all_gpu[a_gpu++].w = -1;
+        cf->start_quad_2_wgpu[e] = e;
+      }
+    }
+    else
+    { int n;
+      copy_pairs (tmp, tmp2, &jj, &n);
+      cf->quad_s_4d_4w_2_wgpu = all_gpu+a_gpu;
+      a_gpu += 
+        copy_wmod (cf->quad_s_4d_4w_2_wgpu, tmp2, cf->start_quad_2_wgpu, GTH);
+    }
     cf->quad_s_4d_4w_wgpu = all_gpu+a_gpu;
-    a_gpu += copy_wmod (cf->quad_s_4d_4w_wgpu, cf->quad_s_4d_4w, 0, GTH);
-    cf->quad_s_4d_4w_2_wgpu = all_gpu+a_gpu;
-    a_gpu += copy_wmod (cf->quad_s_4d_4w_2_wgpu, cf->quad_s_4d_4w_2, 0, GTH);
+    a_gpu += copy_wmod (cf->quad_s_4d_4w_wgpu, tmp, cf->start_quad_wgpu, GTH);
   }
 
   /* Set up other connections (not in quad_s_4d_4w_wgpu) for use in
@@ -738,7 +759,10 @@ static void net_config_sort (net_config *cf, int biases)
   if (!MAKE_OTHER_PAIRS)
   { int e;
     cf->other_2_wgpu = all_gpu+a_gpu;
-    for (e = 0; e<GTH; e++) all_gpu[a_gpu++].w = -1;
+    for (e = 0; e<GTH; e++)
+    { all_gpu[a_gpu++].w = -1;
+      cf->start_other_2_wgpu[e] = e;
+   }
   }
   else
   { copy_pairs (tmp, tmp2, 0, 0);
@@ -759,7 +783,7 @@ static void net_config_sort (net_config *cf, int biases)
     for (e = 0; e<4; e++) all_gpu[a_gpu++].w = -1;
   }
   else
-  { qsort (quad, j, sizeof *tmp, cmp_dmod4_d_w_s);
+  { qsort (quad, j, sizeof *quad, cmp_dmod4_d_w_s);
     cf->quad_s_4d_4w_dgpu = all_gpu+a_gpu;
     a_gpu += copy_dmod (cf->quad_s_4d_4w_dgpu, quad, 0, 4);
   }
@@ -782,7 +806,7 @@ static void net_config_sort (net_config *cf, int biases)
     for (e = 0; e<4; e++) all_gpu[a_gpu++].w = -1;
   }
   else
-  { qsort (quad, j, sizeof *tmp, cmp_smod4_s_w_d);
+  { qsort (quad, j, sizeof *quad, cmp_smod4_s_w_d);
     cf->quad_s_4d_4w_sgpu = all_gpu+a_gpu;
     a_gpu += copy_smod (cf->quad_s_4d_4w_sgpu, quad, cf->start_quad_sgpu, 4);
   }

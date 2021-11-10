@@ -1,16 +1,16 @@
-Commit: 024d3bd6437681c1986d692ae02781000b542aae
+Commit: c6b297231e97e72457ea9d5411f98490c2705880
 
 Running exr with dbl-gpu on A4000:
 
 Number of training cases: 100
 Number of test cases: 1000
-Precision: FP64, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+Prec: FP64, Has: SSE2 SSE3 SSE4.2 AVX AVX2 FMA, Use: SIMD FMA SLEEF, Cfg-op: SQ2
 NVIDIA RTX A4000, Compute Capability 8.6, 48 processors, 14.7 GBytes
-Specified 16 cases per block, max 1000 blocks per launch
+Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
 With 100 cases, need 1 launches, max 7 blocks/launch
-Precision: FP64, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+Prec: FP64, Has: SSE2 SSE3 SSE4.2 AVX AVX2 FMA, Use: SIMD FMA SLEEF, Cfg-op: SQ2
 NVIDIA RTX A4000, Compute Capability 8.6, 48 processors, 14.7 GBytes
-Specified 16 cases per block, max 1000 blocks per launch
+Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
 With 100 cases, need 1 launches, max 7 blocks/launch
  
 Predictions after running for 1000 iterations:
@@ -22,4 +22,4 @@ Number of test cases: 1000
 Average log probability of targets:     0.855+-0.019
 Average squared error guessing mean:    0.01225+-0.00106
 
-elapsed 3.47s
+elapsed 3.48s

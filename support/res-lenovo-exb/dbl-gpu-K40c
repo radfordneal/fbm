@@ -1,16 +1,16 @@
-Commit: 024d3bd6437681c1986d692ae02781000b542aae
+Commit: c6b297231e97e72457ea9d5411f98490c2705880
 
 Running exb with dbl-gpu on K40c:
 
 Number of training cases: 300
 Number of test cases: 1000
-Precision: FP64, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+Prec: FP64, Has: SSE2 SSE3 SSE4.2 AVX AVX2 FMA, Use: SIMD FMA SLEEF, Cfg-op: SQ2
 Tesla K40c, Compute Capability 3.5, 15 processors, 11.2 GBytes ECC
-Specified 16 cases per block, max 1000 blocks per launch
+Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
 With 300 cases, need 1 launches, max 19 blocks/launch
-Precision: FP64, SIMD features: SSE2 SSE3 SSE4.2 AVX AVX2 FMA
+Prec: FP64, Has: SSE2 SSE3 SSE4.2 AVX AVX2 FMA, Use: SIMD FMA SLEEF, Cfg-op: SQ2
 Tesla K40c, Compute Capability 3.5, 15 processors, 11.2 GBytes ECC
-Specified 16 cases per block, max 1000 blocks per launch
+Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
 With 300 cases, need 1 launches, max 19 blocks/launch
 
 Number of iterations used: 20

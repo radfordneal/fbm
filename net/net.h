@@ -29,6 +29,14 @@
 #define TYPICAL_VALUES_ALL_ONE 0  /* Set to 1 to disable simulation of squared
                                      hidden unit values, thereby reverting to 
                                      the old stepsize heuristic */
+
+/* Alignment for value structures. */
+
+#define NET_VALUE_ALIGN_BYTES 16   /* Alignment for value arrays, in bytes
+                                       - must be power of two, minimum of 8 */
+
+#define NET_VALUE_ALIGN_ELEMENTS (NET_VALUE_ALIGN_BYTES / 4 / (1+FP64))
+
 /* For GPU computations: */
 
 #define THREADS_PER_CASE 4   /* Number of GPU threads used per training case

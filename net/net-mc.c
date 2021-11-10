@@ -2488,11 +2488,9 @@ __global__ void gradient_kernel
 
     switch (r)
     { case 1: 
-      { if (th<1) 
-        { net_store_grad (ggrad, &const_params, 
-                          train_vals_b, deriv_b, 
-                          &const_arch, flgs, const_sparse);
-        }
+      { net_store1_grad (th, ggrad, &const_params, 
+                         train_vals_b, deriv_b, 
+                         &const_arch, flgs, const_sparse);
         break;
       }
       case 2: 

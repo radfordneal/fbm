@@ -1,4 +1,4 @@
-Commit: c6b297231e97e72457ea9d5411f98490c2705880
+Commit: fe40e4fed578bf40788167b51fbe178e79efd087
 
 Running exc with flt-gpu on K40c:
 
@@ -20,4 +20,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.472+-0.022
 Fraction of guesses that were wrong:    0.1980+-0.0126
 
-elapsed 5.03s
+elapsed 5.04s

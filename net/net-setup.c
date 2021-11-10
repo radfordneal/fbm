@@ -217,20 +217,11 @@ unsigned net_setup_param_count
    of unit-related values for a network with the given architecture. 
    Includes the inputs and the outputs. */
 
-unsigned net_setup_value_count 
+unsigned net_setup_value_count
 ( net_arch *a		/* Network architecture */
 )
 { 
-  int count;
-  int l;
-
-  count = a->N_inputs + a->N_outputs;
-
-  for (l = 0; l<a->N_layers; l++)
-  { count += 2 * a->N_hidden[l];
-  }
-
-  return count;
+  return net_setup_value_count_aligned (a, 1, 0);
 }
 
 
@@ -525,24 +516,7 @@ void net_setup_value_pointers
   net_value *inputs	/* Input values, 0 if part of value block */
 )
 {
-  int l;
-
-  if (inputs)
-  { v->i = inputs;
-  }
-  else
-  { v->i = b;
-    b += a->N_inputs;
-  }
-
-  for (l = 0; l<a->N_layers; l++)
-  { v->h[l] = b;
-    b += a->N_hidden[l];
-    v->s[l] = b;
-    b += a->N_hidden[l];
-  }
-
-  v->o = b;
+  net_setup_value_pointers_aligned (v, b, a, 1, inputs);
 }
 
 

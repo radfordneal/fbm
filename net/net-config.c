@@ -685,10 +685,9 @@ static void net_config_sort (net_config *cf, int biases)
   }
   else
   {
-    memcpy (tmp2, quad, (q+1) * sizeof *tmp2);
-    qsort (tmp2, q, sizeof *quad, cmp_wmod4_w_d_s);
+    memcpy (tmp, quad, (q+1) * sizeof *tmp);
+    qsort (tmp, q, sizeof *quad, cmp_wmod4_w_d_s);
 
-    memcpy (tmp, tmp2, (q+1) * sizeof *tmp);
     non_adjacency (tmp, "quads4d4w");  /* only useful for info, if enabled */
 
     int jj = q;
@@ -714,8 +713,7 @@ static void net_config_sort (net_config *cf, int biases)
   }
 
   /* Find groups of four single connections with the same value for d, if
-     this is enabled, for use in CPU computations.  Not done for biases. 
-     Keep remaining connections in tmp2, with count in t. */
+     this is enabled, for use in CPU computations.  Not done for biases. */
 
   if (!CONFIG_SINGLE4 || biases)
   { cf->single4_d = all+a;
@@ -728,8 +726,8 @@ static void net_config_sort (net_config *cf, int biases)
     int i, j, k;
     i = j = k = 0;
     while (i < l)
-    { int d = tmp2[i].d;
-      if (l-i >= 4 && tmp2[i+1].d==d  && tmp2[i+2].d==d && tmp2[i+3].d==d)
+    { int d = left[i].d;
+      if (l-i >= 4 && left[i+1].d==d  && left[i+2].d==d && left[i+3].d==d)
       { tmp[j+0] = left[i+0];
         tmp[j+1] = left[i+1];
         tmp[j+2] = left[i+2];
@@ -757,8 +755,7 @@ static void net_config_sort (net_config *cf, int biases)
   }
 
   /* Find groups of four single connections with the same value for s, if
-     this is enabled, for use in CPU computations.  Not done for biases. 
-     Update tmp2 and t. */
+     this is enabled, for use in CPU computations.  Not done for biases. */
 
   if (!CONFIG_SINGLE4 || biases)
   { cf->single4_s = all+a;

@@ -125,8 +125,8 @@ typedef struct
 
 #define MAKE_QUAD_PAIRS 1	/* Make quad_s_4d_4w_2 versions with pairs? */
 
-#define CONFIG_QUAD_GPU_S_4D_4W	0  /* Make quad_s_4d_4w_?gpu groups? */
-#define MAKE_QUAD_GPU_PAIRS 0	/* Make quad_s_4d_4w_2_?gpu ver with pairs? */
+#define CONFIG_QUAD_GPU_S_4D_4W	1  /* Make quad_s_4d_4w_?gpu groups? */
+#define MAKE_QUAD_GPU_PAIRS 1	/* Make quad_s_4d_4w_2_?gpu ver with pairs? */
 #define MAKE_OTHER_GPU_PAIRS 1	/* Make other_2_?gpu versions with pairs? */
 
 /* Set of connections between layers. */

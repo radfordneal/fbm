@@ -221,7 +221,7 @@ unsigned net_setup_value_count
 ( net_arch *a		/* Network architecture */
 )
 { 
-  return net_setup_value_count_aligned (a, 1, 0);
+  return net_setup_value_count_aligned (a, 1, 1);
 }
 
 

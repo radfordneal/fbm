@@ -1,13 +1,13 @@
-Commit: fe40e4fed578bf40788167b51fbe178e79efd087
+Commit: 8db417e0f3230fdd2863efe614ba0624c34deb71
 
 Running exi3 with dbl-gpu on P620:
 
 Number of training cases: 499
-Prec: FP64, Has: SSE2 SSE3 SSE4.2 AVX AVX2 FMA, Use: SIMD FMA SLEEF, Cfg-op: SQ2
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro P620, Compute Capability 6.1, 4 processors, 1.9 GBytes
 Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
 With 499 cases, need 1 launches, max 32 blocks/launch
-Prec: FP64, Has: SSE2 SSE3 SSE4.2 AVX AVX2 FMA, Use: SIMD FMA SLEEF, Cfg-op: SQ2
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro P620, Compute Capability 6.1, 4 processors, 1.9 GBytes
 Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
 With 499 cases, need 1 launches, max 32 blocks/launch
@@ -20,4 +20,4 @@ Average log probability of targets:    -1.379+-0.005
 Fraction of guesses that were wrong:    0.6500+-0.0479
 Average squared error guessing mean:    0.74621+-0.00257
 
-elapsed 79.53s
+elapsed 79.51s

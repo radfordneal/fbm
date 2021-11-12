@@ -90,8 +90,6 @@ HOSTDEV void net_func
 {
   int l, ls, nsqi, j;
 
-  if (a->has_ti) sparse = 0;
-
   /* Compute values for successive hidden layers. */
 
   for (l = start; l<a->N_layers; l++)
@@ -1540,8 +1538,6 @@ __device__ void net_func_gpu
 )
 {
   int l, ls, nsqi, j;
-
-  if (a->has_ti) sparse = 0;
 
   /* Compute values for successive hidden layers. */
 

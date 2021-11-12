@@ -452,26 +452,30 @@ __device__ void net_back_gpu (int, net_values const*, net_values *restrict,
 
 HOSTDEV void net_add_grad (net_params *restrict, net_params const*, 
                            net_values const*, net_values const*, 
-                           net_arch const*, net_flags const*, int);
+                           net_arch const*, net_precomputed const*,
+                           net_flags const*, int);
 
 __device__ void net_store1_grad (int, net_params *restrict, net_params const*, 
                                  net_values const*, net_values const*, 
-                                 net_arch const*, net_flags const*, int);
+                                 net_arch const*, net_precomputed const*,
+                                 net_flags const*, int);
 
 __device__ void net_store2_grad (int, net_params *restrict, net_params const*,
                                  net_values const*, net_values const*,
                                  net_values const*, net_values const*,
-                                 net_arch const*, net_flags const*, int);
+                                 net_arch const*, net_precomputed const*,
+                                 net_flags const*, int);
 
 __device__ void net_store3_grad (int, net_params *restrict, net_params const*,
                        net_values const*, net_values const*, net_values const*,
                        net_values const*, net_values const*, net_values const*,
-                       net_arch const*, net_flags const*, int);
+                       net_arch const*, net_precomputed const*,
+                       net_flags const*, int);
 
 __device__ void net_store4_grad (int, net_params *restrict, net_params const*,
    net_values const*, net_values const*, net_values const*, net_values const*,
    net_values const*, net_values const*, net_values const*, net_values const*,
-   net_arch const*, net_flags const*, int);
+   net_arch const*, net_precomputed const*, net_flags const*, int);
 
 HOSTDEV void net_model_prob (net_values const*, net_value const*, 
                              double *restrict, net_values *restrict, 

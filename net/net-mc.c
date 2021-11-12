@@ -173,7 +173,7 @@ static inline net_value sq (net_value x) { return x*x; }
 
 static int approx_count;	/* Number of entries in approx-file, 0 if none*/
 
-static int sparse;		/* Are input values sparse? */
+static int sparse;		/* Are input values sparse & no input offsets?*/
 
 static int *approx_case; 	/* Data on how approximations are to be done  */
 static int *approx_times;	/*   as read from approx_file                 */
@@ -616,7 +616,7 @@ void mc_app_initialize
     { 
       net_data_read (1, 0, arch, model, surv);
 
-      sparse = train_zero_frac > SPARSE_THRESHOLD;
+      sparse = train_zero_frac > SPARSE_THRESHOLD && !arch->has_ti;
     
       deriv = (net_values *) chk_alloc (1, sizeof *deriv);
       value_block = (net_value *) chk_alloc (value_count, sizeof *value_block);
@@ -1991,8 +1991,8 @@ void net_training_cases
           }
           net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
                     arch, &pre, flgs, &params);
-          net_add_grad (grd, &params, &train_values[i], deriv, arch, flgs,
-                        sparse);
+          net_add_grad (grd, &params, &train_values[i], deriv, arch, &pre,
+                        flgs, sparse);
         }
     
         if (ot<=t1) break;
@@ -2050,7 +2050,8 @@ void net_training_cases
         net_back (train_vals_i, deriv, arch->has_ti ? -1 : 0,
                   arch, &pre, flgs, &params);
 
-        net_add_grad (grd, &params, train_vals_i, deriv, arch, flgs, sparse);
+        net_add_grad (grd, &params, train_vals_i, deriv, arch, &pre,
+                      flgs, sparse);
       }
     }
 
@@ -2504,28 +2505,28 @@ __global__ void gradient_kernel
     { case 1: 
       { net_store1_grad (th, ggrad, &const_params, 
                          train_vals_b, deriv_b, 
-                         &const_arch, flgs, const_sparse);
+                         &const_arch, &const_pre, flgs, const_sparse);
         break;
       }
       case 2: 
       { net_store2_grad (th, ggrad, &const_params, 
                          train_vals_b, train_vals_b+1,
                          deriv_b, deriv_b+1,
-                         &const_arch, flgs, const_sparse);
+                         &const_arch, &const_pre, flgs, const_sparse);
         break;
       }
       case 3: 
       { net_store3_grad (th, ggrad, &const_params, 
                          train_vals_b, train_vals_b+1, train_vals_b+2,
                          deriv_b, deriv_b+1, deriv_b+2,
-                         &const_arch, flgs, const_sparse);
+                         &const_arch, &const_pre, flgs, const_sparse);
         break;
       }
       default: /* 4 */
       { net_store4_grad (th, ggrad, &const_params, 
            train_vals_b, train_vals_b+1, train_vals_b+2, train_vals_b+3,
            deriv_b, deriv_b+1, deriv_b+2, deriv_b+3,
-           &const_arch, flgs, const_sparse);
+           &const_arch, &const_pre, flgs, const_sparse);
         break;
       }
     }

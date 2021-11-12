@@ -73,14 +73,12 @@ HOSTDEV void net_add_grad
   net_values const*v,	/* Values for units in network for a case */
   net_values const*d,	/* Backpropagated derivatives for a case */
   net_arch const*a,	/* Network architecture */
+  net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const*flgs,	/* Network flags, null if none */
   int sparse            /* Might source unit values often be zero? */
 )
 { 
   int l, ls, nsqi;
-  unsigned bits;
-
-  nsqi = 0;
 
   if (a->has_ti) 
   { add_grad1 (g->ti, d->i, a->N_inputs);
@@ -112,19 +110,20 @@ HOSTDEV void net_add_grad
       }
     }
 
-    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
-    { if (bits&1)
-      { if (ls>=l-1) abort();
-        if (a->nonseq_config[nsqi])
-        { add_grad2_config
-              (g->nsq[nsqi], v->h[ls], a->has_th[ls] ? w->th[ls] : 0,
-              d->h[l], a->nonseq_config[nsqi]);
+    if (a->has_nsq[l])
+    { for (ls = 0; ls<l; ls++)
+      { nsqi = pre->nonseq[ls][l];
+        if (nsqi>=0)
+        { if (a->nonseq_config[nsqi])
+          { add_grad2_config
+                (g->nsq[nsqi], v->h[ls], a->has_th[ls] ? w->th[ls] : 0,
+                d->h[l], a->nonseq_config[nsqi]);
+          }
+          else
+          { add_grad2 (g->nsq[nsqi], v->h[ls], a->has_th[ls] ? w->th[ls] : 0,
+              a->N_hidden[ls], d->h[l], N_hidden, (unsigned short *)0, 0, 0);
+          }
         }
-        else
-        { add_grad2 (g->nsq[nsqi], v->h[ls], a->has_th[ls] ? w->th[ls] : 0,
-            a->N_hidden[ls], d->h[l], N_hidden, (unsigned short *)0, 0, 0);
-        }
-        nsqi += 1;
       }
     }
 
@@ -1107,14 +1106,12 @@ __device__ void net_store1_grad
   net_values const*v0,	/* Values for units in network for case */
   net_values const*d0,	/* Backpropagated derivatives for case */
   net_arch const*a,	/* Network architecture */
+  net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const*flgs,	/* Network flags, null if none */
   int sparse            /* Might source unit values often be zero? */
 )
 { 
   int l, ls, nsqi;
-  unsigned bits;
-
-  nsqi = 0;
 
   if (a->has_ti) 
   { net_store1_grad1 (th, g->ti, d0->i, a->N_inputs);
@@ -1148,22 +1145,23 @@ __device__ void net_store1_grad
       }
     }
 
-    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
-    { if (bits&1)
-      { if (ls>=l-1) abort();
-        if (a->nonseq_config[nsqi])
-        { net_store1_grad2_config
-              (th, g->nsq[nsqi], v0->h[ls],
-               a->has_th[ls] ? w->th[ls] : 0,
-               d0->h[l], a->nonseq_config[nsqi]);
+   if (a->has_nsq[l])
+    { for (ls = 0; ls<l; ls++)
+      { nsqi = pre->nonseq[ls][l];
+        if (nsqi>=0)
+        { if (a->nonseq_config[nsqi])
+          { net_store1_grad2_config
+                (th, g->nsq[nsqi], v0->h[ls],
+                 a->has_th[ls] ? w->th[ls] : 0,
+                 d0->h[l], a->nonseq_config[nsqi]);
+          }
+          else
+          { net_store1_grad2 (th, g->nsq[nsqi], v0->h[ls],
+              a->has_th[ls] ? w->th[ls] : 0,
+              a->N_hidden[ls], d0->h[l], N_hidden, 
+              (unsigned short *)0, 0, 0);
+          }
         }
-        else
-        { net_store1_grad2 (th, g->nsq[nsqi], v0->h[ls],
-            a->has_th[ls] ? w->th[ls] : 0,
-            a->N_hidden[ls], d0->h[l], N_hidden, 
-            (unsigned short *)0, 0, 0);
-        }
-        nsqi += 1;
       }
     }
 
@@ -1574,14 +1572,12 @@ __device__ void net_store2_grad
   net_values const*d0,	/* Backpropagated derivatives for case 0 */
   net_values const*d1,	/* Backpropagated derivatives for case 1 */
   net_arch const*a,	/* Network architecture */
+  net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const*flgs,	/* Network flags, null if none */
   int sparse            /* Might source unit values often be zero? */
 )
 { 
   int l, ls, nsqi;
-  unsigned bits;
-
-  nsqi = 0;
 
   if (a->has_ti) 
   { net_store2_grad1 (th, g->ti, d0->i, d1->i, a->N_inputs);
@@ -1615,22 +1611,23 @@ __device__ void net_store2_grad
       }
     }
 
-    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
-    { if (bits&1)
-      { if (ls>=l-1) abort();
-        if (a->nonseq_config[nsqi])
-        { net_store2_grad2_config
-              (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], 
-               a->has_th[ls] ? w->th[ls] : 0,
-               d0->h[l], d1->h[l], a->nonseq_config[nsqi]);
+   if (a->has_nsq[l])
+    { for (ls = 0; ls<l; ls++)
+      { nsqi = pre->nonseq[ls][l];
+        if (nsqi>=0)
+        { if (a->nonseq_config[nsqi])
+          { net_store2_grad2_config
+                (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], 
+                 a->has_th[ls] ? w->th[ls] : 0,
+                 d0->h[l], d1->h[l], a->nonseq_config[nsqi]);
+          }
+          else
+          { net_store2_grad2 (th, g->nsq[nsqi], v0->h[ls], v1->h[ls],
+              a->has_th[ls] ? w->th[ls] : 0,
+              a->N_hidden[ls], d0->h[l], d1->h[l], N_hidden, 
+              (unsigned short *)0, 0, 0);
+          }
         }
-        else
-        { net_store2_grad2 (th, g->nsq[nsqi], v0->h[ls], v1->h[ls],
-            a->has_th[ls] ? w->th[ls] : 0,
-            a->N_hidden[ls], d0->h[l], d1->h[l], N_hidden, 
-            (unsigned short *)0, 0, 0);
-        }
-        nsqi += 1;
       }
     }
 
@@ -2066,14 +2063,12 @@ __device__ void net_store3_grad
   net_values const*d1,	/* Backpropagated derivatives for case 1 */
   net_values const*d2,	/* Backpropagated derivatives for case 2 */
   net_arch const*a,	/* Network architecture */
+  net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const*flgs,	/* Network flags, null if none */
   int sparse            /* Might source unit values often be zero? */
 )
 { 
   int l, ls, nsqi;
-  unsigned bits;
-
-  nsqi = 0;
 
   if (a->has_ti) 
   { net_store3_grad1 (th, g->ti, d0->i, d1->i, d2->i, a->N_inputs);
@@ -2109,22 +2104,23 @@ __device__ void net_store3_grad
       }
     }
 
-    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
-    { if (bits&1)
-      { if (ls>=l-1) abort();
-        if (a->nonseq_config[nsqi])
-        { net_store3_grad2_config
-              (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], v2->h[ls],
-               a->has_th[ls] ? w->th[ls] : 0,
-               d0->h[l], d1->h[l], d2->h[l], a->nonseq_config[nsqi]);
+   if (a->has_nsq[l])
+    { for (ls = 0; ls<l; ls++)
+      { nsqi = pre->nonseq[ls][l];
+        if (nsqi>=0)
+        { if (a->nonseq_config[nsqi])
+          { net_store3_grad2_config
+                (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], v2->h[ls],
+                 a->has_th[ls] ? w->th[ls] : 0,
+                 d0->h[l], d1->h[l], d2->h[l], a->nonseq_config[nsqi]);
+          }
+          else
+          { net_store3_grad2 (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], v2->h[ls],
+              a->has_th[ls] ? w->th[ls] : 0,
+              a->N_hidden[ls], d0->h[l], d1->h[l], d2->h[l], N_hidden,
+              (unsigned short *)0, 0, 0);
+          }
         }
-        else
-        { net_store3_grad2 (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], v2->h[ls],
-            a->has_th[ls] ? w->th[ls] : 0,
-            a->N_hidden[ls], d0->h[l], d1->h[l], d2->h[l], N_hidden,
-            (unsigned short *)0, 0, 0);
-        }
-        nsqi += 1;
       }
     }
 
@@ -2584,14 +2580,12 @@ __device__ void net_store4_grad
   net_values const*d2,	/* Backpropagated derivatives for case 2 */
   net_values const*d3,	/* Backpropagated derivatives for case 3 */
   net_arch const*a,	/* Network architecture */
+  net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const*flgs,	/* Network flags, null if none */
   int sparse            /* Might source unit values often be zero? */
 )
 { 
   int l, ls, nsqi;
-  unsigned bits;
-
-  nsqi = 0;
 
   if (a->has_ti) 
   { net_store4_grad1 (th, g->ti, d0->i, d1->i, d2->i, d3->i, a->N_inputs);
@@ -2629,23 +2623,24 @@ __device__ void net_store4_grad
       }
     }
 
-    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
-    { if (bits&1)
-      { if (ls>=l-1) abort();
-        if (a->nonseq_config[nsqi])
-        { net_store4_grad2_config
-              (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], v2->h[ls], v3->h[ls],
-               a->has_th[ls] ? w->th[ls] : 0,
-               d0->h[l], d1->h[l], d2->h[l], d3->h[l], a->nonseq_config[nsqi]);
+    if (a->has_nsq[l])
+    { for (ls = 0; ls<l; ls++)
+      { nsqi = pre->nonseq[ls][l];
+        if (nsqi>=0)
+        { if (a->nonseq_config[nsqi])
+          { net_store4_grad2_config
+               (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], v2->h[ls], v3->h[ls],
+                a->has_th[ls] ? w->th[ls] : 0,
+                d0->h[l], d1->h[l], d2->h[l], d3->h[l], a->nonseq_config[nsqi]);
+          }
+          else
+          { net_store4_grad2 (th, g->nsq[nsqi], 
+              v0->h[ls], v1->h[ls], v2->h[ls], v3->h[ls],
+              a->has_th[ls] ? w->th[ls] : 0,
+              a->N_hidden[ls], d0->h[l], d1->h[l], d2->h[l], d3->h[l], N_hidden,
+              (unsigned short *)0, 0, 0);
+          }
         }
-        else
-        { net_store4_grad2 (th, g->nsq[nsqi], 
-            v0->h[ls], v1->h[ls], v2->h[ls], v3->h[ls],
-            a->has_th[ls] ? w->th[ls] : 0,
-            a->N_hidden[ls], d0->h[l], d1->h[l], d2->h[l], d3->h[l], N_hidden,
-            (unsigned short *)0, 0, 0);
-        }
-        nsqi += 1;
       }
     }
 

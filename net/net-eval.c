@@ -36,6 +36,7 @@ int main
 )
 {
   net_arch *a;
+  net_precomputed pre;
   net_flags *flgs;
   model_specification *m;
   model_survival *sv;
@@ -170,7 +171,7 @@ int main
   }
 
   s->total_sigmas = net_setup_sigma_count(a,flgs,m);
-  w->total_params = net_setup_param_count(a,flgs,0);
+  w->total_params = net_setup_param_count(a,flgs,&pre);
 
   logg.req_size['S'] = s->total_sigmas * sizeof(net_sigma);
   logg.req_size['W'] = w->total_params * sizeof(net_param);
@@ -244,7 +245,7 @@ int main
   
     for (;;)
     {
-      net_func (v, 0, a, flgs, w, 1);
+      net_func (v, 0, a, &pre, flgs, w, 1);
   
       for (i = 0; i<a->N_inputs; i++) printf(" %8.5f",v->i[i]);
   
@@ -252,7 +253,7 @@ int main
       { for (j = 0; j<a->N_hidden[layer]; j++) printf(" %+.6e",v->h[layer][j]);
       }
       else if (gen_targets)
-      { net_model_guess (v, targets, a, flgs, m, sv, w, s->noise, 1);
+      { net_model_guess (v, targets, a, &pre, flgs, m, sv, w, s->noise, 1);
         for (j = 0; j<N_targets; j++) printf(" %+.6e",targets[j]);
       }
       else

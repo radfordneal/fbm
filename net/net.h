@@ -394,11 +394,12 @@ typedef struct
 } net_values;
 
 
-/* STUFF ABOUT NETWORK THAT'S BEEN PRE-COMPUTED. */
+/* STUFF ABOUT THE NETWORK ARCHITECTURE THAT'S BEEN PRE-COMPUTED. */
 
 typedef struct
-{ short nonseq[Max_layers][Max_layers]; /* nonseq[from][to] indexes non-sequent
-                                           connection in nsq, or is -1 if none*/
+{ signed char nonseq [Max_layers]   /* nonseq[from][to] indexes non-sequential*/
+                     [Max_layers+1];/*  connection in nsq, or is -1 if none.  */
+                                    /*  (The +1 makes power of two for speed) */
 } net_precomputed;
 
 
@@ -434,10 +435,12 @@ void net_prior_max_second (net_params *, net_sigmas *, net_arch *, net_flags *,
                            net_priors *);
 
 HOSTDEV void net_func (net_values *restrict, int, net_arch const*, 
-                       net_flags const*, net_params const*, int);
+                       net_precomputed const*, net_flags const*, 
+                       net_params const*, int);
 
 __device__ void net_func_gpu (int, net_values *restrict, int, net_arch const*, 
-                              net_flags const*, net_params const*, int, int);
+                              net_precomputed const*, net_flags const*, 
+                              net_params const*, int, int);
 
 HOSTDEV void net_back (net_values const*, net_values *restrict, int, 
                        net_arch const*, net_flags const*, net_params const*);
@@ -470,10 +473,9 @@ __device__ void net_store4_grad (int, net_params *restrict, net_params const*,
    net_arch const*, net_flags const*, int);
 
 HOSTDEV void net_model_prob (net_values const*, net_value const*, 
-                             double *restrict,
-                             net_values *restrict, net_arch const*,
-                             model_specification const*, model_survival const*,
-                             net_sigma const*, int);
+                             double *restrict, net_values *restrict, 
+                             net_arch const*, model_specification const*,
+                             model_survival const*, net_sigma const*, int);
 
 __device__ void net_model_prob_gpu (int, net_values const*, net_value const*, 
                              double *restrict, net_values *restrict, 
@@ -485,7 +487,8 @@ void net_model_check (model_specification const*);
 void net_model_max_second (net_value *, net_arch *, model_specification *,
                            model_survival *, net_sigma *);
 
-void net_model_guess (net_values *, net_value *, net_arch *, net_flags *,
+void net_model_guess (net_values *, net_value *, net_arch *, 
+                      net_precomputed *, net_flags *,
                       model_specification *, model_survival *, net_params *,
                       net_sigma *, int);
 

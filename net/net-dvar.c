@@ -39,6 +39,7 @@ int main
   net_arch   *a;
   net_flags  *flgs;
   net_priors *p;
+  net_precomputed pre;
 
   net_params params, *w = &params;
   net_values values1, *v1 = &values1;
@@ -105,7 +106,7 @@ int main
 
   flgs = logg.data['F'];
 
-  w->total_params = net_setup_param_count(a,flgs,0);
+  w->total_params = net_setup_param_count(a,flgs,&pre);
 
   logg.req_size['W'] = w->total_params * sizeof(net_param);
 
@@ -165,9 +166,9 @@ int main
         { width = low_width==0 ? high_width*i/n_pairs
                 : low_width*pow(high_width/low_width,(double)i/n_pairs);
           v1->i[0] = centre + width/2;
-          net_func (v1, 0, a, flgs, w, 1);
+          net_func (v1, 0, a, &pre, flgs, w, 1);
           v2->i[0] = centre - width/2;
-          net_func (v2, 0, a, flgs, w, 1);
+          net_func (v2, 0, a, &pre, flgs, w, 1);
           for (j = 0; j<a->N_hidden[a->N_layers-1]; j++)
           { f1 = v1->h[a->N_layers-1][j];
             f2 = v2->h[a->N_layers-1][j];
@@ -184,9 +185,9 @@ int main
         { width = low_width==0 ? high_width*i/n_pairs
                 : low_width*pow(high_width/low_width,(double)i/n_pairs);
           v1->i[0] = centre + width/2;
-          net_func (v1, 0, a, flgs, w, 1);
+          net_func (v1, 0, a, &pre, flgs, w, 1);
           v2->i[0] = centre - width/2;
-          net_func (v2, 0, a, flgs, w, 1);
+          net_func (v2, 0, a, &pre, flgs, w, 1);
           f1 = v1->o[0];
           f2 = v2->o[0];
           dvar[i] += (f1-f2)*(f1-f2);

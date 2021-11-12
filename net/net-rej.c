@@ -36,6 +36,7 @@ int main
 )
 {
   net_arch *a;
+  net_precomputed pre;
   net_flags *flgs;
   net_priors *p;
   model_specification *m;
@@ -90,7 +91,7 @@ int main
   /* Allocate space for parameters and hyperparameters. */
 
   s->total_sigmas = net_setup_sigma_count(a,flgs,m);
-  w->total_params = net_setup_param_count(a,flgs,0);
+  w->total_params = net_setup_param_count(a,flgs,&pre);
 
   s->sigma_block = chk_alloc (s->total_sigmas, sizeof (net_sigma));
   w->param_block = chk_alloc (w->total_params, sizeof (net_param));
@@ -167,7 +168,7 @@ int main
         }
         else
         { 
-          net_func (&train_values[i], 0, a, flgs, w, 1);
+          net_func (&train_values[i], 0, a, &pre, flgs, w, 1);
           net_model_check (m);    
           net_model_prob (&train_values[i], 
                           train_targets + data_spec->N_targets*i,

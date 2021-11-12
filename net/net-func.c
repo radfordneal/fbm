@@ -82,25 +82,17 @@ HOSTDEV void net_func
 ( net_values *restrict v, /* Place to get inputs and store outputs */
   int start,		/* Number of hidden layers with known values */
   net_arch const* a,	/* Network architecture */
+  net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const* flgs,/* Network flags, null if none */
   net_params const* w,	/* Network parameters */
   int sparse		/* Are input values sparse? */
 )
 {
   int l, ls, nsqi, j;
-  unsigned bits;
+
+  if (a->has_ti) sparse = 0;
 
   /* Compute values for successive hidden layers. */
-
-  nsqi = 0;
-  for (l = 0; l<start; l++)
-  { for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
-    { if (bits&1)
-      { if (ls>=l-1) abort();
-        nsqi += 1;
-      }
-    }
-  }
 
   for (l = start; l<a->N_layers; l++)
   {
@@ -132,19 +124,20 @@ HOSTDEV void net_func
       }
     }
 
-    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
-    { if (bits&1)
-      { if (ls>=l-1) abort();
-        if (a->nonseq_config[nsqi])
-        { add_connections_config (sh, v->h[ls], w->nsq[nsqi], 
-            a->has_th[ls] ? w->th[ls] : 0, a->nonseq_config[nsqi]);
+    if (a->has_nsq[l])
+    { for (ls = 0; ls<l; ls++)
+      { nsqi = pre->nonseq[ls][l];
+        if (nsqi>=0)
+        { if (a->nonseq_config[nsqi])
+          { add_connections_config (sh, v->h[ls], w->nsq[nsqi], 
+              a->has_th[ls] ? w->th[ls] : 0, a->nonseq_config[nsqi]);
+          }
+          else
+          { add_connections (sh, N_hidden, v->h[ls], a->N_hidden[ls],
+              w->nsq[nsqi], a->has_th[ls] ? w->th[ls] : 0, 
+              (unsigned short *) 0, 0, 0);
+          }
         }
-        else
-        { add_connections (sh, N_hidden, v->h[ls], a->N_hidden[ls],
-            w->nsq[nsqi], a->has_th[ls] ? w->th[ls] : 0, 
-            (unsigned short *) 0, 0, 0);
-        }
-        nsqi += 1;
       }
     }
 
@@ -1539,6 +1532,7 @@ __device__ void net_func_gpu
   net_values *restrict v, /* Place to get inputs and store outputs */
   int start,		/* Number of hidden layers with known values */
   net_arch const* a,	/* Network architecture */
+  net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const* flgs,/* Network flags, null if none */
   net_params const* w,	/* Network parameters */
   int sparse,		/* Are input values sparse? */
@@ -1546,25 +1540,10 @@ __device__ void net_func_gpu
 )
 {
   int l, ls, nsqi, j;
-  unsigned bits;
-
-  /* Find location of non-sequential configurations at layer 'start'. */
-
-  nsqi = 0;
-  for (l = 0; l<start; l++)
-  { for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
-    { if (bits&1)
-      { if (ls>=l-1) abort();
-        nsqi += 1;
-      }
-    }
-  }
 
   if (a->has_ti) sparse = 0;
 
   /* Compute values for successive hidden layers. */
-
-  nsqi = 0;
 
   for (l = start; l<a->N_layers; l++)
   {
@@ -1601,19 +1580,20 @@ __device__ void net_func_gpu
       }
     }
 
-    for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
-    { if (bits&1)
-      { if (ls>=l-1) abort();
-        if (a->nonseq_config[nsqi])
-        { add_connections_config_gpu (th, sh, v->h[ls], w->nsq[nsqi],
-            a->has_th[ls] ? w->th[ls] : 0, a->nonseq_config[nsqi]);
+    if (a->has_nsq[l])
+    { for (ls = 0; ls<l; ls++)
+      { nsqi = pre->nonseq[ls][l];
+        if (nsqi>=0)
+        { if (a->nonseq_config[nsqi])
+          { add_connections_config_gpu (th, sh, v->h[ls], w->nsq[nsqi],
+              a->has_th[ls] ? w->th[ls] : 0, a->nonseq_config[nsqi]);
+          }
+          else
+          { add_connections_gpu (th, sh, N_hidden, v->h[ls], a->N_hidden[ls],
+              w->nsq[nsqi], a->has_th[ls] ? w->th[ls] : 0,
+              (unsigned short *) 0, 0, 0);
+          }
         }
-        else
-        { add_connections_gpu (th, sh, N_hidden, v->h[ls], a->N_hidden[ls],
-            w->nsq[nsqi], a->has_th[ls] ? w->th[ls] : 0,
-            (unsigned short *) 0, 0, 0);
-        }
-        nsqi += 1;
       }
     }
 

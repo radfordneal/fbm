@@ -19,6 +19,7 @@
 EXTERN int initialize_done;	/* Has all been set up?  (Will be 0 at start) */
 
 EXTERN net_arch *arch;		/* Network architecture */
+EXTERN net_precomputed pre;	/* Precomputed stuff about the architecture */
 EXTERN net_flags *flgs;		/* Network flags, null if none */
 EXTERN net_priors *priors;	/* Network priors */
 

@@ -224,6 +224,7 @@ __constant__ int const_N_targets;  /* Copy of N_targets in constant memory */
 __constant__ int const_blkcases;   /* Copy of blkcases in constant memory */
 
 __constant__ net_arch const_arch;  /* Copy of dev_arch in constant memory */
+__constant__ net_precomputed const_pre;  /* Copy of pre in constant memory */
 __constant__ net_flags const_flgs; /* Copy of flgs in constant memory */
 __constant__ int const_has_flgs;   /* Are flags present in const_flgs? */
 
@@ -459,7 +460,7 @@ void mc_app_initialize
     /* Locate existing network, if one exists. */
   
     sigmas.total_sigmas = net_setup_sigma_count(arch,flgs,model);
-    params.total_params = net_setup_param_count(arch,flgs,0); /* also precomp */
+    params.total_params = net_setup_param_count(arch,flgs,&pre);
   
     sigmas.sigma_block = (net_sigma *) logg->data['S'];
     params.param_block = (net_param *) logg->data['W'];
@@ -824,6 +825,9 @@ void mc_app_initialize
       cudaMemcpyToSymbol (const_arch, &dev_arch, sizeof dev_arch);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_arch");
+      cudaMemcpyToSymbol (const_pre, &pre, sizeof pre);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_pre");
       cudaMemcpyToSymbol (const_sparse, &sparse, sizeof sparse);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_sparse");
@@ -1321,7 +1325,7 @@ static void gibbs_noise
   int i, j;
 
   for (i = 0; i<N_train; i++) 
-  { net_func (&train_values[i], 0, arch, flgs, &params, sparse);
+  { net_func (&train_values[i], 0, arch, &pre, flgs, &params, sparse);
   }
 
   pr = &model->noise;
@@ -1425,7 +1429,7 @@ static void rgrid_met_noise
   int i, j;
 
   for (i = 0; i<N_train; i++) 
-  { net_func (&train_values[i], 0, arch, flgs, &params, sparse);
+  { net_func (&train_values[i], 0, arch, &pre, flgs, &params, sparse);
   }
 
   pr = &model->noise;
@@ -1964,7 +1968,7 @@ void net_training_cases
     
       for (;;)
       {
-        net_func (&train_values[i], 0, arch, flgs, &params, sparse);
+        net_func (&train_values[i], 0, arch, &pre, flgs, &params, sparse);
         
         net_value fudged_target 
                     = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
@@ -2017,7 +2021,7 @@ void net_training_cases
         // printf("train_values[%d]->i[1] = %f\n",i,train_vals_i->i[1]);
       }
 
-      net_func (train_vals_i, 0, arch, flgs, &params, sparse);
+      net_func (train_vals_i, 0, arch, &pre, flgs, &params, sparse);
 
       if (DEBUG_NET_TRAINING_CASES)
       { printf("train_values[%d]->o[0] = %f\n",i,train_vals_i->o[0]);
@@ -2288,8 +2292,9 @@ __global__ void forward_kernel
             blockIdx.x,threadIdx.x,start,end);
   }
 
-  net_func_gpu (th, train_vals_h, 0, &const_arch, flgs, &const_params, 
-                const_sparse, 0);
+  net_func_gpu 
+    (th, train_vals_h, 0, &const_arch, &const_pre, flgs, &const_params, 
+     const_sparse, 0);
 
 #if SPLIT_KERNELS==1
 

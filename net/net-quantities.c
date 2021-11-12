@@ -33,6 +33,7 @@
 /* NETWORK VARIABLES. */
 
 static net_arch *arch;
+static net_precomputed pre;
 static net_flags *flgs;
 static model_specification *model;
 static net_priors *priors;
@@ -93,7 +94,7 @@ void net_initialize
   /* Check that network is present, and set up pointers. */
 
   sigmas.total_sigmas = net_setup_sigma_count(arch,flgs,model);
-  params.total_params = net_setup_param_count(arch,flgs,0);
+  params.total_params = net_setup_param_count(arch,flgs,&pre);
 
   sigmas.sigma_block = (net_sigma *) logg->data['S'];
   params.param_block = (net_param *) logg->data['W'];
@@ -367,7 +368,7 @@ void net_evaluate
       && (strchr("uoyglbacv",letter)!=0 || letter=='n' && model_type=='C'))
       { if (!have_train_data) abort();
         for (i = 0; i<N_train; i++)
-        { net_func (&train_values[i], 0, arch, flgs, &params, 1);
+        { net_func (&train_values[i], 0, arch, &pre, flgs, &params, 1);
         }
         ev_train = 1;
       }
@@ -376,7 +377,7 @@ void net_evaluate
       && (strchr("OYGLBACV",letter)!=0 || letter=='N' && model_type=='C'))
       { if (!have_test_data) abort();
         for (i = 0; i<N_test; i++)
-        { net_func (&test_values[i], 0, arch, flgs, &params, 1);
+        { net_func (&test_values[i], 0, arch, &pre, flgs, &params, 1);
         }
         ev_test = 1;
       }
@@ -403,8 +404,8 @@ void net_evaluate
 
         case 'y': case 'Y':
         { for (i = low; i<=high; i++)
-          { net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
-                             &params, sigmas.noise, 0);
+          { net_model_guess (&cases[i], target_guess, arch, &pre, flgs,
+                             model, surv, &params, sigmas.noise, 0);
             qh->value[v][i-low] = target_guess[mod];
           }
           qh->updated[v] = 1;
@@ -413,8 +414,8 @@ void net_evaluate
 
         case 'g': case 'G':                                
         { for (i = low; i<=high; i++)
-          { net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
-                             &params, sigmas.noise, 1);
+          { net_model_guess (&cases[i], target_guess, arch, &pre, flgs,
+                             model, surv, &params, sigmas.noise, 1);
             qh->value[v][i-low] = target_guess[mod];
           }
           qh->updated[v] = 1;
@@ -475,7 +476,7 @@ void net_evaluate
 
               for (;;)
               {
-                net_func (&cases[i], 0, arch, flgs, &params, 1);
+                net_func (&cases[i], 0, arch, &pre, flgs, &params, 1);
           
                 ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
 
@@ -533,8 +534,8 @@ void net_evaluate
 
           for (i = (low==-1 ? 0 : low); i <= (low==-1 ? N_cases-1 : high); i++)
           { 
-            net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
-                             &params, sigmas.noise, 0);
+            net_model_guess (&cases[i], target_guess, arch, &pre, flgs, 
+                             model, surv, &params, sigmas.noise, 0);
 
             if (low!=-1) 
             { qh->value[v][i-low] = 0;
@@ -571,8 +572,8 @@ void net_evaluate
 
           for (i = (low==-1 ? 0 : low); i <= (low==-1 ? N_cases-1 : high); i++)
           { 
-            net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
-                             &params, sigmas.noise, 0);
+            net_model_guess (&cases[i], target_guess, arch, &pre, flgs,
+                             model, surv, &params, sigmas.noise, 0);
 
             if (low!=-1) 
             { qh->value[v][i-low] = 0;
@@ -609,8 +610,8 @@ void net_evaluate
 
           for (i = 0; i<N_cases; i++)
           { 
-            net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
-                             &params, sigmas.noise, 0);
+            net_model_guess (&cases[i], target_guess, arch, &pre, flgs,
+                             model, surv, &params, sigmas.noise, 0);
 
             p = qd[v].modifier==-1 ? target_guess[0] 
                                    : target_guess[0]+target_guess[1];
@@ -813,8 +814,8 @@ void net_evaluate
   
             for (i = 0; i<N_cases; i++)
             { 
-              net_model_guess (&cases[i], target_guess, arch, flgs, model, surv,
-                               &params, sigmas.noise, 0);
+              net_model_guess (&cases[i], target_guess, arch, &pre, flgs,
+                               model, surv, &params, sigmas.noise, 0);
   
               for (c = 0; c<arch->N_outputs; c++)
               { e -= target_guess[c]==0 ? 0 

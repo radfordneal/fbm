@@ -626,6 +626,7 @@ void net_model_guess
 ( net_values *v,	/* Values for units in network */
   net_value *t,		/* Place to store guesses at targets */
   net_arch *a,		/* Network architecture */
+  net_precomputed *pre,  /* Precomputed aspects of architecture */
   net_flags *flgs,	/* Network flags, null if none */
   model_specification *m, /* Data model */
   model_survival *sv,	/* Type of hazard function for survival model, or null*/
@@ -732,7 +733,7 @@ void net_model_guess
  
           for (;;)
           {
-            net_func (v, 0, a, flgs, params, 1);
+            net_func (v, 0, a, pre, flgs, params, 1);
             h = exp(v->o[0]);
             
             if (type==0)

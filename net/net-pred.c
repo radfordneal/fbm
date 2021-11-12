@@ -44,6 +44,7 @@ data_value *test_inputs;
 /* LOCAL VARIABLES. */
 
 static net_arch *a;
+static net_precomputed pre;
 static net_flags *flgs;
 static net_priors *p;
 static net_sigmas sigmas, *s = &sigmas;
@@ -85,7 +86,7 @@ void pred_app_init (void)
   net_check_specs_present(a,p,0,m,sv);
 
   s->total_sigmas = net_setup_sigma_count(a,flgs,m);
-  w->total_params = net_setup_param_count(a,flgs,0);
+  w->total_params = net_setup_param_count(a,flgs,&pre);
 
   logg.req_size['S'] = s->total_sigmas * sizeof(net_sigma);
   logg.req_size['W'] = w->total_params * sizeof(net_param);
@@ -149,7 +150,7 @@ int pred_app_use_index (void)
 
     if (m==0 || m->type!='V' || sv->hazard_type=='C')
     {
-      net_func (&test_values[i], 0, a, flgs, w, 1);
+      net_func (&test_values[i], 0, a, &pre, flgs, w, 1);
     }
     
     if (have_targets) 
@@ -179,7 +180,7 @@ int pred_app_use_index (void)
 
         for (;;)
         {
-          net_func (&test_values[i], 0, a, flgs, w, 1);
+          net_func (&test_values[i], 0, a, &pre, flgs, w, 1);
           
           ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
 
@@ -227,11 +228,11 @@ int pred_app_use_index (void)
     }
     
     net_model_guess (&test_values[i], test_targ_pred + i*M_targets, 
-                     a, flgs, m, sv, w, s->noise, 0);
+                     a, &pre, flgs, m, sv, w, s->noise, 0);
 
     if (op_D)
     { net_model_guess (&test_values[i], test_targ_med + i*M_targets, 
-                       a, flgs, m, sv, w, s->noise, 2);
+                       a, &pre, flgs, m, sv, w, s->noise, 2);
     }
 
     for (j = 0; j<M_targets; j++)
@@ -262,7 +263,7 @@ int pred_app_use_index (void)
       for (k = 0; k<Median_sample; k++)
       {
         net_model_guess (&test_values[i], curr_targets, 
-                         a, flgs, m, sv, w, s->noise, 1);
+                         a, &pre, flgs, m, sv, w, s->noise, 1);
 
         for (j = 0; j<M_targets; j++)
         { if (op_r)

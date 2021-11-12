@@ -1,4 +1,4 @@
-Commit: 8d7abff15d2ea8d9223eacf52af64aea19f46944
+Commit: 818ae81f5e39c8cf79650dae5ad3a701f8d8c92b
 
 Running exi2 with dbl-gpu on A4000:
 
@@ -20,4 +20,4 @@ Average log probability of targets:    -0.756+-0.107
 Fraction of guesses that were wrong:    0.2700+-0.0446
 Average squared error guessing mean:    0.38772+-0.04793
 
-elapsed 3.52s
+elapsed 3.47s

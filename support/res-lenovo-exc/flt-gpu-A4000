@@ -1,4 +1,4 @@
-Commit: 8d7abff15d2ea8d9223eacf52af64aea19f46944
+Commit: 818ae81f5e39c8cf79650dae5ad3a701f8d8c92b
 
 Running exc with flt-gpu on A4000:
 
@@ -20,4 +20,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.472+-0.022
 Fraction of guesses that were wrong:    0.1980+-0.0126
 
-elapsed 1.86s
+elapsed 1.87s

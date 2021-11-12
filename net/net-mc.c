@@ -3233,7 +3233,7 @@ void mc_app_stepsizes
           for (k = 0; k<arch->nonseq_config[nsqi]->N_conn; k++)
           { i = arch->nonseq_config[nsqi]->conn[k].s;
             j = arch->nonseq_config[nsqi]->conn[k].d;
-            seconds.h[l][i] += (w*w) * seconds.s[ld][j];
+            seconds.h[l][i] += (w*w) * seconds.h[ld][j];
           }
         }
         else
@@ -3241,7 +3241,7 @@ void mc_app_stepsizes
           { for (j = 0; j<arch->N_hidden[ld]; j++)
             { net_sigma w = sigmas.nsq[nsqi][i];
               if (sigmas.ah[ld]!=0) w *= sigmas.ah[ld][j];
-              seconds.h[l][i] += (w*w) * seconds.s[ld][j];
+              seconds.h[l][i] += (w*w) * seconds.h[ld][j];
             }
           }
         }
@@ -3254,7 +3254,7 @@ void mc_app_stepsizes
         for (k = 0; k<arch->hidden_config[l+1]->N_conn; k++)
         { i = arch->hidden_config[l+1]->conn[k].s;
           j = arch->hidden_config[l+1]->conn[k].d;
-          seconds.h[l][i] += (w*w) * seconds.s[l+1][j];
+          seconds.h[l][i] += (w*w) * seconds.h[l+1][j];
         }
       }
       else
@@ -3262,7 +3262,7 @@ void mc_app_stepsizes
         { for (j = 0; j<arch->N_hidden[l+1]; j++)
           { w = sigmas.hh[l][i];
             if (sigmas.ah[l+1]!=0) w *= sigmas.ah[l+1][j];
-            seconds.h[l][i] += (w*w) * seconds.s[l+1][j];
+            seconds.h[l][i] += (w*w) * seconds.h[l+1][j];
           }
         }
       }
@@ -3274,19 +3274,19 @@ void mc_app_stepsizes
       { case Tanh_type: 
         case Identity_type:
         case Softplus_type:
-        { seconds.s[l][i] = s;
+        { seconds.h[l][i] = s;
           break;
         }
         case Square_type:
-        { seconds.s[l][i] = 4*typical.h[l][i] * s;
+        { seconds.h[l][i] = 4*typical.h[l][i] * s;
           break;
         }
         case Cube_type:
-        { seconds.s[l][i] = 9*typical.h[l][i]*typical.h[l][i] * s;
+        { seconds.h[l][i] = 9*typical.h[l][i]*typical.h[l][i] * s;
           break;
         }
         case Sin_type:
-        { seconds.s[l][i] = 4 * s;
+        { seconds.h[l][i] = 4 * s;
           break;
         }
         default: abort();
@@ -3307,7 +3307,7 @@ void mc_app_stepsizes
           for (k = 0; k<arch->input_config[l]->N_conn; k++)
           { i = arch->input_config[l]->conn[k].s;
             j = arch->input_config[l]->conn[k].d;
-            seconds.i[i] += (w*w) * seconds.s[l][j];
+            seconds.i[i] += (w*w) * seconds.h[l][j];
           }
         }
         else
@@ -3316,7 +3316,7 @@ void mc_app_stepsizes
             for (j = 0; j<arch->N_hidden[l]; j++)
             { w = sigmas.ih[l][i];
               if (sigmas.ah[l]!=0) w *= sigmas.ah[l][j];
-              seconds.i[i] += (w*w) * seconds.s[l][j];
+              seconds.i[i] += (w*w) * seconds.h[l][j];
             }
           }
         }
@@ -3370,12 +3370,12 @@ void mc_app_stepsizes
       { for (k = 0; k<arch->bias_config[l]->N_conn; k++)
         { j = arch->bias_config[l]->conn[k].d;
           stepsizes.bh [l] [arch->bias_config[l]->conn[k].w] 
-            += N_train * seconds.s[l][j];
+            += N_train * seconds.h[l][j];
         }
       }
       else
       { for (j = 0; j<arch->N_hidden[l]; j++)
-        { stepsizes.bh[l][j] += N_train * seconds.s[l][j];
+        { stepsizes.bh[l][j] += N_train * seconds.h[l][j];
         }
       }
     }
@@ -3386,7 +3386,7 @@ void mc_app_stepsizes
         { i = arch->input_config[l]->conn[k].s;
           j = arch->input_config[l]->conn[k].d;
           stepsizes.ih [l] [arch->input_config[l]->conn[k].w]
-            += train_sumsq[i] * seconds.s[l][j];
+            += train_sumsq[i] * seconds.h[l][j];
         }
       }
       else
@@ -3395,7 +3395,7 @@ void mc_app_stepsizes
         { if (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
           { for (j = 0; j<arch->N_hidden[l]; j++)
             { stepsizes.ih [l] [k*arch->N_hidden[l] + j] 
-                += train_sumsq[i] * seconds.s[l][j];
+                += train_sumsq[i] * seconds.h[l][j];
             }
             k += 1;
           }
@@ -3409,7 +3409,7 @@ void mc_app_stepsizes
         { i = arch->hidden_config[l+1]->conn[k].s;
           j = arch->hidden_config[l+1]->conn[k].d;
           stepsizes.hh [l] [arch->hidden_config[l+1]->conn[k].w]
-            += N_train * typical.h[l][i] * seconds.s[l+1][j];
+            += N_train * typical.h[l][i] * seconds.h[l+1][j];
         }
       }
       else
@@ -3417,7 +3417,7 @@ void mc_app_stepsizes
         { net_value pv = N_train * typical.h[l][i];
           for (j = 0; j<arch->N_hidden[l+1]; j++)
           { stepsizes.hh [l] [i*arch->N_hidden[l+1] + j] 
-              += pv * seconds.s[l+1][j];
+              += pv * seconds.h[l+1][j];
           }
         }
       }

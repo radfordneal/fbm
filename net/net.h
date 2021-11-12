@@ -388,8 +388,9 @@ typedef double net_value;  /* Precision of unit values */
 typedef struct
 { 
   net_value *i;			/* Values of input units */
-  net_value *s[Max_layers];	/* Summed input into hidden units */
-  net_value *h[Max_layers];	/* Values of hidden units */
+  net_value *xs[Max_layers];	/* Summed input into hidden units */
+  net_value *h[Max_layers];	/* Values of hidden units, sometime before
+				   activation function, sometime after */
   net_value *o;			/* Values of output units */
 
 } net_values;

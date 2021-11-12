@@ -547,7 +547,7 @@ void net_setup_value_pointers_aligned
   for (l = 0; l<a->N_layers; l++)
   { v->h[l] = b;
     b += ALIGN(a->N_hidden[l],align);
-    v->s[l] = b;
+    v->xs[l] = b;
     b += ALIGN(a->N_hidden[l],align);
   }
 

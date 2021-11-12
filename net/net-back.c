@@ -109,11 +109,11 @@ HOSTDEV void net_back
       { nsqi = ns[l][ld];
         if (a->nonseq_config[nsqi])
         { sum_derivatives_config 
-            (d->s[ld], dh, w->nsq[nsqi], a->nonseq_config[nsqi]);
+            (d->h[ld], dh, w->nsq[nsqi], a->nonseq_config[nsqi]);
         }
         else 
         { sum_derivatives 
-            (d->s[ld], a->N_hidden[ld], dh, N_hidden, 
+            (d->h[ld], a->N_hidden[ld], dh, N_hidden, 
              w->nsq[nsqi], (unsigned short *) 0, 0);
         }
       }
@@ -121,39 +121,37 @@ HOSTDEV void net_back
 
     if (l<a->N_layers-1 && a->has_hh[l])
     { if (a->hidden_config[l+1])
-      { sum_derivatives_config (d->s[l+1], dh, w->hh[l], a->hidden_config[l+1]);
+      { sum_derivatives_config (d->h[l+1], dh, w->hh[l], a->hidden_config[l+1]);
       }
       else 
-      { sum_derivatives (d->s[l+1], a->N_hidden[l+1], dh, N_hidden, 
+      { sum_derivatives (d->h[l+1], a->N_hidden[l+1], dh, N_hidden, 
                          w->hh[l], (unsigned short *) 0, 0);
       }
     }
 
-    net_value *restrict ds = d->s[l];
+    net_value const* vh = v->h[l];
 
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     {
-      net_value const* vh = v->h[l];
-
 #     if FP64 && USE_SIMD_INTRINSICS && __AVX__
       { __m256d ONE = _mm256_set1_pd(1.0);
         i = 3;
         while (i<N_hidden)
         { __m256d VH = _mm256_loadu_pd(vh+i-3);
-          _mm256_storeu_pd (ds+i-3, _mm256_mul_pd (_mm256_loadu_pd(dh+i-3),
+          _mm256_storeu_pd (dh+i-3, _mm256_mul_pd (_mm256_loadu_pd(dh+i-3),
                                       _mm256_sub_pd(ONE,_mm256_mul_pd(VH,VH))));
           i += 4;
         }
         i -= 2;
         if (i<N_hidden)
         { __m128d VH = _mm_loadu_pd(vh+i-1);
-          _mm_storeu_pd (ds+i-1, _mm_mul_pd (_mm_loadu_pd(dh+i-1),
+          _mm_storeu_pd (dh+i-1, _mm_mul_pd (_mm_loadu_pd(dh+i-1),
            _mm_sub_pd (cast128d(ONE), _mm_mul_pd(VH,VH))));
           i += 2;
         }
         if (i<=N_hidden)
         { __m128d VH = _mm_load_sd(vh+i-1);
-          _mm_store_sd (ds+i-1, _mm_mul_sd (_mm_load_sd(dh+i-1),
+          _mm_store_sd (dh+i-1, _mm_mul_sd (_mm_load_sd(dh+i-1),
            _mm_sub_sd (cast128d(ONE), _mm_mul_sd(VH,VH))));
         }
       }
@@ -163,23 +161,23 @@ HOSTDEV void net_back
         i = 3;
         while (i<N_hidden)
         { VH = _mm_loadu_pd(vh+i-3);
-          _mm_storeu_pd (ds+i-3, _mm_mul_pd(_mm_loadu_pd(dh+i-3),
+          _mm_storeu_pd (dh+i-3, _mm_mul_pd(_mm_loadu_pd(dh+i-3),
                                             _mm_sub_pd(ONE,_mm_mul_pd(VH,VH))));
           VH = _mm_loadu_pd(vh+i-1);
-          _mm_storeu_pd (ds+i-1, _mm_mul_pd(_mm_loadu_pd(dh+i-1),
+          _mm_storeu_pd (dh+i-1, _mm_mul_pd(_mm_loadu_pd(dh+i-1),
                                             _mm_sub_pd(ONE,_mm_mul_pd(VH,VH))));
           i += 4;
         }
         i -= 2;
         if (i<N_hidden)
         { VH = _mm_loadu_pd(vh+i-1);
-          _mm_storeu_pd (ds+i-1, _mm_mul_pd(_mm_loadu_pd(dh+i-1),
+          _mm_storeu_pd (dh+i-1, _mm_mul_pd(_mm_loadu_pd(dh+i-1),
                                             _mm_sub_pd(ONE,_mm_mul_pd(VH,VH))));
           i += 2;
         }
         if (i<=N_hidden)
         { VH = _mm_load_sd(vh+i-1);
-          _mm_store_sd (ds+i-1, _mm_mul_sd (_mm_load_sd(dh+i-1),
+          _mm_store_sd (dh+i-1, _mm_mul_sd (_mm_load_sd(dh+i-1),
                                             _mm_sub_sd(ONE,_mm_mul_sd(VH,VH))));
         }
       }
@@ -188,14 +186,14 @@ HOSTDEV void net_back
         i = 7;
         while (i<N_hidden)
         { __m256 VH = _mm256_loadu_ps(vh+i-7);
-          _mm256_storeu_ps (ds+i-7, _mm256_mul_ps (_mm256_loadu_ps(dh+i-7),
+          _mm256_storeu_ps (dh+i-7, _mm256_mul_ps (_mm256_loadu_ps(dh+i-7),
                                       _mm256_sub_ps(ONE,_mm256_mul_ps(VH,VH))));
           i += 8;
         }
         i -= 4;
         if (i<N_hidden)
         { __m128 VH = _mm_loadu_ps(vh+i-3);
-          _mm_storeu_ps (ds+i-3, _mm_mul_ps (_mm_loadu_ps(dh+i-3),
+          _mm_storeu_ps (dh+i-3, _mm_mul_ps (_mm_loadu_ps(dh+i-3),
                              _mm_sub_ps (cast128f(ONE), _mm_mul_ps(VH,VH))));
           i += 4;
         }
@@ -203,14 +201,14 @@ HOSTDEV void net_back
         if (i<N_hidden)
         { __m128 Z = _mm_setzero_ps();
           __m128 VH = _mm_loadl_pi(Z, (__m64 *)(vh+i-1));
-          _mm_storel_pi ((__m64 *)(ds+i-1), 
+          _mm_storel_pi ((__m64 *)(dh+i-1), 
                          _mm_mul_ps (_mm_loadl_pi(Z, (__m64 *)(dh+i-1)),
                            _mm_sub_ps (cast128f(ONE), _mm_mul_ps(VH,VH))));
           i += 2;
         }
         if (i<=N_hidden)
         { __m128 VH = _mm_load_ss(vh+i-1);
-          _mm_store_ss (ds+i-1, _mm_mul_ss (_mm_load_ss(dh+i-1),
+          _mm_store_ss (dh+i-1, _mm_mul_ss (_mm_load_ss(dh+i-1),
                _mm_sub_ss (cast128f(ONE), _mm_mul_ss(VH,VH))));
         }
       }
@@ -220,7 +218,7 @@ HOSTDEV void net_back
         i = 3;
         while (i<N_hidden)
         { VH = _mm_loadu_ps(vh+i-3);
-          _mm_storeu_ps (ds+i-3, _mm_mul_ps (_mm_loadu_ps(dh+i-3),
+          _mm_storeu_ps (dh+i-3, _mm_mul_ps (_mm_loadu_ps(dh+i-3),
                                  _mm_sub_ps (ONE, _mm_mul_ps(VH,VH))));
           i += 4;
         }
@@ -228,41 +226,39 @@ HOSTDEV void net_back
         if (i<N_hidden)
         { __m128 Z = _mm_setzero_ps();
           VH = _mm_loadl_pi(Z, (__m64 *)(vh+i-1));
-          _mm_storel_pi ((__m64 *)(ds+i-1), 
+          _mm_storel_pi ((__m64 *)(dh+i-1), 
                          _mm_mul_ps (_mm_loadl_pi(Z, (__m64 *)(dh+i-1)),
                            _mm_sub_ps (ONE, _mm_mul_ps(VH,VH))));
           i += 2;
         }
         if (i<=N_hidden)
         { VH = _mm_load_ss(vh+i-1);
-          _mm_store_ss (ds+i-1, _mm_mul_ss (_mm_load_ss(dh+i-1),
+          _mm_store_ss (dh+i-1, _mm_mul_ss (_mm_load_ss(dh+i-1),
                _mm_sub_ss (ONE, _mm_mul_ss(VH,VH))));
         }
       }
 #     else
       { for (i = 0; i<N_hidden; i++)
-        { ds[i] = (1 - vh[i]*vh[i]) * dh[i];
+        { dh[i] *= (1 - vh[i]*vh[i]);
         }
       }
 #     endif
     }
     else if (flgs->layer_type[l]==Sin_type)
-    { net_value const* vs = v->s[l];
+    { net_value const* vs = v->h[l];
       for (i = 0; i<N_hidden; i++)
-      { ds[i] = 2 * prec_cos(vs[i]*sqrt_2) * dh[i];
+      { dh[i] = 2 * prec_cos(vs[i]*sqrt_2) * dh[i];
       }
     }
     else if (flgs->layer_type[l]==Softplus_type)
     { 
-      net_value const* vs = v->s[l];
-
-#     if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
+#     if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__ && 0 /* for now */
       { __m256d ONE = _mm256_set1_pd(1.0);
         __m256d ZERO = _mm256_setzero_pd();
         i = 3;
         while (i<N_hidden)
         { __m256d NVS = _mm256_sub_pd (ZERO, _mm256_loadu_pd(vs+i-3));
-          _mm256_storeu_pd (ds+i-3, 
+          _mm256_storeu_pd (dh+i-3, 
                             _mm256_div_pd (_mm256_loadu_pd(dh+i-3),
                               _mm256_add_pd (ONE, sleef_expd4(NVS))));
           i += 4;
@@ -270,37 +266,37 @@ HOSTDEV void net_back
         i -= 2;
         if (i<N_hidden)
         { __m128d NVS = _mm_sub_pd (cast128d(ZERO), _mm_loadu_pd(vs+i-1));
-          _mm_storeu_pd (ds+i-1, 
+          _mm_storeu_pd (dh+i-1, 
                          _mm_div_pd (_mm_loadu_pd(dh+i-1),
                          _mm_add_pd (cast128d(ONE), sleef_expd2(NVS))));
           i += 2;
         }
         if (i<=N_hidden)
-        { ds[i] = dh[i] / (1+prec_exp(-vs[i]));
+        { dh[i] = dh[i] / (1+prec_exp(-vs[i]));
         }
       }
-#     elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
+#     elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__ && 0 /* for now */
       { __m128d ONE = _mm_set1_pd(1.0);
         __m128d ZERO = _mm_setzero_pd();
         i = 1;
         while (i<N_hidden)
         { __m128d NVS = _mm_sub_pd (ZERO, _mm_loadu_pd(vs+i-1));
-          _mm_storeu_pd (ds+i-1, 
+          _mm_storeu_pd (dh+i-1, 
                          _mm_div_pd (_mm_loadu_pd(dh+i-1),
                          _mm_add_pd (ONE, sleef_expd2(NVS))));
           i += 2;
         }
         if (i<=N_hidden)
-        { ds[i] = dh[i] / (1+prec_exp(-vs[i]));
+        { dh[i] = dh[i] / (1+prec_exp(-vs[i]));
         }
       }
-#     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
+#     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__ && 0 /* for now */
       { __m256 ONE = _mm256_set1_ps(1.0f);
         __m256 ZERO = _mm256_setzero_ps();
         i = 7;
         while (i<N_hidden)
         { __m256 NVS = _mm256_sub_ps (ZERO, _mm256_loadu_ps(vs+i-7));
-          _mm256_storeu_ps (ds+i-7, 
+          _mm256_storeu_ps (dh+i-7, 
                             _mm256_div_ps (_mm256_loadu_ps(dh+i-7),
                             _mm256_add_ps (ONE, sleef_expf8(NVS))));
           i += 8;
@@ -308,7 +304,7 @@ HOSTDEV void net_back
         i -= 4;
         while (i<N_hidden)
         { __m128 NVS = _mm_sub_ps (cast128f(ZERO), _mm_loadu_ps(vs+i-3));
-          _mm_storeu_ps (ds+i-3, 
+          _mm_storeu_ps (dh+i-3, 
                          _mm_div_ps (_mm_loadu_ps(dh+i-3),
                          _mm_add_ps (cast128f(ONE), sleef_expf4(NVS))));
           i += 4;
@@ -317,22 +313,22 @@ HOSTDEV void net_back
         if (i<N_hidden)
         { __m128 NVS = _mm_sub_ps (cast128f(ZERO),
                                _mm_loadl_pi(cast128f(ZERO),(__m64 *)(vs+i-1)));
-          _mm_storel_pi ((__m64 *)(ds+i-1), 
+          _mm_storel_pi ((__m64 *)(dh+i-1), 
                      _mm_div_ps (_mm_loadl_pi(cast128f(ZERO),(__m64 *)(dh+i-1)),
                                  _mm_add_ps (cast128f(ONE), sleef_expf4(NVS))));
           i += 2;
         }
         if (i<=N_hidden)
-        { ds[i] = dh[i] / (1+prec_exp(-vs[i]));
+        { dh[i] = dh[i] / (1+prec_exp(-vs[i]));
         }
       }
-#     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
+#     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__ && 0 /* for now */
       { __m128 ONE = _mm_set1_ps(1.0f);
         __m128 ZERO = _mm_setzero_ps();
         i = 3;
         while (i<N_hidden)
         { __m128 NVS = _mm_sub_ps (ZERO, _mm_loadu_ps(vs+i-3));
-          _mm_storeu_ps (ds+i-3, 
+          _mm_storeu_ps (dh+i-3, 
                          _mm_div_ps (_mm_loadu_ps(dh+i-3),
                          _mm_add_ps (ONE, sleef_expf4(NVS))));
           i += 4;
@@ -340,38 +336,37 @@ HOSTDEV void net_back
         i -= 2;
         if (i<N_hidden)
         { __m128 NVS = _mm_sub_ps (ZERO, _mm_loadl_pi(ZERO,(__m64 *)(vs+i-1)));
-          _mm_storel_pi ((__m64 *)(ds+i-1), 
+          _mm_storel_pi ((__m64 *)(dh+i-1), 
                          _mm_div_ps (_mm_loadl_pi(ZERO,(__m64 *)(dh+i-1)),
                                      _mm_add_ps (ONE, sleef_expf4(NVS))));
           i += 2;
         }
         if (i<=N_hidden)
-        { ds[i] = dh[i] / (1+prec_exp(-vs[i]));
+        { dh[i] = dh[i] / (1+prec_exp(-vs[i]));
         }
       }
 #     else
       { for (i = 0; i<N_hidden; i++)
-        { ds[i] = dh[i] / (1+prec_exp(-vs[i]));
+        { net_value e = prec_exp(vh[i]);
+          dh[i] *= (e-1) / e;
         }
       }
 #     endif
     }
     else if (flgs->layer_type[l]==Square_type)
-    { net_value const* vs = v->s[l];
+    { net_value const* vs = v->h[l];
       for (i = 0; i<N_hidden; i++)
-      { ds[i] = 2*vs[i] * dh[i];
+      { dh[i] *= 2*vs[i];
       }
     }
     else if (flgs->layer_type[l]==Cube_type)
-    { net_value const* vs = v->s[l];
+    { net_value const* vs = v->h[l];
       for (i = 0; i<N_hidden; i++)
-      { ds[i] = 3*vs[i]*vs[i] * dh[i];
+      { dh[i] = 3*vs[i]*vs[i] * dh[i];
       }
     }
     else if (flgs->layer_type[l]==Identity_type)
-    { for (i = 0; i<N_hidden; i++)
-      { ds[i] = dh[i];
-      }
+    { /* nothing to do */
     }
     else
     { abort();
@@ -387,10 +382,10 @@ HOSTDEV void net_back
     for (l = 0; l<a->N_layers; l++)
     { if (a->has_ih[l])
       { if (a->input_config[l])
-        { sum_derivatives_config (d->s[l], d->i, w->ih[l], a->input_config[l]);
+        { sum_derivatives_config (d->h[l], d->i, w->ih[l], a->input_config[l]);
         }
         else 
-        { sum_derivatives (d->s[l], a->N_hidden[l], d->i, a->N_inputs, w->ih[l],
+        { sum_derivatives (d->h[l], a->N_hidden[l], d->i, a->N_inputs, w->ih[l],
                       flgs && flgs->any_omitted[l]? flgs->omit : 0, 1<<(l+1));
         }
       }
@@ -924,7 +919,7 @@ __device__ static void sum_derivatives_config_gpu
    d->o[i] is accessible to all threads for all i.
 
    Synchronizes threads after last layer computation if asked to;
-   otherwise, thread 'th' will have computed values of d->s[i] with i
+   otherwise, thread 'th' will have computed values of d->h[i] with i
    mod THREAD_PER_CASE equal to 'th', and can use those values without
    synchronization later. */
 
@@ -962,7 +957,6 @@ __device__ void net_back_gpu
   { 
     int N_hidden = a->N_hidden[l];
     net_value *restrict dh = d->h[l];
-    net_value *restrict ds = d->s[l];
 
     if (th<0) goto sync_layer;
 
@@ -988,11 +982,11 @@ __device__ void net_back_gpu
       { nsqi = ns[l][ld];
         if (a->nonseq_config[nsqi])
         { sum_derivatives_config_gpu
-            (th, d->s[ld], dh, w->nsq[nsqi], a->nonseq_config[nsqi]);
+            (th, d->h[ld], dh, w->nsq[nsqi], a->nonseq_config[nsqi]);
         }
         else
         { sum_derivatives_gpu
-            (th, d->s[ld], a->N_hidden[ld], dh, N_hidden,
+            (th, d->h[ld], a->N_hidden[ld], dh, N_hidden,
              w->nsq[nsqi], (unsigned short *) 0, 0);
         }
       }
@@ -1001,11 +995,11 @@ __device__ void net_back_gpu
     if (l<a->N_layers-1 && a->has_hh[l])
     { if (a->hidden_config[l+1])
       { sum_derivatives_config_gpu 
-          (th, d->s[l+1], dh, w->hh[l], a->hidden_config[l+1]);
+          (th, d->h[l+1], dh, w->hh[l], a->hidden_config[l+1]);
       }
       else 
       { sum_derivatives_gpu 
-          (th, d->s[l+1], a->N_hidden[l+1], dh, N_hidden, 
+          (th, d->h[l+1], a->N_hidden[l+1], dh, N_hidden, 
            w->hh[l], (unsigned short *) 0, 0);
       }
     }
@@ -1013,37 +1007,36 @@ __device__ void net_back_gpu
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     { net_value const* vh = v->h[l];
       for (i = th; i<N_hidden; i+=NTH)
-      { ds[i] = (1 - vh[i]*vh[i]) * dh[i];
+      { dh[i] *= (1 - vh[i]*vh[i]);
       }
     }
     else if (flgs->layer_type[l]==Sin_type)
-    { net_value const* vs = v->s[l];
+    { net_value const* vs = v->h[l];
       for (i = th; i<N_hidden; i+=NTH)
-      { ds[i] = 2 * prec_cos(vs[i]*sqrt_2) * dh[i];
+      { dh[i] *= 2 * prec_cos(vs[i]*sqrt_2);
       }
     }
     else if (flgs->layer_type[l]==Softplus_type)
-    { net_value const* vs = v->s[l];
+    { net_value const* vh = v->h[l];
       for (i = th; i<N_hidden; i+=NTH)
-      { ds[i] = dh[i] / (1+prec_exp(-vs[i]));
+      { net_value e = prec_exp(vh[i]);
+        dh[i] *= (e-1) / e;
       }
     }
     else if (flgs->layer_type[l]==Square_type)
-    { net_value const* vs = v->s[l];
+    { net_value const* vs = v->h[l];
       for (i = th; i<N_hidden; i+=NTH)
-      { ds[i] = 2*vs[i] * dh[i];
+      { dh[i] *= 2*vs[i] * dh[i];
       }
     }
     else if (flgs->layer_type[l]==Cube_type)
-    { net_value const* vs = v->s[l];
+    { net_value const* vs = v->h[l];
       for (i = th; i<N_hidden; i+=NTH)
-      { ds[i] = 3*vs[i]*vs[i] * dh[i];
+      { dh[i] *= 3*vs[i]*vs[i] * dh[i];
       }
     }
     else /* identity */
-    { for (i = th; i<N_hidden; i+=NTH)
-      { ds[i] = dh[i];
-      }
+    { /* nothing to do */
     }
 
   sync_layer:
@@ -1066,11 +1059,11 @@ __device__ void net_back_gpu
     { if (a->has_ih[l])
       { if (a->input_config[l])
         { sum_derivatives_config_gpu 
-            (th, d->s[l], d->i, w->ih[l], a->input_config[l]);
+            (th, d->h[l], d->i, w->ih[l], a->input_config[l]);
         }
         else 
         { sum_derivatives_gpu
-            (th, d->s[l], a->N_hidden[l], d->i, a->N_inputs, w->ih[l],
+            (th, d->h[l], a->N_hidden[l], d->i, a->N_inputs, w->ih[l],
              flgs && flgs->any_omitted[l]? flgs->omit : 0, 1<<(l+1));
         }
       }

@@ -92,21 +92,21 @@ HOSTDEV void net_add_grad
 
     if (a->has_bh[l]) 
     { if (a->bias_config[l])
-      { add_grad1_config (g->bh[l], d->s[l], a->bias_config[l]);
+      { add_grad1_config (g->bh[l], d->h[l], a->bias_config[l]);
       }
       else
-      { add_grad1 (g->bh[l], d->s[l], N_hidden);
+      { add_grad1 (g->bh[l], d->h[l], N_hidden);
       }
     }
 
     if (a->has_ih[l])
     { if (a->input_config[l])
-      { add_grad2_config (g->ih[l], v->i, a->has_ti ? w->ti : 0, d->s[l], 
+      { add_grad2_config (g->ih[l], v->i, a->has_ti ? w->ti : 0, d->h[l], 
                           a->input_config[l]);
       }
       else
       { add_grad2 (g->ih[l], v->i, a->has_ti ? w->ti : 0, a->N_inputs, 
-                   d->s[l], N_hidden, 
+                   d->h[l], N_hidden, 
                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
                    sparse);
       }
@@ -118,11 +118,11 @@ HOSTDEV void net_add_grad
         if (a->nonseq_config[nsqi])
         { add_grad2_config
               (g->nsq[nsqi], v->h[ls], a->has_th[ls] ? w->th[ls] : 0,
-              d->s[l], a->nonseq_config[nsqi]);
+              d->h[l], a->nonseq_config[nsqi]);
         }
         else
         { add_grad2 (g->nsq[nsqi], v->h[ls], a->has_th[ls] ? w->th[ls] : 0,
-            a->N_hidden[ls], d->s[l], N_hidden, (unsigned short *)0, 0, 0);
+            a->N_hidden[ls], d->h[l], N_hidden, (unsigned short *)0, 0, 0);
         }
         nsqi += 1;
       }
@@ -132,11 +132,11 @@ HOSTDEV void net_add_grad
     { if (a->hidden_config[l])
       { add_grad2_config
            (g->hh[l-1], v->h[l-1], a->has_th[l-1] ? w->th[l-1] : 0,
-            d->s[l], a->hidden_config[l]);
+            d->h[l], a->hidden_config[l]);
       }
       else
       { add_grad2 (g->hh[l-1], v->h[l-1], a->has_th[l-1] ? w->th[l-1] : 0,
-          a->N_hidden[l-1], d->s[l], N_hidden, (unsigned short *)0, 0, 0);
+          a->N_hidden[l-1], d->h[l], N_hidden, (unsigned short *)0, 0, 0);
       }
     }
 
@@ -1126,11 +1126,11 @@ __device__ void net_store1_grad
 
     if (a->has_bh[l]) 
     { if (a->bias_config[l])
-      { net_store1_grad1_config (th, g->bh[l], d0->s[l],
+      { net_store1_grad1_config (th, g->bh[l], d0->h[l],
                                  a->bias_config[l]);
       }
       else
-      { net_store1_grad1 (th, g->bh[l], d0->s[l], N_hidden);
+      { net_store1_grad1 (th, g->bh[l], d0->h[l], N_hidden);
       }
     }
 
@@ -1138,11 +1138,11 @@ __device__ void net_store1_grad
     { if (a->input_config[l])
       { net_store1_grad2_config (th, g->ih[l], v0->i,
                                  a->has_ti ? w->ti : 0, 
-                                 d0->s[l], a->input_config[l]);
+                                 d0->h[l], a->input_config[l]);
       }
       else
       { net_store1_grad2 (th, g->ih[l], v0->i, a->has_ti ? w->ti : 0, 
-                    a->N_inputs, d0->s[l], N_hidden, 
+                    a->N_inputs, d0->h[l], N_hidden, 
                     flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
                     sparse);
       }
@@ -1155,12 +1155,12 @@ __device__ void net_store1_grad
         { net_store1_grad2_config
               (th, g->nsq[nsqi], v0->h[ls],
                a->has_th[ls] ? w->th[ls] : 0,
-               d0->s[l], a->nonseq_config[nsqi]);
+               d0->h[l], a->nonseq_config[nsqi]);
         }
         else
         { net_store1_grad2 (th, g->nsq[nsqi], v0->h[ls],
             a->has_th[ls] ? w->th[ls] : 0,
-            a->N_hidden[ls], d0->s[l], N_hidden, 
+            a->N_hidden[ls], d0->h[l], N_hidden, 
             (unsigned short *)0, 0, 0);
         }
         nsqi += 1;
@@ -1172,12 +1172,12 @@ __device__ void net_store1_grad
       { net_store1_grad2_config
            (th, g->hh[l-1], v0->h[l-1],
             a->has_th[l-1] ? w->th[l-1] : 0,
-            d0->s[l], a->hidden_config[l]);
+            d0->h[l], a->hidden_config[l]);
       }
       else
       { net_store1_grad2 (th, g->hh[l-1], v0->h[l-1],
           a->has_th[l-1] ? w->th[l-1] : 0,
-          a->N_hidden[l-1], d0->s[l], N_hidden,
+          a->N_hidden[l-1], d0->h[l], N_hidden,
           (unsigned short *)0, 0, 0);
       }
     }
@@ -1593,11 +1593,11 @@ __device__ void net_store2_grad
 
     if (a->has_bh[l]) 
     { if (a->bias_config[l])
-      { net_store2_grad1_config (th, g->bh[l], d0->s[l], d1->s[l], 
+      { net_store2_grad1_config (th, g->bh[l], d0->h[l], d1->h[l], 
                                  a->bias_config[l]);
       }
       else
-      { net_store2_grad1 (th, g->bh[l], d0->s[l], d1->s[l], N_hidden);
+      { net_store2_grad1 (th, g->bh[l], d0->h[l], d1->h[l], N_hidden);
       }
     }
 
@@ -1605,11 +1605,11 @@ __device__ void net_store2_grad
     { if (a->input_config[l])
       { net_store2_grad2_config (th, g->ih[l], v0->i, v1->i, 
                                  a->has_ti ? w->ti : 0, 
-                                 d0->s[l], d1->s[l], a->input_config[l]);
+                                 d0->h[l], d1->h[l], a->input_config[l]);
       }
       else
       { net_store2_grad2 (th, g->ih[l], v0->i, v1->i, a->has_ti ? w->ti : 0, 
-                    a->N_inputs, d0->s[l], d1->s[l], N_hidden, 
+                    a->N_inputs, d0->h[l], d1->h[l], N_hidden, 
                     flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
                     sparse);
       }
@@ -1622,12 +1622,12 @@ __device__ void net_store2_grad
         { net_store2_grad2_config
               (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], 
                a->has_th[ls] ? w->th[ls] : 0,
-               d0->s[l], d1->s[l], a->nonseq_config[nsqi]);
+               d0->h[l], d1->h[l], a->nonseq_config[nsqi]);
         }
         else
         { net_store2_grad2 (th, g->nsq[nsqi], v0->h[ls], v1->h[ls],
             a->has_th[ls] ? w->th[ls] : 0,
-            a->N_hidden[ls], d0->s[l], d1->s[l], N_hidden, 
+            a->N_hidden[ls], d0->h[l], d1->h[l], N_hidden, 
             (unsigned short *)0, 0, 0);
         }
         nsqi += 1;
@@ -1639,12 +1639,12 @@ __device__ void net_store2_grad
       { net_store2_grad2_config
            (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], 
             a->has_th[l-1] ? w->th[l-1] : 0,
-            d0->s[l], d1->s[l], a->hidden_config[l]);
+            d0->h[l], d1->h[l], a->hidden_config[l]);
       }
       else
       { net_store2_grad2 (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], 
           a->has_th[l-1] ? w->th[l-1] : 0,
-          a->N_hidden[l-1], d0->s[l], d1->s[l], N_hidden,
+          a->N_hidden[l-1], d0->h[l], d1->h[l], N_hidden,
           (unsigned short *)0, 0, 0);
       }
     }
@@ -2085,11 +2085,11 @@ __device__ void net_store3_grad
 
     if (a->has_bh[l]) 
     { if (a->bias_config[l])
-      { net_store3_grad1_config (th, g->bh[l], d0->s[l], d1->s[l], d2->s[l],
+      { net_store3_grad1_config (th, g->bh[l], d0->h[l], d1->h[l], d2->h[l],
                                  a->bias_config[l]);
       }
       else
-      { net_store3_grad1 (th, g->bh[l], d0->s[l], d1->s[l], d2->s[l], N_hidden);
+      { net_store3_grad1 (th, g->bh[l], d0->h[l], d1->h[l], d2->h[l], N_hidden);
       }
     }
 
@@ -2097,13 +2097,13 @@ __device__ void net_store3_grad
     { if (a->input_config[l])
       { net_store3_grad2_config (th, g->ih[l], v0->i, v1->i, v2->i,
                                  a->has_ti ? w->ti : 0, 
-                                 d0->s[l], d1->s[l], d2->s[l], 
+                                 d0->h[l], d1->h[l], d2->h[l], 
                                  a->input_config[l]);
       }
       else
       { net_store3_grad2 (th, g->ih[l], v0->i, v1->i, v2->i,
                     a->has_ti ? w->ti : 0, a->N_inputs, 
-                    d0->s[l], d1->s[l], d2->s[l], N_hidden, 
+                    d0->h[l], d1->h[l], d2->h[l], N_hidden, 
                     flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
                     sparse);
       }
@@ -2116,12 +2116,12 @@ __device__ void net_store3_grad
         { net_store3_grad2_config
               (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], v2->h[ls],
                a->has_th[ls] ? w->th[ls] : 0,
-               d0->s[l], d1->s[l], d2->s[l], a->nonseq_config[nsqi]);
+               d0->h[l], d1->h[l], d2->h[l], a->nonseq_config[nsqi]);
         }
         else
         { net_store3_grad2 (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], v2->h[ls],
             a->has_th[ls] ? w->th[ls] : 0,
-            a->N_hidden[ls], d0->s[l], d1->s[l], d2->s[l], N_hidden,
+            a->N_hidden[ls], d0->h[l], d1->h[l], d2->h[l], N_hidden,
             (unsigned short *)0, 0, 0);
         }
         nsqi += 1;
@@ -2133,12 +2133,12 @@ __device__ void net_store3_grad
       { net_store3_grad2_config
            (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], v2->h[l-1],
             a->has_th[l-1] ? w->th[l-1] : 0,
-            d0->s[l], d1->s[l], d2->s[l], a->hidden_config[l]);
+            d0->h[l], d1->h[l], d2->h[l], a->hidden_config[l]);
       }
       else
       { net_store3_grad2 (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], v2->h[l-1],
           a->has_th[l-1] ? w->th[l-1] : 0,
-          a->N_hidden[l-1], d0->s[l], d1->s[l], d2->s[l], N_hidden,
+          a->N_hidden[l-1], d0->h[l], d1->h[l], d2->h[l], N_hidden,
           (unsigned short *)0, 0, 0);
       }
     }
@@ -2604,12 +2604,12 @@ __device__ void net_store4_grad
     if (a->has_bh[l]) 
     { if (a->bias_config[l])
       { net_store4_grad1_config (th, g->bh[l],
-                                 d0->s[l], d1->s[l], d2->s[l], d3->s[l],
+                                 d0->h[l], d1->h[l], d2->h[l], d3->h[l],
                                  a->bias_config[l]);
       }
       else
       { net_store4_grad1 (th, g->bh[l], 
-                          d0->s[l], d1->s[l], d2->s[l], d3->s[l], N_hidden);
+                          d0->h[l], d1->h[l], d2->h[l], d3->h[l], N_hidden);
       }
     }
 
@@ -2617,13 +2617,13 @@ __device__ void net_store4_grad
     { if (a->input_config[l])
       { net_store4_grad2_config (th, g->ih[l], v0->i, v1->i, v2->i, v3->i,
                                  a->has_ti ? w->ti : 0, 
-                                 d0->s[l], d1->s[l], d2->s[l], d3->s[l],
+                                 d0->h[l], d1->h[l], d2->h[l], d3->h[l],
                                  a->input_config[l]);
       }
       else
       { net_store4_grad2 (th, g->ih[l], v0->i, v1->i, v2->i, v3->i,
                     a->has_ti ? w->ti : 0, a->N_inputs, 
-                    d0->s[l], d1->s[l], d2->s[l], d3->s[l], N_hidden, 
+                    d0->h[l], d1->h[l], d2->h[l], d3->h[l], N_hidden, 
                     flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), 
                     sparse);
       }
@@ -2636,13 +2636,13 @@ __device__ void net_store4_grad
         { net_store4_grad2_config
               (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], v2->h[ls], v3->h[ls],
                a->has_th[ls] ? w->th[ls] : 0,
-               d0->s[l], d1->s[l], d2->s[l], d3->s[l], a->nonseq_config[nsqi]);
+               d0->h[l], d1->h[l], d2->h[l], d3->h[l], a->nonseq_config[nsqi]);
         }
         else
         { net_store4_grad2 (th, g->nsq[nsqi], 
             v0->h[ls], v1->h[ls], v2->h[ls], v3->h[ls],
             a->has_th[ls] ? w->th[ls] : 0,
-            a->N_hidden[ls], d0->s[l], d1->s[l], d2->s[l], d3->s[l], N_hidden,
+            a->N_hidden[ls], d0->h[l], d1->h[l], d2->h[l], d3->h[l], N_hidden,
             (unsigned short *)0, 0, 0);
         }
         nsqi += 1;
@@ -2654,20 +2654,20 @@ __device__ void net_store4_grad
       { net_store4_grad2_config
            (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], v2->h[l-1], v3->h[l-1],
             a->has_th[l-1] ? w->th[l-1] : 0,
-            d0->s[l], d1->s[l], d2->s[l], d3->s[l], a->hidden_config[l]);
+            d0->h[l], d1->h[l], d2->h[l], d3->h[l], a->hidden_config[l]);
       }
       else
       { net_store4_grad2 (th, g->hh[l-1], 
           v0->h[l-1], v1->h[l-1], v2->h[l-1], v3->h[l-1],
           a->has_th[l-1] ? w->th[l-1] : 0,
-          a->N_hidden[l-1], d0->s[l], d1->s[l], d2->s[l], d3->s[l], N_hidden,
+          a->N_hidden[l-1], d0->h[l], d1->h[l], d2->h[l], d3->h[l], N_hidden,
           (unsigned short *)0, 0, 0);
       }
     }
 
     if (a->has_th[l]) 
     { net_store4_grad1 (th, g->th[l], 
-                        d0->h[l], d1->h[l], d2->h[l], d3->s[l], N_hidden);
+                        d0->h[l], d1->h[l], d2->h[l], d3->h[l], N_hidden);
     }
 
     if (a->has_ho[l])

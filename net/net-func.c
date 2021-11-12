@@ -106,7 +106,7 @@ HOSTDEV void net_func
   {
     int N_hidden = a->N_hidden[l];
 
-    net_value *sh = v->s[l];
+    net_value *sh = v->h[l];
 
     if (a->has_bh[l])
     { if (a->bias_config[l])
@@ -162,8 +162,6 @@ HOSTDEV void net_func
 
     /* Put values through hidden unit activation function. */
 
-    net_value *vh = v->h[l];
-
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     { 
 #     if USE_QUICK_AND_DIRTY_TANH
@@ -176,7 +174,7 @@ HOSTDEV void net_func
             x = _mm256_add_pd(x,x);
             x = sleef_expd4(x);
             x = _mm256_sub_pd(one, _mm256_div_pd (two, _mm256_add_pd (one, x)));
-            _mm256_storeu_pd (vh+j-3, x);
+            _mm256_storeu_pd (sh+j-3, x);
             j += 4;
           }
           j -= 2;
@@ -186,11 +184,11 @@ HOSTDEV void net_func
             x = sleef_expd2(x);
             x = _mm_sub_pd (cast128d(one), 
                    _mm_div_pd (cast128d(two), _mm_add_pd (cast128d(one), x)));
-            _mm_storeu_pd (vh+j-1, x);
+            _mm_storeu_pd (sh+j-1, x);
             j += 2;
           }
           if (j<=N_hidden)
-          { vh[j-1] = TANH (sh[j-1]);
+          { sh[j-1] = TANH (sh[j-1]);
           }
         }
 #       elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
@@ -202,11 +200,11 @@ HOSTDEV void net_func
             x = _mm_add_pd(x,x);
             x = sleef_expd2(x);
             x = _mm_sub_pd (one, _mm_div_pd (two, _mm_add_pd (one, x)));
-            _mm_storeu_pd (vh+j-1, x);
+            _mm_storeu_pd (sh+j-1, x);
             j += 2;
           }
           if (j<=N_hidden)
-          { vh[j-1] = TANH (sh[j-1]);
+          { sh[j-1] = TANH (sh[j-1]);
           }
         }
 #       elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
@@ -218,7 +216,7 @@ HOSTDEV void net_func
             x = _mm256_add_ps(x,x);
             x = sleef_expf8(x);
             x = _mm256_sub_ps(one, _mm256_div_ps (two, _mm256_add_ps (one, x)));
-            _mm256_storeu_ps (vh+j-7, x);
+            _mm256_storeu_ps (sh+j-7, x);
             j += 8;
           }
           j -= 4;
@@ -228,7 +226,7 @@ HOSTDEV void net_func
             x = sleef_expf4(x);
             x = _mm_sub_ps (cast128f(one), 
                     _mm_div_ps (cast128f(two), _mm_add_ps (cast128f(one), x)));
-            _mm_storeu_ps (vh+j-3, x);
+            _mm_storeu_ps (sh+j-3, x);
             j += 4;
           }
           j -= 2;
@@ -238,11 +236,11 @@ HOSTDEV void net_func
             x = sleef_expf4(x);
             x = _mm_sub_ps (cast128f(one), 
                     _mm_div_ps (cast128f(two), _mm_add_ps (cast128f(one), x)));
-            _mm_storel_pi ((__m64 *)(vh+j-1), x);
+            _mm_storel_pi ((__m64 *)(sh+j-1), x);
             j += 2;
           }
           if (j<=N_hidden)
-          { vh[j-1] = TANH (sh[j-1]);
+          { sh[j-1] = TANH (sh[j-1]);
           }
         }
 #       elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
@@ -254,7 +252,7 @@ HOSTDEV void net_func
             x = _mm_add_ps(x,x);
             x = sleef_expf4(x);
             x = _mm_sub_ps(one, _mm_div_ps (two, _mm_add_ps (one, x)));
-            _mm_storeu_ps (vh+j-3, x);
+            _mm_storeu_ps (sh+j-3, x);
             j += 4;
           }
           j -= 2;
@@ -263,16 +261,16 @@ HOSTDEV void net_func
             x = _mm_add_ps(x,x);
             x = sleef_expf4(x);
             x = _mm_sub_ps (one, _mm_div_ps (two, _mm_add_ps (one, x)));
-            _mm_storel_pi ((__m64 *)(vh+j-1), x);
+            _mm_storel_pi ((__m64 *)(sh+j-1), x);
             j += 2;
           }
           if (j<=N_hidden)
-          { vh[j-1] = TANH (sh[j-1]);
+          { sh[j-1] = TANH (sh[j-1]);
           }
         }
 #       else
         { for (j = 0; j<N_hidden; j++)
-          { vh[j] = TANH (sh[j]);
+          { sh[j] = TANH (sh[j]);
           }
         }
 #       endif
@@ -282,68 +280,68 @@ HOSTDEV void net_func
 #       if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
         { j = 3;
           while (j<N_hidden)
-          { _mm256_storeu_pd (vh+j-3, sleef_tanhd4 (_mm256_loadu_pd(sh+j-3)));
+          { _mm256_storeu_pd (sh+j-3, sleef_tanhd4 (_mm256_loadu_pd(sh+j-3)));
             j += 4;
           }
           j -= 2;
           if (j<N_hidden)
-          { _mm_storeu_pd (vh+j-1, sleef_tanhd2 (_mm_loadu_pd(sh+j-1)));
+          { _mm_storeu_pd (sh+j-1, sleef_tanhd2 (_mm_loadu_pd(sh+j-1)));
             j += 2;
           }
           if (j<=N_hidden)
-          { vh[j-1] = TANH (sh[j-1]);
+          { sh[j-1] = TANH (sh[j-1]);
           }
         }
 #       elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
         { j = 1;
           while (j<N_hidden)
-          { _mm_storeu_pd (vh+j-1, sleef_tanhd2 (_mm_loadu_pd(sh+j-1)));
+          { _mm_storeu_pd (sh+j-1, sleef_tanhd2 (_mm_loadu_pd(sh+j-1)));
             j += 2;
           }
           if (j<=N_hidden)
-          { vh[j-1] = TANH (sh[j-1]);
+          { sh[j-1] = TANH (sh[j-1]);
           }
         }
 #       elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
         { j = 7;
           while (j<N_hidden)
-          { _mm256_storeu_ps (vh+j-7, sleef_tanhf8 (_mm256_loadu_ps(sh+j-7)));
+          { _mm256_storeu_ps (sh+j-7, sleef_tanhf8 (_mm256_loadu_ps(sh+j-7)));
             j += 8;
           }
           j -= 4;
           while (j<N_hidden)
-          { _mm_storeu_ps (vh+j-3, sleef_tanhf4 (_mm_loadu_ps(sh+j-3)));
+          { _mm_storeu_ps (sh+j-3, sleef_tanhf4 (_mm_loadu_ps(sh+j-3)));
             j += 4;
           }
           j -= 2;
           if (j<N_hidden)
-          { _mm_storel_pi ((__m64 *)(vh+j-1), 
+          { _mm_storel_pi ((__m64 *)(sh+j-1), 
                sleef_tanhf4 (_mm_loadl_pi(_mm_setzero_ps(),(__m64 *)(sh+j-1))));
             j += 2;
           }
           if (j<=N_hidden)
-          { vh[j-1] = TANH (sh[j-1]);
+          { sh[j-1] = TANH (sh[j-1]);
           }
         }
 #       elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
         { j = 3;
           while (j<N_hidden)
-          { _mm_storeu_ps (vh+j-3, sleef_tanhf4 (_mm_loadu_ps(sh+j-3)));
+          { _mm_storeu_ps (sh+j-3, sleef_tanhf4 (_mm_loadu_ps(sh+j-3)));
             j += 4;
           }
           j -= 2;
           if (j<N_hidden)
-          { _mm_storel_pi ((__m64 *)(vh+j-1), 
+          { _mm_storel_pi ((__m64 *)(sh+j-1), 
                sleef_tanhf4 (_mm_loadl_pi(_mm_setzero_ps(),(__m64 *)(sh+j-1))));
             j += 2;
           }
           if (j<=N_hidden)
-          { vh[j-1] = TANH (sh[j-1]);
+          { sh[j-1] = TANH (sh[j-1]);
           }
         }
 #       else
         { for (j = 0; j<N_hidden; j++)
-          { vh[j] = TANH (sh[j]);
+          { sh[j] = TANH (sh[j]);
           }
         }
 #       endif
@@ -351,7 +349,7 @@ HOSTDEV void net_func
     }
     else if (flgs->layer_type[l]==Sin_type)
     { for (j = 0; j<N_hidden; j++)
-      { vh[j] = sqrt_2 * prec_sin(sh[j]*sqrt_2);
+      { sh[j] = sqrt_2 * prec_sin(sh[j]*sqrt_2);
       }
     }
     else if (flgs->layer_type[l]==Softplus_type)
@@ -370,7 +368,7 @@ HOSTDEV void net_func
           v = sleef_logd4(v);
           v = _mm256_add_pd (v, _mm256_and_pd (a, 
                                   _mm256_cmp_pd(a,zero,_CMP_GT_OQ)));
-          _mm256_storeu_pd (vh+j-3, v);
+          _mm256_storeu_pd (sh+j-3, v);
           j += 4;
         }
         j -= 2;
@@ -382,7 +380,7 @@ HOSTDEV void net_func
           v = sleef_logd2(v);
           v = _mm_add_pd (v, _mm_and_pd (a, 
                 _mm_cmp_pd (a, cast128d(zero), _CMP_GT_OQ)));
-          _mm_storeu_pd (vh+j-1, v);
+          _mm_storeu_pd (sh+j-1, v);
           j += 2;
         }
         if (j<=N_hidden)
@@ -390,7 +388,7 @@ HOSTDEV void net_func
           net_value v = 
             prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
           if (a>0) v += a;
-          vh[j-1] = v;
+          sh[j-1] = v;
         }
       }
 #     elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
@@ -405,7 +403,7 @@ HOSTDEV void net_func
           v = _mm_add_pd(one,v);
           v = sleef_logd2(v);
           v = _mm_add_pd (v, _mm_and_pd (a, _mm_cmpgt_pd (a, zero)));
-          _mm_storeu_pd (vh+j-1, v);
+          _mm_storeu_pd (sh+j-1, v);
           j += 2;
         }
         if (j<=N_hidden)
@@ -413,7 +411,7 @@ HOSTDEV void net_func
           net_value v = 
             prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
           if (a>0) v += a;
-          vh[j-1] = v;
+          sh[j-1] = v;
         }
       }
 #     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
@@ -429,7 +427,7 @@ HOSTDEV void net_func
           v = sleef_logf8(v);
           v = _mm256_add_ps (v, 
                 _mm256_and_ps (a, _mm256_cmp_ps (a, zero, _CMP_GT_OQ)));
-          _mm256_storeu_ps (vh+j-7, v);
+          _mm256_storeu_ps (sh+j-7, v);
           j += 8;
         }
         j -= 4;
@@ -440,7 +438,7 @@ HOSTDEV void net_func
           v = _mm_add_ps(cast128f(one),v);
           v = sleef_logf4(v);
           v = _mm_add_ps (v, _mm_and_ps (a, _mm_cmpgt_ps (a, cast128f(zero))));
-          _mm_storeu_ps (vh+j-3, v);
+          _mm_storeu_ps (sh+j-3, v);
           j += 4;
         }
         j -= 2;
@@ -451,7 +449,7 @@ HOSTDEV void net_func
           v = _mm_add_ps(cast128f(one),v);
           v = sleef_logf4(v);
           v = _mm_add_ps (v, _mm_and_ps (a, _mm_cmpgt_ps (a, cast128f(zero))));
-          _mm_storel_pi ((__m64 *)(vh+j-1), v);
+          _mm_storel_pi ((__m64 *)(sh+j-1), v);
           j += 2;
         }
         if (j<=N_hidden)
@@ -459,7 +457,7 @@ HOSTDEV void net_func
           net_value v = 
             prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
           if (a>0) v += a;
-          vh[j-1] = v;
+          sh[j-1] = v;
         }
       }
 #     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
@@ -474,7 +472,7 @@ HOSTDEV void net_func
           v = _mm_add_ps(one,v);
           v = sleef_logf4(v);
           v = _mm_add_ps (v, _mm_and_ps (a, _mm_cmpgt_ps (a, zero)));
-          _mm_storeu_ps (vh+j-3, v);
+          _mm_storeu_ps (sh+j-3, v);
           j += 4;
         }
         j -= 2;
@@ -485,7 +483,7 @@ HOSTDEV void net_func
           v = _mm_add_ps(one,v);
           v = sleef_logf4(v);
           v = _mm_add_ps (v, _mm_and_ps (a, _mm_cmpgt_ps (a, zero)));
-          _mm_storel_pi ((__m64 *)(vh+j-1), v);
+          _mm_storel_pi ((__m64 *)(sh+j-1), v);
           j += 2;
         }
         if (j<=N_hidden)
@@ -493,7 +491,7 @@ HOSTDEV void net_func
           net_value v = 
             prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
           if (a>0) v += a;
-          vh[j-1] = v;
+          sh[j-1] = v;
         }
       }
 #     else
@@ -502,24 +500,24 @@ HOSTDEV void net_func
           net_value v = 
             prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
           if (a>0) v += a;
-          vh[j] = v;
+          sh[j] = v;
         }
       }
 #     endif
     }
     else if (flgs->layer_type[l]==Square_type)
     { for (j = 0; j<N_hidden; j++)
-      { vh[j] = sh[j]*sh[j];
+      { sh[j] = sh[j]*sh[j];
       }
     }
     else if (flgs->layer_type[l]==Cube_type)
     { for (j = 0; j<N_hidden; j++)
-      { vh[j] = sh[j]*sh[j]*sh[j];
+      { sh[j] = sh[j]*sh[j]*sh[j];
       }
     }
     else if (flgs->layer_type[l]==Identity_type)
     { for (j = 0; j<N_hidden; j++)
-      { vh[j] = sh[j];
+      { sh[j] = sh[j];
       }
     }
     else
@@ -1573,8 +1571,7 @@ __device__ void net_func_gpu
   for (l = start; l<a->N_layers; l++)
   {
     int N_hidden = a->N_hidden[l];
-    net_value *sh = v->s[l];
-    net_value *vh = v->h[l];
+    net_value *sh = v->h[l];
 
     if (th<0) goto sync_layer;
 
@@ -1638,12 +1635,12 @@ __device__ void net_func_gpu
 
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     { for (j = th; j<N_hidden; j+=NTH)
-      { vh[j] = TANH (sh[j]);
+      { sh[j] = TANH (sh[j]);
       }
     }
     else if (flgs->layer_type[l]==Sin_type)
     { for (j = th; j<N_hidden; j+=NTH)
-      { vh[j] = sqrt_2 * prec_sin(sh[j]*sqrt_2);
+      { sh[j] = sqrt_2 * prec_sin(sh[j]*sqrt_2);
       }
     }
     else if (flgs->layer_type[l]==Softplus_type)
@@ -1652,22 +1649,22 @@ __device__ void net_func_gpu
         net_value v = 
           prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
         if (a>0) v += a;
-        vh[j] = v;
+        sh[j] = v;
       }
     }
     else if (flgs->layer_type[l]==Square_type)
     { for (j = th; j<N_hidden; j+=NTH)
-      { vh[j] = sh[j]*sh[j];
+      { sh[j] = sh[j]*sh[j];
       }
     }
     else if (flgs->layer_type[l]==Cube_type)
     { for (j = th; j<N_hidden; j+=NTH)
-      { vh[j] = sh[j]*sh[j]*sh[j];
+      { sh[j] = sh[j]*sh[j]*sh[j];
       }
     }
     else /* identity */ 
     { for (j = th; j<N_hidden; j+=NTH)
-      { vh[j] = sh[j];
+      { sh[j] = sh[j];
       }
     }
 

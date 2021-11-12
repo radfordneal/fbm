@@ -459,7 +459,7 @@ void mc_app_initialize
     /* Locate existing network, if one exists. */
   
     sigmas.total_sigmas = net_setup_sigma_count(arch,flgs,model);
-    params.total_params = net_setup_param_count(arch,flgs);  /* also config */
+    params.total_params = net_setup_param_count(arch,flgs,0); /* also precomp */
   
     sigmas.sigma_block = (net_sigma *) logg->data['S'];
     params.param_block = (net_param *) logg->data['W'];

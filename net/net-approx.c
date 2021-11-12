@@ -78,7 +78,7 @@ int main
 
   /* Allocate space for parameters of approximation. */
 
-  n = net_setup_param_count(a,flgs);
+  n = net_setup_param_count(a,flgs,0);
 
   approx = chk_alloc (1+n+n*n, sizeof *approx);
 

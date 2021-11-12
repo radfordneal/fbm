@@ -369,8 +369,8 @@ typedef struct
   net_param *io;		/* Input to output weights */
   net_param *bo;		/* Biases of output units */
 
-  net_param *nsq[Max_nonseq];	/* Weights for non-sequential connections */
-
+  net_param *nsq[Max_nonseq];	/* Weights for non-sequential connections,
+				   ordered by destination, then by source */
 } net_params;
 
 
@@ -394,10 +394,18 @@ typedef struct
 } net_values;
 
 
+/* STUFF ABOUT NETWORK THAT'S BEEN PRE-COMPUTED. */
+
+typedef struct
+{ short nonseq[Max_layers][Max_layers]; /* nonseq[from][to] indexes non-sequent
+                                           connection in nsq, or is -1 if none*/
+} net_precomputed;
+
+
 /* PROCEDURES. */
 
 unsigned net_setup_sigma_count (net_arch *, net_flags *, model_specification *);
-unsigned net_setup_param_count (net_arch *, net_flags *);
+unsigned net_setup_param_count (net_arch *, net_flags *, net_precomputed *);
 
 void net_setup_sigma_pointers (net_sigmas *, net_arch *, net_flags *, 
                                model_specification *);

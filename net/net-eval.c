@@ -170,7 +170,7 @@ int main
   }
 
   s->total_sigmas = net_setup_sigma_count(a,flgs,m);
-  w->total_params = net_setup_param_count(a,flgs);
+  w->total_params = net_setup_param_count(a,flgs,0);
 
   logg.req_size['S'] = s->total_sigmas * sizeof(net_sigma);
   logg.req_size['W'] = w->total_params * sizeof(net_param);

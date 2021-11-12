@@ -93,7 +93,7 @@ void net_initialize
   /* Check that network is present, and set up pointers. */
 
   sigmas.total_sigmas = net_setup_sigma_count(arch,flgs,model);
-  params.total_params = net_setup_param_count(arch,flgs);
+  params.total_params = net_setup_param_count(arch,flgs,0);
 
   sigmas.sigma_block = (net_sigma *) logg->data['S'];
   params.param_block = (net_param *) logg->data['W'];

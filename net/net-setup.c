@@ -97,12 +97,18 @@ unsigned net_setup_sigma_count
 
 /* RETURN NUMBER OF NETWORK PARAMETERS.  Returns the number of
    weights, biases, and offsets in a network with the given
-   architecture.  Also reads any weight/bias configuration files, and
-   fills in the configuration pointers in the net_arch structure. */
+   architecture.  
+
+   Also reads any weight/bias configuration files, and fills in the
+   configuration pointers in the net_arch structure.
+
+   Furthermore, if the 'pre' pointer is non-null, it precomputes the
+   information stored there.  */
 
 unsigned net_setup_param_count
 ( net_arch *a,		/* Network architecture */
-  net_flags *flgs	/* Network flags, null if none */
+  net_flags *flgs,	/* Network flags, null if none */
+  net_precomputed *pre	/* Place to store pre-computed information, or null */
 )
 {
   unsigned count, b;
@@ -115,9 +121,18 @@ unsigned net_setup_param_count
   nsqi = 0;
   for (l = 0; l<a->N_layers; l++)
   {
+    if (pre)
+    { for (ls = 0; ls<l; ls++)
+      { pre->nonseq[ls][l] = -1;
+      }
+    }
+
     for (ls = 0, b = a->has_nsq[l]; b!=0; ls++, b>>=1)
     { if (b&1)
       { if (ls>=l-1) abort();
+        if (pre)
+        { pre->nonseq[ls][l] = nsqi;
+        }
         if (flgs && flgs->nonseq_config[nsqi])
         { a->nonseq_config[nsqi] = 
             net_config_read (flgs->config_files + flgs->nonseq_config[nsqi],

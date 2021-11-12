@@ -1990,7 +1990,7 @@ void net_training_cases
             }
           }
           net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
-                    arch, flgs, &params);
+                    arch, &pre, flgs, &params);
           net_add_grad (grd, &params, &train_values[i], deriv, arch, flgs,
                         sparse);
         }
@@ -2048,7 +2048,7 @@ void net_training_cases
         }
 
         net_back (train_vals_i, deriv, arch->has_ti ? -1 : 0,
-                  arch, flgs, &params);
+                  arch, &pre, flgs, &params);
 
         net_add_grad (grd, &params, train_vals_i, deriv, arch, flgs, sparse);
       }
@@ -2421,12 +2421,12 @@ __global__ void backward_kernel
   if (THREADS_PER_CASE==1)
   { if (th>=0)
     { net_back (train_vals_h, deriv_i, const_arch.has_ti ? -1 : 0,
-                &const_arch, flgs, &const_params);
+                &const_arch, &const_pre, flgs, &const_params);
     }
   }
   else
   { net_back_gpu (th, train_vals_h, deriv_i, const_arch.has_ti ? -1 : 0,
-                  &const_arch, flgs, &const_params, 0);
+                  &const_arch, &const_pre, flgs, &const_params, 0);
   }
 
 #if SPLIT_KERNELS==1

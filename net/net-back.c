@@ -65,24 +65,12 @@ HOSTDEV void net_back
   net_values *restrict d,/* Place to get output derivatives, and store others */
   int start,		/* Earliest layer to find derivatives for */
   net_arch const*a,	/* Network architecture */
+  net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const*flgs,	/* Network flags, null if none */
   net_params const*w	/* Network parameters */
 )
 {
-  int l, ls, ld, i;
-
-  /* Find locations of non-sequential configurations. */
-
-  char ns[Max_nonseq][Max_nonseq];
-  unsigned bits;
-  int nsqi = 0;
-  for (l = 0; l<a->N_layers; l++)
-  { for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
-    { if (ls>=l-1) abort();
-      ns[ls][l] = nsqi;
-      nsqi += 1;
-    }
-  }
+  int l, ld, i;
 
   /* Backpropagate through hidden layers. */
 
@@ -105,9 +93,9 @@ HOSTDEV void net_back
     }
 
     for (ld = l+1; ld<a->N_layers; ld++)
-    { if ((a->has_nsq[ld]>>l) & 1)
-      { nsqi = ns[l][ld];
-        if (a->nonseq_config[nsqi])
+    { int nsqi = pre->nonseq[l][ld];
+      if (nsqi>=0)
+      { if (a->nonseq_config[nsqi])
         { sum_derivatives_config 
             (d->h[ld], dh, w->nsq[nsqi], a->nonseq_config[nsqi]);
         }
@@ -924,25 +912,13 @@ __device__ void net_back_gpu
   net_values *restrict d,/* Place to get output derivatives, and store others */
   int start,		/* Earliest layer to find derivatives for */
   net_arch const*a,	/* Network architecture */
+  net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const*flgs,	/* Network flags, null if none */
   net_params const*w,	/* Network parameters */
   int sync		/* Sync threads after last layer computation? */
 )
 {
-  int l, ls, ld, i;
-
-  /* Find locations of non-sequential configurations. */
-
-  char ns[Max_nonseq][Max_nonseq];
-  unsigned bits;
-  int nsqi = 0;
-  for (l = 0; l<a->N_layers; l++)
-  { for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
-    { if (ls>=l-1) abort();
-      ns[ls][l] = nsqi;
-      nsqi += 1;
-    }
-  }
+  int l, ld, i;
 
   /* Backpropagate through hidden layers. */
 
@@ -971,9 +947,9 @@ __device__ void net_back_gpu
     }
 
     for (ld = l+1; ld<a->N_layers; ld++)
-    { if ((a->has_nsq[ld]>>l) & 1)
-      { nsqi = ns[l][ld];
-        if (a->nonseq_config[nsqi])
+    { int nsqi = pre->nonseq[l][ld];
+      if (nsqi>=0)
+      { if (a->nonseq_config[nsqi])
         { sum_derivatives_config_gpu
             (th, d->h[ld], dh, w->nsq[nsqi], a->nonseq_config[nsqi]);
         }

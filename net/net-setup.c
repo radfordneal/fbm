@@ -244,7 +244,7 @@ unsigned net_setup_value_count_aligned
   count += ALIGN(a->N_outputs,align);
 
   for (l = 0; l<a->N_layers; l++)
-  { count += 2 * ALIGN(a->N_hidden[l],align);
+  { count += ALIGN(a->N_hidden[l],align);
   }
 
   return count;
@@ -546,8 +546,6 @@ void net_setup_value_pointers_aligned
 
   for (l = 0; l<a->N_layers; l++)
   { v->h[l] = b;
-    b += ALIGN(a->N_hidden[l],align);
-    v->xs[l] = b;
     b += ALIGN(a->N_hidden[l],align);
   }
 

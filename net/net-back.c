@@ -1007,7 +1007,7 @@ __device__ void net_back_gpu
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     { net_value const* vh = v->h[l];
       for (i = th; i<N_hidden; i+=NTH)
-      { dh[i] *= (1 - vh[i]*vh[i]);
+      { dh[i] *= (net_value)1 - vh[i]*vh[i];
       }
     }
     else if (flgs->layer_type[l]==Sin_type)
@@ -1020,7 +1020,7 @@ __device__ void net_back_gpu
     { net_value const* vh = v->h[l];
       for (i = th; i<N_hidden; i+=NTH)
       { net_value e = prec_exp(vh[i]);
-        dh[i] *= (e-1) / e;
+        dh[i] *= (e - (net_value)1) / e;
       }
     }
     else if (flgs->layer_type[l]==Square_type)

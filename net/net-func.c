@@ -516,9 +516,7 @@ HOSTDEV void net_func
       }
     }
     else if (flgs->layer_type[l]==Identity_type)
-    { for (j = 0; j<N_hidden; j++)
-      { sh[j] = sh[j];
-      }
+    { /* nothing to do */
     }
     else
     { abort();
@@ -1647,7 +1645,7 @@ __device__ void net_func_gpu
     { for (j = th; j<N_hidden; j+=NTH)
       { net_value a = sh[j];
         net_value v = 
-          prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
+         prec_log ((net_value)1 + prec_exp(-prec_fabs(a))); /* avoid overflow */
         if (a>0) v += a;
         sh[j] = v;
       }
@@ -1663,9 +1661,7 @@ __device__ void net_func_gpu
       }
     }
     else /* identity */ 
-    { for (j = th; j<N_hidden; j+=NTH)
-      { sh[j] = sh[j];
-      }
+    { /* nothing to do */
     }
 
     /* Synchronize threads so that up-to-date values computed for this

@@ -252,97 +252,90 @@ HOSTDEV void net_back
     }
     else if (flgs->layer_type[l]==Softplus_type)
     { 
-#     if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__ && 0 /* for now */
+#     if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
       { __m256d ONE = _mm256_set1_pd(1.0);
-        __m256d ZERO = _mm256_setzero_pd();
         i = 3;
         while (i<N_hidden)
-        { __m256d NVS = _mm256_sub_pd (ZERO, _mm256_loadu_pd(vs+i-3));
-          _mm256_storeu_pd (dh+i-3, 
-                            _mm256_div_pd (_mm256_loadu_pd(dh+i-3),
-                              _mm256_add_pd (ONE, sleef_expd4(NVS))));
+        { __m256d E = sleef_expd4 (_mm256_loadu_pd(vh+i-3));
+          _mm256_storeu_pd (dh+i-3, _mm256_mul_pd (_mm256_loadu_pd(dh+i-3),
+                                      _mm256_div_pd (_mm256_sub_pd(E,ONE),E)));
           i += 4;
         }
         i -= 2;
         if (i<N_hidden)
-        { __m128d NVS = _mm_sub_pd (cast128d(ZERO), _mm_loadu_pd(vs+i-1));
-          _mm_storeu_pd (dh+i-1, 
-                         _mm_div_pd (_mm_loadu_pd(dh+i-1),
-                         _mm_add_pd (cast128d(ONE), sleef_expd2(NVS))));
+        { __m128d E = sleef_expd2 (_mm_loadu_pd(dh+i-1));
+          _mm_storeu_pd (dh+i-1, _mm_mul_pd (_mm_loadu_pd(dh+i-1),
+                                   _mm_div_pd (_mm_sub_pd(E,cast128d(ONE)),E)));
           i += 2;
         }
         if (i<=N_hidden)
-        { dh[i] = dh[i] / (1+prec_exp(-vs[i]));
+        { net_value e = prec_exp(vh[i]);
+          dh[i] *= (e-1) / e;
         }
       }
-#     elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__ && 0 /* for now */
+#     elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
       { __m128d ONE = _mm_set1_pd(1.0);
-        __m128d ZERO = _mm_setzero_pd();
         i = 1;
         while (i<N_hidden)
-        { __m128d NVS = _mm_sub_pd (ZERO, _mm_loadu_pd(vs+i-1));
-          _mm_storeu_pd (dh+i-1, 
-                         _mm_div_pd (_mm_loadu_pd(dh+i-1),
-                         _mm_add_pd (ONE, sleef_expd2(NVS))));
+        { __m128d E = sleef_expd2 (_mm_loadu_pd(dh+i-1));
+          _mm_storeu_pd (dh+i-1, _mm_mul_pd (_mm_loadu_pd(dh+i-1),
+                                   _mm_div_pd (_mm_sub_pd(E,ONE),E)));
           i += 2;
         }
         if (i<=N_hidden)
-        { dh[i] = dh[i] / (1+prec_exp(-vs[i]));
+        { net_value e = prec_exp(vh[i]);
+          dh[i] *= (e-1) / e;
         }
       }
-#     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__ && 0 /* for now */
+#     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
       { __m256 ONE = _mm256_set1_ps(1.0f);
-        __m256 ZERO = _mm256_setzero_ps();
         i = 7;
         while (i<N_hidden)
-        { __m256 NVS = _mm256_sub_ps (ZERO, _mm256_loadu_ps(vs+i-7));
-          _mm256_storeu_ps (dh+i-7, 
-                            _mm256_div_ps (_mm256_loadu_ps(dh+i-7),
-                            _mm256_add_ps (ONE, sleef_expf8(NVS))));
+        { __m256 E = sleef_expf8 (_mm256_loadu_ps(vh+i-7));
+          _mm256_storeu_ps (dh+i-7, _mm256_mul_ps (_mm256_loadu_ps(dh+i-7),
+                                      _mm256_div_ps (_mm256_sub_ps(E,ONE),E)));
           i += 8;
         }
         i -= 4;
-        while (i<N_hidden)
-        { __m128 NVS = _mm_sub_ps (cast128f(ZERO), _mm_loadu_ps(vs+i-3));
-          _mm_storeu_ps (dh+i-3, 
-                         _mm_div_ps (_mm_loadu_ps(dh+i-3),
-                         _mm_add_ps (cast128f(ONE), sleef_expf4(NVS))));
+        if (i<N_hidden)
+        { __m128 E = sleef_expf4 (_mm_loadu_ps(vh+i-3));
+          _mm_storeu_ps (dh+i-3, _mm_mul_ps (_mm_loadu_ps(dh+i-3),
+                                   _mm_div_ps (_mm_sub_ps(E,cast128f(ONE)),E)));
           i += 4;
         }
         i -= 2;
         if (i<N_hidden)
-        { __m128 NVS = _mm_sub_ps (cast128f(ZERO),
-                               _mm_loadl_pi(cast128f(ZERO),(__m64 *)(vs+i-1)));
-          _mm_storel_pi ((__m64 *)(dh+i-1), 
-                     _mm_div_ps (_mm_loadl_pi(cast128f(ZERO),(__m64 *)(dh+i-1)),
-                                 _mm_add_ps (cast128f(ONE), sleef_expf4(NVS))));
+        { __m128 ZERO = _mm_setzero_ps();
+          __m128 E = sleef_expf4 (_mm_loadl_pi(ZERO,(__m64 *)(vh+i-1)));
+          _mm_storel_pi ((__m64 *)(dh+i-1), _mm_mul_ps (_mm_loadu_ps(dh+i-1),
+                                   _mm_div_ps (_mm_sub_ps(E,cast128f(ONE)),E)));
           i += 2;
         }
         if (i<=N_hidden)
-        { dh[i] = dh[i] / (1+prec_exp(-vs[i]));
+        { net_value e = prec_exp(vh[i]);
+          dh[i] *= (e-1) / e;
         }
       }
-#     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__ && 0 /* for now */
-      { __m128 ONE = _mm_set1_ps(1.0f);
-        __m128 ZERO = _mm_setzero_ps();
+#     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
+      { __m128 ONE = _mm128_set1_ps(1.0f);
         i = 3;
-        while (i<N_hidden)
-        { __m128 NVS = _mm_sub_ps (ZERO, _mm_loadu_ps(vs+i-3));
-          _mm_storeu_ps (dh+i-3, 
-                         _mm_div_ps (_mm_loadu_ps(dh+i-3),
-                         _mm_add_ps (ONE, sleef_expf4(NVS))));
+        if (i<N_hidden)
+        { __m128 E = sleef_expf4 (_mm_loadu_ps(vh+i-3));
+          _mm_storeu_ps (dh+i-3, _mm_mul_ps (_mm_loadu_ps(dh+i-3),
+                                   _mm_div_ps (_mm_sub_ps(E,ONE),E)));
           i += 4;
         }
         i -= 2;
         if (i<N_hidden)
-        { __m128 NVS = _mm_sub_ps (ZERO, _mm_loadl_pi(ZERO,(__m64 *)(vs+i-1)));
-          _mm_storel_pi ((__m64 *)(dh+i-1), 
-                         _mm_div_ps (_mm_loadl_pi(ZERO,(__m64 *)(dh+i-1)),
-                                     _mm_add_ps (ONE, sleef_expf4(NVS))));
+        { __m128 ZERO = _mm_setzero_ps();
+          __m128 E = sleef_expf4 (_mm_loadl_pi(ZERO,(__m64 *)(vh+i-1)));
+          _mm_storel_pi ((__m64 *)(dh+i-1), _mm_mul_ps (_mm_loadu_ps(dh+i-1),
+                                   _mm_div_ps (_mm_sub_ps(E,ONE),E)));
           i += 2;
         }
         if (i<=N_hidden)
-        { dh[i] = dh[i] / (1+prec_exp(-vs[i]));
+        { net_value e = prec_exp(vh[i]);
+          dh[i] *= (e-1) / e;
         }
       }
 #     else

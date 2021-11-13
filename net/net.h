@@ -400,6 +400,8 @@ typedef struct
 { signed char nonseq [Max_layers]   /* nonseq[from][to] indexes non-sequential*/
                      [Max_layers+1];/*  connection in nsq, or is -1 if none.  */
                                     /*  (The +1 makes power of two for speed) */
+  short hidgpumem[Max_layers];      /* Offset to store hidden layer at in fast GPU
+                                       shared memory, or -1 to use global memory */
 } net_precomputed;
 
 

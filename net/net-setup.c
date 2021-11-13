@@ -122,7 +122,8 @@ unsigned net_setup_param_count
   for (l = 0; l<a->N_layers; l++)
   {
     if (pre)
-    { for (ls = 0; ls<l; ls++)
+    { pre->hidgpumem[l] = -1;
+      for (ls = 0; ls<l; ls++)
       { pre->nonseq[ls][l] = -1;
       }
     }

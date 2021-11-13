@@ -113,7 +113,9 @@ unsigned net_setup_param_count
 {
   unsigned count, b;
   int l, ls, nsqi;
+  int fastmem_used;
 
+  fastmem_used = 0;
   count = 0;
  
   if (a->has_ti) count += a->N_inputs;
@@ -122,7 +124,15 @@ unsigned net_setup_param_count
   for (l = 0; l<a->N_layers; l++)
   {
     if (pre)
-    { pre->hidgpumem[l] = -1;
+    { 
+      if (fastmem_used+a->N_hidden[l] <= MAX_FASTMEM_VALUES)
+      { pre->hidgpumem[l] = fastmem_used;
+        fastmem_used += MAX_FASTMEM_VALUES;
+      }
+      else
+      { pre->hidgpumem[l] = -1;
+      }
+
       for (ls = 0; ls<l; ls++)
       { pre->nonseq[ls][l] = -1;
       }

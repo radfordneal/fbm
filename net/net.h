@@ -26,9 +26,9 @@
 #define SPARSE_THRESHOLD 0.3 /* Do sparse handling for training inputs if 
                                 fraction of zero inputs is greater than this */
 
-#define TYPICAL_VALUES_ALL_ONE 0  /* Set to 1 to disable simulation of squared
-                                     hidden unit values, thereby reverting to 
-                                     the old stepsize heuristic */
+#define TYPICAL_VALUES_ALL_ONE 0   /* Set to 1 to disable simulation of squared
+                                      hidden unit values, thereby reverting to 
+                                      the old stepsize heuristic */
 
 /* Alignment for value structures. */
 
@@ -37,7 +37,8 @@
 
 #define NET_VALUE_ALIGN_ELEMENTS (NET_VALUE_ALIGN_BYTES / 4 / (1+FP64))
 
-/* For GPU computations: */
+
+/* CONSTANTS RELATING TO GPU COMPUTATIONS: */
 
 #define THREADS_PER_CASE 4   /* Number of GPU threads used per training case
                                 for value computaton; must be a power of two */
@@ -71,6 +72,18 @@
 
 #define DEFAULT_BLKCASES 16  /* Default, if not set by BLKCASES env var */
 #define DEFAULT_MAXBLKS	1000 /* Default, if not set by MAXBLKS env var */
+
+#define MAX_FASTMEM_VALUES 64    /* Maximum number of elements per thread that
+                                    can be stored in the fast shared memory */
+
+#define GPU_CACHE_PREFERENCE cudaFuncCachePreferShared
+
+#if __CUDACC__
+
+extern __shared__ net_value sharedvalues[];
+#define FASTMEM(o) (sharedvalues + (threadIdx.x/NTH)*MAX_FASTMEM_VALUES + (o))
+
+#endif
 
 
 /* FUNCTIONS WITH SPECIFIED PRECISION. */

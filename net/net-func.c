@@ -88,7 +88,7 @@ HOSTDEV void net_func
   int sparse		/* Are input values sparse? */
 )
 {
-  int l, ls, nsqi, j;
+  int l, ls, j;
 
   /* Compute values for successive hidden layers. */
 
@@ -124,7 +124,7 @@ HOSTDEV void net_func
 
     if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { nsqi = pre->nonseq[ls][l];
+      { int nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
           { add_connections_config (sh, v->h[ls], w->nsq[nsqi], 
@@ -1537,16 +1537,18 @@ __device__ void net_func_gpu
   int sync		/* Sync threads after last layer computation? */
 )
 {
-  int l, ls, nsqi, j;
+  net_value *vh, *sh, *shp;
+  int l, ls, j;
 
   /* Compute values for successive hidden layers. */
 
   for (l = start; l<a->N_layers; l++)
   {
     int N_hidden = a->N_hidden[l];
-    net_value *sh = v->h[l];
 
     if (th<0) goto sync_layer;
+
+    sh = pre->hidgpumem[l]>=0 ? FASTMEM(pre->hidgpumem[l]) : v->h[l];
 
     /* Find summed inputs into each hidden unit in the layer. */
 
@@ -1578,14 +1580,15 @@ __device__ void net_func_gpu
 
     if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { nsqi = pre->nonseq[ls][l];
+      { int nsqi = pre->nonseq[ls][l];
+        shp = pre->hidgpumem[ls]>=0 ? FASTMEM(pre->hidgpumem[ls]) : v->h[ls];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
-          { add_connections_config_gpu (th, sh, v->h[ls], w->nsq[nsqi],
+          { add_connections_config_gpu (th, sh, shp, w->nsq[nsqi],
               a->has_th[ls] ? w->th[ls] : 0, a->nonseq_config[nsqi]);
           }
           else
-          { add_connections_gpu (th, sh, N_hidden, v->h[ls], a->N_hidden[ls],
+          { add_connections_gpu (th, sh, N_hidden, shp, a->N_hidden[ls],
               w->nsq[nsqi], a->has_th[ls] ? w->th[ls] : 0,
               (unsigned short *) 0, 0, 0);
           }
@@ -1594,12 +1597,13 @@ __device__ void net_func_gpu
     }
 
     if (l>0 && a->has_hh[l-1])
-    { if (a->hidden_config[l])
-      { add_connections_config_gpu (th, sh, v->h[l-1], w->hh[l-1], 
+    { shp = pre->hidgpumem[l-1]>=0 ? FASTMEM(pre->hidgpumem[l-1]) : v->h[l-1];
+      if (a->hidden_config[l])
+      { add_connections_config_gpu (th, sh, shp, w->hh[l-1], 
           a->has_th[l-1] ? w->th[l-1] : 0, a->hidden_config[l]);
       }
       else
-      { add_connections_gpu (th, sh, N_hidden, v->h[l-1], a->N_hidden[l-1],
+      { add_connections_gpu (th, sh, N_hidden, shp, a->N_hidden[l-1],
           w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0, (unsigned short *) 0, 
           0, 0);
       }
@@ -1607,37 +1611,77 @@ __device__ void net_func_gpu
 
     /* Put values through hidden unit activation function. */
 
-    if (flgs==0 || flgs->layer_type[l]==Tanh_type)
-    { for (j = th; j<N_hidden; j+=NTH)
-      { sh[j] = TANH (sh[j]);
+    vh = v->h[l];
+
+    if (sh==vh)
+    { if (flgs==0 || flgs->layer_type[l]==Tanh_type)
+      { for (j = th; j<N_hidden; j+=NTH)
+        { sh[j] = TANH (sh[j]);
+        }
+      }
+      else if (flgs->layer_type[l]==Sin_type)
+      { for (j = th; j<N_hidden; j+=NTH)
+        { sh[j] = sqrt_2 * prec_sin(sh[j]*sqrt_2);
+        }
+      }
+      else if (flgs->layer_type[l]==Softplus_type)
+      { for (j = th; j<N_hidden; j+=NTH)
+        { net_value a = sh[j];
+          net_value v = 
+           prec_log ((net_value)1 + prec_exp(-prec_fabs(a)));/* avoid overflow*/
+          if (a>0) v += a;
+          sh[j] = v;
+        }
+      }
+      else if (flgs->layer_type[l]==Square_type)
+      { for (j = th; j<N_hidden; j+=NTH)
+        { sh[j] = sh[j]*sh[j];
+        }
+      }
+      else if (flgs->layer_type[l]==Cube_type)
+      { for (j = th; j<N_hidden; j+=NTH)
+        { sh[j] = sh[j]*sh[j]*sh[j];
+        }
+      }
+      else /* identity */ 
+      { /* nothing to do */
       }
     }
-    else if (flgs->layer_type[l]==Sin_type)
-    { for (j = th; j<N_hidden; j+=NTH)
-      { sh[j] = sqrt_2 * prec_sin(sh[j]*sqrt_2);
+    else
+    { if (flgs==0 || flgs->layer_type[l]==Tanh_type)
+      { for (j = th; j<N_hidden; j+=NTH)
+        { vh[j] = sh[j] = TANH (sh[j]);
+        }
       }
-    }
-    else if (flgs->layer_type[l]==Softplus_type)
-    { for (j = th; j<N_hidden; j+=NTH)
-      { net_value a = sh[j];
-        net_value v = 
-         prec_log ((net_value)1 + prec_exp(-prec_fabs(a))); /* avoid overflow */
-        if (a>0) v += a;
-        sh[j] = v;
+      else if (flgs->layer_type[l]==Sin_type)
+      { for (j = th; j<N_hidden; j+=NTH)
+        { vh[j] = sh[j] = sqrt_2 * prec_sin(sh[j]*sqrt_2);
+        }
       }
-    }
-    else if (flgs->layer_type[l]==Square_type)
-    { for (j = th; j<N_hidden; j+=NTH)
-      { sh[j] = sh[j]*sh[j];
+      else if (flgs->layer_type[l]==Softplus_type)
+      { for (j = th; j<N_hidden; j+=NTH)
+        { net_value a = sh[j];
+          net_value v = 
+           prec_log ((net_value)1 + prec_exp(-prec_fabs(a)));/* avoid overflow*/
+          if (a>0) v += a;
+          vh[j] = sh[j] = v;
+        }
       }
-    }
-    else if (flgs->layer_type[l]==Cube_type)
-    { for (j = th; j<N_hidden; j+=NTH)
-      { sh[j] = sh[j]*sh[j]*sh[j];
+      else if (flgs->layer_type[l]==Square_type)
+      { for (j = th; j<N_hidden; j+=NTH)
+        { vh[j] = sh[j] = sh[j]*sh[j];
+        }
       }
-    }
-    else /* identity */ 
-    { /* nothing to do */
+      else if (flgs->layer_type[l]==Cube_type)
+      { for (j = th; j<N_hidden; j+=NTH)
+        { vh[j] = sh[j] = sh[j]*sh[j]*sh[j];
+        }
+      }
+      else /* identity */ 
+      { for (j = th; j<N_hidden; j+=NTH)
+        { vh[j] = sh[j];
+        }
+      }
     }
 
     /* Synchronize threads so that up-to-date values computed for this
@@ -1680,13 +1724,14 @@ __device__ void net_func_gpu
 
   for (l = 0; l<a->N_layers; l++)
   { if (a->has_ho[l])
-    { int k = 2*a->N_layers-1-l;
+    { shp = pre->hidgpumem[l]>=0 ? FASTMEM(pre->hidgpumem[l]) : v->h[l];
+      int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
-      { add_connections_config_gpu (th, v->o, v->h[l], w->ho[l], 
+      { add_connections_config_gpu (th, v->o, shp, w->ho[l], 
                          a->has_th[l] ? w->th[l] : 0, a->hidden_config[k]);
       }
       else
-      { add_connections_gpu (th, v->o, a->N_outputs, v->h[l], a->N_hidden[l], 
+      { add_connections_gpu (th, v->o, a->N_outputs, shp, a->N_hidden[l], 
                              w->ho[l], a->has_th[l] ? w->th[l] : 0, 
                              (unsigned short *) 0, 0, 0);
       }

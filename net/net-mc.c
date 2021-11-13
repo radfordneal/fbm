@@ -878,33 +878,34 @@ void mc_app_initialize
 
 #     if SPLIT_KERNELS==0
       { check_cuda_error (
-          cudaFuncSetCacheConfig (training_kernel, cudaFuncCachePreferL1),
+          cudaFuncSetCacheConfig (training_kernel, GPU_CACHE_PREFERENCE),
           "Set cache config for training_kernel");
       }
 #     elif SPLIT_KERNELS==1
       { check_cuda_error (
-          cudaFuncSetCacheConfig (forward_kernel, cudaFuncCachePreferL1),
+          cudaFuncSetCacheConfig (forward_kernel, GPU_CACHE_PREFERENCE),
           "Set cache config for forward_kernel");
         check_cuda_error (
-          cudaFuncSetCacheConfig (energy_kernel, cudaFuncCachePreferL1),
+          cudaFuncSetCacheConfig (energy_kernel, GPU_CACHE_PREFERENCE),
           "Set cache config for energy_kernel");
         check_cuda_error (
-          cudaFuncSetCacheConfig (backward_kernel, cudaFuncCachePreferL1),
+          cudaFuncSetCacheConfig (backward_kernel, GPU_CACHE_PREFERENCE),
           "Set cache config for backward_kernel");
         check_cuda_error (
-          cudaFuncSetCacheConfig (gradient_comp_kernel, cudaFuncCachePreferL1),
+          cudaFuncSetCacheConfig (gradient_comp_kernel, 
+                                  GPU_CACHE_PREFERENCE),
           "Set cache config for gradient_comp_kernel");
         check_cuda_error (
           cudaFuncSetCacheConfig (gradient_reduction_kernel, 
-                                  cudaFuncCachePreferL1),
+                                  GPU_CACHE_PREFERENCE),
           "Set cache config for gradient_reduction_kernel");
       }
 #     else  /* SPLIT_KERNELS is 2 */
       { check_cuda_error (
-          cudaFuncSetCacheConfig (nongrad_kernel, cudaFuncCachePreferL1),
+          cudaFuncSetCacheConfig (nongrad_kernel, GPU_CACHE_PREFERENCE),
           "Set cache config for nongrad_kernel");
         check_cuda_error (
-          cudaFuncSetCacheConfig (gradient_kernel, cudaFuncCachePreferL1),
+          cudaFuncSetCacheConfig (gradient_kernel, GPU_CACHE_PREFERENCE),
           "Set cache config for gradient_kernel");
       }
 #     endif
@@ -2657,31 +2658,37 @@ static void net_training_cases_gpu
 
       check_cuda_error (cudaGetLastError(), "Before launching kernel(s)");
 
+      int shared_mem = blkcases * MAX_FASTMEM_VALUES * sizeof(net_value);
+
 #     if SPLIT_KERNELS==0
-      { training_kernel <<<blks, blkcases*THREADS_PER_CASE>>>
+      { training_kernel <<<blks, blkcases*THREADS_PER_CASE, shared_mem>>>
           (energy ? case_energy : 0, gr ? group_grad : 0,
            i, i+cases, en_weight, gr_weight);
         if (0) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching training_kernel");
       }
 #     elif SPLIT_KERNELS==1
-      { forward_kernel <<<blks, blkcases*THREADS_PER_CASE>>> (i, i+cases);
+      { forward_kernel <<<blks, blkcases*THREADS_PER_CASE, shared_mem>>>
+          (i, i+cases);
         if (0) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching forward_kernel");
-        energy_kernel <<<blks, blkcases*THREADS_PER_CASE>>> 
+        energy_kernel <<<blks, blkcases*THREADS_PER_CASE, shared_mem>>> 
           (energy ? case_energy : 0, i, i+cases, en_weight, gr!=0, gr_weight);
         if (0) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching energy_kernel");
         if (gr)
-        { backward_kernel <<<blks, blkcases*THREADS_PER_CASE>>>  (i, i+cases);
+        { backward_kernel <<<blks, blkcases*THREADS_PER_CASE, shared_mem>>>
+            (i, i+cases);
           if (0) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching backward_kernel");
-          gradient_comp_kernel <<<blks, blkcases*GRAD_THREADS_PER_CASE>>>
+          gradient_comp_kernel 
+            <<<blks, blkcases*GRAD_THREADS_PER_CASE, shared_mem>>>
             (group_grad, i, i+cases);
           if (0) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching gradient_comp_kernel");
           if (blkcases>GROUP_SIZE)
-          { gradient_reduction_kernel <<<blks, blkcases*GRAD_THREADS_PER_CASE>>>
+          { gradient_reduction_kernel 
+              <<<blks, blkcases*GRAD_THREADS_PER_CASE, shared_mem>>>
               (group_grad, i, i+cases);
             if (0) check_cuda_error (cudaDeviceSynchronize(), 
                      "Synchronizing after launching gradient_reduction_kernel");
@@ -2689,13 +2696,14 @@ static void net_training_cases_gpu
         }
       }
 #     else /* SPLIT_KERNELS is 2 */
-      { nongrad_kernel <<<blks, blkcases*THREADS_PER_CASE>>>
+      { nongrad_kernel <<<blks, blkcases*THREADS_PER_CASE, shared_mem>>>
           (energy ? case_energy : 0, gr ? group_grad : 0,
            i, i+cases, en_weight, gr_weight);
         if (0) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching nongrad_kernel");
         if (gr)
-        { gradient_kernel <<<blks, blkcases*GRAD_THREADS_PER_CASE>>> 
+        { gradient_kernel 
+            <<<blks, blkcases*GRAD_THREADS_PER_CASE, shared_mem>>> 
             (group_grad, i, i+cases);
           if (0) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching gradient_kernel");

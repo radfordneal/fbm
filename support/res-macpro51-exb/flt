@@ -1,11 +1,11 @@
-Commit: 6e7c3ff48be3e72d115e3f6886ede201a9f3c1e1
+Commit: 544ad3bfe1a821bff854306baf2e0caea994f1eb
 
 Running exb with flt:
 
 Number of training cases: 300
 Number of test cases: 1000
-Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2
-Precision: FP32, SIMD features: SSE2 SSE3 SSE4.2
+Precision: FP32, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
+Precision: FP32, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
 
 Number of iterations used: 20
 
@@ -14,4 +14,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.235+-0.016
 Fraction of guesses that were wrong:    0.1050+-0.0097
 
-elapsed 2.15s
+elapsed 2.00s

@@ -251,7 +251,7 @@ HOSTDEV void net_back
         }
         i -= 2;
         if (i<N_hidden)
-        { __m128d E = sleef_expd2 (_mm_loadu_pd(dh+i-1));
+        { __m128d E = sleef_expd2 (_mm_loadu_pd(vh+i-1));
           _mm_storeu_pd (dh+i-1, _mm_mul_pd (_mm_loadu_pd(dh+i-1),
                                    _mm_div_pd (_mm_sub_pd(E,cast128d(ONE)),E)));
           i += 2;
@@ -265,7 +265,7 @@ HOSTDEV void net_back
       { __m128d ONE = _mm_set1_pd(1.0);
         i = 1;
         while (i<N_hidden)
-        { __m128d E = sleef_expd2 (_mm_loadu_pd(dh+i-1));
+        { __m128d E = sleef_expd2 (_mm_loadu_pd(vh+i-1));
           _mm_storeu_pd (dh+i-1, _mm_mul_pd (_mm_loadu_pd(dh+i-1),
                                    _mm_div_pd (_mm_sub_pd(E,ONE),E)));
           i += 2;

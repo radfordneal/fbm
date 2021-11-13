@@ -305,7 +305,7 @@ HOSTDEV void net_back
         }
       }
 #     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
-      { __m128 ONE = _mm128_set1_ps(1.0f);
+      { __m128 ONE = _mm_set1_ps(1.0f);
         i = 3;
         if (i<N_hidden)
         { __m128 E = sleef_expf4 (_mm_loadu_ps(vh+i-3));

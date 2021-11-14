@@ -1507,6 +1507,8 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
    that this means that outputs for different cases will not have been
    synchronized. */
 
+#define FASTMEM(o) (sharedvalues + (threadIdx.x/NTH)*pre->memused + (o))
+
 __device__ void net_func_gpu
 ( int th,		/* Thread index */
   net_values *restrict v, /* Place to get inputs and store outputs */
@@ -1530,7 +1532,7 @@ __device__ void net_func_gpu
 
     if (th<0) goto sync_layer;
 
-    sh = pre->hidgpumem[l]>=0 ? FASTMEM(pre->hidgpumem[l]) : v->h[l];
+    sh = pre->fwgpumem[l]>=0 ? FASTMEM(pre->fwgpumem[l]) : v->h[l];
 
     /* Find summed inputs into each hidden unit in the layer. */
 
@@ -1563,7 +1565,7 @@ __device__ void net_func_gpu
     if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
       { int nsqi = pre->nonseq[ls][l];
-        shp = pre->hidgpumem[ls]>=0 ? FASTMEM(pre->hidgpumem[ls]) : v->h[ls];
+        shp = pre->fwgpumem[ls]>=0 ? FASTMEM(pre->fwgpumem[ls]) : v->h[ls];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
           { add_connections_config_gpu (th, sh, shp, w->nsq[nsqi],
@@ -1579,7 +1581,7 @@ __device__ void net_func_gpu
     }
 
     if (l>0 && a->has_hh[l-1])
-    { shp = pre->hidgpumem[l-1]>=0 ? FASTMEM(pre->hidgpumem[l-1]) : v->h[l-1];
+    { shp = pre->fwgpumem[l-1]>=0 ? FASTMEM(pre->fwgpumem[l-1]) : v->h[l-1];
       if (a->hidden_config[l])
       { add_connections_config_gpu (th, sh, shp, w->hh[l-1], 
           a->has_th[l-1] ? w->th[l-1] : 0, a->hidden_config[l]);
@@ -1676,7 +1678,7 @@ __device__ void net_func_gpu
 
   for (l = 0; l<a->N_layers; l++)
   { if (a->has_ho[l])
-    { shp = pre->hidgpumem[l]>=0 ? FASTMEM(pre->hidgpumem[l]) : v->h[l];
+    { shp = pre->fwgpumem[l]>=0 ? FASTMEM(pre->fwgpumem[l]) : v->h[l];
       int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { add_connections_config_gpu (th, v->o, shp, w->ho[l], 

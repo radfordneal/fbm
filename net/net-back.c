@@ -864,6 +864,8 @@ HOSTDEV static void sum_derivatives_config
 
 /* -------------------------- net_back_gpu --------------------------------- */
 
+#if __CUDACC__
+
 __device__ static void sum_derivatives_gpu 
     (int, net_value const*, int, net_value *restrict, 
      int, net_param const*, unsigned short const*, int);
@@ -883,7 +885,7 @@ __device__ static void sum_derivatives_config_gpu
    mod THREAD_PER_CASE equal to 'th', and can use those values without
    synchronization later. */
 
-#if __CUDACC__
+#define FASTMEM(o) (sharedvalues + (threadIdx.x/NTH)*pre->memused + (o))
 
 __device__ void net_back_gpu
 ( int th,		/* Which thread, negative for surplus thread */
@@ -905,6 +907,7 @@ __device__ void net_back_gpu
   { 
     int N_hidden = a->N_hidden[l];
     net_value *restrict dh = d->h[l];
+    net_value const* vh;
 
     if (th<0) goto sync_layer;
 
@@ -952,15 +955,15 @@ __device__ void net_back_gpu
       }
     }
 
+    vh =  pre->fwgpumem[l]>=0 ? FASTMEM(pre->fwgpumem[l]) : v->h[l];
+
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
-    { net_value const* vh = v->h[l];
-      for (i = th; i<N_hidden; i+=NTH)
+    { for (i = th; i<N_hidden; i+=NTH)
       { dh[i] *= (net_value)1 - vh[i]*vh[i];
       }
     }
     else if (flgs->layer_type[l]==Softplus_type)
-    { net_value const* vh = v->h[l];
-      for (i = th; i<N_hidden; i+=NTH)
+    { for (i = th; i<N_hidden; i+=NTH)
       { net_value e = prec_exp(vh[i]);
         dh[i] *= (e - (net_value)1) / e;
       }

@@ -2,7 +2,13 @@
 
 set -e
 
-for ex in exr exb exc exbgd exi1 exi2 exi3; do
+if [ x$1 == x ]; then
+  list="exr exb exc exbgd exi1 exi2 exi3"
+else
+  list="$@"
+fi
+
+for ex in $list; do
   echo RUNNING $ex on CPU
   run-ex $ex
   for GPUNAME in $GPULIST; do

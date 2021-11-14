@@ -2658,39 +2658,39 @@ static void net_training_cases_gpu
 
       check_cuda_error (cudaGetLastError(), "Before launching kernel(s)");
 
-      int shared_mem = blkcases * MAX_FASTMEM_VALUES * sizeof(net_value);
+      int shared_mem = blkcases * pre.memused * sizeof(net_value);
 
 #     if SPLIT_KERNELS==0
       { training_kernel <<<blks, blkcases*THREADS_PER_CASE, shared_mem>>>
           (energy ? case_energy : 0, gr ? group_grad : 0,
            i, i+cases, en_weight, gr_weight);
-        if (0) check_cuda_error (cudaDeviceSynchronize(), 
+        if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching training_kernel");
       }
 #     elif SPLIT_KERNELS==1
       { forward_kernel <<<blks, blkcases*THREADS_PER_CASE, shared_mem>>>
           (i, i+cases);
-        if (0) check_cuda_error (cudaDeviceSynchronize(), 
+        if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching forward_kernel");
         energy_kernel <<<blks, blkcases*THREADS_PER_CASE, shared_mem>>> 
           (energy ? case_energy : 0, i, i+cases, en_weight, gr!=0, gr_weight);
-        if (0) check_cuda_error (cudaDeviceSynchronize(), 
+        if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching energy_kernel");
         if (gr)
         { backward_kernel <<<blks, blkcases*THREADS_PER_CASE, shared_mem>>>
             (i, i+cases);
-          if (0) check_cuda_error (cudaDeviceSynchronize(), 
+          if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching backward_kernel");
           gradient_comp_kernel 
             <<<blks, blkcases*GRAD_THREADS_PER_CASE, shared_mem>>>
             (group_grad, i, i+cases);
-          if (0) check_cuda_error (cudaDeviceSynchronize(), 
+          if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching gradient_comp_kernel");
           if (blkcases>GROUP_SIZE)
           { gradient_reduction_kernel 
               <<<blks, blkcases*GRAD_THREADS_PER_CASE, shared_mem>>>
               (group_grad, i, i+cases);
-            if (0) check_cuda_error (cudaDeviceSynchronize(), 
+            if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                      "Synchronizing after launching gradient_reduction_kernel");
           }
         }
@@ -2699,13 +2699,13 @@ static void net_training_cases_gpu
       { nongrad_kernel <<<blks, blkcases*THREADS_PER_CASE, shared_mem>>>
           (energy ? case_energy : 0, gr ? group_grad : 0,
            i, i+cases, en_weight, gr_weight);
-        if (0) check_cuda_error (cudaDeviceSynchronize(), 
+        if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching nongrad_kernel");
         if (gr)
         { gradient_kernel 
             <<<blks, blkcases*GRAD_THREADS_PER_CASE, shared_mem>>> 
             (group_grad, i, i+cases);
-          if (0) check_cuda_error (cudaDeviceSynchronize(), 
+          if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching gradient_kernel");
         }
       }

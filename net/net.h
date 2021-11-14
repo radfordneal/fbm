@@ -73,7 +73,7 @@
 #define DEFAULT_BLKCASES 16  /* Default, if not set by BLKCASES env var */
 #define DEFAULT_MAXBLKS	1000 /* Default, if not set by MAXBLKS env var */
 
-#define MAX_FASTMEM_VALUES 64    /* Maximum number of elements per thread that
+#define MAX_FASTMEM_VALUES 128   /* Maximum number of elements per thread that
                                     can be stored in the fast shared memory */
 
 #define GPU_CACHE_PREFERENCE cudaFuncCachePreferShared
@@ -81,7 +81,6 @@
 #if __CUDACC__
 
 extern __shared__ net_value sharedvalues[];
-#define FASTMEM(o) (sharedvalues + (threadIdx.x/NTH)*MAX_FASTMEM_VALUES + (o))
 
 #endif
 
@@ -410,11 +409,15 @@ typedef struct
 /* STUFF ABOUT THE NETWORK ARCHITECTURE THAT'S BEEN PRE-COMPUTED. */
 
 typedef struct
-{ signed char nonseq [Max_layers]   /* nonseq[from][to] indexes non-sequential*/
+{ 
+  short memused;                    /* Amount of fast GPU shared memory used
+                                       (in net_value units) */
+  short fwgpumem[Max_layers];       /* Offset to forward hidden layer in fast
+                                       GPU shared mem, or -1 if in global mem */
+
+  signed char nonseq [Max_layers]   /* nonseq[from][to] indexes non-sequential*/
                      [Max_layers+1];/*  connection in nsq, or is -1 if none.  */
                                     /*  (The +1 makes power of two for speed) */
-  short hidgpumem[Max_layers];      /* Offset to store hidden layer at in fast GPU
-                                       shared memory, or -1 to use global memory */
 } net_precomputed;
 
 

@@ -1071,6 +1071,9 @@ HOSTDEV static void add_grad2_config
 
 #if __CUDACC__ 
 
+#define FASTMEM(o,w) \
+  (sharedvalues + ((w)+(threadIdx.x/GTH)*GROUP_SIZE)*pre->memused + (o))
+
 __device__ static void net_store1_grad1 
         (int, net_param *restrict, net_value const*, int);
 __device__ static void net_store1_grad1_config 
@@ -1111,6 +1114,7 @@ __device__ void net_store1_grad
   int sparse            /* Might source unit values often be zero? */
 )
 { 
+  const net_value *u0;
   int l, ls, nsqi;
 
   if (a->has_ti) 
@@ -1145,18 +1149,25 @@ __device__ void net_store1_grad
       }
     }
 
-   if (a->has_nsq[l])
+    if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { nsqi = pre->nonseq[ls][l];
+      { if (pre->fwgpumem[ls]>=0)
+        { int m = pre->fwgpumem[ls];
+          u0 = FASTMEM(m,0);
+        }
+        else
+        { u0 = v0->h[ls];
+        }
+        nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
           { net_store1_grad2_config
-                (th, g->nsq[nsqi], v0->h[ls],
+                (th, g->nsq[nsqi], u0,
                  a->has_th[ls] ? w->th[ls] : 0,
                  d0->h[l], a->nonseq_config[nsqi]);
           }
           else
-          { net_store1_grad2 (th, g->nsq[nsqi], v0->h[ls],
+          { net_store1_grad2 (th, g->nsq[nsqi], u0,
               a->has_th[ls] ? w->th[ls] : 0,
               a->N_hidden[ls], d0->h[l], N_hidden, 
               (unsigned short *)0, 0, 0);
@@ -1166,14 +1177,21 @@ __device__ void net_store1_grad
     }
 
     if (l>0 && a->has_hh[l-1])
-    { if (a->hidden_config[l])
+    { if (pre->fwgpumem[l-1]>=0)
+      { int m = pre->fwgpumem[l-1];
+        u0 = FASTMEM(m,0);
+      }
+      else
+      { u0 = v0->h[l-1];
+      }
+      if (a->hidden_config[l])
       { net_store1_grad2_config
-           (th, g->hh[l-1], v0->h[l-1],
+           (th, g->hh[l-1], u0,
             a->has_th[l-1] ? w->th[l-1] : 0,
             d0->h[l], a->hidden_config[l]);
       }
       else
-      { net_store1_grad2 (th, g->hh[l-1], v0->h[l-1],
+      { net_store1_grad2 (th, g->hh[l-1], u0,
           a->has_th[l-1] ? w->th[l-1] : 0,
           a->N_hidden[l-1], d0->h[l], N_hidden,
           (unsigned short *)0, 0, 0);
@@ -1185,14 +1203,21 @@ __device__ void net_store1_grad
     }
 
     if (a->has_ho[l])
-    { int k = 2*a->N_layers-1-l;
+    { if (pre->fwgpumem[l]>=0)
+      { int m = pre->fwgpumem[l];
+        u0 = FASTMEM(m,0);
+      }
+      else
+      { u0 = v0->h[l];
+      }
+      int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
-      { net_store1_grad2_config (th, g->ho[l], v0->h[l],
+      { net_store1_grad2_config (th, g->ho[l], u0,
                            a->has_th[l] ? w->th[l] : 0,
                            d0->o, a->hidden_config[k]);
       }
       else
-      { net_store1_grad2 (th, g->ho[l], v0->h[l],
+      { net_store1_grad2 (th, g->ho[l], u0,
                     a->has_th[l] ? w->th[l] : 0,
                     N_hidden, d0->o, a->N_outputs, 
                     (unsigned short *) 0, 0, 0);
@@ -1577,6 +1602,7 @@ __device__ void net_store2_grad
   int sparse            /* Might source unit values often be zero? */
 )
 { 
+  const net_value *u0, *u1;
   int l, ls, nsqi;
 
   if (a->has_ti) 
@@ -1611,18 +1637,25 @@ __device__ void net_store2_grad
       }
     }
 
-   if (a->has_nsq[l])
+    if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { nsqi = pre->nonseq[ls][l];
+      { if (pre->fwgpumem[ls]>=0)
+        { int m = pre->fwgpumem[ls];
+          u0 = FASTMEM(m,0); u1 = FASTMEM(m,1);
+        }
+        else
+        { u0 = v0->h[ls]; u1 = v1->h[ls];
+        }
+        nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
           { net_store2_grad2_config
-                (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], 
+                (th, g->nsq[nsqi], u0, u1,
                  a->has_th[ls] ? w->th[ls] : 0,
                  d0->h[l], d1->h[l], a->nonseq_config[nsqi]);
           }
           else
-          { net_store2_grad2 (th, g->nsq[nsqi], v0->h[ls], v1->h[ls],
+          { net_store2_grad2 (th, g->nsq[nsqi], u0, u1,
               a->has_th[ls] ? w->th[ls] : 0,
               a->N_hidden[ls], d0->h[l], d1->h[l], N_hidden, 
               (unsigned short *)0, 0, 0);
@@ -1632,14 +1665,21 @@ __device__ void net_store2_grad
     }
 
     if (l>0 && a->has_hh[l-1])
-    { if (a->hidden_config[l])
+    { if (pre->fwgpumem[l-1]>=0)
+      { int m = pre->fwgpumem[l-1];
+        u0 = FASTMEM(m,0); u1 = FASTMEM(m,1);
+      }
+      else
+      { u0 = v0->h[l-1]; u1 = v1->h[l-1];
+      }
+      if (a->hidden_config[l])
       { net_store2_grad2_config
-           (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], 
+           (th, g->hh[l-1], u0, u1, 
             a->has_th[l-1] ? w->th[l-1] : 0,
             d0->h[l], d1->h[l], a->hidden_config[l]);
       }
       else
-      { net_store2_grad2 (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], 
+      { net_store2_grad2 (th, g->hh[l-1], u0, u1, 
           a->has_th[l-1] ? w->th[l-1] : 0,
           a->N_hidden[l-1], d0->h[l], d1->h[l], N_hidden,
           (unsigned short *)0, 0, 0);
@@ -1651,14 +1691,21 @@ __device__ void net_store2_grad
     }
 
     if (a->has_ho[l])
-    { int k = 2*a->N_layers-1-l;
+    { if (pre->fwgpumem[l]>=0)
+      { int m = pre->fwgpumem[l];
+        u0 = FASTMEM(m,0); u1 = FASTMEM(m,1);
+      }
+      else
+      { u0 = v0->h[l]; u1 = v1->h[l];
+      }
+      int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
-      { net_store2_grad2_config (th, g->ho[l], v0->h[l], v1->h[l], 
+      { net_store2_grad2_config (th, g->ho[l], u0, u1, 
                            a->has_th[l] ? w->th[l] : 0,
                            d0->o, d1->o, a->hidden_config[k]);
       }
       else
-      { net_store2_grad2 (th, g->ho[l], v0->h[l], v1->h[l], 
+      { net_store2_grad2 (th, g->ho[l], u0, u1, 
                     a->has_th[l] ? w->th[l] : 0,
                     N_hidden, d0->o, d1->o, a->N_outputs, 
                     (unsigned short *) 0, 0, 0);
@@ -2068,6 +2115,7 @@ __device__ void net_store3_grad
   int sparse            /* Might source unit values often be zero? */
 )
 { 
+  const net_value *u0, *u1, *u2;
   int l, ls, nsqi;
 
   if (a->has_ti) 
@@ -2104,18 +2152,25 @@ __device__ void net_store3_grad
       }
     }
 
-   if (a->has_nsq[l])
+    if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { nsqi = pre->nonseq[ls][l];
+      { if (pre->fwgpumem[ls]>=0)
+        { int m = pre->fwgpumem[ls];
+          u0 = FASTMEM(m,0); u1 = FASTMEM(m,1); u2 = FASTMEM(m,2);
+        }
+        else
+        { u0 = v0->h[ls]; u1 = v1->h[ls]; u2 = v2->h[ls];
+        }
+        nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
           { net_store3_grad2_config
-                (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], v2->h[ls],
+                (th, g->nsq[nsqi], u0, u1, u2,
                  a->has_th[ls] ? w->th[ls] : 0,
                  d0->h[l], d1->h[l], d2->h[l], a->nonseq_config[nsqi]);
           }
           else
-          { net_store3_grad2 (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], v2->h[ls],
+          { net_store3_grad2 (th, g->nsq[nsqi], u0, u1, u2,
               a->has_th[ls] ? w->th[ls] : 0,
               a->N_hidden[ls], d0->h[l], d1->h[l], d2->h[l], N_hidden,
               (unsigned short *)0, 0, 0);
@@ -2125,14 +2180,21 @@ __device__ void net_store3_grad
     }
 
     if (l>0 && a->has_hh[l-1])
-    { if (a->hidden_config[l])
+    { if (pre->fwgpumem[l-1]>=0)
+      { int m = pre->fwgpumem[l-1];
+        u0 = FASTMEM(m,0); u1 = FASTMEM(m,1); u2 = FASTMEM(m,2);
+      }
+      else
+      { u0 = v0->h[l-1]; u1 = v1->h[l-1]; u2 = v2->h[l-1];
+      }
+      if (a->hidden_config[l])
       { net_store3_grad2_config
-           (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], v2->h[l-1],
+           (th, g->hh[l-1], u0, u1, u2,
             a->has_th[l-1] ? w->th[l-1] : 0,
             d0->h[l], d1->h[l], d2->h[l], a->hidden_config[l]);
       }
       else
-      { net_store3_grad2 (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], v2->h[l-1],
+      { net_store3_grad2 (th, g->hh[l-1], u0, u1, u2,
           a->has_th[l-1] ? w->th[l-1] : 0,
           a->N_hidden[l-1], d0->h[l], d1->h[l], d2->h[l], N_hidden,
           (unsigned short *)0, 0, 0);
@@ -2144,14 +2206,21 @@ __device__ void net_store3_grad
     }
 
     if (a->has_ho[l])
-    { int k = 2*a->N_layers-1-l;
+    { if (pre->fwgpumem[l]>=0)
+      { int m = pre->fwgpumem[l];
+        u0 = FASTMEM(m,0); u1 = FASTMEM(m,1); u2 = FASTMEM(m,2);
+      }
+      else
+      { u0 = v0->h[l]; u1 = v1->h[l]; u2 = v2->h[l];
+      }
+      int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
-      { net_store3_grad2_config (th, g->ho[l], v0->h[l], v1->h[l], v2->h[l],
+      { net_store3_grad2_config (th, g->ho[l], u0, u1, u2,
                            a->has_th[l] ? w->th[l] : 0,
                            d0->o, d1->o, d2->o, a->hidden_config[k]);
       }
       else
-      { net_store3_grad2 (th, g->ho[l], v0->h[l], v1->h[l], v2->h[l],
+      { net_store3_grad2 (th, g->ho[l], u0, u1, u2,
                     a->has_th[l] ? w->th[l] : 0,
                     N_hidden, d0->o, d1->o, d2->o, a->N_outputs, 
                     (unsigned short *) 0, 0, 0);
@@ -2585,6 +2654,7 @@ __device__ void net_store4_grad
   int sparse            /* Might source unit values often be zero? */
 )
 { 
+  const net_value *u0, *u1, *u2, *u3;
   int l, ls, nsqi;
 
   if (a->has_ti) 
@@ -2625,17 +2695,25 @@ __device__ void net_store4_grad
 
     if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { nsqi = pre->nonseq[ls][l];
+      { if (pre->fwgpumem[ls]>=0)
+        { int m = pre->fwgpumem[ls];
+          u0 = FASTMEM(m,0); u1 = FASTMEM(m,1); 
+          u2 = FASTMEM(m,2); u3 = FASTMEM(m,3);
+        }
+        else
+        { u0 = v0->h[ls]; u1 = v1->h[ls]; 
+          u2 = v2->h[ls]; u3 = v3->h[ls];
+        }
+        nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
           { net_store4_grad2_config
-               (th, g->nsq[nsqi], v0->h[ls], v1->h[ls], v2->h[ls], v3->h[ls],
+               (th, g->nsq[nsqi], u0, u1, u2, u3,
                 a->has_th[ls] ? w->th[ls] : 0,
                 d0->h[l], d1->h[l], d2->h[l], d3->h[l], a->nonseq_config[nsqi]);
           }
           else
-          { net_store4_grad2 (th, g->nsq[nsqi], 
-              v0->h[ls], v1->h[ls], v2->h[ls], v3->h[ls],
+          { net_store4_grad2 (th, g->nsq[nsqi], u0, u1, u2, u3,
               a->has_th[ls] ? w->th[ls] : 0,
               a->N_hidden[ls], d0->h[l], d1->h[l], d2->h[l], d3->h[l], N_hidden,
               (unsigned short *)0, 0, 0);
@@ -2645,15 +2723,23 @@ __device__ void net_store4_grad
     }
 
     if (l>0 && a->has_hh[l-1])
-    { if (a->hidden_config[l])
+    { if (pre->fwgpumem[l-1]>=0)
+      { int m = pre->fwgpumem[l-1];
+        u0 = FASTMEM(m,0); u1 = FASTMEM(m,1); 
+        u2 = FASTMEM(m,2); u3 = FASTMEM(m,3);
+      }
+      else
+      { u0 = v0->h[l-1]; u1 = v1->h[l-1]; 
+        u2 = v2->h[l-1]; u3 = v3->h[l-1];
+      }
+      if (a->hidden_config[l])
       { net_store4_grad2_config
-           (th, g->hh[l-1], v0->h[l-1], v1->h[l-1], v2->h[l-1], v3->h[l-1],
+           (th, g->hh[l-1], u0, u1, u2, u3,
             a->has_th[l-1] ? w->th[l-1] : 0,
             d0->h[l], d1->h[l], d2->h[l], d3->h[l], a->hidden_config[l]);
       }
       else
-      { net_store4_grad2 (th, g->hh[l-1], 
-          v0->h[l-1], v1->h[l-1], v2->h[l-1], v3->h[l-1],
+      { net_store4_grad2 (th, g->hh[l-1], u0, u1, u2, u3,
           a->has_th[l-1] ? w->th[l-1] : 0,
           a->N_hidden[l-1], d0->h[l], d1->h[l], d2->h[l], d3->h[l], N_hidden,
           (unsigned short *)0, 0, 0);
@@ -2666,15 +2752,23 @@ __device__ void net_store4_grad
     }
 
     if (a->has_ho[l])
-    { int k = 2*a->N_layers-1-l;
+    { if (pre->fwgpumem[l]>=0)
+      { int m = pre->fwgpumem[l];
+        u0 = FASTMEM(m,0); u1 = FASTMEM(m,1); 
+        u2 = FASTMEM(m,2); u3 = FASTMEM(m,3);
+      }
+      else
+      { u0 = v0->h[l]; u1 = v1->h[l]; 
+        u2 = v2->h[l]; u3 = v3->h[l];
+      }
+      int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
-      { net_store4_grad2_config (th, g->ho[l], 
-                           v0->h[l], v1->h[l], v2->h[l], v3->h[l],
+      { net_store4_grad2_config (th, g->ho[l], u0, u1, u2, u3,
                            a->has_th[l] ? w->th[l] : 0,
                            d0->o, d1->o, d2->o, d3->o, a->hidden_config[k]);
       }
       else
-      { net_store4_grad2 (th, g->ho[l], v0->h[l], v1->h[l], v2->h[l], v3->h[l],
+      { net_store4_grad2 (th, g->ho[l], u0, u1, u2, u3,
                     a->has_th[l] ? w->th[l] : 0,
                     N_hidden, d0->o, d1->o, d2->o, d3->o, a->N_outputs, 
                     (unsigned short *) 0, 0, 0);

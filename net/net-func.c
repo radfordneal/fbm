@@ -338,11 +338,6 @@ HOSTDEV void net_func
 #       endif
 #     endif
     }
-    else if (flgs->layer_type[l]==Sin_type)
-    { for (j = 0; j<N_hidden; j++)
-      { sh[j] = sqrt_2 * prec_sin(sh[j]*sqrt_2);
-      }
-    }
     else if (flgs->layer_type[l]==Softplus_type)
     {
 #     if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
@@ -496,21 +491,8 @@ HOSTDEV void net_func
       }
 #     endif
     }
-    else if (flgs->layer_type[l]==Square_type)
-    { for (j = 0; j<N_hidden; j++)
-      { sh[j] = sh[j]*sh[j];
-      }
-    }
-    else if (flgs->layer_type[l]==Cube_type)
-    { for (j = 0; j<N_hidden; j++)
-      { sh[j] = sh[j]*sh[j]*sh[j];
-      }
-    }
-    else if (flgs->layer_type[l]==Identity_type)
+    else /* identity */
     { /* nothing to do */
-    }
-    else
-    { abort();
     }
   }
 

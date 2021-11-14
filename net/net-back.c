@@ -232,12 +232,6 @@ HOSTDEV void net_back
       }
 #     endif
     }
-    else if (flgs->layer_type[l]==Sin_type)
-    { net_value const* vs = v->h[l];
-      for (i = 0; i<N_hidden; i++)
-      { dh[i] = 2 * prec_cos(vs[i]*sqrt_2) * dh[i];
-      }
-    }
     else if (flgs->layer_type[l]==Softplus_type)
     { 
 #     if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
@@ -334,23 +328,8 @@ HOSTDEV void net_back
       }
 #     endif
     }
-    else if (flgs->layer_type[l]==Square_type)
-    { net_value const* vs = v->h[l];
-      for (i = 0; i<N_hidden; i++)
-      { dh[i] *= 2*vs[i];
-      }
-    }
-    else if (flgs->layer_type[l]==Cube_type)
-    { net_value const* vs = v->h[l];
-      for (i = 0; i<N_hidden; i++)
-      { dh[i] = 3*vs[i]*vs[i] * dh[i];
-      }
-    }
-    else if (flgs->layer_type[l]==Identity_type)
+    else /* identity */
     { /* nothing to do */
-    }
-    else
-    { abort();
     }
   }
 
@@ -979,29 +958,11 @@ __device__ void net_back_gpu
       { dh[i] *= (net_value)1 - vh[i]*vh[i];
       }
     }
-    else if (flgs->layer_type[l]==Sin_type)
-    { net_value const* vs = v->h[l];
-      for (i = th; i<N_hidden; i+=NTH)
-      { dh[i] *= 2 * prec_cos(vs[i]*sqrt_2);
-      }
-    }
     else if (flgs->layer_type[l]==Softplus_type)
     { net_value const* vh = v->h[l];
       for (i = th; i<N_hidden; i+=NTH)
       { net_value e = prec_exp(vh[i]);
         dh[i] *= (e - (net_value)1) / e;
-      }
-    }
-    else if (flgs->layer_type[l]==Square_type)
-    { net_value const* vs = v->h[l];
-      for (i = th; i<N_hidden; i+=NTH)
-      { dh[i] *= 2*vs[i] * dh[i];
-      }
-    }
-    else if (flgs->layer_type[l]==Cube_type)
-    { net_value const* vs = v->h[l];
-      for (i = th; i<N_hidden; i+=NTH)
-      { dh[i] *= 3*vs[i]*vs[i] * dh[i];
       }
     }
     else /* identity */

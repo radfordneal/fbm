@@ -338,11 +338,6 @@ HOSTDEV void net_func
 #       endif
 #     endif
     }
-    else if (flgs->layer_type[l]==Sin_type)
-    { for (j = 0; j<N_hidden; j++)
-      { sh[j] = sqrt_2 * prec_sin(sh[j]*sqrt_2);
-      }
-    }
     else if (flgs->layer_type[l]==Softplus_type)
     {
 #     if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
@@ -496,21 +491,8 @@ HOSTDEV void net_func
       }
 #     endif
     }
-    else if (flgs->layer_type[l]==Square_type)
-    { for (j = 0; j<N_hidden; j++)
-      { sh[j] = sh[j]*sh[j];
-      }
-    }
-    else if (flgs->layer_type[l]==Cube_type)
-    { for (j = 0; j<N_hidden; j++)
-      { sh[j] = sh[j]*sh[j]*sh[j];
-      }
-    }
-    else if (flgs->layer_type[l]==Identity_type)
+    else /* identity */
     { /* nothing to do */
-    }
-    else
-    { abort();
     }
   }
 
@@ -1619,11 +1601,6 @@ __device__ void net_func_gpu
         { sh[j] = TANH (sh[j]);
         }
       }
-      else if (flgs->layer_type[l]==Sin_type)
-      { for (j = th; j<N_hidden; j+=NTH)
-        { sh[j] = sqrt_2 * prec_sin(sh[j]*sqrt_2);
-        }
-      }
       else if (flgs->layer_type[l]==Softplus_type)
       { for (j = th; j<N_hidden; j+=NTH)
         { net_value a = sh[j];
@@ -1631,16 +1608,6 @@ __device__ void net_func_gpu
            prec_log ((net_value)1 + prec_exp(-prec_fabs(a)));/* avoid overflow*/
           if (a>0) v += a;
           sh[j] = v;
-        }
-      }
-      else if (flgs->layer_type[l]==Square_type)
-      { for (j = th; j<N_hidden; j+=NTH)
-        { sh[j] = sh[j]*sh[j];
-        }
-      }
-      else if (flgs->layer_type[l]==Cube_type)
-      { for (j = th; j<N_hidden; j+=NTH)
-        { sh[j] = sh[j]*sh[j]*sh[j];
         }
       }
       else /* identity */ 
@@ -1653,11 +1620,6 @@ __device__ void net_func_gpu
         { vh[j] = sh[j] = TANH (sh[j]);
         }
       }
-      else if (flgs->layer_type[l]==Sin_type)
-      { for (j = th; j<N_hidden; j+=NTH)
-        { vh[j] = sh[j] = sqrt_2 * prec_sin(sh[j]*sqrt_2);
-        }
-      }
       else if (flgs->layer_type[l]==Softplus_type)
       { for (j = th; j<N_hidden; j+=NTH)
         { net_value a = sh[j];
@@ -1665,16 +1627,6 @@ __device__ void net_func_gpu
            prec_log ((net_value)1 + prec_exp(-prec_fabs(a)));/* avoid overflow*/
           if (a>0) v += a;
           vh[j] = sh[j] = v;
-        }
-      }
-      else if (flgs->layer_type[l]==Square_type)
-      { for (j = th; j<N_hidden; j+=NTH)
-        { vh[j] = sh[j] = sh[j]*sh[j];
-        }
-      }
-      else if (flgs->layer_type[l]==Cube_type)
-      { for (j = th; j<N_hidden; j+=NTH)
-        { vh[j] = sh[j] = sh[j]*sh[j]*sh[j];
         }
       }
       else /* identity */ 

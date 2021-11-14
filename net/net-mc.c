@@ -3168,25 +3168,6 @@ void mc_app_stepsizes
           }
         }
       }
-      else if (flgs!=0)
-      { if (flgs->layer_type[l]==Sin_type)
-        { for (j = 0; j<arch->N_hidden[l]; j++)
-          { if (typl[j]>2)
-            { typl[j] = 2;
-            }
-          }
-        }
-        else if (flgs->layer_type[l]==Square_type)
-        { for (j = 0; j<arch->N_hidden[l]; j++)
-          { typl[j] = typl[j]*typl[j];
-          }
-        }
-        else if (flgs->layer_type[l]==Cube_type)
-        { for (j = 0; j<arch->N_hidden[l]; j++)
-          { typl[j] = typl[j]*typl[j]*typl[j];
-          }
-        }
-      }
     }
   }
 
@@ -3282,30 +3263,23 @@ void mc_app_stepsizes
       }
     }
 
-    for (i = 0; i<arch->N_hidden[l]; i++)
-    { net_value s = seconds.h[l][i];
-      switch (flgs==0 ? Tanh_type : flgs->layer_type[l])
-      { case Tanh_type: 
-        case Identity_type:
-        case Softplus_type:
-        { seconds.h[l][i] = s;
-          break;
+    /* With current activation functions, their effects on second derivatives
+       are all nil, same as for the identity, so nothing is done here. */
+
+    if (0)
+    { for (i = 0; i<arch->N_hidden[l]; i++)
+      { net_value s = seconds.h[l][i];
+        switch (flgs==0 ? Tanh_type : flgs->layer_type[l])
+        { case Tanh_type: 
+          case Softplus_type:
+          case Identity_type:
+          { seconds.h[l][i] = s;
+            break;
+          }
         }
-        case Square_type:
-        { seconds.h[l][i] = 4*typical.h[l][i] * s;
-          break;
-        }
-        case Cube_type:
-        { seconds.h[l][i] = 9*typical.h[l][i]*typical.h[l][i] * s;
-          break;
-        }
-        case Sin_type:
-        { seconds.h[l][i] = 4 * s;
-          break;
-        }
-        default: abort();
       }
     }
+
   }
 
   if (arch->has_ti)

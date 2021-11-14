@@ -125,7 +125,7 @@ unsigned net_setup_param_count
   {
     if (pre)
     { 
-      if (pre->memused+a->N_hidden[l] <= MAX_FASTMEM_VALUES)
+      if (!SPLIT_KERNELS && pre->memused+a->N_hidden[l] <= MAX_FASTMEM_VALUES)
       { pre->fwgpumem[l] = pre->memused;
         pre->memused += a->N_hidden[l];
       }

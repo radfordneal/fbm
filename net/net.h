@@ -78,6 +78,21 @@
 
 #define GPU_CACHE_PREFERENCE cudaFuncCachePreferShared
 
+
+/* HOW GPU COMPUTATIONS ARE SPLIT INTO KERNELS.  The computation
+   consists of five parts: forward pass, model/energy evaluation,
+   backward pass, gradient computation, gradient reduction (last three
+   not always wanted).  The setting of SPLIT_KERNELS controls whether
+   they are all done as separate kernels (useful for profiling how
+   long they take), all done as one kernel (minimizing launch
+   overhead), or the first three are done as one kernel and the last
+   two as a separate kernel (allowing it to not have extra threads it
+   doesn't use, if GTH<NTH). */
+
+#define SPLIT_KERNELS 0   /* 0 = one kernel for all five parts
+                             1 = five kernels for the five parts
+                             2 = first three together, two gradient separate */
+
 #if __CUDACC__
 
 extern __shared__ net_value sharedvalues[];

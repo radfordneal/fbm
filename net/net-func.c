@@ -1595,47 +1595,22 @@ __device__ void net_func_gpu
 
     /* Put values through hidden unit activation function. */
 
-    vh = v->h[l];
-
-    if (sh==vh)
-    { if (flgs==0 || flgs->layer_type[l]==Tanh_type)
-      { for (j = th; j<N_hidden; j+=NTH)
-        { sh[j] = TANH (sh[j]);
-        }
-      }
-      else if (flgs->layer_type[l]==Softplus_type)
-      { for (j = th; j<N_hidden; j+=NTH)
-        { net_value a = sh[j];
-          net_value v = 
-           prec_log ((net_value)1 + prec_exp(-prec_fabs(a)));/* avoid overflow*/
-          if (a>0) v += a;
-          sh[j] = v;
-        }
-      }
-      else /* identity */ 
-      { /* nothing to do */
+    if (flgs==0 || flgs->layer_type[l]==Tanh_type)
+    { for (j = th; j<N_hidden; j+=NTH)
+      { sh[j] = TANH (sh[j]);
       }
     }
-    else
-    { if (flgs==0 || flgs->layer_type[l]==Tanh_type)
-      { for (j = th; j<N_hidden; j+=NTH)
-        { vh[j] = sh[j] = TANH (sh[j]);
-        }
+    else if (flgs->layer_type[l]==Softplus_type)
+    { for (j = th; j<N_hidden; j+=NTH)
+      { net_value a = sh[j];
+        net_value v = 
+         prec_log ((net_value)1 + prec_exp(-prec_fabs(a)));/* avoid overflow*/
+        if (a>0) v += a;
+        sh[j] = v;
       }
-      else if (flgs->layer_type[l]==Softplus_type)
-      { for (j = th; j<N_hidden; j+=NTH)
-        { net_value a = sh[j];
-          net_value v = 
-           prec_log ((net_value)1 + prec_exp(-prec_fabs(a)));/* avoid overflow*/
-          if (a>0) v += a;
-          vh[j] = sh[j] = v;
-        }
-      }
-      else /* identity */ 
-      { for (j = th; j<N_hidden; j+=NTH)
-        { vh[j] = sh[j];
-        }
-      }
+    }
+    else /* identity */ 
+    { /* nothing to do */
     }
 
     /* Synchronize threads so that up-to-date values computed for this

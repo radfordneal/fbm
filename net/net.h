@@ -40,10 +40,10 @@
 
 /* CONSTANTS RELATING TO GPU COMPUTATIONS: */
 
-#define THREADS_PER_CASE 8   /* Number of GPU threads used per training case
+#define THREADS_PER_CASE 4   /* Number of GPU threads used per training case
                                 for value computaton; must be a power of two */
 
-#define GRAD_THREADS_PER_CASE 8  /* Number of GPU threads per training case
+#define GRAD_THREADS_PER_CASE 4  /* Number of GPU threads per training case
                                     for gradient computation and reduction;
                                     must be a power of two, less than or equal
                                     to THREADS_PER_CASE */

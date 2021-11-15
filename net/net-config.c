@@ -413,19 +413,6 @@ static int cmp_w_d_s (const void *a0, const void *b0)
   return r;
 }
 
-static int cmp_wmod4_w_d_s (const void *a0, const void *b0)
-{ net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
-  int r;
-  r = (int)(a->w&3) - (int)(b->w&3);
-  if (r!=0) return r;
-  r = (int)a->w - (int)b->w;
-  if (r!=0) return r;
-  r = (int)a->d - (int)b->d;
-  if (r!=0) return r;
-  r = (int)a->s - (int)b->s;
-  return r;
-}
-
 static int cmp_wmodGTH_w_d_s (const void *a0, const void *b0)
 { net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
   int r;
@@ -439,10 +426,10 @@ static int cmp_wmodGTH_w_d_s (const void *a0, const void *b0)
   return r;
 }
 
-static int cmp_dmod4_d_w_s (const void *a0, const void *b0)
+static int cmp_dmodNTH_d_w_s (const void *a0, const void *b0)
 { net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
   int r;
-  r = (int)(a->d&3) - (int)(b->d&3);
+  r = (int)(a->d&(NTH-1)) - (int)(b->d&(NTH-1));
   if (r!=0) return r;
   r = (int)a->d - (int)b->d;
   if (r!=0) return r;
@@ -452,10 +439,10 @@ static int cmp_dmod4_d_w_s (const void *a0, const void *b0)
   return r;
 }
 
-static int cmp_smod4_s_w_d (const void *a0, const void *b0)
+static int cmp_smodNTH_s_w_d (const void *a0, const void *b0)
 { net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
   int r;
-  r = (int)(a->s&3) - (int)(b->s&3);
+  r = (int)(a->s&(NTH-1)) - (int)(b->s&(NTH-1));
   if (r!=0) return r;
   r = (int)a->s - (int)b->s;
   if (r!=0) return r;
@@ -914,7 +901,7 @@ static void net_config_sort (net_config *cf, int biases)
 
   /* Similarly, the quad_s_4d_4w_dgpu connections are used for gpu
      function computations, sorted by d, but a paired version is not
-     set up. In sections by d mod 4. */
+     set up. In sections by d mod NTH. */
 
   if (!CONFIG_QUAD_GPU_S_4D_4W)
   { int e;
@@ -925,9 +912,9 @@ static void net_config_sort (net_config *cf, int biases)
   }
   else
   { memcpy (tmp, quad, (q+1) * sizeof *tmp);
-    qsort (tmp, q, sizeof *tmp, cmp_dmod4_d_w_s);
+    qsort (tmp, q, sizeof *tmp, cmp_dmodNTH_d_w_s);
     cf->quad_s_4d_4w_dgpu = all_gpu+a_gpu;
-    a_gpu += copy_dmod (cf->quad_s_4d_4w_dgpu, tmp, 0, 4);
+    a_gpu += copy_dmod (cf->quad_s_4d_4w_dgpu, tmp, 0, NTH);
     memcpy (left, rem, (r+1) * sizeof *left);
     l = r;
   }
@@ -936,12 +923,12 @@ static void net_config_sort (net_config *cf, int biases)
      forward pass computations. */
 
   memcpy (tmp, left, (l+1) * sizeof *tmp);  
-  qsort (tmp, l, sizeof *tmp, cmp_dmod4_d_w_s);
+  qsort (tmp, l, sizeof *tmp, cmp_dmodNTH_d_w_s);
   cf->other_dgpu = all_gpu+a_gpu;
-  a_gpu += copy_dmod (cf->other_dgpu, tmp, cf->start_other_dgpu, 4);
+  a_gpu += copy_dmod (cf->other_dgpu, tmp, cf->start_other_dgpu, NTH);
 
   /* And, the quad_s_4d_4w_sgpu connections are used for gpu backward pass
-     computations, sorted by s. In sections by s mod 4. */
+     computations, sorted by s. In sections by s mod NTH. */
 
   if (!CONFIG_QUAD_GPU_S_4D_4W)
   { int e;
@@ -952,9 +939,9 @@ static void net_config_sort (net_config *cf, int biases)
   }
   else
   { memcpy (tmp, quad, (q+1) * sizeof *tmp);
-    qsort (tmp, q, sizeof *tmp, cmp_smod4_s_w_d);
+    qsort (tmp, q, sizeof *tmp, cmp_smodNTH_s_w_d);
     cf->quad_s_4d_4w_sgpu = all_gpu+a_gpu;
-    a_gpu += copy_smod (cf->quad_s_4d_4w_sgpu, tmp, cf->start_quad_sgpu, 4);
+    a_gpu += copy_smod (cf->quad_s_4d_4w_sgpu, tmp, cf->start_quad_sgpu, NTH);
     memcpy (left, rem, (r+1) * sizeof *left);
     l = r;
   }
@@ -963,9 +950,9 @@ static void net_config_sort (net_config *cf, int biases)
      backward pass computations. */
 
   memcpy (tmp, left, (l+1) * sizeof *tmp);  
-  qsort (tmp, l, sizeof *tmp, cmp_smod4_s_w_d);
+  qsort (tmp, l, sizeof *tmp, cmp_smodNTH_s_w_d);
   cf->other_sgpu = all_gpu+a_gpu;
-  a_gpu += copy_smod (cf->other_sgpu, tmp, cf->start_other_sgpu, 4);
+  a_gpu += copy_smod (cf->other_sgpu, tmp, cf->start_other_sgpu, NTH);
 
   /* Record the block all the GPU versions came from, in config structure. */
 

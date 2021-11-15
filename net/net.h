@@ -40,15 +40,15 @@
 
 /* CONSTANTS RELATING TO GPU COMPUTATIONS: */
 
-#define THREADS_PER_CASE 4   /* Number of GPU threads used per training case
+#define THREADS_PER_CASE 8   /* Number of GPU threads used per training case
                                 for value computaton; must be a power of two */
 
-#define GRAD_THREADS_PER_CASE 4  /* Number of GPU threads per training case
+#define GRAD_THREADS_PER_CASE 8  /* Number of GPU threads per training case
                                     for gradient computation and reduction;
                                     must be a power of two, less than or equal
                                     to THREADS_PER_CASE */
 
-#define GROUP_SHIFT 2        /* Log2 of number of training case in a group for
+#define GROUP_SHIFT 2        /* Log2 of number of training cases in a group for
                                 computing gradients, must be 0, 1, or 2 */
 
 #define GROUP_SIZE (1<<GROUP_SHIFT)  /* Number of cases in a gradient group */
@@ -183,15 +183,15 @@ typedef struct
   int start_other_2_wgpu[GTH];	/* Start indexes for sections in other_2_wgpu */
 
   net_connection *quad_s_4d_4w_dgpu;  /* Four connections, same s, sequential
-                                         d & w, sorted by d, grouped d mod 4 */
+                                         d & w, sorted by d, grouped d mod NTH*/
   net_connection *other_dgpu;	/* Other connections for dest, has 4 -1s */
-  int start_other_dgpu[4];	/* Start indexes for sections in other_dgpu */
+  int start_other_dgpu[NTH];	/* Start indexes for sections in other_dgpu */
 
   net_connection *quad_s_4d_4w_sgpu;  /* Four connections, same s, sequential
-                                         d & w, sorted by s, grouped s mod 4 */
-  int start_quad_sgpu[4];	/* Start indexes for sections in quad...sgpu */
-  net_connection *other_sgpu;	/* Other connections for dource, has 4 -1s */
-  int start_other_sgpu[4];	/* Start indexes for sections in other_sgpu */
+                                         d & w, sorted by s, grouped s mod NTH*/
+  int start_quad_sgpu[NTH];	/* Start indexes for sections in quad...sgpu */
+  net_connection *other_sgpu;	/* Other connections for dource, has NTH -1s */
+  int start_other_sgpu[NTH];	/* Start indexes for sections in other_sgpu */
 
   net_connection *all_gpu;	/* Pointer to block with items above */
   int all_gpu_length;		/* Length of 'all_gpu' block in use */

@@ -1713,8 +1713,8 @@ __device__ static void bias_values_config_gpu
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w_dgpu;
     c = 0;
-    for (m = 0; m<4; m++)
-    { if (NTH>1) ix = (th+4-m)&(NTH-1);
+    for (m = 0; m<NTH; m++)
+    { if (NTH>1) ix = (th+NTH-m)&(NTH-1);
       for (;;)
       { j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
@@ -1728,7 +1728,10 @@ __device__ static void bias_values_config_gpu
         { v[j+ix] += b[k+ix];
           v[j+ix+2] += b[k+ix+2];
         }
-        else /* NTH==4 */
+        else if (NTH==4)
+        { v[j+ix] += b[k+ix];
+        }
+        else if (ix<4)
         { v[j+ix] += b[k+ix];
         }
       }
@@ -1736,13 +1739,11 @@ __device__ static void bias_values_config_gpu
   }
 
   cn = cf->other_dgpu;
-  for (m = 0; m<4; m+=NTH)
-  { c = cf->start_other_dgpu[th+m];
-    for (;;)
-    { j = cn[c].d; k = cn[c].w; c += 1;
-      if (k<0) break;
-      v[j] += b[k];
-    }
+  c = cf->start_other_dgpu[th];
+  for (;;)
+  { j = cn[c].d; k = cn[c].w; c += 1;
+    if (k<0) break;
+    v[j] += b[k];
   }
 }
 
@@ -1911,8 +1912,8 @@ __device__ static void add_connections_config_gpu
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w_dgpu;
     c = 0;
-    for (m = 0; m<4; m++)
-    { if (NTH>1) ix = (th+4-m)&(NTH-1);
+    for (m = 0; m<NTH; m++)
+    { if (NTH>1) ix = (th+NTH-m)&(NTH-1);
       for (;;)
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
@@ -1928,7 +1929,10 @@ __device__ static void add_connections_config_gpu
         { s[j+ix] += vi * w[k+ix];
           s[j+ix+2] += vi * w[k+ix+2];
         }
-        else /* NTH==4 */
+        else if (NTH==4)
+        { s[j+ix] += vi * w[k+ix];
+        }
+        else if (ix<4)
         { s[j+ix] += vi * w[k+ix];
         }
       }
@@ -1936,15 +1940,13 @@ __device__ static void add_connections_config_gpu
   }
 
   cn = cf->other_dgpu;
-  for (m = 0; m<4; m+=NTH)
-  { c = cf->start_other_dgpu[th+m];
-    for (;;)
-    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-      if (k<0) break;
-      vi = v[i];
-      if (off) vi += off[i];
-      s[j] += vi * w[k];
-    }
+  c = cf->start_other_dgpu[th];
+  for (;;)
+  { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+    if (k<0) break;
+    vi = v[i];
+    if (off) vi += off[i];
+    s[j] += vi * w[k];
   }
 }
 

@@ -402,6 +402,17 @@ static int cmp_d_s_w (const void *a0, const void *b0)
   return r;
 }
 
+static int cmp_w_d_s (const void *a0, const void *b0)
+{ net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
+  int r;
+  r = (int)a->w - (int)b->w;
+  if (r!=0) return r;
+  r = (int)a->d - (int)b->d;
+  if (r!=0) return r;
+  r = (int)a->s - (int)b->s;
+  return r;
+}
+
 static int cmp_wmod4_w_d_s (const void *a0, const void *b0)
 { net_connection *a = (net_connection *) a0, *b = (net_connection *) b0;
   int r;
@@ -689,7 +700,7 @@ static void net_config_sort (net_config *cf, int biases)
   else
   {
     memcpy (tmp, quad, (q+1) * sizeof *tmp);
-    qsort (tmp, q, sizeof *quad, cmp_wmod4_w_d_s);
+    qsort (tmp, q, sizeof *quad, cmp_w_d_s);
 
     non_adjacency (tmp, "quads4d4w");  /* only useful for info, if enabled */
 

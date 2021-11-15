@@ -1027,7 +1027,7 @@ __device__ void net_back_gpu
    a given destination layer to the totals for the source layer. */
 
 __device__ static void sum_derivatives_gpu
-( int th,		/* Which thread, negative for surplus thread */
+( int th,		  /* Which thread */
   net_value const* dd,    /* Derivatives with respect to destination units */
   int nd,		  /* Number of destination units */
   net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
@@ -1101,7 +1101,7 @@ __device__ static void sum_derivatives_gpu
    a given destination layer to the totals for the source layer. */
 
 __device__ static void sum_derivatives_config_gpu
-( int th,		/* Which thread, negative for surplus thread */
+( int th,		  /* Which thread */
   net_value const* dd,    /* Derivatives with respect to destination units */
   net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
   net_param const* w,     /* Connection weights */
@@ -1110,6 +1110,8 @@ __device__ static void sum_derivatives_config_gpu
 {
   net_connection *cn;
   int c, i, j, k, m;
+
+  if (th>=4) return;
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w_sgpu;

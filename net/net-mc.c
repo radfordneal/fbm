@@ -34,6 +34,19 @@
 #include "net-mc.h"
 
 #include "intrinsics-use.h"
+#include "sleef-use.h"
+
+
+/* INCLUDE NETWORK COMPUTATION PROCEDURES AS SOURCE HERE.  This may
+   allow for some compiler optimizations that would not be possible if
+   they were compiled separately and linked as .o files. */
+
+#define SRC_INCLUDE
+
+#include "net-func.c"
+#include "net-model.c"
+#include "net-back.c"
+#include "net-grad.c"
 
 
 #if __CUDACC__

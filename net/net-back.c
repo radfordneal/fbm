@@ -13,6 +13,8 @@
  * application.  All use of these programs is entirely at the user's own risk.
  */
 
+#ifndef SRC_INCLUDE  /* Not included in another source file */
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -29,6 +31,8 @@
 
 #include "intrinsics-use.h"
 #include "sleef-use.h"
+
+#endif
 
 
 /* This module finds the derivative of the "error" for a particular case
@@ -885,7 +889,7 @@ __device__ static void sum_derivatives_config_gpu
    mod THREAD_PER_CASE equal to 'th', and can use those values without
    synchronization later. */
 
-#define FASTMEM(o) (sharedvalues + (threadIdx.x/NTH)*pre->memused + (o))
+#define FASTMEMB(o) (sharedvalues + (threadIdx.x/NTH)*pre->memused + (o))
 
 __device__ void net_back_gpu
 ( int th,		/* Which thread, negative for surplus thread */
@@ -955,7 +959,7 @@ __device__ void net_back_gpu
       }
     }
 
-    vh =  pre->fwgpumem[l]>=0 ? FASTMEM(pre->fwgpumem[l]) : v->h[l];
+    vh =  pre->fwgpumem[l]>=0 ? FASTMEMB(pre->fwgpumem[l]) : v->h[l];
 
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     { for (i = th; i<N_hidden; i+=NTH)

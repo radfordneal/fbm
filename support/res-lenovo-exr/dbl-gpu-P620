@@ -1,4 +1,4 @@
-Commit: 2f24a4101113c04d39eee434463651f184e5ba72
+Commit: 6f3e293cb02f2b604beb9708dd5ce4a49c659f6e
 
 Running exr with dbl-gpu on P620:
 
@@ -6,11 +6,11 @@ Number of training cases: 100
 Number of test cases: 1000
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro P620, Compute Capability 6.1, 4 processors, 2.0 GBytes
-Specified 16 cases per block, max 1000 blocks per launch, threads/case: 8,8
+Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
 With 100 cases, need 1 launches, max 7 blocks/launch
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro P620, Compute Capability 6.1, 4 processors, 2.0 GBytes
-Specified 16 cases per block, max 1000 blocks per launch, threads/case: 8,8
+Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
 With 100 cases, need 1 launches, max 7 blocks/launch
  
 Predictions after running for 1000 iterations:
@@ -22,4 +22,4 @@ Number of test cases: 1000
 Average log probability of targets:     0.855+-0.019
 Average squared error guessing mean:    0.01225+-0.00106
 
-elapsed 5.76s
+elapsed 4.97s

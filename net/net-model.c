@@ -13,6 +13,8 @@
  * application.  All use of these programs is entirely at the user's own risk.
  */
 
+#ifndef SRC_INCLUDE  /* Not included in another source file */
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -27,6 +29,8 @@
 #include "model.h"
 #include "net.h"
 #include "rand.h"
+
+#endif
 
 
 /* CONSTANTS INVOLVING PI. */

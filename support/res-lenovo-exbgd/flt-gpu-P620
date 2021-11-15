@@ -1,11 +1,11 @@
-Commit: 2f24a4101113c04d39eee434463651f184e5ba72
+Commit: 6f3e293cb02f2b604beb9708dd5ce4a49c659f6e
 
 Running exbgd with flt-gpu on P620:
 
 Number of training cases: 800
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro P620, Compute Capability 6.1, 4 processors, 2.0 GBytes
-Specified 16 cases per block, max 1000 blocks per launch, threads/case: 8,8
+Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
 With 800 cases, need 1 launches, max 50 blocks/launch
 
 Number of iterations used: 1
@@ -16,4 +16,4 @@ Average log probability of targets:    -0.238+-0.025
 Fraction of guesses that were wrong:    0.1120+-0.0141
 Average squared error guessing mean:    0.07571+-0.00848
 
-elapsed 26.99s
+elapsed 9.76s

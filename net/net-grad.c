@@ -13,6 +13,8 @@
  * application.  All use of these programs is entirely at the user's own risk.
  */
 
+#ifndef SRC_INCLUDE  /* Not included in another source file */
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -28,6 +30,8 @@
 #include "net.h"
 
 #include "intrinsics-use.h"
+
+#endif
 
 
 /* This module finds the derivatives of the "error" on the training set
@@ -1071,11 +1075,11 @@ HOSTDEV static void add_grad2_config
 
 #if __CUDACC__ 
 
-#define FASTMEM(o,w) \
+#define FASTMEMG(o,w) \
   (sharedvalues + ((w)+(threadIdx.x/GTH)*GROUP_SIZE)*pre->memused + (o))
 
 #define HIDLOC(pre,layer,values,w) \
-  ((pre)->fwgpumem[layer]>=0 ? FASTMEM(pre->fwgpumem[layer],(w)) \
+  ((pre)->fwgpumem[layer]>=0 ? FASTMEMG(pre->fwgpumem[layer],(w)) \
                              : ((values)+(w))->h[layer])
 
 __device__ static void net_store1_grad1 

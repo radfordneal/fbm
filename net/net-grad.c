@@ -1074,6 +1074,10 @@ HOSTDEV static void add_grad2_config
 #define FASTMEM(o,w) \
   (sharedvalues + ((w)+(threadIdx.x/GTH)*GROUP_SIZE)*pre->memused + (o))
 
+#define HIDLOC(pre,layer,values,w) \
+  ((pre)->fwgpumem[layer]>=0 ? FASTMEM(pre->fwgpumem[layer],(w)) \
+                             : ((values)+(w))->h[layer])
+
 __device__ static void net_store1_grad1 
         (int, net_param *restrict, net_value const*, int);
 __device__ static void net_store1_grad1_config 
@@ -1151,13 +1155,7 @@ __device__ void net_store1_grad
 
     if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { if (pre->fwgpumem[ls]>=0)
-        { int m = pre->fwgpumem[ls];
-          u0 = FASTMEM(m,0);
-        }
-        else
-        { u0 = v0->h[ls];
-        }
+      { u0 = HIDLOC(pre,ls,v0,0);
         nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
@@ -1177,13 +1175,7 @@ __device__ void net_store1_grad
     }
 
     if (l>0 && a->has_hh[l-1])
-    { if (pre->fwgpumem[l-1]>=0)
-      { int m = pre->fwgpumem[l-1];
-        u0 = FASTMEM(m,0);
-      }
-      else
-      { u0 = v0->h[l-1];
-      }
+    { u0 = HIDLOC(pre,l-1,v0,0);
       if (a->hidden_config[l])
       { net_store1_grad2_config
            (th, g->hh[l-1], u0,
@@ -1203,13 +1195,7 @@ __device__ void net_store1_grad
     }
 
     if (a->has_ho[l])
-    { if (pre->fwgpumem[l]>=0)
-      { int m = pre->fwgpumem[l];
-        u0 = FASTMEM(m,0);
-      }
-      else
-      { u0 = v0->h[l];
-      }
+    { u0 = HIDLOC(pre,l,v0,0);
       int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { net_store1_grad2_config (th, g->ho[l], u0,
@@ -1592,16 +1578,16 @@ __device__ void net_store2_grad
 ( int th,		/* Which thread (0 to GTH-1) */
   net_params *restrict g, /* Gradient with respect to parameters to store to */
   net_params const*w,	/* Network parameters (only offsets used) */
-  net_values const*v0,	/* Values for units in network for case 0 */
-  net_values const*v1,	/* Values for units in network for case 1 */
-  net_values const*d0,	/* Backpropagated derivatives for case 0 */
-  net_values const*d1,	/* Backpropagated derivatives for case 1 */
+  net_values const*v0,	/* Values for units in network for case 0, rest follow*/
+  net_values const*d0,	/* Backpropagated derivatives for case 0, rest follow */
   net_arch const*a,	/* Network architecture */
   net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const*flgs,	/* Network flags, null if none */
   int sparse            /* Might source unit values often be zero? */
 )
 { 
+  const net_values *d1 = d0+1;
+  const net_values *v1 = v0+1;
   const net_value *u0, *u1;
   int l, ls, nsqi;
 
@@ -1639,13 +1625,7 @@ __device__ void net_store2_grad
 
     if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { if (pre->fwgpumem[ls]>=0)
-        { int m = pre->fwgpumem[ls];
-          u0 = FASTMEM(m,0); u1 = FASTMEM(m,1);
-        }
-        else
-        { u0 = v0->h[ls]; u1 = v1->h[ls];
-        }
+      { u0 = HIDLOC(pre,ls,v0,0); u1 = HIDLOC(pre,ls,v0,1); 
         nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
@@ -1665,13 +1645,7 @@ __device__ void net_store2_grad
     }
 
     if (l>0 && a->has_hh[l-1])
-    { if (pre->fwgpumem[l-1]>=0)
-      { int m = pre->fwgpumem[l-1];
-        u0 = FASTMEM(m,0); u1 = FASTMEM(m,1);
-      }
-      else
-      { u0 = v0->h[l-1]; u1 = v1->h[l-1];
-      }
+    { u0 = HIDLOC(pre,l-1,v0,0); u1 = HIDLOC(pre,l-1,v0,1); 
       if (a->hidden_config[l])
       { net_store2_grad2_config
            (th, g->hh[l-1], u0, u1, 
@@ -1691,13 +1665,7 @@ __device__ void net_store2_grad
     }
 
     if (a->has_ho[l])
-    { if (pre->fwgpumem[l]>=0)
-      { int m = pre->fwgpumem[l];
-        u0 = FASTMEM(m,0); u1 = FASTMEM(m,1);
-      }
-      else
-      { u0 = v0->h[l]; u1 = v1->h[l];
-      }
+    { u0 = HIDLOC(pre,l,v0,0); u1 = HIDLOC(pre,l,v0,1); 
       int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { net_store2_grad2_config (th, g->ho[l], u0, u1, 
@@ -2103,18 +2071,16 @@ __device__ void net_store3_grad
 ( int th,		/* Which thread (0 to GTH-1) */
   net_params *restrict g, /* Gradient with respect to parameters to store to */
   net_params const*w,	/* Network parameters (only offsets used) */
-  net_values const*v0,	/* Values for units in network for case 0 */
-  net_values const*v1,	/* Values for units in network for case 1 */
-  net_values const*v2,	/* Values for units in network for case 2 */
-  net_values const*d0,	/* Backpropagated derivatives for case 0 */
-  net_values const*d1,	/* Backpropagated derivatives for case 1 */
-  net_values const*d2,	/* Backpropagated derivatives for case 2 */
+  net_values const*v0,	/* Values for units in network for case 0, rest follow*/
+  net_values const*d0,	/* Backpropagated derivatives for case 0, rest follow */
   net_arch const*a,	/* Network architecture */
   net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const*flgs,	/* Network flags, null if none */
   int sparse            /* Might source unit values often be zero? */
 )
 { 
+  const net_values *d1 = d0+1, *d2 = d1+1;
+  const net_values *v1 = v0+1, *v2 = v1+1;
   const net_value *u0, *u1, *u2;
   int l, ls, nsqi;
 
@@ -2154,13 +2120,8 @@ __device__ void net_store3_grad
 
     if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { if (pre->fwgpumem[ls]>=0)
-        { int m = pre->fwgpumem[ls];
-          u0 = FASTMEM(m,0); u1 = FASTMEM(m,1); u2 = FASTMEM(m,2);
-        }
-        else
-        { u0 = v0->h[ls]; u1 = v1->h[ls]; u2 = v2->h[ls];
-        }
+      { u0 = HIDLOC(pre,ls,v0,0); u1 = HIDLOC(pre,ls,v0,1); 
+        u2 = HIDLOC(pre,ls,v0,2);
         nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
@@ -2180,13 +2141,8 @@ __device__ void net_store3_grad
     }
 
     if (l>0 && a->has_hh[l-1])
-    { if (pre->fwgpumem[l-1]>=0)
-      { int m = pre->fwgpumem[l-1];
-        u0 = FASTMEM(m,0); u1 = FASTMEM(m,1); u2 = FASTMEM(m,2);
-      }
-      else
-      { u0 = v0->h[l-1]; u1 = v1->h[l-1]; u2 = v2->h[l-1];
-      }
+    { u0 = HIDLOC(pre,l-1,v0,0); u1 = HIDLOC(pre,l-1,v0,1); 
+      u2 = HIDLOC(pre,l-1,v0,2);
       if (a->hidden_config[l])
       { net_store3_grad2_config
            (th, g->hh[l-1], u0, u1, u2,
@@ -2206,13 +2162,8 @@ __device__ void net_store3_grad
     }
 
     if (a->has_ho[l])
-    { if (pre->fwgpumem[l]>=0)
-      { int m = pre->fwgpumem[l];
-        u0 = FASTMEM(m,0); u1 = FASTMEM(m,1); u2 = FASTMEM(m,2);
-      }
-      else
-      { u0 = v0->h[l]; u1 = v1->h[l]; u2 = v2->h[l];
-      }
+    { u0 = HIDLOC(pre,l,v0,0); u1 = HIDLOC(pre,l,v0,1); 
+      u2 = HIDLOC(pre,l,v0,2);
       int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { net_store3_grad2_config (th, g->ho[l], u0, u1, u2,
@@ -2640,20 +2591,16 @@ __device__ void net_store4_grad
 ( int th,		/* Which thread (0 to GTH-1) */
   net_params *restrict g, /* Gradient with respect to parameters to store to */
   net_params const*w,	/* Network parameters (only offsets used) */
-  net_values const*v0,	/* Values for units in network for case 0 */
-  net_values const*v1,	/* Values for units in network for case 1 */
-  net_values const*v2,	/* Values for units in network for case 2 */
-  net_values const*v3,	/* Values for units in network for case 3 */
-  net_values const*d0,	/* Backpropagated derivatives for case 0 */
-  net_values const*d1,	/* Backpropagated derivatives for case 1 */
-  net_values const*d2,	/* Backpropagated derivatives for case 2 */
-  net_values const*d3,	/* Backpropagated derivatives for case 3 */
+  net_values const*v0,	/* Values for units in network for case 0, rest follow*/
+  net_values const*d0,	/* Backpropagated derivatives for case 0, rest follow */
   net_arch const*a,	/* Network architecture */
   net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const*flgs,	/* Network flags, null if none */
   int sparse            /* Might source unit values often be zero? */
 )
 { 
+  const net_values *d1 = d0+1, *d2 = d1+1, *d3 = d2+1;
+  const net_values *v1 = v0+1, *v2 = v1+1, *v3 = v2+1;
   const net_value *u0, *u1, *u2, *u3;
   int l, ls, nsqi;
 
@@ -2695,15 +2642,8 @@ __device__ void net_store4_grad
 
     if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { if (pre->fwgpumem[ls]>=0)
-        { int m = pre->fwgpumem[ls];
-          u0 = FASTMEM(m,0); u1 = FASTMEM(m,1); 
-          u2 = FASTMEM(m,2); u3 = FASTMEM(m,3);
-        }
-        else
-        { u0 = v0->h[ls]; u1 = v1->h[ls]; 
-          u2 = v2->h[ls]; u3 = v3->h[ls];
-        }
+      { u0 = HIDLOC(pre,ls,v0,0); u1 = HIDLOC(pre,ls,v0,1); 
+        u2 = HIDLOC(pre,ls,v0,2); u3 = HIDLOC(pre,ls,v0,3); 
         nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
@@ -2723,15 +2663,8 @@ __device__ void net_store4_grad
     }
 
     if (l>0 && a->has_hh[l-1])
-    { if (pre->fwgpumem[l-1]>=0)
-      { int m = pre->fwgpumem[l-1];
-        u0 = FASTMEM(m,0); u1 = FASTMEM(m,1); 
-        u2 = FASTMEM(m,2); u3 = FASTMEM(m,3);
-      }
-      else
-      { u0 = v0->h[l-1]; u1 = v1->h[l-1]; 
-        u2 = v2->h[l-1]; u3 = v3->h[l-1];
-      }
+    { u0 = HIDLOC(pre,l-1,v0,0); u1 = HIDLOC(pre,l-1,v0,1); 
+      u2 = HIDLOC(pre,l-1,v0,2); u3 = HIDLOC(pre,l-1,v0,3); 
       if (a->hidden_config[l])
       { net_store4_grad2_config
            (th, g->hh[l-1], u0, u1, u2, u3,
@@ -2752,15 +2685,8 @@ __device__ void net_store4_grad
     }
 
     if (a->has_ho[l])
-    { if (pre->fwgpumem[l]>=0)
-      { int m = pre->fwgpumem[l];
-        u0 = FASTMEM(m,0); u1 = FASTMEM(m,1); 
-        u2 = FASTMEM(m,2); u3 = FASTMEM(m,3);
-      }
-      else
-      { u0 = v0->h[l]; u1 = v1->h[l]; 
-        u2 = v2->h[l]; u3 = v3->h[l];
-      }
+    { u0 = HIDLOC(pre,l,v0,0); u1 = HIDLOC(pre,l,v0,1); 
+      u2 = HIDLOC(pre,l,v0,2); u3 = HIDLOC(pre,l,v0,3); 
       int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { net_store4_grad2_config (th, g->ho[l], u0, u1, u2, u3,

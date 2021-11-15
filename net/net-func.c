@@ -1521,7 +1521,7 @@ __device__ void net_func_gpu
   int sync		/* Sync threads after last layer computation? */
 )
 {
-  net_value *vh, *sh, *shp;
+  net_value *sh, *shp;
   int l, ls, j;
 
   /* Compute values for successive hidden layers. */

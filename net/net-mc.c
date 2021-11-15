@@ -2497,22 +2497,19 @@ __global__ void gradient_kernel
       }
       case 2: 
       { net_store2_grad (th, ggrad, &const_params, 
-                         train_vals_b, train_vals_b+1,
-                         deriv_b, deriv_b+1,
+                         train_vals_b, deriv_b, 
                          &const_arch, &const_pre, flgs, const_sparse);
         break;
       }
       case 3: 
       { net_store3_grad (th, ggrad, &const_params, 
-                         train_vals_b, train_vals_b+1, train_vals_b+2,
-                         deriv_b, deriv_b+1, deriv_b+2,
+                         train_vals_b, deriv_b,
                          &const_arch, &const_pre, flgs, const_sparse);
         break;
       }
       default: /* 4 */
       { net_store4_grad (th, ggrad, &const_params, 
-           train_vals_b, train_vals_b+1, train_vals_b+2, train_vals_b+3,
-           deriv_b, deriv_b+1, deriv_b+2, deriv_b+3,
+           train_vals_b, deriv_b,
            &const_arch, &const_pre, flgs, const_sparse);
         break;
       }

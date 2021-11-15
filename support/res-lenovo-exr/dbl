@@ -1,4 +1,4 @@
-Commit: 366e393f375d1838146c4182c81b8b2556ebf4de
+Commit: 2f24a4101113c04d39eee434463651f184e5ba72
 
 Running exr with dbl:
 
@@ -16,4 +16,4 @@ Number of test cases: 1000
 Average log probability of targets:     0.858+-0.019
 Average squared error guessing mean:    0.01093+-0.00062
 
-elapsed 0.96s
+elapsed 0.95s

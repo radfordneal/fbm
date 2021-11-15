@@ -1,4 +1,4 @@
-Commit: d00bff0dd6ee83f81f5e9d007a2d686043ed48ac
+Commit: 2f24a4101113c04d39eee434463651f184e5ba72
 
 Running exb with dbl-gpu on A4000:
 
@@ -6,11 +6,11 @@ Number of training cases: 300
 Number of test cases: 1000
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 NVIDIA RTX A4000, Compute Capability 8.6, 48 processors, 14.7 GBytes ECC
-Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
+Specified 16 cases per block, max 1000 blocks per launch, threads/case: 8,8
 With 300 cases, need 1 launches, max 19 blocks/launch
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 NVIDIA RTX A4000, Compute Capability 8.6, 48 processors, 14.7 GBytes ECC
-Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
+Specified 16 cases per block, max 1000 blocks per launch, threads/case: 8,8
 With 300 cases, need 1 launches, max 19 blocks/launch
 
 Number of iterations used: 20
@@ -20,4 +20,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.238+-0.017
 Fraction of guesses that were wrong:    0.1040+-0.0097
 
-elapsed 1.49s
+elapsed 1.35s

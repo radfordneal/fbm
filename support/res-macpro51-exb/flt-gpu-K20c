@@ -1,4 +1,4 @@
-Commit: 3ab52dc92b0b52c47a0becddaf9997f5e8771c6a
+Commit: 27e90ce58967d9b3b8ff93eb660aa31aee96bf43
 
 Running exb with flt-gpu on K20c:
 
@@ -20,4 +20,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.239+-0.016
 Fraction of guesses that were wrong:    0.1050+-0.0097
 
-elapsed 3.35s
+elapsed 3.26s

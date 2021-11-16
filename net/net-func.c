@@ -58,8 +58,6 @@
    last calculation. 
 */
 
-#define sqrt_2 1.4142135623730950488
-
 HOSTDEV static void bias_values (net_value *restrict, int, net_param const*);
 
 HOSTDEV static void bias_values_config (net_value *restrict, int, 
@@ -100,27 +98,27 @@ HOSTDEV void net_func
   {
     int N_hidden = a->N_hidden[l];
 
-    net_value *sh = v->h[l];
+    net_value *restrict vh = v->h[l];
 
     if (a->has_bh[l])
     { if (a->bias_config[l])
-      { bias_values_config (sh, N_hidden, w->bh[l], a->bias_config[l]);
+      { bias_values_config (vh, N_hidden, w->bh[l], a->bias_config[l]);
       }
       else
-      { bias_values (sh, N_hidden, w->bh[l]);
+      { bias_values (vh, N_hidden, w->bh[l]);
       }
     }
     else
-    { memset (sh, 0, N_hidden * sizeof *sh);
+    { memset (vh, 0, N_hidden * sizeof *vh);
     }
 
     if (a->has_ih[l])
     { if (a->input_config[l])
-      { add_connections_config (sh, v->i, w->ih[l], 
+      { add_connections_config (vh, v->i, w->ih[l], 
           a->has_ti ? w->ti : 0, a->input_config[l]);
       }
       else
-      { add_connections (sh, N_hidden, v->i, a->N_inputs, 
+      { add_connections (vh, N_hidden, v->i, a->N_inputs, 
           w->ih[l], a->has_ti ? w->ti : 0, 
           flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), sparse);
       }
@@ -131,11 +129,11 @@ HOSTDEV void net_func
       { int nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
-          { add_connections_config (sh, v->h[ls], w->nsq[nsqi], 
+          { add_connections_config (vh, v->h[ls], w->nsq[nsqi], 
               a->has_th[ls] ? w->th[ls] : 0, a->nonseq_config[nsqi]);
           }
           else
-          { add_connections (sh, N_hidden, v->h[ls], a->N_hidden[ls],
+          { add_connections (vh, N_hidden, v->h[ls], a->N_hidden[ls],
               w->nsq[nsqi], a->has_th[ls] ? w->th[ls] : 0, 
               (unsigned short *) 0, 0, 0);
           }
@@ -145,11 +143,11 @@ HOSTDEV void net_func
 
     if (l>0 && a->has_hh[l-1])
     { if (a->hidden_config[l])
-      { add_connections_config (sh, v->h[l-1], w->hh[l-1], 
+      { add_connections_config (vh, v->h[l-1], w->hh[l-1], 
           a->has_th[l-1] ? w->th[l-1] : 0, a->hidden_config[l]);
       }
       else
-      { add_connections (sh, N_hidden, v->h[l-1], a->N_hidden[l-1],
+      { add_connections (vh, N_hidden, v->h[l-1], a->N_hidden[l-1],
           w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0, (unsigned short *) 0, 0,
           0);
       }
@@ -165,25 +163,25 @@ HOSTDEV void net_func
           __m256d two = _mm256_set1_pd(2.0);
           j = 3;
           while (j<N_hidden)
-          { __m256d x = _mm256_loadu_pd(sh+j-3);
+          { __m256d x = _mm256_loadu_pd(vh+j-3);
             x = _mm256_add_pd(x,x);
             x = sleef_expd4(x);
             x = _mm256_sub_pd(one, _mm256_div_pd (two, _mm256_add_pd (one, x)));
-            _mm256_storeu_pd (sh+j-3, x);
+            _mm256_storeu_pd (vh+j-3, x);
             j += 4;
           }
           j -= 2;
           if (j<N_hidden)
-          { __m128d x = _mm_loadu_pd(sh+j-1);
+          { __m128d x = _mm_loadu_pd(vh+j-1);
             x = _mm_add_pd(x,x);
             x = sleef_expd2(x);
             x = _mm_sub_pd (cast128d(one), 
                    _mm_div_pd (cast128d(two), _mm_add_pd (cast128d(one), x)));
-            _mm_storeu_pd (sh+j-1, x);
+            _mm_storeu_pd (vh+j-1, x);
             j += 2;
           }
           if (j<=N_hidden)
-          { sh[j-1] = TANH (sh[j-1]);
+          { vh[j-1] = TANH (vh[j-1]);
           }
         }
 #       elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
@@ -191,15 +189,15 @@ HOSTDEV void net_func
           __m128d two = _mm_set1_pd(2.0);
           j = 1;
           while (j<N_hidden)
-          { __m128d x = _mm_loadu_pd(sh+j-1);
+          { __m128d x = _mm_loadu_pd(vh+j-1);
             x = _mm_add_pd(x,x);
             x = sleef_expd2(x);
             x = _mm_sub_pd (one, _mm_div_pd (two, _mm_add_pd (one, x)));
-            _mm_storeu_pd (sh+j-1, x);
+            _mm_storeu_pd (vh+j-1, x);
             j += 2;
           }
           if (j<=N_hidden)
-          { sh[j-1] = TANH (sh[j-1]);
+          { vh[j-1] = TANH (vh[j-1]);
           }
         }
 #       elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
@@ -207,35 +205,35 @@ HOSTDEV void net_func
           __m256 two = _mm256_set1_ps(2.0f);
           j = 7;
           while (j<N_hidden)
-          { __m256 x = _mm256_loadu_ps(sh+j-7);
+          { __m256 x = _mm256_loadu_ps(vh+j-7);
             x = _mm256_add_ps(x,x);
             x = sleef_expf8(x);
             x = _mm256_sub_ps(one, _mm256_div_ps (two, _mm256_add_ps (one, x)));
-            _mm256_storeu_ps (sh+j-7, x);
+            _mm256_storeu_ps (vh+j-7, x);
             j += 8;
           }
           j -= 4;
           while (j<N_hidden)
-          { __m128 x = _mm_loadu_ps(sh+j-3);
+          { __m128 x = _mm_loadu_ps(vh+j-3);
             x = _mm_add_ps(x,x);
             x = sleef_expf4(x);
             x = _mm_sub_ps (cast128f(one), 
                     _mm_div_ps (cast128f(two), _mm_add_ps (cast128f(one), x)));
-            _mm_storeu_ps (sh+j-3, x);
+            _mm_storeu_ps (vh+j-3, x);
             j += 4;
           }
           j -= 2;
           if (j<N_hidden)
-          { __m128 x = _mm_loadl_pi (_mm_setzero_ps(), (__m64 *)(sh+j-1));
+          { __m128 x = _mm_loadl_pi (_mm_setzero_ps(), (__m64 *)(vh+j-1));
             x = _mm_add_ps(x,x);
             x = sleef_expf4(x);
             x = _mm_sub_ps (cast128f(one), 
                     _mm_div_ps (cast128f(two), _mm_add_ps (cast128f(one), x)));
-            _mm_storel_pi ((__m64 *)(sh+j-1), x);
+            _mm_storel_pi ((__m64 *)(vh+j-1), x);
             j += 2;
           }
           if (j<=N_hidden)
-          { sh[j-1] = TANH (sh[j-1]);
+          { vh[j-1] = TANH (vh[j-1]);
           }
         }
 #       elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
@@ -243,29 +241,29 @@ HOSTDEV void net_func
           __m128 two = _mm_set1_ps(2.0f);
           j = 3;
           while (j<N_hidden)
-          { __m128 x = _mm_loadu_ps(sh+j-3);
+          { __m128 x = _mm_loadu_ps(vh+j-3);
             x = _mm_add_ps(x,x);
             x = sleef_expf4(x);
             x = _mm_sub_ps(one, _mm_div_ps (two, _mm_add_ps (one, x)));
-            _mm_storeu_ps (sh+j-3, x);
+            _mm_storeu_ps (vh+j-3, x);
             j += 4;
           }
           j -= 2;
           if (j<N_hidden)
-          { __m128 x = _mm_loadl_pi (_mm_setzero_ps(), (__m64 *)(sh+j-1));
+          { __m128 x = _mm_loadl_pi (_mm_setzero_ps(), (__m64 *)(vh+j-1));
             x = _mm_add_ps(x,x);
             x = sleef_expf4(x);
             x = _mm_sub_ps (one, _mm_div_ps (two, _mm_add_ps (one, x)));
-            _mm_storel_pi ((__m64 *)(sh+j-1), x);
+            _mm_storel_pi ((__m64 *)(vh+j-1), x);
             j += 2;
           }
           if (j<=N_hidden)
-          { sh[j-1] = TANH (sh[j-1]);
+          { vh[j-1] = TANH (vh[j-1]);
           }
         }
 #       else
         { for (j = 0; j<N_hidden; j++)
-          { sh[j] = TANH (sh[j]);
+          { vh[j] = TANH (vh[j]);
           }
         }
 #       endif
@@ -275,68 +273,68 @@ HOSTDEV void net_func
 #       if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
         { j = 3;
           while (j<N_hidden)
-          { _mm256_storeu_pd (sh+j-3, sleef_tanhd4 (_mm256_loadu_pd(sh+j-3)));
+          { _mm256_storeu_pd (vh+j-3, sleef_tanhd4 (_mm256_loadu_pd(vh+j-3)));
             j += 4;
           }
           j -= 2;
           if (j<N_hidden)
-          { _mm_storeu_pd (sh+j-1, sleef_tanhd2 (_mm_loadu_pd(sh+j-1)));
+          { _mm_storeu_pd (vh+j-1, sleef_tanhd2 (_mm_loadu_pd(vh+j-1)));
             j += 2;
           }
           if (j<=N_hidden)
-          { sh[j-1] = TANH (sh[j-1]);
+          { vh[j-1] = TANH (vh[j-1]);
           }
         }
 #       elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
         { j = 1;
           while (j<N_hidden)
-          { _mm_storeu_pd (sh+j-1, sleef_tanhd2 (_mm_loadu_pd(sh+j-1)));
+          { _mm_storeu_pd (vh+j-1, sleef_tanhd2 (_mm_loadu_pd(vh+j-1)));
             j += 2;
           }
           if (j<=N_hidden)
-          { sh[j-1] = TANH (sh[j-1]);
+          { vh[j-1] = TANH (vh[j-1]);
           }
         }
 #       elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
         { j = 7;
           while (j<N_hidden)
-          { _mm256_storeu_ps (sh+j-7, sleef_tanhf8 (_mm256_loadu_ps(sh+j-7)));
+          { _mm256_storeu_ps (vh+j-7, sleef_tanhf8 (_mm256_loadu_ps(vh+j-7)));
             j += 8;
           }
           j -= 4;
           while (j<N_hidden)
-          { _mm_storeu_ps (sh+j-3, sleef_tanhf4 (_mm_loadu_ps(sh+j-3)));
+          { _mm_storeu_ps (vh+j-3, sleef_tanhf4 (_mm_loadu_ps(vh+j-3)));
             j += 4;
           }
           j -= 2;
           if (j<N_hidden)
-          { _mm_storel_pi ((__m64 *)(sh+j-1), 
-               sleef_tanhf4 (_mm_loadl_pi(_mm_setzero_ps(),(__m64 *)(sh+j-1))));
+          { _mm_storel_pi ((__m64 *)(vh+j-1), 
+               sleef_tanhf4 (_mm_loadl_pi(_mm_setzero_ps(),(__m64 *)(vh+j-1))));
             j += 2;
           }
           if (j<=N_hidden)
-          { sh[j-1] = TANH (sh[j-1]);
+          { vh[j-1] = TANH (vh[j-1]);
           }
         }
 #       elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
         { j = 3;
           while (j<N_hidden)
-          { _mm_storeu_ps (sh+j-3, sleef_tanhf4 (_mm_loadu_ps(sh+j-3)));
+          { _mm_storeu_ps (vh+j-3, sleef_tanhf4 (_mm_loadu_ps(vh+j-3)));
             j += 4;
           }
           j -= 2;
           if (j<N_hidden)
-          { _mm_storel_pi ((__m64 *)(sh+j-1), 
-               sleef_tanhf4 (_mm_loadl_pi(_mm_setzero_ps(),(__m64 *)(sh+j-1))));
+          { _mm_storel_pi ((__m64 *)(vh+j-1), 
+               sleef_tanhf4 (_mm_loadl_pi(_mm_setzero_ps(),(__m64 *)(vh+j-1))));
             j += 2;
           }
           if (j<=N_hidden)
-          { sh[j-1] = TANH (sh[j-1]);
+          { vh[j-1] = TANH (vh[j-1]);
           }
         }
 #       else
         { for (j = 0; j<N_hidden; j++)
-          { sh[j] = TANH (sh[j]);
+          { vh[j] = TANH (vh[j]);
           }
         }
 #       endif
@@ -351,34 +349,34 @@ HOSTDEV void net_func
           _mm256_castsi256_pd (_mm256_set1_epi64x ((long long)1<<63));
         j = 3;
         while (j<N_hidden)
-        { __m256d a = _mm256_loadu_pd(sh+j-3);
+        { __m256d a = _mm256_loadu_pd(vh+j-3);
           __m256d v = _mm256_or_pd(a,mask);  /* compute -fabs(a) */
           v = sleef_expd4(v);
           v = _mm256_add_pd(one,v);
           v = sleef_logd4(v);
           v = _mm256_add_pd (v, _mm256_and_pd (a, 
                                   _mm256_cmp_pd(a,zero,_CMP_GT_OQ)));
-          _mm256_storeu_pd (sh+j-3, v);
+          _mm256_storeu_pd (vh+j-3, v);
           j += 4;
         }
         j -= 2;
         if (j<N_hidden)
-        { __m128d a = _mm_loadu_pd(sh+j-1);
+        { __m128d a = _mm_loadu_pd(vh+j-1);
           __m128d v = _mm_or_pd(a,cast128d(mask));
           v = sleef_expd2(v);
           v = _mm_add_pd(cast128d(one),v);
           v = sleef_logd2(v);
           v = _mm_add_pd (v, _mm_and_pd (a, 
                 _mm_cmp_pd (a, cast128d(zero), _CMP_GT_OQ)));
-          _mm_storeu_pd (sh+j-1, v);
+          _mm_storeu_pd (vh+j-1, v);
           j += 2;
         }
         if (j<=N_hidden)
-        { net_value a = sh[j-1];
+        { net_value a = vh[j-1];
           net_value v = 
             prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
           if (a>0) v += a;
-          sh[j-1] = v;
+          vh[j-1] = v;
         }
       }
 #     elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
@@ -387,21 +385,21 @@ HOSTDEV void net_func
         __m128d mask = _mm_castsi128_pd (_mm_set1_epi64x ((long long)1<<63));
         j = 1;
         while (j<N_hidden)
-        { __m128d a = _mm_loadu_pd(sh+j-1);
+        { __m128d a = _mm_loadu_pd(vh+j-1);
           __m128d v = _mm_or_pd(a,mask);  /* compute -fabs(a) */
           v = sleef_expd2(v);
           v = _mm_add_pd(one,v);
           v = sleef_logd2(v);
           v = _mm_add_pd (v, _mm_and_pd (a, _mm_cmpgt_pd (a, zero)));
-          _mm_storeu_pd (sh+j-1, v);
+          _mm_storeu_pd (vh+j-1, v);
           j += 2;
         }
         if (j<=N_hidden)
-        { net_value a = sh[j-1];
+        { net_value a = vh[j-1];
           net_value v = 
             prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
           if (a>0) v += a;
-          sh[j-1] = v;
+          vh[j-1] = v;
         }
       }
 #     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
@@ -410,44 +408,44 @@ HOSTDEV void net_func
         __m256 mask = _mm256_castsi256_ps (_mm256_set1_epi32(1<<31));
         j = 7;
         while (j<N_hidden)
-        { __m256 a = _mm256_loadu_ps(sh+j-7);
+        { __m256 a = _mm256_loadu_ps(vh+j-7);
           __m256 v = _mm256_or_ps(a,mask);  /* compute -fabs(a) */
           v = sleef_expf8(v);
           v = _mm256_add_ps(one,v);
           v = sleef_logf8(v);
           v = _mm256_add_ps (v, 
                 _mm256_and_ps (a, _mm256_cmp_ps (a, zero, _CMP_GT_OQ)));
-          _mm256_storeu_ps (sh+j-7, v);
+          _mm256_storeu_ps (vh+j-7, v);
           j += 8;
         }
         j -= 4;
         if (j<N_hidden)
-        { __m128 a = _mm_loadu_ps(sh+j-3);
+        { __m128 a = _mm_loadu_ps(vh+j-3);
           __m128 v = _mm_or_ps(a,cast128f(mask));  /* compute -fabs(a) */
           v = sleef_expf4(v);
           v = _mm_add_ps(cast128f(one),v);
           v = sleef_logf4(v);
           v = _mm_add_ps (v, _mm_and_ps (a, _mm_cmpgt_ps (a, cast128f(zero))));
-          _mm_storeu_ps (sh+j-3, v);
+          _mm_storeu_ps (vh+j-3, v);
           j += 4;
         }
         j -= 2;
         if (j<N_hidden)
-        { __m128 a = _mm_loadl_pi (cast128f(zero), (__m64 *)(sh+j-1));
+        { __m128 a = _mm_loadl_pi (cast128f(zero), (__m64 *)(vh+j-1));
           __m128 v = _mm_or_ps(a,cast128f(mask));
           v = sleef_expf4(v);
           v = _mm_add_ps(cast128f(one),v);
           v = sleef_logf4(v);
           v = _mm_add_ps (v, _mm_and_ps (a, _mm_cmpgt_ps (a, cast128f(zero))));
-          _mm_storel_pi ((__m64 *)(sh+j-1), v);
+          _mm_storel_pi ((__m64 *)(vh+j-1), v);
           j += 2;
         }
         if (j<=N_hidden)
-        { net_value a = sh[j-1];
+        { net_value a = vh[j-1];
           net_value v = 
             prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
           if (a>0) v += a;
-          sh[j-1] = v;
+          vh[j-1] = v;
         }
       }
 #     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
@@ -456,41 +454,41 @@ HOSTDEV void net_func
         __m128 mask = _mm_castsi128_ps (_mm_set1_epi32(1<<31));
         j = 3;
         while (j<N_hidden)
-        { __m128 a = _mm_loadu_ps(sh+j-3);
+        { __m128 a = _mm_loadu_ps(vh+j-3);
           __m128 v = _mm_or_ps(a,mask);  /* compute -fabs(a) */
           v = sleef_expf4(v);
           v = _mm_add_ps(one,v);
           v = sleef_logf4(v);
           v = _mm_add_ps (v, _mm_and_ps (a, _mm_cmpgt_ps (a, zero)));
-          _mm_storeu_ps (sh+j-3, v);
+          _mm_storeu_ps (vh+j-3, v);
           j += 4;
         }
         j -= 2;
         if (j<N_hidden)
-        { __m128 a = _mm_loadl_pi (zero, (__m64 *)(sh+j-1));
+        { __m128 a = _mm_loadl_pi (zero, (__m64 *)(vh+j-1));
           __m128 v = _mm_or_ps(a,mask);
           v = sleef_expf4(v);
           v = _mm_add_ps(one,v);
           v = sleef_logf4(v);
           v = _mm_add_ps (v, _mm_and_ps (a, _mm_cmpgt_ps (a, zero)));
-          _mm_storel_pi ((__m64 *)(sh+j-1), v);
+          _mm_storel_pi ((__m64 *)(vh+j-1), v);
           j += 2;
         }
         if (j<=N_hidden)
-        { net_value a = sh[j-1];
+        { net_value a = vh[j-1];
           net_value v = 
             prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
           if (a>0) v += a;
-          sh[j-1] = v;
+          vh[j-1] = v;
         }
       }
 #     else
       { for (j = 0; j<N_hidden; j++)
-        { net_value a = sh[j];
+        { net_value a = vh[j];
           net_value v = 
             prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
           if (a>0) v += a;
-          sh[j] = v;
+          vh[j] = v;
         }
       }
 #     endif
@@ -1485,11 +1483,11 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
    zero, the correct unit values for that number of hidden layers are
    assumed to be already present in the net_values structure.
 
-   This version uses THREADS_PER_CASE (value 1, 2, or 4) GPU threads
-   to do the computation.  It should be called from each of these
-   threads, with 'th' set to 0 up to THREADS_PER_CASE-1.  If called
-   with a negative 'th' (done when there are spare threads at end of
-   training set), it just skips to the synchronization points.
+   This version uses THREADS_PER_CASE (power of two) GPU threads to do
+   the computation.  It should be called from each of these threads,
+   with 'th' set to 0 up to THREADS_PER_CASE-1.  If called with a
+   negative 'th' (done when there are spare threads at end of training
+   set), it just skips to the synchronization points.
   
    Layers are computed in sequence, using all threads, with a
    __syncthreads call after each layer's computations, so that all
@@ -1525,7 +1523,7 @@ __device__ void net_func_gpu
   int sync		/* Sync threads after last layer computation? */
 )
 {
-  net_value *sh, *shp;
+  net_value *vhp;
   int l, ls, j;
 
   /* Compute values for successive hidden layers. */
@@ -1533,34 +1531,35 @@ __device__ void net_func_gpu
   for (l = start; l<a->N_layers; l++)
   {
     int N_hidden = a->N_hidden[l];
+    net_value *restrict vh;
 
     if (th<0) goto sync_layer;
 
-    sh = pre->fwgpumem[l]>=0 ? FASTMEMF(pre->fwgpumem[l]) : v->h[l];
+    vh = pre->fwgpumem[l]>=0 ? FASTMEMF(pre->fwgpumem[l]) : v->h[l];
 
     /* Find summed inputs into each hidden unit in the layer. */
 
     if (a->has_bh[l])
     { if (a->bias_config[l])
-      { bias_values_config_gpu (th, sh, N_hidden, w->bh[l], a->bias_config[l]);
+      { bias_values_config_gpu (th, vh, N_hidden, w->bh[l], a->bias_config[l]);
       }
       else
-      { bias_values_gpu (th, sh, N_hidden, w->bh[l]);
+      { bias_values_gpu (th, vh, N_hidden, w->bh[l]);
       }
     }
     else
     { for (j = th; j < N_hidden; j+=NTH)
-      { sh[j] = 0;
+      { vh[j] = 0;
       }
     }
 
     if (a->has_ih[l])
     { if (a->input_config[l])
-      { add_connections_config_gpu (th, sh, v->i, w->ih[l], 
+      { add_connections_config_gpu (th, vh, v->i, w->ih[l], 
           a->has_ti ? w->ti : 0, a->input_config[l]);
       }
       else
-      { add_connections_gpu (th, sh, N_hidden, v->i, a->N_inputs, 
+      { add_connections_gpu (th, vh, N_hidden, v->i, a->N_inputs, 
           w->ih[l], a->has_ti ? w->ti : 0, 
           flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), sparse);
       }
@@ -1569,14 +1568,15 @@ __device__ void net_func_gpu
     if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
       { int nsqi = pre->nonseq[ls][l];
-        shp = pre->fwgpumem[ls]>=0 ? FASTMEMF(pre->fwgpumem[ls]) : v->h[ls];
+        net_value *vhs =
+           pre->fwgpumem[ls]>=0 ? FASTMEMF(pre->fwgpumem[ls]) : v->h[ls];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
-          { add_connections_config_gpu (th, sh, shp, w->nsq[nsqi],
+          { add_connections_config_gpu (th, vh, vhs, w->nsq[nsqi],
               a->has_th[ls] ? w->th[ls] : 0, a->nonseq_config[nsqi]);
           }
           else
-          { add_connections_gpu (th, sh, N_hidden, shp, a->N_hidden[ls],
+          { add_connections_gpu (th, vh, N_hidden, vhs, a->N_hidden[ls],
               w->nsq[nsqi], a->has_th[ls] ? w->th[ls] : 0,
               (unsigned short *) 0, 0, 0);
           }
@@ -1585,13 +1585,12 @@ __device__ void net_func_gpu
     }
 
     if (l>0 && a->has_hh[l-1])
-    { shp = pre->fwgpumem[l-1]>=0 ? FASTMEMF(pre->fwgpumem[l-1]) : v->h[l-1];
-      if (a->hidden_config[l])
-      { add_connections_config_gpu (th, sh, shp, w->hh[l-1], 
+    { if (a->hidden_config[l])
+      { add_connections_config_gpu (th, vh, vhp, w->hh[l-1], 
           a->has_th[l-1] ? w->th[l-1] : 0, a->hidden_config[l]);
       }
       else
-      { add_connections_gpu (th, sh, N_hidden, shp, a->N_hidden[l-1],
+      { add_connections_gpu (th, vh, N_hidden, vhp, a->N_hidden[l-1],
           w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0, (unsigned short *) 0, 
           0, 0);
       }
@@ -1601,16 +1600,16 @@ __device__ void net_func_gpu
 
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     { for (j = th; j<N_hidden; j+=NTH)
-      { sh[j] = TANH (sh[j]);
+      { vh[j] = TANH (vh[j]);
       }
     }
     else if (flgs->layer_type[l]==Softplus_type)
     { for (j = th; j<N_hidden; j+=NTH)
-      { net_value a = sh[j];
+      { net_value a = vh[j];
         net_value v = 
          prec_log ((net_value)1 + prec_exp(-prec_fabs(a)));/* avoid overflow*/
         if (a>0) v += a;
-        sh[j] = v;
+        vh[j] = v;
       }
     }
     else /* identity */ 
@@ -1622,6 +1621,8 @@ __device__ void net_func_gpu
 
   sync_layer:
     if (NTH>1) __syncthreads();
+
+    vhp = vh;
   }
 
   /* Compute values for the outputs. */
@@ -1657,14 +1658,14 @@ __device__ void net_func_gpu
 
   for (l = 0; l<a->N_layers; l++)
   { if (a->has_ho[l])
-    { shp = pre->fwgpumem[l]>=0 ? FASTMEMF(pre->fwgpumem[l]) : v->h[l];
+    { vhp = pre->fwgpumem[l]>=0 ? FASTMEMF(pre->fwgpumem[l]) : v->h[l];
       int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
-      { add_connections_config_gpu (th, v->o, shp, w->ho[l], 
+      { add_connections_config_gpu (th, v->o, vhp, w->ho[l], 
                          a->has_th[l] ? w->th[l] : 0, a->hidden_config[k]);
       }
       else
-      { add_connections_gpu (th, v->o, a->N_outputs, shp, a->N_hidden[l], 
+      { add_connections_gpu (th, v->o, a->N_outputs, vhp, a->N_hidden[l], 
                              w->ho[l], a->has_th[l] ? w->th[l] : 0, 
                              (unsigned short *) 0, 0, 0);
       }

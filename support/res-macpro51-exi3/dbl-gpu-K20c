@@ -1,15 +1,15 @@
-Commit: 7f141b383cc7fe2a5bf2c5c80a7a021eb256d9d3
+Commit: 79ba19d5b4ce8cc3535cc8e3fd7914f4c4c5b63b
 
 Running exi3 with dbl-gpu on K20c:
 
 Number of training cases: 499
 Precision: FP64, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
 Tesla K20c, Compute Capability 3.5, 13 processors, 4.6 GBytes ECC
-Specified 16 cases per block, max 1000 blocks per launch, threads/case: 8,8
+Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
 With 499 cases, need 1 launches, max 32 blocks/launch
 Precision: FP64, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
 Tesla K20c, Compute Capability 3.5, 13 processors, 4.6 GBytes ECC
-Specified 16 cases per block, max 1000 blocks per launch, threads/case: 8,8
+Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
 With 499 cases, need 1 launches, max 32 blocks/launch
 
 Number of iterations used: 6
@@ -20,4 +20,4 @@ Average log probability of targets:    -1.344+-0.019
 Fraction of guesses that were wrong:    0.7000+-0.0461
 Average squared error guessing mean:    0.72884+-0.00962
 
-elapsed 80.72s
+elapsed 62.31s

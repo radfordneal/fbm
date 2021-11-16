@@ -889,8 +889,6 @@ __device__ static void sum_derivatives_config_gpu
    mod THREAD_PER_CASE equal to 'th', and can use those values without
    synchronization later. */
 
-#define FASTMEMB(o) (sharedvalues + (threadIdx.x/NTH)*pre->memused + (o))
-
 __device__ void net_back_gpu
 ( int th,		/* Which thread, negative for surplus thread */
   net_values const*v,	/* Values for units in network */
@@ -910,7 +908,7 @@ __device__ void net_back_gpu
   for (l = a->N_layers-1; l>=0 && l>=start; l--)
   { 
     int N_hidden = a->N_hidden[l];
-    net_value *restrict dh = d->h[l];
+    net_value *restrict dh = bw_hidden_loc(pre,d,l);
     net_value const* vh;
 
     if (th<0) goto sync_layer;
@@ -934,32 +932,34 @@ __device__ void net_back_gpu
 
     for (ld = l+1; ld<a->N_layers; ld++)
     { int nsqi = pre->nonseq[l][ld];
+      net_value *restrict dhd = bw_hidden_loc(pre,d,ld);
       if (nsqi>=0)
       { if (a->nonseq_config[nsqi])
         { sum_derivatives_config_gpu
-            (th, d->h[ld], dh, w->nsq[nsqi], a->nonseq_config[nsqi]);
+            (th, dhd, dh, w->nsq[nsqi], a->nonseq_config[nsqi]);
         }
         else
         { sum_derivatives_gpu
-            (th, d->h[ld], a->N_hidden[ld], dh, N_hidden,
+            (th, dhd, a->N_hidden[ld], dh, N_hidden,
              w->nsq[nsqi], (unsigned short *) 0, 0);
         }
       }
     }
 
     if (l<a->N_layers-1 && a->has_hh[l])
-    { if (a->hidden_config[l+1])
+    { net_value *restrict dhd = bw_hidden_loc(pre,d,l+1);
+      if (a->hidden_config[l+1])
       { sum_derivatives_config_gpu 
-          (th, d->h[l+1], dh, w->hh[l], a->hidden_config[l+1]);
+          (th, dhd, dh, w->hh[l], a->hidden_config[l+1]);
       }
       else 
       { sum_derivatives_gpu 
-          (th, d->h[l+1], a->N_hidden[l+1], dh, N_hidden, 
+          (th, dhd, a->N_hidden[l+1], dh, N_hidden, 
            w->hh[l], (unsigned short *) 0, 0);
       }
     }
 
-    vh =  pre->fwgpumem[l]>=0 ? FASTMEMB(pre->fwgpumem[l]) : v->h[l];
+    vh = fw_hidden_loc(pre,v,l);
 
     if (flgs==0 || flgs->layer_type[l]==Tanh_type)
     { for (i = th; i<N_hidden; i+=NTH)
@@ -993,14 +993,15 @@ __device__ void net_back_gpu
     }
  
     for (l = 0; l<a->N_layers; l++)
-    { if (a->has_ih[l])
+    { net_value *restrict dh = bw_hidden_loc(pre,d,l);
+      if (a->has_ih[l])
       { if (a->input_config[l])
         { sum_derivatives_config_gpu 
-            (th, d->h[l], d->i, w->ih[l], a->input_config[l]);
+            (th, dh, d->i, w->ih[l], a->input_config[l]);
         }
         else 
         { sum_derivatives_gpu
-            (th, d->h[l], a->N_hidden[l], d->i, a->N_inputs, w->ih[l],
+            (th, dh, a->N_hidden[l], d->i, a->N_inputs, w->ih[l],
              flgs && flgs->any_omitted[l]? flgs->omit : 0, 1<<(l+1));
         }
       }

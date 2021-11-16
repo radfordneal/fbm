@@ -114,8 +114,6 @@ unsigned net_setup_param_count
   unsigned count, b;
   int l, ls, nsqi;
 
-  if (pre) pre->memused = 0;
-
   count = 0;
  
   if (a->has_ti) count += a->N_inputs;
@@ -123,25 +121,9 @@ unsigned net_setup_param_count
   nsqi = 0;
   for (l = 0; l<a->N_layers; l++)
   {
-    if (pre)
-    { 
-      if (!SPLIT_KERNELS && pre->memused+a->N_hidden[l] <= MAX_FASTMEM_VALUES)
-      { pre->fwgpumem[l] = pre->memused;
-        pre->memused += a->N_hidden[l];
-      }
-      else
-      { pre->fwgpumem[l] = -1;
-      }
-
-      for (ls = 0; ls<l; ls++)
-      { pre->nonseq[ls][l] = -1;
-      }
-    }
-
-    for (ls = 0, b = a->has_nsq[l]; b!=0; ls++, b>>=1)
+    for (ls = 0, b = a->has_nsq[l]; ls<l; ls++, b>>=1)
     { if (b&1)
-      { if (ls>=l-1) abort();
-        if (pre)
+      { if (pre)
         { pre->nonseq[ls][l] = nsqi;
         }
         if (flgs && flgs->nonseq_config[nsqi])
@@ -154,6 +136,11 @@ unsigned net_setup_param_count
         { count += a->N_hidden[ls]*a->N_hidden[l];
         }
         nsqi += 1;
+      }
+      else
+      { if (pre)
+        { pre->nonseq[ls][l] = -1;
+        }
       }
     }
 
@@ -232,6 +219,31 @@ unsigned net_setup_param_count
     }
     else
     { count += a->N_outputs;
+    }
+  }
+
+  if (pre)
+  { 
+    pre->memused = 0;
+
+    for (l = 0; l<a->N_layers; l++)
+    { if (!SPLIT_KERNELS && pre->memused+a->N_hidden[l] <= MAX_FASTMEM_VALUES)
+      { pre->fwgpumem[l] = pre->memused;
+        pre->memused += a->N_hidden[l];
+      }
+      else
+      { pre->fwgpumem[l] = -1;
+      }
+    }
+
+    for (l = 0; l<a->N_layers; l++)
+    { if (!SPLIT_KERNELS && pre->memused+a->N_hidden[l] <= MAX_FASTMEM_VALUES)
+      { pre->bwgpumem[l] = pre->memused;
+        pre->memused += a->N_hidden[l];
+      }
+      else
+      { pre->bwgpumem[l] = -1;
+      }
     }
   }
 

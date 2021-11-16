@@ -1075,13 +1075,6 @@ HOSTDEV static void add_grad2_config
 
 #if __CUDACC__ 
 
-#define FASTMEMG(o,w) \
-  (sharedvalues + ((w)+(threadIdx.x/GTH)*GROUP_SIZE)*pre->memused + (o))
-
-#define HIDLOC(pre,layer,values,w) \
-  ((pre)->fwgpumem[layer]>=0 ? FASTMEMG(pre->fwgpumem[layer],(w)) \
-                             : ((values)+(w))->h[layer])
-
 __device__ static void net_store1_grad1 
         (int, net_param *restrict, net_value const*, int);
 __device__ static void net_store1_grad1_config 
@@ -1123,6 +1116,7 @@ __device__ void net_store1_grad
 )
 { 
   const net_value *u0;
+  net_value *c0;
   int l, ls, nsqi;
 
   if (a->has_ti) 
@@ -1132,14 +1126,15 @@ __device__ void net_store1_grad
   for (l = 0; l<a->N_layers; l++)
   { 
     int N_hidden = a->N_hidden[l];
+    c0 = bw_hidden_loc_grad(pre,d0,l,0);
 
     if (a->has_bh[l]) 
     { if (a->bias_config[l])
-      { net_store1_grad1_config (th, g->bh[l], d0->h[l],
+      { net_store1_grad1_config (th, g->bh[l], c0,
                                  a->bias_config[l]);
       }
       else
-      { net_store1_grad1 (th, g->bh[l], d0->h[l], N_hidden);
+      { net_store1_grad1 (th, g->bh[l], c0, N_hidden);
       }
     }
 
@@ -1147,11 +1142,11 @@ __device__ void net_store1_grad
     { if (a->input_config[l])
       { net_store1_grad2_config (th, g->ih[l], v0->i,
                                  a->has_ti ? w->ti : 0, 
-                                 d0->h[l], a->input_config[l]);
+                                 c0, a->input_config[l]);
       }
       else
       { net_store1_grad2 (th, g->ih[l], v0->i, a->has_ti ? w->ti : 0, 
-                    a->N_inputs, d0->h[l], N_hidden, 
+                    a->N_inputs, c0, N_hidden, 
                     flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
                     sparse);
       }
@@ -1159,19 +1154,19 @@ __device__ void net_store1_grad
 
     if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { u0 = HIDLOC(pre,ls,v0,0);
+      { u0 = fw_hidden_loc_grad(pre,v0,ls,0);
         nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
           { net_store1_grad2_config
                 (th, g->nsq[nsqi], u0,
                  a->has_th[ls] ? w->th[ls] : 0,
-                 d0->h[l], a->nonseq_config[nsqi]);
+                 c0, a->nonseq_config[nsqi]);
           }
           else
           { net_store1_grad2 (th, g->nsq[nsqi], u0,
               a->has_th[ls] ? w->th[ls] : 0,
-              a->N_hidden[ls], d0->h[l], N_hidden, 
+              a->N_hidden[ls], c0, N_hidden, 
               (unsigned short *)0, 0, 0);
           }
         }
@@ -1179,27 +1174,27 @@ __device__ void net_store1_grad
     }
 
     if (l>0 && a->has_hh[l-1])
-    { u0 = HIDLOC(pre,l-1,v0,0);
+    { u0 = fw_hidden_loc_grad(pre,v0,l-1,0);
       if (a->hidden_config[l])
       { net_store1_grad2_config
            (th, g->hh[l-1], u0,
             a->has_th[l-1] ? w->th[l-1] : 0,
-            d0->h[l], a->hidden_config[l]);
+            c0, a->hidden_config[l]);
       }
       else
       { net_store1_grad2 (th, g->hh[l-1], u0,
           a->has_th[l-1] ? w->th[l-1] : 0,
-          a->N_hidden[l-1], d0->h[l], N_hidden,
+          a->N_hidden[l-1], c0, N_hidden,
           (unsigned short *)0, 0, 0);
       }
     }
 
     if (a->has_th[l]) 
-    { net_store1_grad1 (th, g->th[l], d0->h[l], N_hidden);
+    { net_store1_grad1 (th, g->th[l], c0, N_hidden);
     }
 
     if (a->has_ho[l])
-    { u0 = HIDLOC(pre,l,v0,0);
+    { u0 = fw_hidden_loc_grad(pre,v0,l,0);
       int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { net_store1_grad2_config (th, g->ho[l], u0,
@@ -1593,6 +1588,7 @@ __device__ void net_store2_grad
   const net_values *d1 = d0+1;
   const net_values *v1 = v0+1;
   const net_value *u0, *u1;
+  const net_value *c0, *c1;
   int l, ls, nsqi;
 
   if (a->has_ti) 
@@ -1602,14 +1598,16 @@ __device__ void net_store2_grad
   for (l = 0; l<a->N_layers; l++)
   { 
     int N_hidden = a->N_hidden[l];
+    c0 = bw_hidden_loc_grad(pre,d0,l,0);
+    c1 = bw_hidden_loc_grad(pre,d0,l,1);
 
     if (a->has_bh[l]) 
     { if (a->bias_config[l])
-      { net_store2_grad1_config (th, g->bh[l], d0->h[l], d1->h[l], 
+      { net_store2_grad1_config (th, g->bh[l], c0, c1, 
                                  a->bias_config[l]);
       }
       else
-      { net_store2_grad1 (th, g->bh[l], d0->h[l], d1->h[l], N_hidden);
+      { net_store2_grad1 (th, g->bh[l], c0, c1, N_hidden);
       }
     }
 
@@ -1617,11 +1615,11 @@ __device__ void net_store2_grad
     { if (a->input_config[l])
       { net_store2_grad2_config (th, g->ih[l], v0->i, v1->i, 
                                  a->has_ti ? w->ti : 0, 
-                                 d0->h[l], d1->h[l], a->input_config[l]);
+                                 c0, c1, a->input_config[l]);
       }
       else
       { net_store2_grad2 (th, g->ih[l], v0->i, v1->i, a->has_ti ? w->ti : 0, 
-                    a->N_inputs, d0->h[l], d1->h[l], N_hidden, 
+                    a->N_inputs, c0, c1, N_hidden, 
                     flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
                     sparse);
       }
@@ -1629,19 +1627,20 @@ __device__ void net_store2_grad
 
     if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { u0 = HIDLOC(pre,ls,v0,0); u1 = HIDLOC(pre,ls,v0,1); 
+      { u0 = fw_hidden_loc_grad(pre,v0,ls,0);
+        u1 = fw_hidden_loc_grad(pre,v0,ls,1);
         nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
           { net_store2_grad2_config
                 (th, g->nsq[nsqi], u0, u1,
                  a->has_th[ls] ? w->th[ls] : 0,
-                 d0->h[l], d1->h[l], a->nonseq_config[nsqi]);
+                 c0, c1, a->nonseq_config[nsqi]);
           }
           else
           { net_store2_grad2 (th, g->nsq[nsqi], u0, u1,
               a->has_th[ls] ? w->th[ls] : 0,
-              a->N_hidden[ls], d0->h[l], d1->h[l], N_hidden, 
+              a->N_hidden[ls], c0, c1, N_hidden, 
               (unsigned short *)0, 0, 0);
           }
         }
@@ -1649,27 +1648,29 @@ __device__ void net_store2_grad
     }
 
     if (l>0 && a->has_hh[l-1])
-    { u0 = HIDLOC(pre,l-1,v0,0); u1 = HIDLOC(pre,l-1,v0,1); 
+    { u0 = fw_hidden_loc_grad(pre,v0,l-1,0);
+      u1 = fw_hidden_loc_grad(pre,v0,l-1,1);
       if (a->hidden_config[l])
       { net_store2_grad2_config
            (th, g->hh[l-1], u0, u1, 
             a->has_th[l-1] ? w->th[l-1] : 0,
-            d0->h[l], d1->h[l], a->hidden_config[l]);
+            c0, c1, a->hidden_config[l]);
       }
       else
       { net_store2_grad2 (th, g->hh[l-1], u0, u1, 
           a->has_th[l-1] ? w->th[l-1] : 0,
-          a->N_hidden[l-1], d0->h[l], d1->h[l], N_hidden,
+          a->N_hidden[l-1], c0, c1, N_hidden,
           (unsigned short *)0, 0, 0);
       }
     }
 
     if (a->has_th[l]) 
-    { net_store2_grad1 (th, g->th[l], d0->h[l], d1->h[l], N_hidden);
+    { net_store2_grad1 (th, g->th[l], c0, c1, N_hidden);
     }
 
     if (a->has_ho[l])
-    { u0 = HIDLOC(pre,l,v0,0); u1 = HIDLOC(pre,l,v0,1); 
+    { u0 = fw_hidden_loc_grad(pre,v0,l,0);
+      u1 = fw_hidden_loc_grad(pre,v0,l,1);
       int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { net_store2_grad2_config (th, g->ho[l], u0, u1, 
@@ -2086,6 +2087,7 @@ __device__ void net_store3_grad
   const net_values *d1 = d0+1, *d2 = d1+1;
   const net_values *v1 = v0+1, *v2 = v1+1;
   const net_value *u0, *u1, *u2;
+  const net_value *c0, *c1, *c2;
   int l, ls, nsqi;
 
   if (a->has_ti) 
@@ -2095,14 +2097,17 @@ __device__ void net_store3_grad
   for (l = 0; l<a->N_layers; l++)
   { 
     int N_hidden = a->N_hidden[l];
+    c0 = bw_hidden_loc_grad(pre,d0,l,0);
+    c1 = bw_hidden_loc_grad(pre,d0,l,1);
+    c2 = bw_hidden_loc_grad(pre,d0,l,2);
 
     if (a->has_bh[l]) 
     { if (a->bias_config[l])
-      { net_store3_grad1_config (th, g->bh[l], d0->h[l], d1->h[l], d2->h[l],
+      { net_store3_grad1_config (th, g->bh[l], c0, c1, c2,
                                  a->bias_config[l]);
       }
       else
-      { net_store3_grad1 (th, g->bh[l], d0->h[l], d1->h[l], d2->h[l], N_hidden);
+      { net_store3_grad1 (th, g->bh[l], c0, c1, c2, N_hidden);
       }
     }
 
@@ -2110,13 +2115,13 @@ __device__ void net_store3_grad
     { if (a->input_config[l])
       { net_store3_grad2_config (th, g->ih[l], v0->i, v1->i, v2->i,
                                  a->has_ti ? w->ti : 0, 
-                                 d0->h[l], d1->h[l], d2->h[l], 
+                                 c0, c1, c2, 
                                  a->input_config[l]);
       }
       else
       { net_store3_grad2 (th, g->ih[l], v0->i, v1->i, v2->i,
                     a->has_ti ? w->ti : 0, a->N_inputs, 
-                    d0->h[l], d1->h[l], d2->h[l], N_hidden, 
+                    c0, c1, c2, N_hidden, 
                     flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
                     sparse);
       }
@@ -2124,20 +2129,21 @@ __device__ void net_store3_grad
 
     if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { u0 = HIDLOC(pre,ls,v0,0); u1 = HIDLOC(pre,ls,v0,1); 
-        u2 = HIDLOC(pre,ls,v0,2);
+      { u0 = fw_hidden_loc_grad(pre,v0,ls,0);
+        u1 = fw_hidden_loc_grad(pre,v0,ls,1);
+        u2 = fw_hidden_loc_grad(pre,v0,ls,2);
         nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
           { net_store3_grad2_config
                 (th, g->nsq[nsqi], u0, u1, u2,
                  a->has_th[ls] ? w->th[ls] : 0,
-                 d0->h[l], d1->h[l], d2->h[l], a->nonseq_config[nsqi]);
+                 c0, c1, c2, a->nonseq_config[nsqi]);
           }
           else
           { net_store3_grad2 (th, g->nsq[nsqi], u0, u1, u2,
               a->has_th[ls] ? w->th[ls] : 0,
-              a->N_hidden[ls], d0->h[l], d1->h[l], d2->h[l], N_hidden,
+              a->N_hidden[ls], c0, c1, c2, N_hidden,
               (unsigned short *)0, 0, 0);
           }
         }
@@ -2145,29 +2151,31 @@ __device__ void net_store3_grad
     }
 
     if (l>0 && a->has_hh[l-1])
-    { u0 = HIDLOC(pre,l-1,v0,0); u1 = HIDLOC(pre,l-1,v0,1); 
-      u2 = HIDLOC(pre,l-1,v0,2);
+    { u0 = fw_hidden_loc_grad(pre,v0,l-1,0);
+      u1 = fw_hidden_loc_grad(pre,v0,l-1,1);
+      u2 = fw_hidden_loc_grad(pre,v0,l-1,2);
       if (a->hidden_config[l])
       { net_store3_grad2_config
            (th, g->hh[l-1], u0, u1, u2,
             a->has_th[l-1] ? w->th[l-1] : 0,
-            d0->h[l], d1->h[l], d2->h[l], a->hidden_config[l]);
+            c0, c1, c2, a->hidden_config[l]);
       }
       else
       { net_store3_grad2 (th, g->hh[l-1], u0, u1, u2,
           a->has_th[l-1] ? w->th[l-1] : 0,
-          a->N_hidden[l-1], d0->h[l], d1->h[l], d2->h[l], N_hidden,
+          a->N_hidden[l-1], c0, c1, c2, N_hidden,
           (unsigned short *)0, 0, 0);
       }
     }
 
     if (a->has_th[l]) 
-    { net_store3_grad1 (th, g->th[l], d0->h[l], d1->h[l], d2->h[l], N_hidden);
+    { net_store3_grad1 (th, g->th[l], c0, c1, c2, N_hidden);
     }
 
     if (a->has_ho[l])
-    { u0 = HIDLOC(pre,l,v0,0); u1 = HIDLOC(pre,l,v0,1); 
-      u2 = HIDLOC(pre,l,v0,2);
+    { u0 = fw_hidden_loc_grad(pre,v0,l,0);
+      u1 = fw_hidden_loc_grad(pre,v0,l,1);
+      u2 = fw_hidden_loc_grad(pre,v0,l,2);
       int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { net_store3_grad2_config (th, g->ho[l], u0, u1, u2,
@@ -2606,6 +2614,7 @@ __device__ void net_store4_grad
   const net_values *d1 = d0+1, *d2 = d1+1, *d3 = d2+1;
   const net_values *v1 = v0+1, *v2 = v1+1, *v3 = v2+1;
   const net_value *u0, *u1, *u2, *u3;
+  const net_value *c0, *c1, *c2, *c3;
   int l, ls, nsqi;
 
   if (a->has_ti) 
@@ -2615,16 +2624,20 @@ __device__ void net_store4_grad
   for (l = 0; l<a->N_layers; l++)
   { 
     int N_hidden = a->N_hidden[l];
+    c0 = bw_hidden_loc_grad(pre,d0,l,0);
+    c1 = bw_hidden_loc_grad(pre,d0,l,1);
+    c2 = bw_hidden_loc_grad(pre,d0,l,2);
+    c3 = bw_hidden_loc_grad(pre,d0,l,3);
 
     if (a->has_bh[l]) 
     { if (a->bias_config[l])
       { net_store4_grad1_config (th, g->bh[l],
-                                 d0->h[l], d1->h[l], d2->h[l], d3->h[l],
+                                 c0, c1, c2, c3,
                                  a->bias_config[l]);
       }
       else
       { net_store4_grad1 (th, g->bh[l], 
-                          d0->h[l], d1->h[l], d2->h[l], d3->h[l], N_hidden);
+                          c0, c1, c2, c3, N_hidden);
       }
     }
 
@@ -2632,13 +2645,13 @@ __device__ void net_store4_grad
     { if (a->input_config[l])
       { net_store4_grad2_config (th, g->ih[l], v0->i, v1->i, v2->i, v3->i,
                                  a->has_ti ? w->ti : 0, 
-                                 d0->h[l], d1->h[l], d2->h[l], d3->h[l],
+                                 c0, c1, c2, c3,
                                  a->input_config[l]);
       }
       else
       { net_store4_grad2 (th, g->ih[l], v0->i, v1->i, v2->i, v3->i,
                     a->has_ti ? w->ti : 0, a->N_inputs, 
-                    d0->h[l], d1->h[l], d2->h[l], d3->h[l], N_hidden, 
+                    c0, c1, c2, c3, N_hidden, 
                     flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), 
                     sparse);
       }
@@ -2646,20 +2659,22 @@ __device__ void net_store4_grad
 
     if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { u0 = HIDLOC(pre,ls,v0,0); u1 = HIDLOC(pre,ls,v0,1); 
-        u2 = HIDLOC(pre,ls,v0,2); u3 = HIDLOC(pre,ls,v0,3); 
+      { u0 = fw_hidden_loc_grad(pre,v0,ls,0);
+        u1 = fw_hidden_loc_grad(pre,v0,ls,1);
+        u2 = fw_hidden_loc_grad(pre,v0,ls,2);
+        u3 = fw_hidden_loc_grad(pre,v0,ls,3);
         nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
           { net_store4_grad2_config
                (th, g->nsq[nsqi], u0, u1, u2, u3,
                 a->has_th[ls] ? w->th[ls] : 0,
-                d0->h[l], d1->h[l], d2->h[l], d3->h[l], a->nonseq_config[nsqi]);
+                c0, c1, c2, c3, a->nonseq_config[nsqi]);
           }
           else
           { net_store4_grad2 (th, g->nsq[nsqi], u0, u1, u2, u3,
               a->has_th[ls] ? w->th[ls] : 0,
-              a->N_hidden[ls], d0->h[l], d1->h[l], d2->h[l], d3->h[l], N_hidden,
+              a->N_hidden[ls], c0, c1, c2, c3, N_hidden,
               (unsigned short *)0, 0, 0);
           }
         }
@@ -2667,30 +2682,34 @@ __device__ void net_store4_grad
     }
 
     if (l>0 && a->has_hh[l-1])
-    { u0 = HIDLOC(pre,l-1,v0,0); u1 = HIDLOC(pre,l-1,v0,1); 
-      u2 = HIDLOC(pre,l-1,v0,2); u3 = HIDLOC(pre,l-1,v0,3); 
+    { u0 = fw_hidden_loc_grad(pre,v0,l-1,0);
+      u1 = fw_hidden_loc_grad(pre,v0,l-1,1);
+      u2 = fw_hidden_loc_grad(pre,v0,l-1,2);
+      u3 = fw_hidden_loc_grad(pre,v0,l-1,3);
       if (a->hidden_config[l])
       { net_store4_grad2_config
            (th, g->hh[l-1], u0, u1, u2, u3,
             a->has_th[l-1] ? w->th[l-1] : 0,
-            d0->h[l], d1->h[l], d2->h[l], d3->h[l], a->hidden_config[l]);
+            c0, c1, c2, c3, a->hidden_config[l]);
       }
       else
       { net_store4_grad2 (th, g->hh[l-1], u0, u1, u2, u3,
           a->has_th[l-1] ? w->th[l-1] : 0,
-          a->N_hidden[l-1], d0->h[l], d1->h[l], d2->h[l], d3->h[l], N_hidden,
+          a->N_hidden[l-1], c0, c1, c2, c3, N_hidden,
           (unsigned short *)0, 0, 0);
       }
     }
 
     if (a->has_th[l]) 
     { net_store4_grad1 (th, g->th[l], 
-                        d0->h[l], d1->h[l], d2->h[l], d3->h[l], N_hidden);
+                        c0, c1, c2, c3, N_hidden);
     }
 
     if (a->has_ho[l])
-    { u0 = HIDLOC(pre,l,v0,0); u1 = HIDLOC(pre,l,v0,1); 
-      u2 = HIDLOC(pre,l,v0,2); u3 = HIDLOC(pre,l,v0,3); 
+    { u0 = fw_hidden_loc_grad(pre,v0,l,0);
+      u1 = fw_hidden_loc_grad(pre,v0,l,1);
+      u2 = fw_hidden_loc_grad(pre,v0,l,2);
+      u3 = fw_hidden_loc_grad(pre,v0,l,3);
       int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { net_store4_grad2_config (th, g->ho[l], u0, u1, u2, u3,

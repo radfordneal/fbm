@@ -93,12 +93,6 @@
                              1 = five kernels for the five parts
                              2 = first three together, two gradient separate */
 
-#if __CUDACC__
-
-extern __shared__ net_value sharedvalues[];
-
-#endif
-
 
 /* FUNCTIONS WITH SPECIFIED PRECISION. */
 
@@ -426,11 +420,50 @@ typedef struct
                                        (in net_value units) */
   short fwgpumem[Max_layers];       /* Offset to forward hidden layer in fast
                                        GPU shared mem, or -1 if in global mem */
+  short bwgpumem[Max_layers];       /* Offset to backward hidden layer in fast
+                                       GPU shared mem, or -1 if in global mem */
 
   signed char nonseq [Max_layers]   /* nonseq[from][to] indexes non-sequential*/
                      [Max_layers+1];/*  connection in nsq, or is -1 if none.  */
                                     /*  (The +1 makes power of two for speed) */
 } net_precomputed;
+
+
+/* USE OF FAST SHARED MEMORY FOR UNIT VALUES / DERIVATIVES. */
+
+#if __CUDACC__
+
+extern __shared__ net_value sharedvalues[];
+
+__device__ static inline net_value *fw_hidden_loc 
+  (net_precomputed const*pre, net_values const*v, int l)
+{ int t = pre->fwgpumem[l];
+  return t<0 ? v->h[l] 
+             : sharedvalues + (threadIdx.x/NTH) * pre->memused + t;
+}
+
+__device__ static inline net_value *bw_hidden_loc 
+  (net_precomputed const*pre, net_values const*v, int l)
+{ int t = pre->bwgpumem[l];
+  return t<0 ? v->h[l] 
+             : sharedvalues + (threadIdx.x/NTH) * pre->memused + t;
+}
+
+__device__ static inline net_value *fw_hidden_loc_grad 
+  (net_precomputed const*pre, net_values const*v, int l, int w)
+{ int t = pre->fwgpumem[l];
+  return t<0 ? (v+w)->h[l]
+             : sharedvalues + (w+(threadIdx.x/GTH)*GROUP_SIZE)*pre->memused + t;
+}
+
+__device__ static inline net_value *bw_hidden_loc_grad 
+  (net_precomputed const*pre, net_values const*v, int l, int w)
+{ int t = pre->bwgpumem[l];
+  return t<0 ? (v+w)->h[l] 
+             : sharedvalues + (w+(threadIdx.x/GTH)*GROUP_SIZE)*pre->memused + t;
+}
+
+#endif
 
 
 /* PROCEDURES. */

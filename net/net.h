@@ -262,10 +262,7 @@ typedef struct
 
 #define Tanh_type 0		/* Tanh units */
 #define Identity_type 1		/* Identity units */
-#define Sin_type 2		/* Sine units */
 #define Softplus_type 3		/* Softplus units */
-#define Square_type 4		/* Square units */
-#define Cube_type 5		/* Cube units */
 
 typedef struct
 {

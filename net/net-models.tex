@@ -179,9 +179,6 @@ The following activation functions are supported:\vspace{-22pt}
 \begin{tabbing}
 {\bf tanh:}\ \ \ \ \ \ \ \= $a(u)\ =\ \tanh(u)$\\[3pt]
 {\bf softplus:}\> $a(u)\ =\ \log(1+\exp(u))$\\[3pt]
-{\bf square:}\>  $a(u)\ =\ u^2$\\[4pt]
-{\bf cube:}\>  $a(u)\ =\ u^3$\\[4pt]
-{\bf sin:}\>  $a(u)\ =\ \sqrt{2}\,\sin(\sqrt{2}u)$\\[4pt]
 {\bf identity:}\> $a(u)\ =\ u$\vspace{-5pt}
 \end{tabbing}
 \end{quotation}
@@ -813,11 +810,9 @@ The first approximation assumes that since the first term may be either
 positive or negative, its effects will (optimistically) cancel when
 averaged over the training set.  Since $u$ is not known, the second
 approximation above takes the maximum with respect to $u$.  
-For the $\tanh$ and softplus activation functions, $\max[a'(u)^2] = 1$.
-For $a(u)=\sqrt{2}\sin(\sqrt{2}u)$, we have $\max[a'(u)^2] = 4$.  For
-the square and cube activation functions, there is no bound on $a'(u)^2$;
-so rather than take the maximum, the value for $a'(u)^2$ at a ``typical''
-value for $u$ is used, with typical values found as described below.
+For the currently-used activation functions --- $\tanh$, softplus, 
+and identity --- $\max[a'(u)^2] = 1$, so nothing need actually
+be done for this.
 
 Note that the backward propagation ignores any interactions between
 multiple connections from a unit.
@@ -875,12 +870,8 @@ it would be if the degrees of freedom were three.)
 
 For a layer of tanh hidden units, the typical squared value found in
 this way is reduced to one if it exceeds one, since one is the maximum
-squared value of tanh.  Similarly, the typical squared value for a
-unit with activation function $\sqrt{2}\,\sin(\sqrt{2}u)$ is capped at
-two.  Units with the softplus activation function are treated the same
-as those with identity activation function.  For units with the square
-or cube activation function, the typical squared value is the square
-or cube of the typical squared value of the input to the unit.
+squared value of tanh.  Units with the softplus activation function 
+are treated the same as those with identity activation function.
 
 Second derivatives with respect to biases are simply equal to the
 second derivatives with respect to the associated summed input to the

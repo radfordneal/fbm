@@ -1,16 +1,18 @@
-Commit: 19495ca1165bfbeb19d0dee17c3ddb970ee8ad8e
+Commit: 62e11dfb26f57611cd1daf232f3be2dfa8885fbb
 
 Running exr with flt-gpu on K20c:
 
 Number of training cases: 100
 Number of test cases: 1000
 Precision: FP32, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
-Tesla K20c, Compute Capability 3.5, 13 processors, 4.6 GBytes ECC
+Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
 Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 768 bytes/case
 With 100 cases, need 1 launches, max 7 blocks/launch
 Precision: FP32, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
-Tesla K20c, Compute Capability 3.5, 13 processors, 4.6 GBytes ECC
+Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
 Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 768 bytes/case
 With 100 cases, need 1 launches, max 7 blocks/launch
  
 Predictions after running for 1000 iterations:
@@ -22,4 +24,4 @@ Number of test cases: 1000
 Average log probability of targets:     0.825+-0.024
 Average squared error guessing mean:    0.01685+-0.00264
 
-elapsed 7.92s
+elapsed 7.95s

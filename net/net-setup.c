@@ -222,31 +222,6 @@ unsigned net_setup_param_count
     }
   }
 
-  if (pre)
-  { 
-    pre->memused = 0;
-
-    for (l = 0; l<a->N_layers; l++)
-    { if (!SPLIT_KERNELS && pre->memused+a->N_hidden[l] <= MAX_FASTMEM_VALUES)
-      { pre->fwgpumem[l] = pre->memused;
-        pre->memused += a->N_hidden[l];
-      }
-      else
-      { pre->fwgpumem[l] = -1;
-      }
-    }
-
-    for (l = 0; l<a->N_layers; l++)
-    { if (!SPLIT_KERNELS && pre->memused+a->N_hidden[l] <= MAX_FASTMEM_VALUES)
-      { pre->bwgpumem[l] = pre->memused;
-        pre->memused += a->N_hidden[l];
-      }
-      else
-      { pre->bwgpumem[l] = -1;
-      }
-    }
-  }
-
   return count;
 }
 

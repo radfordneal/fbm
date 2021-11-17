@@ -191,6 +191,8 @@ static net_params grad;		/* Pointers to gradient for network parameters*/
 
 #if __CUDACC__
 
+static struct cudaDeviceProp cuda_prop;  /* Obtained at initialization */
+
 static unsigned grad_aligned_total; /* Aligned size of grad block for one case*/
 
 static net_arch dev_arch;	/* Copy of arch with GPU config pointers */
@@ -381,16 +383,21 @@ void mc_app_initialize
 
 #   if __CUDACC__
     {
+      check_cuda_error (cudaGetDeviceProperties(&cuda_prop,0),
+                        "Get properties");
+
       if (show_info)
-      { struct cudaDeviceProp cuda_prop;
-        check_cuda_error (cudaGetDeviceProperties(&cuda_prop,0),
-                          "Get properties");
-        fprintf (stderr,
-          "%s, Compute Capability %d.%d, %d processors, %.1f GBytes%s\n",
+      { fprintf (stderr,
+          "%s, Compute Capability %d.%d, %d SM processors, %.1f GBytes%s\n",
           cuda_prop.name, cuda_prop.major, cuda_prop.minor,
           cuda_prop.multiProcessorCount, 
           (double)cuda_prop.totalGlobalMem/1024/1024/1024,
           cuda_prop.ECCEnabled ? " ECC" : "");
+        fprintf (stderr, 
+         "Shared mem per block: %d, Shared mem per SM: %d, Blocks per SM: %d\n",
+           (int) cuda_prop.sharedMemPerBlock, 
+           (int) cuda_prop.sharedMemPerMultiprocessor ,
+           (int) cuda_prop.maxBlocksPerMultiProcessor);
       }
 
       char junk;
@@ -503,6 +510,38 @@ void mc_app_initialize
    
       net_prior_generate (&params, &sigmas, arch, flgs, model, priors, 1, 0, 0);
     }
+
+    /* Do precomputations for GPU usage. */
+
+#   if __CUDACC__
+    {
+      int l;
+
+      pre.memused = 0;
+
+      for (l = 0; l<arch->N_layers; l++)
+      { if (!SPLIT_KERNELS 
+              && pre.memused+arch->N_hidden[l] <= MAX_FASTMEM_VALUES)
+        { pre.fwgpumem[l] = pre.memused;
+          pre.memused += arch->N_hidden[l];
+        }
+        else
+        { pre.fwgpumem[l] = -1;
+        }
+      }
+
+      for (l = 0; l<arch->N_layers; l++)
+      { if (!SPLIT_KERNELS 
+              && pre.memused+arch->N_hidden[l] <= MAX_FASTMEM_VALUES)
+        { pre.bwgpumem[l] = pre.memused;
+          pre.memused += arch->N_hidden[l];
+        }
+        else
+        { pre.bwgpumem[l] = -1;
+        }
+      }
+    }
+#   endif
 
     /* Make copy of architecture with config pointers going to GPU memory. */
 

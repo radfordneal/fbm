@@ -425,7 +425,8 @@ void mc_app_initialize
 #     define MIN_BLOCKS_PER_SM 2
 
       int threads_per_block = blkcases * THREADS_PER_CASE;
-      int warps_per_block = (threads_per_block+31)/32;
+      int warps_per_block = (threads_per_block + cuda_prop.warpSize - 1)
+                              / cuda_prop.warpSize;
 
       int needed_blocks = MIN_BLOCKS_PER_SM;
       while (needed_blocks*warps_per_block < MIN_WARPS_PER_SM)
@@ -434,9 +435,12 @@ void mc_app_initialize
       if (needed_blocks > maxblks)
       { needed_blocks = maxblks;
       }
+      if (needed_blocks > cuda_prop.maxBlocksPerMultiProcessor)
+      { needed_blocks = cuda_prop.maxBlocksPerMultiProcessor;
+      }
 
       allowed_shared_mem = !USE_FAST_SHARED_MEM ? 0
-        : (cuda_prop.sharedMemPerBlock / needed_blocks) / blkcases;
+        : (cuda_prop.sharedMemPerMultiprocessor / needed_blocks) / blkcases;
 
       if (show_info)
       { printf (

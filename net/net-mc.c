@@ -421,7 +421,7 @@ void mc_app_initialize
       check_cuda_error (cudaGetDeviceProperties(&cuda_prop,0),
                         "Get properties");
 
-#     define MIN_WARPS_PER_SM 8
+#     define MIN_WARPS_PER_SM 16
 #     define MIN_BLOCKS_PER_SM 2
 
       int threads_per_block = blkcases * THREADS_PER_CASE;

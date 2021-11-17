@@ -73,12 +73,12 @@
 #define DEFAULT_BLKCASES 16  /* Default, if not set by BLKCASES env var */
 #define DEFAULT_MAXBLKS	1000 /* Default, if not set by MAXBLKS env var */
 
-#define MAX_FASTMEM_VALUES 200   /* Maximum number of elements per thread that
-                                    can be stored in the fast shared memory */
+#define USE_FAST_SHARED_MEM 1  /* Use fast shared GPU memory for unit values
+                                  and derivatives? */
 
 #define GPU_CACHE_PREFERENCE \
- (MAX_FASTMEM_VALUES==0 ? cudaFuncCachePreferL1      /* L1 is better when 0 */ \
-                        : cudaFuncCachePreferShared) /* Can set to Shared,  */ \
+ (!USE_FAST_SHARED_MEM ? cudaFuncCachePreferL1 /* L1 is better if no shared */ \
+                       : cudaFuncCachePreferShared)  /* Can set to Shared,  */ \
                                                      /*   or Equal, or L1   */
 
 
@@ -441,28 +441,28 @@ extern __shared__ net_value sharedvalues[];
 __device__ static inline net_value *fw_hidden_loc 
   (net_precomputed const*pre, net_values const*v, int l)
 { int t;
-  return MAX_FASTMEM_VALUES==0 || (t = pre->fwgpumem[l]) < 0 ? v->h[l] 
+  return !USE_FAST_SHARED_MEM || (t = pre->fwgpumem[l]) < 0 ? v->h[l] 
              : sharedvalues + (threadIdx.x/NTH) * pre->memused + t;
 }
 
 __device__ static inline net_value *bw_hidden_loc 
   (net_precomputed const*pre, net_values const*v, int l)
 { int t;
-  return MAX_FASTMEM_VALUES==0 || (t = pre->bwgpumem[l]) < 0 ? v->h[l] 
+  return !USE_FAST_SHARED_MEM || (t = pre->bwgpumem[l]) < 0 ? v->h[l] 
              : sharedvalues + (threadIdx.x/NTH) * pre->memused + t;
 }
 
 __device__ static inline net_value *fw_hidden_loc_grad 
   (net_precomputed const*pre, net_values const*v, int l, int w)
 { int t;
-  return MAX_FASTMEM_VALUES==0 || (t = pre->fwgpumem[l]) < 0 ? (v+w)->h[l]
+  return !USE_FAST_SHARED_MEM || (t = pre->fwgpumem[l]) < 0 ? (v+w)->h[l]
              : sharedvalues + (w+(threadIdx.x/GTH)*GROUP_SIZE)*pre->memused + t;
 }
 
 __device__ static inline net_value *bw_hidden_loc_grad 
   (net_precomputed const*pre, net_values const*v, int l, int w)
 { int t;
-  return MAX_FASTMEM_VALUES==0 || (t = pre->bwgpumem[l]) < 0 ? (v+w)->h[l] 
+  return !USE_FAST_SHARED_MEM || (t = pre->bwgpumem[l]) < 0 ? (v+w)->h[l] 
              : sharedvalues + (w+(threadIdx.x/GTH)*GROUP_SIZE)*pre->memused + t;
 }
 

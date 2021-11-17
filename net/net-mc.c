@@ -193,6 +193,8 @@ static net_params grad;		/* Pointers to gradient for network parameters*/
 
 static struct cudaDeviceProp cuda_prop;  /* Obtained at initialization */
 
+static int allowed_shared_mem;	/* How much shared memory allowed per case? */
+
 static unsigned grad_aligned_total; /* Aligned size of grad block for one case*/
 
 static net_arch dev_arch;	/* Copy of arch with GPU config pointers */
@@ -383,23 +385,6 @@ void mc_app_initialize
 
 #   if __CUDACC__
     {
-      check_cuda_error (cudaGetDeviceProperties(&cuda_prop,0),
-                        "Get properties");
-
-      if (show_info)
-      { fprintf (stderr,
-          "%s, Compute Capability %d.%d, %d SM processors, %.1f GBytes%s\n",
-          cuda_prop.name, cuda_prop.major, cuda_prop.minor,
-          cuda_prop.multiProcessorCount, 
-          (double)cuda_prop.totalGlobalMem/1024/1024/1024,
-          cuda_prop.ECCEnabled ? " ECC" : "");
-        fprintf (stderr, 
-         "Shared mem per block: %d, Shared mem per SM: %d, Blocks per SM: %d\n",
-           (int) cuda_prop.sharedMemPerBlock, 
-           (int) cuda_prop.sharedMemPerMultiprocessor ,
-           (int) cuda_prop.maxBlocksPerMultiProcessor);
-      }
-
       char junk;
       char *e_blkcases = getenv("BLKCASES");
       if (e_blkcases)
@@ -433,11 +418,44 @@ void mc_app_initialize
           exit(1);
         }
       }
+      check_cuda_error (cudaGetDeviceProperties(&cuda_prop,0),
+                        "Get properties");
+
+#     define MIN_WARPS_PER_SM 8
+#     define MIN_BLOCKS_PER_SM 2
+
+      int threads_per_block = blkcases * THREADS_PER_CASE;
+      int warps_per_block = (threads_per_block+31)/32;
+
+      int needed_blocks = MIN_BLOCKS_PER_SM;
+      while (needed_blocks*warps_per_block < MIN_WARPS_PER_SM)
+      { needed_blocks += 1;
+      }
+      if (needed_blocks > maxblks)
+      { needed_blocks = maxblks;
+      }
+
+      allowed_shared_mem = !USE_FAST_SHARED_MEM ? 0
+        : (cuda_prop.sharedMemPerBlock / needed_blocks) / blkcases;
 
       if (show_info)
       { printf (
+          "%s, Compute Capability %d.%d, %d SM processors, %.1f GBytes%s\n",
+          cuda_prop.name, cuda_prop.major, cuda_prop.minor,
+          cuda_prop.multiProcessorCount, 
+          (double)cuda_prop.totalGlobalMem/1024/1024/1024,
+          cuda_prop.ECCEnabled ? " ECC" : "");
+
+        printf (
 "Specified %d cases per block, max %d blocks per launch, threads/case: %d,%d\n",
           blkcases, maxblks, THREADS_PER_CASE, GRAD_THREADS_PER_CASE);
+
+        printf (
+"Shared mem/blk: %d, Shared mem/SM: %d, Blks/SM: %d -> %d bytes/case\n",
+           (int) cuda_prop.sharedMemPerBlock, 
+           (int) cuda_prop.sharedMemPerMultiprocessor ,
+           (int) cuda_prop.maxBlocksPerMultiProcessor,
+           allowed_shared_mem);
       }
     }
 #   endif
@@ -515,13 +533,14 @@ void mc_app_initialize
 
 #   if __CUDACC__
     {
+      int allowed_elements = allowed_shared_mem / sizeof(net_value);
       int l;
 
       pre.memused = 0;
 
       for (l = 0; l<arch->N_layers; l++)
       { if (!SPLIT_KERNELS 
-              && pre.memused+arch->N_hidden[l] <= MAX_FASTMEM_VALUES)
+              && pre.memused+arch->N_hidden[l] <= allowed_elements)
         { pre.fwgpumem[l] = pre.memused;
           pre.memused += arch->N_hidden[l];
         }
@@ -532,7 +551,7 @@ void mc_app_initialize
 
       for (l = 0; l<arch->N_layers; l++)
       { if (!SPLIT_KERNELS 
-              && pre.memused+arch->N_hidden[l] <= MAX_FASTMEM_VALUES)
+              && pre.memused+arch->N_hidden[l] <= allowed_elements)
         { pre.bwgpumem[l] = pre.memused;
           pre.memused += arch->N_hidden[l];
         }

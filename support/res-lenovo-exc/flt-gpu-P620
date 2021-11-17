@@ -1,15 +1,17 @@
-Commit: 460f33810f2dc31f40c70722152b810db8b33dfb
+Commit: 9961bbff23c3d591862dcda60f0f0567a8efe751
 
 Running exc with flt-gpu on P620:
 
 Number of training cases: 400
 Number of test cases: 1000
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
-Quadro P620, Compute Capability 6.1, 4 processors, 2.0 GBytes
+Quadro P620, Compute Capability 6.1, 4 SM processors, 2.0 GBytes
+Shared mem per block: 49152, Shared mem per SM: 98304, Blocks per SM: 32
 Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
 With 400 cases, need 1 launches, max 25 blocks/launch
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
-Quadro P620, Compute Capability 6.1, 4 processors, 2.0 GBytes
+Quadro P620, Compute Capability 6.1, 4 SM processors, 2.0 GBytes
+Shared mem per block: 49152, Shared mem per SM: 98304, Blocks per SM: 32
 Specified 16 cases per block, max 1000 blocks per launch, threads/case: 4,4
 With 400 cases, need 1 launches, max 25 blocks/launch
 

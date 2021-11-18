@@ -2,7 +2,7 @@
 
 if [ "x$@" == x ]; then
   TESTS="test-func3 test-func2 test-func test-config test-adj test-class \
-         test-nonseq test-sparse test-ti test-im test-sigmas test-dyn"
+         test-nonseq test-sparse test-offsets test-im test-sigmas test-dyn"
 else
   TESTS="$@"
 fi

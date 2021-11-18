@@ -58,16 +58,16 @@
    last calculation. 
 */
 
-HOSTDEV static void bias_values (net_value *restrict, int, net_param const*);
+static void bias_values (net_value *restrict, int, net_param const*);
 
-HOSTDEV static void bias_values_config (net_value *restrict, int, 
-                                        net_param const*, net_config const*);
+static void bias_values_config (net_value *restrict, int, 
+                                net_param const*, net_config const*);
 
-HOSTDEV static void add_connections (net_value *restrict, int, net_value const*,
+static void add_connections (net_value *restrict, int, net_value const*,
                              int, net_param const*, net_param const*,
                              unsigned short const*, int, int);
 
-HOSTDEV static void add_connections_config (net_value *restrict, 
+static void add_connections_config (net_value *restrict, 
                                     net_value const*,
                                     net_param const*, net_param const*,
                                     net_config const*);
@@ -80,7 +80,7 @@ HOSTDEV static void add_connections_config (net_value *restrict,
    correct unit values for that number of hidden layers are assumed to be
    already present in the net_values structure. */
 
-HOSTDEV void net_func 
+void net_func 
 ( net_values *restrict v, /* Place to get inputs and store outputs */
   int start,		/* Number of hidden layers with known values */
   net_arch const* a,	/* Network architecture */
@@ -544,7 +544,7 @@ HOSTDEV void net_func
 
 /* SET UNIT VALUES TO BIASES. */
 
-HOSTDEV static void bias_values
+static void bias_values
 ( net_value *restrict v,	/* Array of unit values to set */
   int n,			/* Number of units */
   net_param const* b		/* Biases */
@@ -559,7 +559,7 @@ HOSTDEV static void bias_values
 
 /* SET UNIT VALUES TO BIASES WHEN THERE IS A CONFIGURATON. */
 
-HOSTDEV static void bias_values_config
+static void bias_values_config
 ( net_value *restrict v,	/* Array of unit values to set */
   int n,			/* Number of units */
   net_param const* b,		/* Biases */
@@ -1088,7 +1088,7 @@ do \
 
 #endif
 
-HOSTDEV static void add_connections
+static void add_connections
 ( net_value *restrict s,  /* Summed input for destination units to add to */
   int nd,		  /* Number of destination units */
   net_value const* v,     /* Values for source units */
@@ -1133,7 +1133,7 @@ HOSTDEV static void add_connections
    Adds the weighted input due to connections from one source layer to the 
    current unit values for the destination layer. */
 
-HOSTDEV static void add_connections_config
+static void add_connections_config
 ( net_value *restrict s,  /* Summed input for destination units to add to */
   net_value const* v,     /* Values for source units */
   net_param const* w,     /* Connection weights */

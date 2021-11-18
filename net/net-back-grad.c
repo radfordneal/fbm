@@ -65,7 +65,7 @@ HOSTDEV static void sum_derivatives_config(net_value const*,
    to the summed input into the hidden units.  This is done back to hidden 
    layer 'start', or back all the way to the inputs if 'start' is -1. */
 
-HOSTDEV void net_back
+void net_back
 ( net_values const*v,	/* Values for units in network */
   net_values *restrict d,/* Place to get output derivatives, and store others */
   int start,		/* Earliest layer to find derivatives for */
@@ -1159,15 +1159,15 @@ __device__ static void sum_derivatives_config_gpu
 
 /* ---------------------------- add_grad ------------------------------------ */
 
-HOSTDEV static void add_grad1 (net_param *restrict, net_value const*, int);
-HOSTDEV static void add_grad1_config (net_param *restrict, net_value const*,
-                                      net_config const*);
-HOSTDEV static void add_grad2 (net_param *restrict, net_value const*, 
-                               net_param const*, int, net_value const*, int,
-                               unsigned short const*, int, int);
-HOSTDEV static void add_grad2_config (net_param *restrict, net_value const*, 
-                                      net_param const*, net_value const*,
-                                      net_config const*);
+static void add_grad1 (net_param *restrict, net_value const*, int);
+static void add_grad1_config (net_param *restrict, net_value const*,
+                              net_config const*);
+static void add_grad2 (net_param *restrict, net_value const*, 
+                       net_param const*, int, net_value const*, int,
+                       unsigned short const*, int, int);
+static void add_grad2_config (net_param *restrict, net_value const*, 
+                              net_param const*, net_value const*,
+                              net_config const*);
 
 
 /* ADD TO GRADIENT OF ERROR WITH RESPECT TO NETWORK PARAMETERS.  Adds
@@ -1181,7 +1181,7 @@ HOSTDEV static void add_grad2_config (net_param *restrict, net_value const*,
    error with respect to the input unit values if the network does not
    have input offset parameters. */
 
-HOSTDEV void net_add_grad
+void net_add_grad
 ( net_params *restrict g, /* Gradient with respect to parameters to add to */
   net_params const*w,	/* Network parameters */
   net_values const*v,	/* Values for units in network for a case */
@@ -1296,7 +1296,7 @@ HOSTDEV void net_add_grad
 
 /* ADD TO GRADIENT FROM UNIT DERIVATIVE. */
 
-HOSTDEV static void add_grad1
+static void add_grad1
 ( net_param *restrict g,  /* Array of derivatives to add to */
   net_value const* d,     /* Derivatives with respect to unit values */
   int n			  /* Number of units */
@@ -1311,7 +1311,7 @@ HOSTDEV static void add_grad1
 
 /* ADD TO GRADIENT FROM UNIT DERIVATIVE, WITH CONFIGURATION. */
 
-HOSTDEV static void add_grad1_config
+static void add_grad1_config
 ( net_param *restrict g,  /* Array of derivatives to add to */
   net_value const* d,     /* Derivatives with respect to unit values */
   net_config const* cf    /* Configuration for biases */
@@ -1850,7 +1850,7 @@ do \
 
 #endif
 
-HOSTDEV static void add_grad2
+static void add_grad2
 ( net_param *restrict g,  /* Array of derivatives to add to */
   net_value const* v,     /* Source unit values */
   net_param const* off,   /* Offsets for source units, or zero if no offsets */
@@ -1894,7 +1894,7 @@ HOSTDEV static void add_grad2
 /* ADD TO GRADIENT FROM PRODUCT OF UNIT VALUE AND UNIT DERIVATIVE.  For
    when the connections are specified by a configuration file. */
 
-HOSTDEV static void add_grad2_config
+static void add_grad2_config
 ( net_param *restrict g,  /* Array of derivatives to add to */
   net_value const* s,     /* Source unit values */
   net_param const* off,   /* Offsets for source units, or zero if no offsets */
@@ -4249,7 +4249,7 @@ __device__ static void net_store4_grad2_config
    of energy with respect to hidden units, and with respect to input units,
    if input offsets are present. */
 
-HOSTDEV void net_back_add_grad
+void net_back_add_grad
 ( net_params *restrict g, /* Gradient with respect to parameters to add to */
   net_values const*v,	/* Values for units in network */
   net_values *restrict d,/* Has output derivatives, storage for other derivs */

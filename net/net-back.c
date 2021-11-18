@@ -42,9 +42,6 @@
    these derivatives only back to a certain layer.
 */
 
-#define sqrt_2 1.4142135623730950488
-
-
 
 /* ---------------------------- net_back ----------------------------------- */
 

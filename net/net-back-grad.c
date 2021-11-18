@@ -4238,10 +4238,21 @@ __device__ static void net_store4_grad2_config
 
 /* Combined backprop and gradient section. */
 
+
+/* -------------------------- net_back_add_grad ----------------------------- */
+
+
+/* FIND GRADIENT, USING BACKPROPAGATED DERIVATIVES.  Assumes that values
+   of hidden units for the training case have been computed (in v->h[.]),
+   and that the derivative of the energy with respect to the outputs has
+   been computed (in d->o).  Uses other parts of d to store derivatives 
+   of energy with respect to hidden units, and with respect to input units,
+   if input offsets are present. */
+
 HOSTDEV void net_back_add_grad
 ( net_params *restrict g, /* Gradient with respect to parameters to add to */
   net_values const*v,	/* Values for units in network */
-  net_values *restrict d,/* Storage for derivatives */
+  net_values *restrict d,/* Has output derivatives, storage for other derivs */
   net_arch const*a,	/* Network architecture */
   net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const*flgs,	/* Network flags, null if none */
@@ -4292,7 +4303,7 @@ HOSTDEV void net_back_add_grad
     }
   }
 
-  /* Start compution of derivatives with respect to input values, if
+  /* Start computation of derivatives with respect to input values, if
      they will be needed, with possible contribution from input-output
      connections. */
 
@@ -4318,9 +4329,12 @@ HOSTDEV void net_back_add_grad
   {
     int N_hidden = a->N_hidden[l];
 
-    /* Find derivatives with respect to output of units in this hidden layer. */
+    /* Place to store derivatives computed for this hidden layer. */
 
     net_value *restrict dh = d->h[l];
+
+    /* Find derivatives with respect to values of units in this hidden layer. */
+
     memset (dh, 0, N_hidden * sizeof *dh);
 
     if (a->has_ho[l])
@@ -4360,14 +4374,16 @@ HOSTDEV void net_back_add_grad
     }
 
     /* Add to gradient with respect to hidden offsets, based on derivatives
-       with respect to hidden unit outputs. */
+       with respect to hidden unit values (before these are converted to
+       derivatives with respect to the summed input, prior to the activation
+       function). */
 
     if (a->has_th[l])
     { add_grad1 (g->th[l], dh, N_hidden);
     }
 
     /* Pass backwards through activation function to get derivatives with 
-       respect to the inputs of units in this hidden layer. */
+       respect to the summed inputs of units in this hidden layer. */
 
     net_value const* vh = v->h[l];
 

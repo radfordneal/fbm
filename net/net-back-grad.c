@@ -4677,3 +4677,26 @@ void net_back_add_grad
   { add_grad1 (g->ti, d->i, a->N_inputs);
   }
 }
+
+
+/* ----------------------- net_back_add_grad_gpu ---------------------------- */
+
+#if __CUDACC__
+
+#undef CASES
+#define CASES 1
+#include "net-back-grad-gpu.c"
+
+#undef CASES
+#define CASES 2
+#include "net-back-grad-gpu.c"
+
+#undef CASES
+#define CASES 3
+#include "net-back-grad-gpu.c"
+
+#undef CASES
+#define CASES 4
+#include "net-back-grad-gpu.c"
+
+#endif

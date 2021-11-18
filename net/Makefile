@@ -59,6 +59,8 @@ net-back.o:	net-back.c	misc.h log.h prior.h model.h net.h data.h \
 				intrinsics-use.h sleef-use.h cuda-use.h
 net-grad.o:	net-grad.c	misc.h log.h prior.h model.h net.h data.h \
 				intrinsics-use.h cuda-use.h
+net-back-grad.o:	net-back-grad.c misc.h log.h prior.h model.h net.h \
+				data.h intrinsics-use.h cuda-use.h
 net-util.o:	net-util.c	misc.h log.h prior.h model.h net.h data.h \
 				cuda-use.h
 net-config.o:	net-config.c	misc.h log.h prior.h model.h net.h data.h \
@@ -243,7 +245,7 @@ net-his:	mc-his.o net-mc.o ars.o misc.o log.o rand.o data-trans.o \
 
 net-mc.o:	net-mc.c	misc.h rand.h log.h mc.h data.h prior.h \
 				model.h net.h net-data.h net-mc.h cuda-use.h \
-				net-func.c net-model.c net-back.c net-grad.c
+				net-func.c net-model.c net-back-grad.c
 
 net-gd:		net-gd.o	net-setup.o net-data.o \
 				net-prior.o net-util.o \
@@ -323,7 +325,7 @@ net-mc-gpu:	mc.o net-mc-gpu.o \
 
 net-mc-gpu.o:	net-mc.c misc.h rand.h log.h mc.h data.h prior.h \
 		  model.h net.h net-data.h cuda-use.h \
-                  net-func.c net-model.c net-back.c net-grad.c
+                  net-func.c net-model.c net-back-grad.c
 		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
 		  net-mc.c -o net-mc-gpu.o
 
@@ -379,6 +381,11 @@ net-grad-gpu.o:	net-grad.c misc.h prior.h model.h net.h data.h \
 			   intrinsics-use.h cuda-use.h
 		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
 		  net-grad.c -o net-grad-gpu.o
+
+net-back-grad-gpu.o:	net-back-grad.c misc.h prior.h model.h net.h data.h \
+			   intrinsics-use.h cuda-use.h
+		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
+		  net-back-grad.c -o net-grad-gpu.o
 
 net-util-gpu.o:	net-util.c misc.h prior.h model.h net.h data.h \
 			   cuda-use.h

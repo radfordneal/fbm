@@ -45,8 +45,7 @@
 
 #include "net-func.c"
 #include "net-model.c"
-#include "net-back.c"
-#include "net-grad.c"
+#include "net-back-grad.c"
 
 
 #if __CUDACC__
@@ -2051,10 +2050,8 @@ void net_training_cases
             { deriv->o[k] *= gr_weight;
             }
           }
-          net_back (&train_values[i], deriv, arch->has_ti ? -1 : 0,
-                    arch, &pre, flgs, &params);
-          net_add_grad (grd, &params, &train_values[i], deriv, arch, &pre,
-                        flgs, sparse);
+          net_back_add_grad (grd, &train_values[i], deriv, arch, &pre,
+                        flgs, &params, sparse);
         }
     
         if (ot<=t1) break;
@@ -2108,12 +2105,8 @@ void net_training_cases
           { deriv->o[k] *= gr_weight;
           }
         }
-
-        net_back (train_vals_i, deriv, arch->has_ti ? -1 : 0,
-                  arch, &pre, flgs, &params);
-
-        net_add_grad (grd, &params, train_vals_i, deriv, arch, &pre,
-                      flgs, sparse);
+        net_back_add_grad (grd, train_vals_i, deriv, arch, &pre,
+                           flgs, &params, sparse);
       }
     }
 

@@ -450,8 +450,8 @@ void mc_app_initialize
           cuda_prop.ECCEnabled ? " ECC" : "");
 
         printf (
-"Specified %d cases per block, max %d blocks per launch, threads/case: %d,%d\n",
-          blkcases, maxblks, THREADS_PER_CASE, GRAD_THREADS_PER_CASE);
+"Specified %d cases per block, max %d blocks per launch, threads/case: %d\n",
+          blkcases, maxblks, THREADS_PER_CASE);
 
         printf (
 "Shared mem/blk: %d, Shared mem/SM: %d, Blks/SM: %d -> %d bytes/case\n",
@@ -2296,13 +2296,13 @@ void cuda_setup
 
 #define KDEBUG 0        /* Set to 1 to enable debug output below */
 
-#define KERNEL_PRELUDE(thrds) \
+#define KERNEL_PRELUDE \
   net_flags *flgs = const_has_flgs ? &const_flgs : 0; \
-  int m = threadIdx.x / (thrds); \
+  int m = threadIdx.x / NTH; \
   int i = blockIdx.x*const_blkcases + m; \
   int h = start + i; \
   net_values *train_vals_h = const_train_values+h; \
-  int th = threadIdx.x & ((thrds)-1); \
+  int th = threadIdx.x & (NTH-1); \
   if (h >= end) th = -1;
 
 
@@ -2341,7 +2341,7 @@ __global__ void forward_kernel
 #endif
 
 { 
-  KERNEL_PRELUDE(THREADS_PER_CASE)
+  KERNEL_PRELUDE
 
   if (KDEBUG) 
   { printf("Forward computation: block %d, thread %d, start %d, end %d\n",
@@ -2365,7 +2365,7 @@ __global__ void energy_kernel
   double gr_weight	/* Weight for these cases for gradient */
 )
 {
-  KERNEL_PRELUDE(THREADS_PER_CASE)
+  KERNEL_PRELUDE
 
 #else
 
@@ -2459,7 +2459,7 @@ __global__ void backward_kernel
   int end		/* End of cases to look at (index after last case) */
 )
 {
-  KERNEL_PRELUDE(THREADS_PER_CASE)
+  KERNEL_PRELUDE
 
   net_values *deriv_i = const_deriv+i;
 
@@ -2495,7 +2495,7 @@ __global__ void gradient_comp_kernel
   int end		/* End of cases to look at (index after last case) */
 )
 { 
-  KERNEL_PRELUDE(GRAD_THREADS_PER_CASE)
+  KERNEL_PRELUDE
 
   net_values *deriv_i = const_deriv+i;
 
@@ -2509,7 +2509,7 @@ __global__ void gradient_kernel
   int end		/* End of cases to look at (index after last case) */
 )
 { 
-  KERNEL_PRELUDE(GRAD_THREADS_PER_CASE)
+  KERNEL_PRELUDE
 
   net_values *deriv_i = const_deriv+i;
 
@@ -2530,7 +2530,7 @@ __global__ void gradient_kernel
   int o = blockIdx.x * ((const_blkcases+GROUP_MASK)>>GROUP_SHIFT) 
             + (m>>GROUP_SHIFT);
 
-  th = threadIdx.x & (GROUP_SIZE*GRAD_THREADS_PER_CASE - 1);
+  th = threadIdx.x & (GTH - 1);
 
   net_params *restrict ggrad;
 
@@ -2594,7 +2594,7 @@ __global__ void gradient_reduction_kernel
   int end               /* End of cases to look at (index after last case) */
 )
 {
-  KERNEL_PRELUDE(GRAD_THREADS_PER_CASE)
+  KERNEL_PRELUDE
 
 #endif
 
@@ -2630,18 +2630,14 @@ __global__ void gradient_reduction_kernel
 
   for (stride = 1; stride < n_results; stride <<= 1)
   { 
-    __syncthreads();  /* all __syncthreads calls must be done by all threads! */
+    __syncthreads();
 
-    if (threadIdx.x >= const_blkcases*GRAD_THREADS_PER_CASE)
-    { continue;
-    }
-
-    base = (threadIdx.x / (GROUP_SIZE*GRAD_THREADS_PER_CASE)) & ~(2*stride-1);
-    base_worker = base * (GROUP_SIZE*GRAD_THREADS_PER_CASE);
+    base = (threadIdx.x / GTH) & ~(2*stride-1);
+    base_worker = base * GTH;
     this_worker = threadIdx.x - base_worker;
-    workers = 2*GROUP_SIZE*GRAD_THREADS_PER_CASE*stride;
-    if (base_worker+workers >= const_blkcases*GRAD_THREADS_PER_CASE)
-    { workers = const_blkcases*GRAD_THREADS_PER_CASE - base_worker;
+    workers = 2*GTH*stride;
+    if (base_worker+workers >= const_blkcases*NTH)
+    { workers = const_blkcases*NTH - base_worker;
     }
 
     if (base+stride < n_results)
@@ -2710,36 +2706,37 @@ static void net_training_cases_gpu
       check_cuda_error (cudaGetLastError(), "Before launching kernel(s)");
 
       int shared_mem = blkcases * pre.memused * sizeof(net_value);
+      int threads = blkcases*THREADS_PER_CASE;
 
 #     if SPLIT_KERNELS==0
-      { training_kernel <<<blks, blkcases*THREADS_PER_CASE, shared_mem>>>
+      { training_kernel <<<blks, threads, shared_mem>>>
           (energy ? case_energy : 0, gr ? group_grad : 0,
            i, i+cases, en_weight, gr_weight);
         if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching training_kernel");
       }
 #     elif SPLIT_KERNELS==1
-      { forward_kernel <<<blks, blkcases*THREADS_PER_CASE, shared_mem>>>
+      { forward_kernel <<<blks, threads, shared_mem>>>
           (i, i+cases);
         if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching forward_kernel");
-        energy_kernel <<<blks, blkcases*THREADS_PER_CASE, shared_mem>>> 
+        energy_kernel <<<blks, threads, shared_mem>>> 
           (energy ? case_energy : 0, i, i+cases, en_weight, gr!=0, gr_weight);
         if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching energy_kernel");
         if (gr)
-        { backward_kernel <<<blks, blkcases*THREADS_PER_CASE, shared_mem>>>
+        { backward_kernel <<<blks, threads, shared_mem>>>
             (i, i+cases);
           if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching backward_kernel");
           gradient_comp_kernel 
-            <<<blks, blkcases*GRAD_THREADS_PER_CASE, shared_mem>>>
+            <<<blks, threads, shared_mem>>>
             (group_grad, i, i+cases);
           if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching gradient_comp_kernel");
           if (blkcases>GROUP_SIZE)
           { gradient_reduction_kernel 
-              <<<blks, blkcases*GRAD_THREADS_PER_CASE, shared_mem>>>
+              <<<blks, threads, shared_mem>>>
               (group_grad, i, i+cases);
             if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                      "Synchronizing after launching gradient_reduction_kernel");
@@ -2747,14 +2744,14 @@ static void net_training_cases_gpu
         }
       }
 #     else /* SPLIT_KERNELS is 2 */
-      { nongrad_kernel <<<blks, blkcases*THREADS_PER_CASE, shared_mem>>>
+      { nongrad_kernel <<<blks, threads, shared_mem>>>
           (energy ? case_energy : 0, gr ? group_grad : 0,
            i, i+cases, en_weight, gr_weight);
         if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching nongrad_kernel");
         if (gr)
         { gradient_kernel 
-            <<<blks, blkcases*GRAD_THREADS_PER_CASE, shared_mem>>> 
+            <<<blks, threads, shared_mem>>> 
             (group_grad, i, i+cases);
           if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching gradient_kernel");

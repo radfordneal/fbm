@@ -36,7 +36,6 @@
 
 
 /* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
 
 
 /* SUM UP CONTRIBUTIONS TO THE DERIVATIVES FROM ONE GROUP OF CONNECTIONS.  Adds 
@@ -536,14 +535,11 @@ HOSTDEV static void sum_derivatives_config
   }
 }
 
-
-/* -------------------------- net_back_gpu --------------------------------- */
-
 #if __CUDACC__
 
-/* SUM UP CONTRIBUTIONS TO THE DERIVATIVES FROM ONE GROUP OF CONNECTIONS.  Adds 
-   the weighted sum of derivatives due to connections from source units to 
-   a given destination layer to the totals for the source layer. */
+/* SUM CONTRIBUTIONS TO THE DERIVATIVES FROM ONE GROUP OF CONNECTIONS, IN GPU.
+   Adds the weighted sum of derivatives due to connections from source
+   units to a given destination layer to the totals for the source layer. */
 
 __device__ static void sum_derivatives_gpu
 ( int th,		  /* Which thread */
@@ -615,7 +611,7 @@ __device__ static void sum_derivatives_gpu
 }
 
 
-/* SUM UP CONTRIBUTIONS TO THE DERIVATIVES FROM CONNECTIONS WITH CONFIGURATION.
+/* SUM CONTRIBUTIONS TO DERIVATIVES FROM CONNECTIONS WITH CONFIGURATION, IN GPU.
    Adds the weighted sum of derivatives due to connections from source units to
    a given destination layer to the totals for the source layer. */
 
@@ -654,23 +650,6 @@ __device__ static void sum_derivatives_config_gpu
 
 
 /* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-
-
-/* This secton finds the derivatives of the "error" on the training set
-   with respect to the network parameters, using the backpropagated 
-   derivatives of the error for each training case with respect to the
-   unit values. 
-
-   A version that adds derivatives from a training case to an existing 
-   derivative structure is accessible to both CPU and GPU.  Versions that 
-   store a derivative from one training case or the sum of 2, 3, or 4 
-   derivatives from 2, 3, or 4 training cases to a derivative structure
-   are accessible to the GPU.
-*/
-
-
-/* ---------------------------- add_grad ------------------------------------ */
 
 
 /* ADD TO GRADIENT FROM UNIT DERIVATIVE. */
@@ -1270,8 +1249,8 @@ static void add_grad2
 }
 
 
-/* ADD TO GRADIENT FROM PRODUCT OF UNIT VALUE AND UNIT DERIVATIVE.  For
-   when the connections are specified by a configuration file. */
+/* ADD TO GRADIENT FROM PRODUCT OF UNIT VALUE AND UNIT DERIVATIVE, WITH CONFIG.
+   For when the connections are specified by a configuration file. */
 
 static void add_grad2_config
 ( net_param *restrict g,  /* Array of derivatives to add to */
@@ -1559,12 +1538,9 @@ static void add_grad2_config
   }
 }
 
-
-/* --------------------------- store1_grad ---------------------------------- */
-
 #if __CUDACC__ 
 
-/* STORE GRADIENT FOR BIASES FOR CASE.  The thread mod scheme is
+/* STORE GRADIENT FOR BIASES FOR 1 CASE.  The thread mod scheme is
    based on indexes for the biases/destination units. */
 
 __device__ static void net_store1_grad1
@@ -1581,7 +1557,7 @@ __device__ static void net_store1_grad1
 }
 
 
-/* STORE GRADIENT FOR BIASES FOR CASE, WITH CONFIGURATION.  The
+/* STORE GRADIENT FOR BIASES FOR 1 CASE, WITH CONFIGURATION.  The
    thread mod scheme is based on indexes for the biases.  Note that
    the connections in quad_s_4d_4w_wgpu, other_wgpu, and other_2_wgpu
    come in GTH sections. */
@@ -1642,7 +1618,7 @@ __device__ static void net_store1_grad1_config
 }
 
 
-/* STORE GRADIENT FOR WEIGHTS FOR CASE.  The thread mod scheme is
+/* STORE GRADIENT FOR WEIGHTS FOR 1 CASE.  The thread mod scheme is
    based on the indexes for the destination units, unless there is
    only one destination unit, in which case it is based on the indexes
    for the source units. */
@@ -1742,7 +1718,7 @@ __device__ static void net_store1_grad2
 }
 
 
-/* STORE GRADIENT FOR WEIGHTS FOR 2 CASES, WITH CONFIGURATION.  The
+/* STORE GRADIENT FOR WEIGHTS FOR 1 CASE, WITH CONFIGURATION.  The
    thread mod scheme is based on the indexes for the weights.  Note
    that the connections in quad_s_4d_4w_wgpu, other_wgpu, and
    other_2_wgpu come in GTH sections. */
@@ -1869,8 +1845,6 @@ __device__ static void net_store1_grad2_config
 
 #endif
 
-
-/* --------------------------- store2_grad ---------------------------------- */
 
 #if __CUDACC__
 
@@ -2203,11 +2177,7 @@ __device__ static void net_store2_grad2_config
 
 #endif
 
-
-/* --------------------------- store3_grad ---------------------------------- */
-
 #if __CUDACC__
-
 
 /* STORE GRADIENT FOR BIASES FOR 3 CASES.  The thread mod scheme is
    based on indexes for the biases/destination units. */
@@ -2557,11 +2527,7 @@ __device__ static void net_store3_grad2_config
 
 #endif
 
-
-/* --------------------------- store4_grad ---------------------------------- */
-
 #if __CUDACC__
-
 
 /* STORE GRADIENT FOR BIASES FOR 4 CASES.  The thread mod scheme is
    based on indexes for the biases/destination units. */
@@ -2933,13 +2899,6 @@ __device__ static void net_store4_grad2_config
 
 
 /* -------------------------------------------------------------------------- */
-/* -------------------------------------------------------------------------- */
-
-
-/* Combined backprop and gradient section. */
-
-
-/* -------------------------- net_back_add_grad ----------------------------- */
 
 
 /* FIND GRADIENT, USING BACKPROPAGATED DERIVATIVES.  Assumes that values
@@ -3378,10 +3337,15 @@ void net_back_add_grad
   }
 }
 
-
-/* ----------------------- net_back_add_grad_gpu ---------------------------- */
-
 #if __CUDACC__
+
+/* FIND GRADIENT, USING BACKPROPAGATED DERIVATIVES, GPU VERSION.
+   Assumes that values of hidden units for the training case have been
+   computed (in v->h[.]), and that the derivative of the energy with
+   respect to the outputs has been computed (in d->o).  Uses other
+   parts of d to store derivatives of energy with respect to hidden
+   units, and with respect to input units, if input offsets are
+   present. */
 
 __device__ static void store_grad1
 ( int th,                 /* Which thread (0 to GTH-1) */
@@ -3504,14 +3468,6 @@ __device__ static void store_grad2_config
      (th, g, v0, off, d0, cf);
   }
 }
-
-/* FIND GRADIENT, USING BACKPROPAGATED DERIVATIVES, GPU VERSION.
-   Assumes that values of hidden units for the training case have been
-   computed (in v->h[.]), and that the derivative of the energy with
-   respect to the outputs has been computed (in d->o).  Uses other
-   parts of d to store derivatives of energy with respect to hidden
-   units, and with respect to input units, if input offsets are
-   present. */
 
 __device__ void net_back_grad_gpu
 ( int thrg,		/* Which thread, from 0 to GTH-1 */

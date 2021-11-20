@@ -55,8 +55,6 @@ include ../mc/mc.make
 
 net-func.o:	net-func.c	misc.h log.h prior.h model.h net.h data.h \
 				intrinsics-use.h sleef-use.h cuda-use.h
-net-grad.o:	net-grad.c	misc.h log.h prior.h model.h net.h data.h \
-				intrinsics-use.h cuda-use.h
 net-back-grad.o:	net-back-grad.c misc.h log.h prior.h model.h net.h \
 				data.h intrinsics-use.h cuda-use.h
 net-util.o:	net-util.c	misc.h log.h prior.h model.h net.h data.h \
@@ -369,11 +367,6 @@ net-func-gpu.o:	net-func.c misc.h prior.h model.h net.h data.h \
 			   intrinsics-use.h sleef-use.h cuda-use.h
 		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
 		  net-func.c -o net-func-gpu.o
-
-net-grad-gpu.o:	net-grad.c misc.h prior.h model.h net.h data.h \
-			   intrinsics-use.h cuda-use.h
-		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
-		  net-grad.c -o net-grad-gpu.o
 
 net-util-gpu.o:	net-util.c misc.h prior.h model.h net.h data.h \
 			   cuda-use.h

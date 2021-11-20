@@ -39,14 +39,6 @@
 /* -------------------------------------------------------------------------- */
 
 
-HOSTDEV static void sum_derivatives (net_value const*, int, net_value *restrict,
-                                     int, net_param const*, 
-                                     unsigned short const*, int);
-HOSTDEV static void sum_derivatives_config(net_value const*, 
-                                           net_value *restrict,
-                                           net_param const*, net_config const*);
-
-
 /* SUM UP CONTRIBUTIONS TO THE DERIVATIVES FROM ONE GROUP OF CONNECTIONS.  Adds 
    the weighted sum of derivatives due to connections from source units to 
    a given destination layer to the totals for the source layer. */
@@ -549,15 +541,6 @@ HOSTDEV static void sum_derivatives_config
 
 #if __CUDACC__
 
-__device__ static void sum_derivatives_gpu 
-    (int, net_value const*, int, net_value *restrict, 
-     int, net_param const*, unsigned short const*, int);
-
-__device__ static void sum_derivatives_config_gpu
-    (int, net_value const*, net_value *restrict,
-     net_param const*, net_config const*);
-
-
 /* SUM UP CONTRIBUTIONS TO THE DERIVATIVES FROM ONE GROUP OF CONNECTIONS.  Adds 
    the weighted sum of derivatives due to connections from source units to 
    a given destination layer to the totals for the source layer. */
@@ -688,16 +671,6 @@ __device__ static void sum_derivatives_config_gpu
 
 
 /* ---------------------------- add_grad ------------------------------------ */
-
-static void add_grad1 (net_param *restrict, net_value const*, int);
-static void add_grad1_config (net_param *restrict, net_value const*,
-                              net_config const*);
-static void add_grad2 (net_param *restrict, net_value const*, 
-                       net_param const*, int, net_value const*, int,
-                       unsigned short const*, int, int);
-static void add_grad2_config (net_param *restrict, net_value const*, 
-                              net_param const*, net_value const*,
-                              net_config const*);
 
 
 /* ADD TO GRADIENT FROM UNIT DERIVATIVE. */
@@ -1591,21 +1564,6 @@ static void add_grad2_config
 
 #if __CUDACC__ 
 
-__device__ static void net_store1_grad1 
-        (int, net_param *restrict, net_value const*, int);
-__device__ static void net_store1_grad1_config 
-        (int, net_param *restrict, net_value const*,
-         net_config const*);
-__device__ static void net_store1_grad2 
-        (int, net_param *restrict,  net_value const*, 
-         net_param const*, int, net_value const*, int,
-         unsigned short const*, int, int);
-__device__ static void net_store1_grad2_config 
-        (int, net_param *restrict, net_value const*,
-         net_param const*, net_value const*,
-         net_config const*);
-
-
 /* STORE GRADIENT FOR BIASES FOR CASE.  The thread mod scheme is
    based on indexes for the biases/destination units. */
 
@@ -1915,21 +1873,6 @@ __device__ static void net_store1_grad2_config
 /* --------------------------- store2_grad ---------------------------------- */
 
 #if __CUDACC__
-
-__device__ static void net_store2_grad1 
-        (int, net_param *restrict, net_value const*, net_value const*, int);
-__device__ static void net_store2_grad1_config 
-        (int, net_param *restrict, net_value const*, net_value const*,
-         net_config const*);
-__device__ static void net_store2_grad2 
-        (int, net_param *restrict, net_value const*,  net_value const*, 
-         net_param const*, int, net_value const*, net_value const*, int,
-         unsigned short const*, int, int);
-__device__ static void net_store2_grad2_config 
-        (int, net_param *restrict, net_value const*, net_value const*,
-         net_param const*, net_value const*, net_value const*,
-         net_config const*);
-
 
 /* STORE GRADIENT FOR BIASES FOR 2 CASES.  The thread mod scheme is
    based on indexes for the biases/destination units. */
@@ -2264,19 +2207,6 @@ __device__ static void net_store2_grad2_config
 /* --------------------------- store3_grad ---------------------------------- */
 
 #if __CUDACC__
-
-__device__ static void net_store3_grad1 (int, net_param *restrict, 
-   net_value const*, net_value const*, net_value const*, int);
-__device__ static void net_store3_grad1_config (int, net_param *restrict, 
-   net_value const*, net_value const*, net_value const*, net_config const*);
-__device__ static void net_store3_grad2 (int, net_param *restrict, 
-   net_value const*, net_value const*, net_value const*, net_param const*, int,
-   net_value const*, net_value const*, net_value const*, 
-   int, unsigned short const*, int, int);
-__device__ static void net_store3_grad2_config (int, net_param *restrict, 
-   net_value const*, net_value const*, net_value const*, net_param const*,
-   net_value const*, net_value const*, net_value const*, net_config const*);
-
 
 
 /* STORE GRADIENT FOR BIASES FOR 3 CASES.  The thread mod scheme is
@@ -2631,21 +2561,6 @@ __device__ static void net_store3_grad2_config
 /* --------------------------- store4_grad ---------------------------------- */
 
 #if __CUDACC__
-
-__device__ static void net_store4_grad1 (int, net_param *restrict, 
-   net_value const*, net_value const*, net_value const*, net_value const*,
-   int);
-__device__ static void net_store4_grad1_config (int, net_param *restrict, 
-   net_value const*, net_value const*, net_value const*, net_value const*,
-   net_config const*);
-__device__ static void net_store4_grad2 (int, net_param *restrict, 
-   net_value const*, net_value const*, net_value const*, net_value const*,
-   net_param const*, int, net_value const*, net_value const*, net_value const*,
-   net_value const*, int, unsigned short const*, int, int);
-__device__ static void net_store4_grad2_config (int, net_param *restrict, 
-   net_value const*, net_value const*, net_value const*, net_value const*,
-   net_param const*, net_value const*, net_value const*, net_value const*, 
-   net_value const*, net_config const*);
 
 
 /* STORE GRADIENT FOR BIASES FOR 4 CASES.  The thread mod scheme is

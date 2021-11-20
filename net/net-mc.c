@@ -533,6 +533,16 @@ void mc_app_initialize
         { pre.bwgpumem[l] = -1;
         }
       }
+
+      if (show_info)
+      { printf("Hid layer shrd mem:");
+        for (l = 0; l<arch->N_layers; l++)
+        { printf (" %d:%d:%s", l, arch->N_hidden[l],
+            pre.fwgpumem[l]>=0 && pre.bwgpumem[l]>=0 ? "FB"
+             : pre.fwgpumem[l]>=0 ? "F" : pre.bwgpumem[l]>=0 ? "B" : "-");
+        }
+        printf("\n");
+      }
     }
 #   endif
 

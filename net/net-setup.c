@@ -102,8 +102,8 @@ unsigned net_setup_sigma_count
    Also reads any weight/bias configuration files, and fills in the
    configuration pointers in the net_arch structure.
 
-   Furthermore, if the 'pre' pointer is non-null, it precomputes the
-   information stored there.  */
+   Furthermore, if the 'pre' pointer is non-null, it precomputes 
+   (some of) the information stored there.  */
 
 unsigned net_setup_param_count
 ( net_arch *a,		/* Network architecture */

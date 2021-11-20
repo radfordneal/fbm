@@ -2413,6 +2413,7 @@ __global__ void energy_kernel
 }
 __global__ void backward_gradient_kernel
 (
+  net_params *group_grad, /* Places to store gradient, null if not required */
   int start,		/* Start of cases to look at */
   int end		/* End of cases to look at (index after last case) */
 )

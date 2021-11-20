@@ -85,7 +85,7 @@
    separate kernels (useful for profiling how long they take), or all
    done as one kernel (minimizing launch overhead). */
 
-#define SPLIT_KERNELS 0   /* 0 = one kernel for all four parts
+#define SPLIT_KERNELS 1   /* 0 = one kernel for all four parts
                              1 = four kernels for the four parts */
 
 
@@ -433,29 +433,33 @@ extern __shared__ net_value sharedvalues[];
 __device__ static inline net_value *fw_hidden_loc 
   (net_precomputed const*pre, net_values const*v, int l)
 { int t;
-  return !USE_FAST_SHARED_MEM || (t = pre->fwgpumem[l]) < 0 ? v->h[l] 
-             : sharedvalues + (threadIdx.x/NTH) * pre->memused + t;
+  return !USE_FAST_SHARED_MEM || SPLIT_KERNELS || (t = pre->fwgpumem[l]) < 0 
+           ? v->h[l]
+           : sharedvalues + (threadIdx.x/NTH) * pre->memused + t;
 }
 
 __device__ static inline net_value *bw_hidden_loc 
   (net_precomputed const*pre, net_values const*v, int l)
 { int t;
-  return !USE_FAST_SHARED_MEM || (t = pre->bwgpumem[l]) < 0 ? v->h[l] 
-             : sharedvalues + (threadIdx.x/NTH) * pre->memused + t;
+  return !USE_FAST_SHARED_MEM || SPLIT_KERNELS || (t = pre->bwgpumem[l]) < 0
+           ? v->h[l]
+           : sharedvalues + (threadIdx.x/NTH) * pre->memused + t;
 }
 
 __device__ static inline net_value *fw_hidden_loc_grad 
   (net_precomputed const*pre, net_values const*v, int l, int w)
 { int t;
-  return !USE_FAST_SHARED_MEM || (t = pre->fwgpumem[l]) < 0 ? (v+w)->h[l]
-             : sharedvalues + (w+(threadIdx.x/GTH)*GROUP_SIZE)*pre->memused + t;
+  return !USE_FAST_SHARED_MEM || SPLIT_KERNELS || (t = pre->fwgpumem[l]) < 0 
+           ? (v+w)->h[l] 
+           : sharedvalues + (w+(threadIdx.x/GTH)*GROUP_SIZE)*pre->memused + t;
 }
 
 __device__ static inline net_value *bw_hidden_loc_grad 
   (net_precomputed const*pre, net_values const*v, int l, int w)
 { int t;
-  return !USE_FAST_SHARED_MEM || (t = pre->bwgpumem[l]) < 0 ? (v+w)->h[l] 
-             : sharedvalues + (w+(threadIdx.x/GTH)*GROUP_SIZE)*pre->memused + t;
+  return !USE_FAST_SHARED_MEM || SPLIT_KERNELS || (t = pre->bwgpumem[l]) < 0 
+           ? (v+w)->h[l] 
+           : sharedvalues + (w+(threadIdx.x/GTH)*GROUP_SIZE)*pre->memused + t;
 }
 
 #endif

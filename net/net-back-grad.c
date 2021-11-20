@@ -4683,20 +4683,464 @@ void net_back_add_grad
 
 #if __CUDACC__
 
-#undef CASES
-#define CASES 1
-#include "net-back-grad-gpu.c"
+__device__ static void store_grad1
+( int th,                 /* Which thread (0 to GTH-1) */
+  int gsz,                /* Number of cases in this group (<= GROUP_SIZE) */
+  net_param *restrict g,  /* Array of derivatives to store to */
+  net_value const* d0,    /* Derivatives with respect to unit values, case 0 */
+  net_value const* d1,    /* Derivatives with respect to unit values, case 1 */
+  net_value const* d2,    /* Derivatives with respect to unit values, case 2 */
+  net_value const* d3,    /* Derivatives with respect to unit values, case 3 */
+  int n                   /* Number of units */
+)
+{
+  if (gsz==4)
+  { net_store4_grad1 (th, g, d0, d1, d2, d3, n);
+  }
+  else if (gsz==3)
+  { net_store3_grad1 (th, g, d0, d1, d2, n);
+  }
+  else if (gsz==2)
+  { net_store2_grad1 (th, g, d0, d1, n);
+  }
+  else if (gsz==1)
+  { net_store1_grad1 (th, g, d0, n);
+  }
+}
 
-#undef CASES
-#define CASES 2
-#include "net-back-grad-gpu.c"
+__device__ static void store_grad1_config
+( int th,                 /* Which thread (0 to GTH-1) */
+  int gsz,                /* Number of cases in this group (<= GROUP_SIZE) */
+  net_param *restrict g,  /* Array of derivatives to store to */
+  net_value const* d0,    /* Derivatives with respect to unit values, case 0 */
+  net_value const* d1,    /* Derivatives with respect to unit values, case 1 */
+  net_value const* d2,    /* Derivatives with respect to unit values, case 2 */
+  net_value const* d3,    /* Derivatives with respect to unit values, case 3 */
+  net_config const* cf    /* Configuration for biases */
+)
+{
+  if (gsz==4)
+  { net_store4_grad1_config (th, g, d0, d1, d2, d3, cf);
+  }
+  else if (gsz==3)
+  { net_store3_grad1_config (th, g, d0, d1, d2, cf);
+  }
+  else if (gsz==2)
+  { net_store2_grad1_config (th, g, d0, d1, cf);
+  }
+  else if (gsz==1)
+  { net_store1_grad1_config (th, g, d0, cf);
+  }
+}
 
-#undef CASES
-#define CASES 3
-#include "net-back-grad-gpu.c"
+__device__ static void store_grad2
+( int th,                 /* Which thread (0 to GTH-1) */
+  int gsz,                /* Number of cases in this group (<= GROUP_SIZE) */
+  net_param *restrict g,  /* Array of derivatives to store to */
+  net_value const* v0,    /* Source unit values, case 0 */
+  net_value const* v1,    /* Source unit values, case 1 */
+  net_value const* v2,    /* Source unit values, case 2 */
+  net_value const* v3,    /* Source unit values, case 3 */
+  net_param const* off,   /* Offsets for source units, or zero if no offsets */
+  int nv,                 /* Number of source units */
+  net_value const* d0,    /* Derivatives with respect to destination units, 0 */
+  net_value const* d1,    /* Derivatives with respect to destination units, 1 */
+  net_value const* d2,    /* Derivatives with respect to destination units, 2 */
+  net_value const* d3,    /* Derivatives with respect to destination units, 3 */
+  int nd,                 /* Number of destination units */
+  unsigned short const* omit, /* Omit flags, null if not present */
+  int ob,                 /* Bit to look at in omit flags (mask, not number) */
+  int sparse              /* Might source unit values often be zero? */
+)
+{
+  if (gsz==4)
+  { net_store4_grad2 
+     (th, g, v0, v1, v2, v3, off, nv, d0, d1, d2, d3, nd, omit, ob, sparse);
+  }
+  else if (gsz==3)
+  { net_store3_grad2
+     (th, g, v0, v1, v2, off, nv, d0, d1, d2, nd, omit, ob, sparse);
+  }
+  else if (gsz==2)
+  { net_store2_grad2
+     (th, g, v0, v1, off, nv, d0, d1, nd, omit, ob, sparse);
+  }
+  else if (gsz==1)
+  { net_store1_grad2
+     (th, g, v0, off, nv, d0, nd, omit, ob, sparse);
+  }
+}
 
-#undef CASES
-#define CASES 4
-#include "net-back-grad-gpu.c"
+__device__ static void store_grad2_config
+( int th,                 /* Which thread (0 to GTH-1) */
+  int gsz,                /* Number of cases in this group (<= GROUP_SIZE) */
+  net_param *restrict g,  /* Array of derivatives to add to */
+  net_value const* v0,    /* Source unit values, case 0 */
+  net_value const* v1,    /* Source unit values, case 1 */
+  net_value const* v2,    /* Source unit values, case 2 */
+  net_value const* v3,    /* Source unit values, case 3 */
+  net_param const* off,   /* Offsets for source units, or zero if no offsets */
+  net_value const* d0,    /* Derivatives with respect to destination units, 0 */
+  net_value const* d1,    /* Derivatives with respect to destination units, 1 */
+  net_value const* d2,    /* Derivatives with respect to destination units, 2 */
+  net_value const* d3,    /* Derivatives with respect to destination units, 3 */
+  net_config const* cf    /* Configuration for connections and weights */
+)
+{
+  if (gsz==4)
+  { net_store4_grad2_config
+     (th, g, v0, v1, v2, v3, off, d0, d1, d2, d3, cf);
+  }
+  else if (gsz==3)
+  { net_store3_grad2_config
+     (th, g, v0, v1, v2, off, d0, d1, d2, cf);
+  }
+  else if (gsz==2)
+  { net_store2_grad2_config
+     (th, g, v0, v1, off, d0, d1, cf);
+  }
+  else if (gsz==1)
+  { net_store1_grad2_config
+     (th, g, v0, off, d0, cf);
+  }
+}
+
+/* FIND GRADIENT, USING BACKPROPAGATED DERIVATIVES, GPU VERSION.
+   Assumes that values of hidden units for the training case have been
+   computed (in v->h[.]), and that the derivative of the energy with
+   respect to the outputs has been computed (in d->o).  Uses other
+   parts of d to store derivatives of energy with respect to hidden
+   units, and with respect to input units, if input offsets are
+   present. */
+
+__device__ void net_back_grad_gpu
+( int thrg,		/* Which thread, from 0 to GTH-1 */
+  int gsz,		/* Size of gradient group (maybe < GROUP_SIZE at end) */
+  net_params *restrict g, /* Gradient with respect to parameters to add to */
+  net_values const*v0,	/* Values for units in network, first training case */
+  net_values *restrict d0, /* Place for derivatives, first training case */
+  net_arch const*a,	/* Network architecture */
+  net_precomputed const* pre,  /* Precomputed aspects of architecture */
+  net_flags const*flgs,	/* Network flags, null if none */
+  net_params const*w,	/* Network parameters */
+  int sparse            /* Might source unit values often be zero? */
+)
+{
+  int l, ld, ls, nsqi, i;
+  const net_values *d1 = d0+1, *d2 = d1+1, *d3 = d2+1;
+  const net_values *v1 = v0+1, *v2 = v1+1, *v3 = v2+1;
+
+  /* Add parts of gradients that don't depend on computing derivatives
+     with respect to hidden or input unit values - only on inputs and hidden
+     unit values, and on derivatives with respect to outputs, */
+
+  if (a->has_bo)
+  { if (a->bias_config[a->N_layers])
+    { store_grad1_config (thrg, gsz, g->bo, d0->o, d1->o, d2->o, d3->o,
+                          a->bias_config[a->N_layers]);
+    }
+    else
+    { store_grad1 (thrg, gsz, g->bo, d0->o, d1->o, d2->o, d3->o, a->N_outputs);
+    }
+  }
+
+  if (a->has_io)
+  { if (a->input_config[a->N_layers])
+    { store_grad2_config (thrg, gsz, g->io, 
+                          v0->i, v1->i, v2->i, v3->i, 
+                          a->has_ti ? w->ti : 0, 
+                          d0->o, d1->o, d2->o, d3->o,
+                          a->input_config[a->N_layers]);
+    }
+    else
+    { store_grad2 (thrg, gsz, g->io, 
+                   v0->i, v1->i, v2->i, v3->i, 
+                   a->has_ti ? w->ti : 0, a->N_inputs,
+                   d0->o, d1->o, d2->o, d3->o, a->N_outputs,
+                   flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
+                   sparse);
+    }
+  }
+
+  for (l = 0; l<a->N_layers; l++)
+  {
+    if (a->has_ho[l])
+    { int k = 2*a->N_layers-1-l;
+      if (a->hidden_config[k])
+      { store_grad2_config (thrg, gsz, g->ho[l], 
+                            v0->h[l], v1->h[l], v2->h[l], v3->h[l], 
+                            a->has_th[l] ? w->th[l] : 0,
+                            d0->o, d1->o, d2->o, d3->o, 
+                            a->hidden_config[k]);
+      }
+      else
+      { store_grad2 (thrg, gsz, g->ho[l], 
+                     v0->h[l], v1->h[l], v2->h[l], v3->h[l], 
+                     a->has_th[l] ? w->th[l] : 0, a->N_hidden[l], 
+                     d0->o, d1->o, d2->o, d3->o, a->N_outputs, 
+                     (unsigned short *) 0, 0, 0);
+      }
+    }
+  }
+
+  /* Find case handled by this thread for backpropagation, and index of
+     this thread within that case (0 to NTH-1). */
+
+  const net_values *d, *v;
+  int thrb;
+  if (thrg>=gsz*NTH)
+  { thrb = -1;
+  }
+  else
+  { thrb = thrg & (NTH-1);
+    d = d0 + thrg / NTH;
+    v = v0 + thrg / NTH;
+  }
+
+  /* Start computation of derivatives with respect to input values, if
+     they will be needed, with possible contribution from input-output
+     connections. */
+
+  if (a->has_ti && thrb>=0)
+  { 
+    for (i = thrb; i<a->N_inputs; i+=NTH)
+    { d->i[i] = 0;
+    }
+
+    if (a->has_io)
+    { if (a->input_config[a->N_layers])
+      { sum_derivatives_config_gpu 
+         (thrb, d->o, d->i, w->io, a->input_config[a->N_layers]);
+      }
+      else
+      { sum_derivatives_gpu 
+         (thrb, d->o, a->N_outputs, d->i, a->N_inputs, w->io,
+          flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1);
+      }
+    }
+  }
+
+  /* Go backwards through hidden layers, computing derivatives with respect to
+     hidden unit values, and then adding to gradients that depend on these. */
+
+  for (l = a->N_layers-1; l>=0; l--)
+  {
+    int N_hidden = a->N_hidden[l];
+
+    /* Place to store derivatives computed for this hidden layer. */
+
+    net_value *restrict dh;
+
+    if (thrb<0) goto sync_layer;
+
+    dh = d->h[l];
+
+    /* Find derivatives with respect to values of units in this hidden layer. */
+
+    for (i = thrb; i<N_hidden; i+=NTH)
+    { dh[i] = 0;
+    }
+
+    if (a->has_ho[l])
+    { int k = 2*a->N_layers-1-l;
+      if (a->hidden_config[k])
+      { sum_derivatives_config_gpu 
+         (thrb, d->o, dh, w->ho[l], a->hidden_config[k]);
+      }
+      else
+      { sum_derivatives_gpu 
+          (thrb, d->o, a->N_outputs, dh, N_hidden,
+           w->ho[l], (unsigned short *) 0, 0);
+      }
+    }
+
+    for (ld = l+1; ld<a->N_layers; ld++)
+    { int nsqi = pre->nonseq[l][ld];
+      if (nsqi>=0)
+      { if (a->nonseq_config[nsqi])
+        { sum_derivatives_config_gpu
+            (thrb, d->h[ld], dh, w->nsq[nsqi], a->nonseq_config[nsqi]);
+        }
+        else
+        { sum_derivatives_gpu
+            (thrb, d->h[ld], a->N_hidden[ld], dh, N_hidden,
+             w->nsq[nsqi], (unsigned short *) 0, 0);
+        }
+      }
+    }
+
+    if (l<a->N_layers-1 && a->has_hh[l])
+    { if (a->hidden_config[l+1])
+      { sum_derivatives_config_gpu 
+          (thrb, d->h[l+1], dh, w->hh[l], a->hidden_config[l+1]);
+      }
+      else
+      { sum_derivatives_gpu 
+          (thrb, d->h[l+1], a->N_hidden[l+1], dh, N_hidden,
+           w->hh[l], (unsigned short *) 0, 0);
+      }
+    }
+
+  sync_layer:
+
+    /* Add to gradient with respect to hidden offsets, based on derivatives
+       with respect to hidden unit values (before these are converted to
+       derivatives with respect to the summed input, prior to the activation
+       function). */
+
+    if (a->has_th[l])
+    { 
+      __syncthreads();
+
+      const net_value *c0 = bw_hidden_loc_grad(pre,d0,l,0);
+      const net_value *c1 = bw_hidden_loc_grad(pre,d0,l,1);
+      const net_value *c2 = bw_hidden_loc_grad(pre,d0,l,2);
+      const net_value *c3 = bw_hidden_loc_grad(pre,d0,l,3);
+
+      store_grad1 (thrg, gsz, g->th[l], c0, c1, c2, c3, N_hidden);
+    }
+
+    /* Pass backwards through activation function to get derivatives with 
+       respect to the summed inputs of units in this hidden layer. */
+
+    if (thrb>=0)
+    {
+      net_value const* vh = v->h[l];
+
+      if (flgs==0 || flgs->layer_type[l]==Tanh_type)
+      { for (i = thrb; i<N_hidden; i+=NTH)
+        { dh[i] *= (1 - vh[i]*vh[i]);
+        }
+      }
+      else if (flgs->layer_type[l]==Softplus_type)
+      { for (i = thrb; i<N_hidden; i+=NTH)
+        { net_value e = prec_exp(vh[i]);
+          dh[i] *= (e-1) / e;
+        }
+      }
+      else /* identity */
+      { /* nothing to do */
+      }
+    }
+
+    __syncthreads();
+
+    /* Add contribution from this hidden layer's derivatives to the derivatives
+       with respect to inputs, if they will be needed. */
+
+    if (a->has_ti && thrb>=0)
+    { 
+      if (a->has_ih[l])
+      { if (a->input_config[l])
+        { sum_derivatives_config_gpu (thrb, dh, d->i, w->ih[l], 
+                                      a->input_config[l]);
+        }
+        else
+        { sum_derivatives_gpu (thrb, dh, a->N_hidden[l], d->i, a->N_inputs, 
+             w->ih[l], flgs && flgs->any_omitted[l]? flgs->omit : 0, 1<<(l+1));
+        }
+      }
+    }
+
+    /* Add to gradients that depend on the derivatives of energy with respect 
+       to the inputs of units in this hidden layer. */
+
+    const net_value *c0 = bw_hidden_loc_grad(pre,d0,l,0);
+    const net_value *c1 = bw_hidden_loc_grad(pre,d0,l,1);
+    const net_value *c2 = bw_hidden_loc_grad(pre,d0,l,2);
+    const net_value *c3 = bw_hidden_loc_grad(pre,d0,l,3);
+
+    if (a->has_bh[l])
+    { if (a->bias_config[l])
+      { store_grad1_config (thrg, gsz, g->bh[l], 
+                            c0, c1, c2, c3, a->bias_config[l]);
+      }
+      else
+      { store_grad1 (thrg, gsz, g->bh[l], 
+                     c0, c1, c2, c3, N_hidden);
+      }
+    }
+
+    if (a->has_ih[l])
+    { if (a->input_config[l])
+      { store_grad2_config (thrg, gsz, g->ih[l], 
+                            v0->i, v1->i, v2->i, v3->i, 
+                            a->has_ti ? w->ti : 0, 
+                            c0, c1, c2, c3,
+                            a->input_config[l]);
+      }
+      else
+      { store_grad2 (thrg, gsz, g->ih[l], 
+                     v0->i, v1->i, v2->i, v3->i,
+                     a->has_ti ? w->ti : 0, a->N_inputs,
+                     c0, c1, c2, c3, N_hidden,
+                     flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
+                     sparse);
+      }
+    }
+
+    if (a->has_nsq[l])
+    { for (ls = 0; ls<l; ls++)
+      { nsqi = pre->nonseq[ls][l];
+        if (nsqi>=0)
+        { 
+          net_value *u0 = fw_hidden_loc_grad(pre,v0,ls,0);
+          net_value *u1 = fw_hidden_loc_grad(pre,v0,ls,1);
+          net_value *u2 = fw_hidden_loc_grad(pre,v0,ls,2);
+          net_value *u3 = fw_hidden_loc_grad(pre,v0,ls,3);
+
+          if (a->nonseq_config[nsqi])
+          { store_grad2_config (thrg, gsz, g->nsq[nsqi], 
+                                u0, u1, u2, u3,
+                                a->has_th[ls] ? w->th[ls] : 0,
+                                c0, c1, c2, c3, a->nonseq_config[nsqi]);
+          }
+          else
+          { store_grad2 (thrg, gsz, g->nsq[nsqi], 
+                         u0, u1, u2, u3,
+                         a->has_th[ls] ? w->th[ls] : 0, a->N_hidden[ls], 
+                         c0, c1, c2, c3, N_hidden, 
+                         (unsigned short *)0, 0, 0);
+          }
+        }
+      }
+    }
+
+    if (l>0 && a->has_hh[l-1])
+    { 
+      net_value *u0 = fw_hidden_loc_grad(pre,v0,l-1,0);
+      net_value *u1 = fw_hidden_loc_grad(pre,v0,l-1,1);
+      net_value *u2 = fw_hidden_loc_grad(pre,v0,l-1,2);
+      net_value *u3 = fw_hidden_loc_grad(pre,v0,l-1,3);
+
+      if (a->hidden_config[l])
+      { store_grad2_config (thrg, gsz, g->hh[l-1], 
+                            u0, u1, u2, u3,
+                            a->has_th[l-1] ? w->th[l-1] : 0,
+                            c0, c1, c2, c3,
+                            a->hidden_config[l]);
+      }
+      else
+      { store_grad2 (thrg, gsz, g->hh[l-1], 
+                     u0, u1, u2, u3,
+                     a->has_th[l-1] ? w->th[l-1] : 0, a->N_hidden[l-1], 
+                     c0, c1, c2, c3, N_hidden, 
+                     (unsigned short *)0, 0, 0);
+      }
+    }
+  }
+
+  /* Add to gradients for input offsets, now that derivatives with respect
+     to inputs have been computed. */
+
+  if (a->has_ti)
+  { 
+    if (a->N_layers==0)  /* otherwise done at end of loop above */
+    {__syncthreads();
+    }
+
+    store_grad1 (thrg, gsz, g->ti, d0->i, d1->i, d2->i, d3->i, a->N_inputs);
+  }
+}
 
 #endif

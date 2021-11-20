@@ -68,7 +68,7 @@
 #define DEFAULT_BLKCASES 16  /* Default, if not set by BLKCASES env var */
 #define DEFAULT_MAXBLKS	1000 /* Default, if not set by MAXBLKS env var */
 
-#define USE_FAST_SHARED_MEM 1  /* Use fast shared GPU memory for unit values
+#define USE_FAST_SHARED_MEM 0  /* Use fast shared GPU memory for unit values
                                   and derivatives? */
 
 #define GPU_CACHE_PREFERENCE \
@@ -78,18 +78,15 @@
 
 
 /* HOW GPU COMPUTATIONS ARE SPLIT INTO KERNELS.  The computation
-   consists of five parts: forward pass, model/energy evaluation,
-   backward pass, gradient computation, gradient reduction (last three
-   not always wanted).  The setting of SPLIT_KERNELS controls whether
-   they are all done as separate kernels (useful for profiling how
-   long they take), all done as one kernel (minimizing launch
-   overhead), or the first three are done as one kernel and the last
-   two as a separate kernel (allowing it to not have extra threads it
-   doesn't use, if GTH<NTH). */
+   consists of four parts: forward pass, model/energy evaluation,
+   combined backward pass & gradient computation, and gradient
+   reduction (last two not needed if gradient not needed).  The
+   setting of SPLIT_KERNELS controls whether they are all done as
+   separate kernels (useful for profiling how long they take), or all
+   done as one kernel (minimizing launch overhead). */
 
-#define SPLIT_KERNELS 0   /* 0 = one kernel for all five parts
-                             1 = five kernels for the five parts
-                             2 = first three together, two gradient separate */
+#define SPLIT_KERNELS 0   /* 0 = one kernel for all four parts
+                             1 = four kernels for the four parts */
 
 
 /* FUNCTIONS WITH SPECIFIED PRECISION. */
@@ -507,10 +504,6 @@ HOSTDEV void net_back (net_values const*, net_values *restrict, int,
                        net_arch const*, net_precomputed const*, 
                        net_flags const*, net_params const*);
 
-__device__ void net_back_gpu (int, net_values const*, net_values *restrict, 
-                              int, net_arch const*, net_precomputed const*,
-                              net_flags const*, net_params const*, int);
-
 void net_add_grad (net_params *restrict, net_params const*, 
                    net_values const*, net_values const*, 
                    net_arch const*, net_precomputed const*,
@@ -521,25 +514,10 @@ void net_back_add_grad (net_params *restrict,
                         net_arch const*, net_precomputed const*,
                         net_flags const*, net_params const*, int);
 
-__device__ void net_store1_grad (int, net_params *restrict, net_params const*, 
-                                 net_values const*, net_values const*, 
-                                 net_arch const*, net_precomputed const*,
-                                 net_flags const*, int);
-
-__device__ void net_store2_grad (int, net_params *restrict, net_params const*,
-                                 net_values const*, net_values const*,
-                                 net_arch const*, net_precomputed const*,
-                                 net_flags const*, int);
-
-__device__ void net_store3_grad (int, net_params *restrict, net_params const*,
-                                 net_values const*, net_values const*,
-                                 net_arch const*, net_precomputed const*,
-                                 net_flags const*, int);
-
-__device__ void net_store4_grad (int, net_params *restrict, net_params const*,
-                                 net_values const*, net_values const*, 
-                                 net_arch const*, net_precomputed const*, 
-                                 net_flags const*, int);
+__device__ void net_back_grad_gpu (int, int, net_params *restrict, 
+                                   net_values const*, net_values *restrict, 
+                                   net_arch const*, net_precomputed const*,
+                                   net_flags const*, net_params const*, int);
 
 HOSTDEV void net_model_prob (net_values const*, net_value const*, 
                              double *restrict, net_values *restrict, 

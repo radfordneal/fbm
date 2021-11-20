@@ -83,8 +83,8 @@ net/net-approx
 net/net-display
 net/net-dvar
 net/net-eval
-net/net-eval-gpu
 net/net-gd
+net/net-gd-gpu
 net/net-gen
 net/net-genp
 net/net-grad-test

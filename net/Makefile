@@ -382,11 +382,6 @@ net-grad-gpu.o:	net-grad.c misc.h prior.h model.h net.h data.h \
 		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
 		  net-grad.c -o net-grad-gpu.o
 
-net-back-grad-gpu.o:	net-back-grad.c misc.h prior.h model.h net.h data.h \
-			   intrinsics-use.h cuda-use.h
-		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
-		  net-back-grad.c -o net-grad-gpu.o
-
 net-util-gpu.o:	net-util.c misc.h prior.h model.h net.h data.h \
 			   cuda-use.h
 		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \

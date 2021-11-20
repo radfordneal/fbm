@@ -32,10 +32,13 @@ Feature changes in the version:
    connections from inputs and to outputs were already allowed.)
 
 3) Hidden layers may now use the 'softplus' activation function, given
-   by h(u) = log(1+exp(u)), the 'square' activation function, given by
-   h(u) = x^2, or the 'cube' activation function, given by h(u) = x^3,
-   in addition to the previous options of tanh, sin, or identity.  The
-   activaton function may be specified as documented in <A HREF="net-spec.html">net-spec.doc</A>.
+   by h(u) = log(1+exp(u)), in addition to the previous options of
+   'tanh' or 'identity'.  However, the previous option of 'sin' has
+   been removed, since the implementation no longer saves the summed
+   input to hidden units, before applying the activation function, so
+   the activation function must have a derivative computable from its
+   value (which sin does not).  See <A HREF="net-spec.html">net-spec.doc</A> for how to specify
+   the activation function.
 
 4) The sample-hyper operation for neural network models can now take
    an argument in order to restrict the updates to the hyperparameters
@@ -66,7 +69,8 @@ Feature changes in the version:
    of following continuing input, updating the plot in real time.
 
 10) The old (positional) syntax for net-spec is no longer allowed.  It
-    would not have supported non-sequential hidden layer connections.
+    would not have supported the new feature of non-sequential hidden
+    layer connections.
 
 11) The maximum number of hidden layers in a neural network is now 15
     (up from 7 before).

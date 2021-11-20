@@ -68,7 +68,7 @@
 #define DEFAULT_BLKCASES 16  /* Default, if not set by BLKCASES env var */
 #define DEFAULT_MAXBLKS	1000 /* Default, if not set by MAXBLKS env var */
 
-#define USE_FAST_SHARED_MEM 0  /* Use fast shared GPU memory for unit values
+#define USE_FAST_SHARED_MEM 1  /* Use fast shared GPU memory for unit values
                                   and derivatives? */
 
 #define GPU_CACHE_PREFERENCE \

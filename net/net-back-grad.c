@@ -38,9 +38,9 @@
 /* -------------------------------------------------------------------------- */
 
 
-/* SUM UP CONTRIBUTIONS TO THE DERIVATIVES FROM ONE GROUP OF CONNECTIONS.  Adds 
-   the weighted sum of derivatives due to connections from source units to 
-   a given destination layer to the totals for the source layer. */
+/* SUM UP CONTRIBUTIONS TO THE DERIVATIVES FROM ONE GROUP OF CONNECTIONS.  
+   Adds the weighted sum of derivatives due to connections from source
+   units to a given destination layer to the totals for the source layer. */
 
 HOSTDEV static void sum_derivatives
 ( net_value const* dd,    /* Derivatives with respect to destination units */
@@ -537,9 +537,7 @@ HOSTDEV static void sum_derivatives_config
 
 #if __CUDACC__
 
-/* SUM CONTRIBUTIONS TO THE DERIVATIVES FROM ONE GROUP OF CONNECTIONS, IN GPU.
-   Adds the weighted sum of derivatives due to connections from source
-   units to a given destination layer to the totals for the source layer. */
+/* SUM CONTRIBUTIONS TO THE DERIVATIVES FROM ONE GROUP OF CONNECTIONS, IN GPU.*/
 
 __device__ static void sum_derivatives_gpu
 ( int th,		  /* Which thread */
@@ -611,9 +609,7 @@ __device__ static void sum_derivatives_gpu
 }
 
 
-/* SUM CONTRIBUTIONS TO DERIVATIVES FROM CONNECTIONS WITH CONFIGURATION, IN GPU.
-   Adds the weighted sum of derivatives due to connections from source units to
-   a given destination layer to the totals for the source layer. */
+/* SUM CONTRIBUTIONS TO DERIVATIVES FROM CONNECTIONS WITH CONFIG., IN GPU. */
 
 __device__ static void sum_derivatives_config_gpu
 ( int th,		  /* Which thread */
@@ -1249,8 +1245,7 @@ static void add_grad2
 }
 
 
-/* ADD TO GRADIENT FROM PRODUCT OF UNIT VALUE AND UNIT DERIVATIVE, WITH CONFIG.
-   For when the connections are specified by a configuration file. */
+/* ADD TO GRADIENT FROM PRODUCT OF UNIT VALUE AND UNIT DERIV., WITH CONFIG. */
 
 static void add_grad2_config
 ( net_param *restrict g,  /* Array of derivatives to add to */
@@ -3340,12 +3335,27 @@ void net_back_add_grad
 #if __CUDACC__
 
 /* FIND GRADIENT, USING BACKPROPAGATED DERIVATIVES, GPU VERSION.
-   Assumes that values of hidden units for the training case have been
-   computed (in v->h[.]), and that the derivative of the energy with
-   respect to the outputs has been computed (in d->o).  Uses other
-   parts of d to store derivatives of energy with respect to hidden
-   units, and with respect to input units, if input offsets are
-   present. */
+   
+   Called by each thread in a block, with threads divided according to
+   which group of cases they handle.  The 'th' argument (0 to GTH-1)
+   identifies the thread within such a group, while 'gsz' gives the
+   size of the group - it will be GROUP_SIZE except when there are
+   extra cases at the end of the training set, or it may be zero or
+   negative for threads that are not used, but must be synchronized.
+
+   The v0 and d0 arguments point to the places where hidden unit
+   values are found, where derivatives with respect to the outputs are
+   found, and where derivatives with respect to hidden and/or input
+   units may be stored - v0 and d0 are for the first case in the
+   group, with other cases following.  If USE_FAST_SHARED_MEM is 1,
+   fast shared memory may be used insteadd to hold values for some or
+   all hidden units, and/or derivatives with respect to hidden units. 
+
+   The gradient due to the cases in the group is stored in 'g'. */
+
+/* Dispatch functions.  Comparisons with GTH are redundant, but may let
+   the compiler eliminate some comparisons at compile time.  Note that
+   no function is called when gsz is less than 1 (unused thread). */
 
 __device__ static void store_grad1
 ( int th,                 /* Which thread (0 to GTH-1) */
@@ -3358,13 +3368,13 @@ __device__ static void store_grad1
   int n                   /* Number of units */
 )
 {
-  if (gsz==4)
+  if (GTH>=4 && gsz==4)
   { net_store4_grad1 (th, g, d0, d1, d2, d3, n);
   }
-  else if (gsz==3)
+  else if (GTH>=3 && gsz==3)
   { net_store3_grad1 (th, g, d0, d1, d2, n);
   }
-  else if (gsz==2)
+  else if (GTH>=2 && gsz==2)
   { net_store2_grad1 (th, g, d0, d1, n);
   }
   else if (gsz==1)
@@ -3383,13 +3393,13 @@ __device__ static void store_grad1_config
   net_config const* cf    /* Configuration for biases */
 )
 {
-  if (gsz==4)
+  if (GTH>=4 && gsz==4)
   { net_store4_grad1_config (th, g, d0, d1, d2, d3, cf);
   }
-  else if (gsz==3)
+  else if (GTH>=3 && gsz==3)
   { net_store3_grad1_config (th, g, d0, d1, d2, cf);
   }
-  else if (gsz==2)
+  else if (GTH>=2 && gsz==2)
   { net_store2_grad1_config (th, g, d0, d1, cf);
   }
   else if (gsz==1)
@@ -3417,15 +3427,15 @@ __device__ static void store_grad2
   int sparse              /* Might source unit values often be zero? */
 )
 {
-  if (gsz==4)
+  if (GTH>=4 && gsz==4)
   { net_store4_grad2 
      (th, g, v0, v1, v2, v3, off, nv, d0, d1, d2, d3, nd, omit, ob, sparse);
   }
-  else if (gsz==3)
+  else if (GTH>=3 && gsz==3)
   { net_store3_grad2
      (th, g, v0, v1, v2, off, nv, d0, d1, d2, nd, omit, ob, sparse);
   }
-  else if (gsz==2)
+  else if (GTH>=2 && gsz==2)
   { net_store2_grad2
      (th, g, v0, v1, off, nv, d0, d1, nd, omit, ob, sparse);
   }
@@ -3451,15 +3461,15 @@ __device__ static void store_grad2_config
   net_config const* cf    /* Configuration for connections and weights */
 )
 {
-  if (gsz==4)
+  if (GTH>=4 && gsz==4)
   { net_store4_grad2_config
      (th, g, v0, v1, v2, v3, off, d0, d1, d2, d3, cf);
   }
-  else if (gsz==3)
+  else if (GTH>=3 && gsz==3)
   { net_store3_grad2_config
      (th, g, v0, v1, v2, off, d0, d1, d2, cf);
   }
-  else if (gsz==2)
+  else if (GTH>=2 && gsz==2)
   { net_store2_grad2_config
      (th, g, v0, v1, off, d0, d1, cf);
   }
@@ -3521,17 +3531,23 @@ __device__ void net_back_grad_gpu
   for (l = 0; l<a->N_layers; l++)
   {
     if (a->has_ho[l])
-    { int k = 2*a->N_layers-1-l;
+    { 
+      const net_value *u0 = fw_hidden_loc_grad(pre,v0,l,0);
+      const net_value *u1 = fw_hidden_loc_grad(pre,v0,l,1);
+      const net_value *u2 = fw_hidden_loc_grad(pre,v0,l,2);
+      const net_value *u3 = fw_hidden_loc_grad(pre,v0,l,3);
+
+      int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { store_grad2_config (thrg, gsz, g->ho[l], 
-                            v0->h[l], v1->h[l], v2->h[l], v3->h[l], 
+                            u0, u1, u2, u3,
                             a->has_th[l] ? w->th[l] : 0,
                             d0->o, d1->o, d2->o, d3->o, 
                             a->hidden_config[k]);
       }
       else
       { store_grad2 (thrg, gsz, g->ho[l], 
-                     v0->h[l], v1->h[l], v2->h[l], v3->h[l], 
+                     u0, u1, u2, u3,
                      a->has_th[l] ? w->th[l] : 0, a->N_hidden[l], 
                      d0->o, d1->o, d2->o, d3->o, a->N_outputs, 
                      (unsigned short *) 0, 0, 0);
@@ -3539,8 +3555,8 @@ __device__ void net_back_grad_gpu
     }
   }
 
-  /* Find case handled by this thread for backpropagation, and index of
-     this thread within that case (0 to NTH-1). */
+  /* Find case handled by this thread for backpropagation, and index, thrb, of
+     this thread within that case (0 to NTH-1, except -1 for unused thread). */
 
   const net_values *d, *v;
   int thrb;
@@ -3589,7 +3605,7 @@ __device__ void net_back_grad_gpu
 
     if (thrb<0) goto sync_layer;
 
-    dh = d->h[l];
+    dh = bw_hidden_loc(pre,d,l);
 
     /* Find derivatives with respect to values of units in this hidden layer. */
 
@@ -3612,27 +3628,29 @@ __device__ void net_back_grad_gpu
 
     for (ld = l+1; ld<a->N_layers; ld++)
     { int nsqi = pre->nonseq[l][ld];
+      net_value *restrict dhd = bw_hidden_loc(pre,d,ld);
       if (nsqi>=0)
       { if (a->nonseq_config[nsqi])
         { sum_derivatives_config_gpu
-            (thrb, d->h[ld], dh, w->nsq[nsqi], a->nonseq_config[nsqi]);
+            (thrb, dhd, dh, w->nsq[nsqi], a->nonseq_config[nsqi]);
         }
         else
         { sum_derivatives_gpu
-            (thrb, d->h[ld], a->N_hidden[ld], dh, N_hidden,
+            (thrb, dhd, a->N_hidden[ld], dh, N_hidden,
              w->nsq[nsqi], (unsigned short *) 0, 0);
         }
       }
     }
 
     if (l<a->N_layers-1 && a->has_hh[l])
-    { if (a->hidden_config[l+1])
+    { net_value *restrict dhd = bw_hidden_loc(pre,d,l+1);
+      if (a->hidden_config[l+1])
       { sum_derivatives_config_gpu 
-          (thrb, d->h[l+1], dh, w->hh[l], a->hidden_config[l+1]);
+          (thrb, dhd, dh, w->hh[l], a->hidden_config[l+1]);
       }
       else
       { sum_derivatives_gpu 
-          (thrb, d->h[l+1], a->N_hidden[l+1], dh, N_hidden,
+          (thrb, dhd, a->N_hidden[l+1], dh, N_hidden,
            w->hh[l], (unsigned short *) 0, 0);
       }
     }
@@ -3661,7 +3679,7 @@ __device__ void net_back_grad_gpu
 
     if (thrb>=0)
     {
-      net_value const* vh = v->h[l];
+      const net_value *vh = fw_hidden_loc(pre,v,l);
 
       if (flgs==0 || flgs->layer_type[l]==Tanh_type)
       { for (i = thrb; i<N_hidden; i+=NTH)

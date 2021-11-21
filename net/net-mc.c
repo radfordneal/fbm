@@ -2494,11 +2494,6 @@ __global__ void gradient_reduction_kernel
   int n_blk_res;	/* Max number of energy/grad results in a block */
   int n_results;	/* Number of energy/grad results in this block, less
                            than n_blk_res if that would exceed training cases */
-  int base;		/* Index in block of results to add to for this thread*/
-  int stride;		/* Stride from base to reach result to add to it */
-  int workers;          /* Number of threads that can work on adding to base */
-  int base_worker;	/* Lowest of the worker threads */
-  int this_worker;	/* Position of this thread in its worker group */
 
   n_blk_res = (const_blkcases + GROUP_MASK) >> GROUP_SHIFT;
   n_results = 
@@ -2507,32 +2502,22 @@ __global__ void gradient_reduction_kernel
   { n_results = n_blk_res;
   }
 
-  for (stride = 1; stride < n_results; stride <<= 1)
-  { 
-    __syncthreads();
+  net_params *accum = const_block_grad + blockIdx.x; /* Where to store sum */
 
-    base = (threadIdx.x / GTH) & ~(2*stride-1);
-    base_worker = base * GTH;
-    this_worker = threadIdx.x - base_worker;
-    workers = 2*GTH*stride;
-    if (base_worker+workers >= const_blkcases*NTH)
-    { workers = const_blkcases*NTH - base_worker;
+  net_params *from = group_grad  /* Base for where to add from */
+                      + blockIdx.x * ((const_blkcases+GROUP_MASK)>>GROUP_SHIFT);
+  unsigned k;
+
+  __syncthreads();
+
+  for (k = threadIdx.x; k < total_params; k += blockDim.x)
+  { net_params *e = from+n_results;
+    net_param sum = 0;
+    net_params *f;
+    for (f = from+1; f<e; f++)
+    { sum += f->param_block[k];
     }
-
-    if (base+stride < n_results)
-    { 
-      int wb = blockIdx.x * n_blk_res + base;
-      int ws = wb+stride;
-
-      net_param *restrict p = group_grad[ws].param_block;
-      net_param *restrict q = 
-          base==0 ? const_block_grad[blockIdx.x].param_block
-                  : group_grad[wb].param_block;
-      unsigned k;
-      for (k = this_worker; k < total_params; k += workers)
-      { q[k] += p[k];
-      }
-    }
+    accum->param_block[k] += sum;
   }
 }
 

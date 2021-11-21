@@ -82,7 +82,7 @@ __global__ void forward_kernel
 
 __global__ void energy_kernel
 (
-  double *case_energy,  /* Places to store energy, null if not required */
+  double *restrict case_energy, /* Places to store energy, null if not needed */
   int start,		/* Start of cases to look at */
   int end, 		/* End of cases to look at (index after last case) */
   double en_weight,	/* Weight for these cases for energy */
@@ -92,14 +92,14 @@ __global__ void energy_kernel
 
 __global__ void backward_gradient_kernel
 (
-  net_params *group_grad, /* Places where gradient stored */
+  net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
   int start,		/* Start of cases to look at */
   int end		/* End of cases to look at (index after last case) */
 );
 
 __global__ void gradient_reduction_kernel
 (
-  net_params *group_grad, /* Places where gradient stored */
+  net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
   int start,		/* Start of cases to look at */
   int end		/* End of cases to look at (index after last case) */
 );
@@ -108,8 +108,8 @@ __global__ void gradient_reduction_kernel
 
 __global__ void training_kernel
 (
-  double *case_energy,  /* Places to store energy, null if not required */
-  net_params *group_grad, /* Places to store gradient, null if not required */
+  double *restrict case_energy, /* Places to store energy, null if not needed */
+  net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
   int start,		/* Start of cases to look at */
   int end, 		/* End of cases to look at (index after last case) */
   double en_weight,	/* Weight for these cases for energy */
@@ -2267,11 +2267,11 @@ void cuda_setup
 #define KDEBUG 0        /* Set to 1 to enable debug output below */
 
 #define KERNEL_PRELUDE \
-  net_flags *flgs = const_has_flgs ? &const_flgs : 0; \
+  net_flags const*flgs = const_has_flgs ? &const_flgs : 0; \
   int m = threadIdx.x / NTH; \
   int i = blockIdx.x*const_blkcases + m; \
   int h = start + i; \
-  net_values *train_vals_h = const_train_values+h; \
+  net_values *restrict train_vals_h = const_train_values+h; \
   int th = threadIdx.x & (NTH-1); \
   if (h >= end) th = -1;
 
@@ -2280,8 +2280,8 @@ void cuda_setup
 
 __global__ void training_kernel
 (
-  double *case_energy,  /* Places to store energy, null if not required */
-  net_params *group_grad, /* Places to store gradient, null if not required */
+  double *restrict case_energy, /* Places to store energy, null if not needed */
+  net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
   int start,		/* Start of cases to look at */
   int end, 		/* End of cases to look at (index after last case) */
   double en_weight,	/* Weight for these cases for energy */
@@ -2315,7 +2315,7 @@ __global__ void forward_kernel
 }
 __global__ void energy_kernel
 (
-  double *case_energy,  /* Places to store energy, null if not required */
+  double *restrict case_energy, /* Places to store energy, null if not needed */
   int start,		/* Start of cases to look at */
   int end, 		/* End of cases to look at (index after last case) */
   double en_weight,	/* Weight for these cases for energy */
@@ -2338,9 +2338,9 @@ __global__ void energy_kernel
             case_energy!=0,need_deriv,blockIdx.x,threadIdx.x,start,end);
   }
 
-  net_value *targ_h = const_train_targets + const_N_targets*h;
-  net_values *deriv_i = need_deriv ? const_deriv+i : 0;
-  double *log_prob_h = case_energy ? case_energy+i : 0;
+  net_value const*restrict targ_h = const_train_targets + const_N_targets*h;
+  net_values *restrict deriv_i = need_deriv ? const_deriv+i : 0;
+  double *restrict log_prob_h = case_energy ? case_energy+i : 0;
 
   int single_thread = THREADS_PER_CASE==1 
                        || const_arch.N_outputs < 2 /* adjustable */
@@ -2353,7 +2353,7 @@ __global__ void energy_kernel
     }
   }
   else
-  { net_value *scratch_i = 
+  { net_value *restrict scratch_i = 
       const_scratch + SCRATCH_PER_CASE(const_arch.N_outputs) * i;
     net_model_prob_gpu (th, train_vals_h, targ_h, log_prob_h, deriv_i, 
                         &const_arch, &const_model, const_noise, 
@@ -2413,14 +2413,14 @@ __global__ void energy_kernel
 }
 __global__ void backward_gradient_kernel
 (
-  net_params *group_grad, /* Places to store gradient, null if not required */
+  net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
   int start,		/* Start of cases to look at */
   int end		/* End of cases to look at (index after last case) */
 )
 {
   KERNEL_PRELUDE
 
-  net_values *deriv_i = const_deriv+i;
+  net_values *restrict deriv_i = const_deriv+i;
 
 #else
 
@@ -2468,7 +2468,7 @@ __global__ void backward_gradient_kernel
 }
 __global__ void gradient_reduction_kernel
 (
-  net_params *group_grad, /* Places to store gradient */
+  net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
   int start,            /* Start of cases to look at */
   int end               /* End of cases to look at (index after last case) */
 )

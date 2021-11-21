@@ -38,6 +38,18 @@
 #define NET_VALUE_ALIGN_ELEMENTS (NET_VALUE_ALIGN_BYTES / 4 / (1+FP64))
 
 
+/* HOW GPU COMPUTATIONS ARE SPLIT INTO KERNELS.  The computation
+   consists of four parts: forward pass, model/energy evaluation,
+   combined backward pass & gradient computation, and gradient
+   reduction (last two not needed if gradient not needed).  The
+   setting of SPLIT_KERNELS controls whether they are all done as
+   separate kernels (useful for profiling how long they take), or all
+   done as one kernel (minimizing launch overhead). */
+
+#define SPLIT_KERNELS 0   /* 0 = one kernel for all four parts
+                             1 = four kernels for the four parts */
+
+
 /* CONSTANTS RELATING TO GPU COMPUTATIONS: */
 
 #define THREADS_PER_CASE 4   /* Number of GPU threads used per training case,
@@ -72,21 +84,9 @@
                                   and derivatives? */
 
 #define GPU_CACHE_PREFERENCE \
- (!USE_FAST_SHARED_MEM ? cudaFuncCachePreferL1 /* L1 is better if no shared */ \
-                       : cudaFuncCachePreferShared)  /* Can set to Shared,  */ \
-                                                     /*   or Equal, or L1   */
-
-
-/* HOW GPU COMPUTATIONS ARE SPLIT INTO KERNELS.  The computation
-   consists of four parts: forward pass, model/energy evaluation,
-   combined backward pass & gradient computation, and gradient
-   reduction (last two not needed if gradient not needed).  The
-   setting of SPLIT_KERNELS controls whether they are all done as
-   separate kernels (useful for profiling how long they take), or all
-   done as one kernel (minimizing launch overhead). */
-
-#define SPLIT_KERNELS 1   /* 0 = one kernel for all four parts
-                             1 = four kernels for the four parts */
+ (!USE_FAST_SHARED_MEM || SPLIT_KERNELS \
+   ? cudaFuncCachePreferL1      /* L1 is better if shared memory isn't used */ \
+   : cudaFuncCachePreferShared) /* Might be better as Shared, or Equal, or L1 */
 
 
 /* FUNCTIONS WITH SPECIFIED PRECISION. */
@@ -424,7 +424,16 @@ typedef struct
 } net_precomputed;
 
 
-/* USE OF FAST SHARED MEMORY FOR UNIT VALUES / DERIVATIVES. */
+/* LOCATE UNIT VALUES / DERIVATIVES, IN FAST SHARED OR IN REGULAR GPU MEMORY.
+
+   The fw_hidden_loc and bw_hidden_loc function give locations of
+   hidden unit values or derivatives in layer 'l' for the case handled
+   by this thread, given a pointer to the value structure for this case.
+
+   The fw_hidden_loc_grad and bs_hidden_loc functions give locations
+   of hidden unit values or derivatives in layer 'l' for case 'w' in
+   the group handled by this thread, given a pointer to the value
+   structure for the first case in this group. */
 
 #if __CUDACC__
 
@@ -522,7 +531,7 @@ HOSTDEV void net_model_prob (net_values const*, net_value const*,
 __device__ void net_model_prob_gpu (int, net_values const*, net_value const*, 
                              double *restrict, net_values *restrict, 
                              net_arch const*, model_specification const*,
-                             net_sigma const*, net_value *, int, int);
+                             net_sigma const*, net_value *restrict, int, int);
 
 void net_model_check (model_specification const*);
 

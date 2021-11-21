@@ -305,7 +305,7 @@ __device__ void net_model_prob_gpu
   net_arch const*a,	/* Network architecture */
   model_specification const*m, /* Data model */
   net_sigma const*noise,/* Noise sigmas, or null */
-  net_value *scratch,	/* Scratch memory, for twice number of outputs */
+  net_value *restrict scratch, /* Scratch memory, for twice number of outputs */
   int op,		/* Can we ignore some factors? */
   int sync		/* Sync threads after computation? */
 )

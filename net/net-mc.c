@@ -196,6 +196,8 @@ __constant__ int const_N_targets;  /* Copy of N_targets in constant memory */
 
 __constant__ int const_blkcases;   /* Copy of blkcases in constant memory */
 
+__constant__ unsigned const_grad_aligned_total;  /* Copy in constant memory */
+
 __constant__ net_arch const_arch;  /* Copy of dev_arch in constant memory */
 __constant__ net_precomputed const_pre;  /* Copy of pre in constant memory */
 __constant__ net_flags const_flgs; /* Copy of flgs in constant memory */
@@ -843,6 +845,9 @@ void mc_app_initialize
 
       free(tmp_values);
     }
+
+    grad_aligned_total = (params.total_params + GRAD_ALIGN_ELEMENTS - 1)
+                            & ~(GRAD_ALIGN_ELEMENTS - 1);
 #   endif
 
     /* Copy some data to constant memory in the GPU, if using CUDA. 
@@ -866,6 +871,10 @@ void mc_app_initialize
       cudaMemcpyToSymbol (const_arch, &dev_arch, sizeof dev_arch);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_arch");
+      cudaMemcpyToSymbol (const_grad_aligned_total, &grad_aligned_total, 
+                          sizeof grad_aligned_total);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to grad_aligned_total");
       cudaMemcpyToSymbol (const_pre, &pre, sizeof pre);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_pre");
@@ -2178,9 +2187,6 @@ void cuda_setup
   { 
     net_params *tmp_grad;
 
-    grad_aligned_total = (grad.total_params + GRAD_ALIGN_ELEMENTS - 1)
-                            & ~(GRAD_ALIGN_ELEMENTS - 1);
-
     /* Create group_grad array on GPU. */
 
     tmp_grad = (net_params *) chk_alloc (n_grad_accum, sizeof *tmp_grad);
@@ -2503,51 +2509,54 @@ __global__ void gradient_reduction_kernel
   }
 
   net_params *accum = const_block_grad + blockIdx.x; /* Where to store sum */
+  net_param *accum_blk = accum->param_block;
 
   net_params *from = group_grad  /* Base for where to add from */
                       + blockIdx.x * ((const_blkcases+GROUP_MASK)>>GROUP_SHIFT);
+  size_t stride = const_grad_aligned_total;
+  net_param *from_blk = from->param_block + stride;
   unsigned k;
 
   __syncthreads();
 
   if (n_results==2)
   { for (k = threadIdx.x; k < total_params; k += blockDim.x)
-    { accum->param_block[k] += (from+1)->param_block[k];
+    { accum_blk[k] += from_blk[k];
     }
   }
   else if (n_results==4)
   { for (k = threadIdx.x; k < total_params; k += blockDim.x)
     { net_param sum;
-      net_params *f = from;
-      sum = (++f)->param_block[k];
-      sum += (++f)->param_block[k];
-      sum += (++f)->param_block[k];
-      accum->param_block[k] += sum;
+      net_param *fb = from_blk;
+      sum = fb[k];  fb += stride;
+      sum += fb[k]; fb += stride;
+      sum += fb[k];
+      accum_blk[k] += sum;
     }
   }
   else if (n_results==8)
   { for (k = threadIdx.x; k < total_params; k += blockDim.x)
     { net_param sum;
-      net_params *f = from;
-      sum = (++f)->param_block[k];
-      sum += (++f)->param_block[k];
-      sum += (++f)->param_block[k];
-      sum += (++f)->param_block[k];
-      sum += (++f)->param_block[k];
-      sum += (++f)->param_block[k];
-      sum += (++f)->param_block[k];
-      accum->param_block[k] += sum;
+      net_param *fb = from_blk;
+      sum = fb[k];  fb += stride;
+      sum += fb[k]; fb += stride;
+      sum += fb[k]; fb += stride;
+      sum += fb[k]; fb += stride;
+      sum += fb[k]; fb += stride;
+      sum += fb[k]; fb += stride;
+      sum += fb[k];
+      accum_blk[k] += sum;
     }
   }
   else
   { for (k = threadIdx.x; k < total_params; k += blockDim.x)
-    { net_params *e = from+n_results;
-      net_param sum = 0;
-      net_params *f;
-      for (f = from+1; f<e; f++)
-      { sum += f->param_block[k];
+    { net_param sum = 0;
+      net_param *fb = from_blk;
+      for (i = 1; i<n_results; i++)
+      { sum += fb[k];
+        fb += stride;
       }
-      accum->param_block[k] += sum;
+      accum_blk[k] += sum;
     }
   }
 }

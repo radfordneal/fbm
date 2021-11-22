@@ -623,19 +623,19 @@ void mc_app_initialize
        without inputs. */
 
     value_count = 
-      net_setup_value_count_aligned (arch, NET_VALUE_ALIGN_ELEMENTS, 1);
+      net_setup_value_count_aligned (arch, NET_VALUE_ALIGN_ELEMENTS, 1, 1);
     value_count_noin = 
-      net_setup_value_count_aligned (arch, NET_VALUE_ALIGN_ELEMENTS, 0);
+      net_setup_value_count_aligned (arch, NET_VALUE_ALIGN_ELEMENTS, 0, 1);
 
     /* Set up second derivative and typical value structures. */
 
     value_block = (net_value *) chk_alloc (value_count, sizeof *value_block);
     net_setup_value_pointers_aligned (&seconds, value_block, arch, 
-                                      NET_VALUE_ALIGN_ELEMENTS, 0);
+                                      NET_VALUE_ALIGN_ELEMENTS, 0, 0);
 
     value_block = (net_value *) chk_alloc (value_count, sizeof *value_block);
     net_setup_value_pointers_aligned (&typical, value_block, arch, 
-                                      NET_VALUE_ALIGN_ELEMENTS, 0);
+                                      NET_VALUE_ALIGN_ELEMENTS, 0, 0);
   
     /* Read training data, if any, and allocate space for derivatives. */
   
@@ -664,7 +664,7 @@ void mc_app_initialize
       deriv = (net_values *) chk_alloc (1, sizeof *deriv);
       value_block = (net_value *) chk_alloc (value_count, sizeof *value_block);
       net_setup_value_pointers_aligned (deriv, value_block, arch, 
-                                        NET_VALUE_ALIGN_ELEMENTS, 0);
+                                        NET_VALUE_ALIGN_ELEMENTS, 0, 0);
     
       for (j = 0; j<arch->N_inputs; j++)
       { for (i = 0; i<N_train; i++)
@@ -797,7 +797,7 @@ void mc_app_initialize
       for (i = 0; i<N_train; i++) 
       { net_setup_value_pointers_aligned 
              (&tmp_values[i], vblk+value_count_noin*i, arch,
-              NET_VALUE_ALIGN_ELEMENTS, iblk+N_inputs*i);
+              NET_VALUE_ALIGN_ELEMENTS, iblk+N_inputs*i, 0);
       }
 
       sz = N_train * sizeof *dev_train_values;
@@ -820,14 +820,14 @@ void mc_app_initialize
       if (arch->has_ti)  /* Must allow for derivatives w.r.t. inputs */
       { for (i = 0; i<N_train; i++) 
         { net_setup_value_pointers_aligned (&tmp_values[i], vblk+value_count*i,
-                                            arch, NET_VALUE_ALIGN_ELEMENTS, 0);
+                                          arch, NET_VALUE_ALIGN_ELEMENTS, 0, 0);
         }
       }
       else  /* Derivatives w.r.t. inputs will not be taken */
       { for (i = 0; i<N_train; i++) 
         { net_setup_value_pointers_aligned 
             (&tmp_values[i], vblk+value_count_noin*i, 
-             arch, NET_VALUE_ALIGN_ELEMENTS, iblk+N_inputs*i /* not used */);
+             arch, NET_VALUE_ALIGN_ELEMENTS, iblk+N_inputs*i /* not used */, 0);
         }
       }
 

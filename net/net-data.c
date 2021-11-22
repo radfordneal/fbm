@@ -181,7 +181,7 @@ static net_values *read_inputs
   N_cases = numin_start(ns);
 
   value_count = net_setup_value_count_aligned
-                 (arch, NET_VALUE_ALIGN_ELEMENTS, 0);
+                 (arch, NET_VALUE_ALIGN_ELEMENTS, 0, 1);
 
   value_block = 
     (net_value *) chk_alloc (value_count*N_cases, sizeof *value_block);
@@ -195,7 +195,7 @@ static net_values *read_inputs
   for (i = 0; i<N_cases; i++) 
   { net_setup_value_pointers_aligned (&values[i], value_block+value_count*i, 
                                       arch, NET_VALUE_ALIGN_ELEMENTS,
-                                      (*input_block)+arch->N_inputs*i);
+                                      (*input_block)+arch->N_inputs*i, 0);
   }
 
   double ind[N_inputs];

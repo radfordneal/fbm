@@ -121,7 +121,7 @@ void net_initialize
 
   net_setup_value_pointers (&deriv, 
     (net_value *) chk_alloc (net_setup_value_count(arch), sizeof (net_value)),
-    arch, 0);
+    arch, 0, 0);
 
   /* Read training and test data, if present. */
 

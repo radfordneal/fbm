@@ -234,27 +234,32 @@ unsigned net_setup_value_count
 ( net_arch *a		/* Network architecture */
 )
 { 
-  return net_setup_value_count_aligned (a, 1, 1);
+  return net_setup_value_count_aligned (a, 1, 1, 1);
 }
 
 
 /* RETURN NUMBER OF UNIT-RELATED VALUES IN NETWORK, WITH ALIGNMENT.  Returns
    the number of unit-related values for a network with the given architecture,
    including padding for alignment to 'align' boundary (elements, not bytes,
-   must be a power of two).  Includes outputs, and inputs if include_inputs
-   is non-zero. */
+   must be a power of two).  May or may not include inputs and outputs, 
+   depending on the last two arguments. */
 
 unsigned net_setup_value_count_aligned
 ( net_arch *a,		/* Network architecture */
   int align,		/* Alignment, must be a power of 2 */
-  int include_inputs	/* Should inputs be included in the count? */
+  int include_inputs,	/* Should inputs be included in the count? */
+  int include_outputs	/* Should outputs be included in the count? */
 )
 { 
   unsigned count = 0;
   int l;
 
-  if (include_inputs) count += ALIGN(a->N_inputs,align);
-  count += ALIGN(a->N_outputs,align);
+  if (include_inputs) 
+  { count += ALIGN(a->N_inputs,align);
+  }
+  if (include_outputs)
+  { count += ALIGN(a->N_outputs,align);
+  }
 
   for (l = 0; l<a->N_layers; l++)
   { count += ALIGN(a->N_hidden[l],align);
@@ -518,18 +523,18 @@ void net_replicate_param_pointers
 /* SET UP POINTERS TO UNIT VALUES.  Sets the pointers in the net_values
    structure to point to the appropriate places in the block of net_value
    values passed.  The size of this block must be as indicated by the
-   net_setup_value_count procedure, except that the count should exclude
-   inputs if a separate 'inputs' argument is passed, indicating where 
-   they are. */
+   net_setup_value_count procedure, with inputs/outputs included according
+   to match whether they are provided separately here. */
 
 void net_setup_value_pointers
 ( net_values *v,	/* Structure to set up pointers in */
   net_value *b,		/* Block of 'value' values */
   net_arch *a,		/* Network architecture */
-  net_value *inputs	/* Input values, 0 if part of value block */
+  net_value *inputs,	/* Input values, 0 if part of value block */
+  net_value *outputs	/* Output values, 0 if part of value block */
 )
 {
-  net_setup_value_pointers_aligned (v, b, a, 1, inputs);
+  net_setup_value_pointers_aligned (v, b, a, 1, inputs, outputs);
 }
 
 
@@ -544,7 +549,8 @@ void net_setup_value_pointers_aligned
   net_value *b,		/* Block of 'value' values */
   net_arch *a,		/* Network architecture */
   int align,		/* Alignment, must be power of 2 */
-  net_value *inputs	/* Input values, 0 if part of value block */
+  net_value *inputs,	/* Input values, 0 if part of value block */
+  net_value *outputs	/* Output values, 0 if part of value block */
 )
 {
   int l;
@@ -562,7 +568,12 @@ void net_setup_value_pointers_aligned
     b += ALIGN(a->N_hidden[l],align);
   }
 
-  v->o = b;
+  if (outputs)
+  { v->o = outputs;
+  }
+  else
+  { v->o = b;
+  }
 }
 
 

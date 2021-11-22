@@ -123,9 +123,9 @@ int main
   /* Allocate space for network values and variances. */
 
   net_setup_value_pointers
-    (v1, chk_alloc (net_setup_value_count(a), sizeof(net_value)), a, 0);
+    (v1, chk_alloc (net_setup_value_count(a), sizeof(net_value)), a, 0, 0);
   net_setup_value_pointers
-    (v2, chk_alloc (net_setup_value_count(a), sizeof(net_value)), a, 0);
+    (v2, chk_alloc (net_setup_value_count(a), sizeof(net_value)), a, 0, 0);
 
   dvar = chk_alloc (n_pairs+1, sizeof *dvar);
 

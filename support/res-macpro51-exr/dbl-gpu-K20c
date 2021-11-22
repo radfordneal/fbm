@@ -1,4 +1,4 @@
-Commit: 80f7f5ea09b03ac230109e0451feff76f14bcfa6
+Commit: 1cd9c65d451aff2bebd0459cc161e28f1101afbf
 
 Running exr with dbl-gpu on K20c:
 
@@ -26,4 +26,4 @@ Number of test cases: 1000
 Average log probability of targets:     0.854+-0.019
 Average squared error guessing mean:    0.01029+-0.00046
 
-elapsed 8.93s
+elapsed 8.87s

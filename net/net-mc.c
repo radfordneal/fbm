@@ -2510,14 +2510,45 @@ __global__ void gradient_reduction_kernel
 
   __syncthreads();
 
-  for (k = threadIdx.x; k < total_params; k += blockDim.x)
-  { net_params *e = from+n_results;
-    net_param sum = 0;
-    net_params *f;
-    for (f = from+1; f<e; f++)
-    { sum += f->param_block[k];
+  if (n_results==2)
+  { for (k = threadIdx.x; k < total_params; k += blockDim.x)
+    { accum->param_block[k] += (from+1)->param_block[k];
     }
-    accum->param_block[k] += sum;
+  }
+  else if (n_results==4)
+  { for (k = threadIdx.x; k < total_params; k += blockDim.x)
+    { net_param sum;
+      net_params *f = from;
+      sum = (++f)->param_block[k];
+      sum += (++f)->param_block[k];
+      sum += (++f)->param_block[k];
+      accum->param_block[k] += sum;
+    }
+  }
+  else if (n_results==8)
+  { for (k = threadIdx.x; k < total_params; k += blockDim.x)
+    { net_param sum;
+      net_params *f = from;
+      sum = (++f)->param_block[k];
+      sum += (++f)->param_block[k];
+      sum += (++f)->param_block[k];
+      sum += (++f)->param_block[k];
+      sum += (++f)->param_block[k];
+      sum += (++f)->param_block[k];
+      sum += (++f)->param_block[k];
+      accum->param_block[k] += sum;
+    }
+  }
+  else
+  { for (k = threadIdx.x; k < total_params; k += blockDim.x)
+    { net_params *e = from+n_results;
+      net_param sum = 0;
+      net_params *f;
+      for (f = from+1; f<e; f++)
+      { sum += f->param_block[k];
+      }
+      accum->param_block[k] += sum;
+    }
   }
 }
 

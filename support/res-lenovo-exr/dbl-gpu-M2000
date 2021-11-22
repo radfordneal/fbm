@@ -1,4 +1,4 @@
-Commit: 80f7f5ea09b03ac230109e0451feff76f14bcfa6
+Commit: 6983bf43ea9bbf4548f921f520e5dc97f8cf87c2
 
 Running exr with dbl-gpu on M2000:
 
@@ -26,4 +26,4 @@ Number of test cases: 1000
 Average log probability of targets:     0.855+-0.019
 Average squared error guessing mean:    0.01260+-0.00117
 
-elapsed 5.77s
+elapsed 5.14s

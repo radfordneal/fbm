@@ -77,8 +77,8 @@
 			        exceeding the per-block register use limit
 			        (max 255 reg/thread, min 32K reg/block) */
 
-#define DEFAULT_BLKCASES 16  /* Default, if not set by BLKCASES env var */
-#define DEFAULT_MAXBLKS	1000 /* Default, if not set by MAXBLKS env var */
+#define DEFAULT_BLKCASES 32  /* Default, if not set by BLKCASES env var */
+#define DEFAULT_MAXBLKS	500  /* Default, if not set by MAXBLKS env var */
 
 #define USE_FAST_SHARED_MEM 1  /* Use fast shared GPU memory for unit values
                                   and derivatives? */

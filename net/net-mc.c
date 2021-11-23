@@ -2299,7 +2299,7 @@ void cuda_setup
 #if !SPLIT_KERNELS
 
 __global__ void training_kernel
-__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE)
+__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
 (
   double *restrict case_energy, /* Places to store energy, null if not needed */
   net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
@@ -2312,7 +2312,7 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE)
 #else 
 
 __global__ void forward_kernel
-__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE)
+__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
 (
   int start,		/* Start of cases to look at */
   int end 		/* End of cases to look at (index after last case) */
@@ -2336,7 +2336,7 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE)
 
 }
 __global__ void energy_kernel
-__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE)
+__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
 (
   double *restrict case_energy, /* Places to store energy, null if not needed */
   int start,		/* Start of cases to look at */
@@ -2435,7 +2435,7 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE)
 
 }
 __global__ void backward_gradient_kernel
-__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE)
+__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
 (
   net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
   int start,		/* Start of cases to look at */
@@ -2491,7 +2491,7 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE)
 
 }
 __global__ void gradient_reduction_kernel
-__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE)
+__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
 (
   net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
   int start,            /* Start of cases to look at */

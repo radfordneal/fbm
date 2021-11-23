@@ -275,20 +275,32 @@ void mc_app_record_sizes
 }
 
 
-/* DECIDE HOW TO USE FAST GPU SHARED MEMORY.  Sets fields in pre. */
+/* DECIDE HOW TO USE FAST GPU SHARED MEMORY. */
 
 #if __CUDACC__
 
-void decide_gpu_shared_mem_use (net_precomputed *pre, net_arch *arch)
+static void decide_gpu_shared_mem_use 
+( net_precomputed *pre,	/* Place to store result in fwgpumem & bwgpumem fields*/
+  net_arch *arch,	/* Network architecture */
+  net_flags *flgs,	/* Flags for layers (eg, activation function) */
+  int allowed_elements	/* Number of elements allowed in shared memory */
+)
 {
-  int allowed_elements = allowed_shared_mem / sizeof(net_value);
   int l;
 
   pre->memused = 0;
 
   for (l = 0; l<arch->N_layers; l++)
-  { if (!SPLIT_KERNELS 
-          && pre->memused+arch->N_hidden[l] <= allowed_elements)
+  { pre->fwgpumem[l] = -1;
+    pre->bwgpumem[l] = -1;
+  }
+
+  if (SPLIT_KERNELS)
+  { return;
+  }
+
+  for (l = 0; l<arch->N_layers; l++)
+  { if (pre->memused+arch->N_hidden[l] <= allowed_elements)
     { pre->fwgpumem[l] = pre->memused;
       pre->memused += arch->N_hidden[l];
     }
@@ -298,8 +310,7 @@ void decide_gpu_shared_mem_use (net_precomputed *pre, net_arch *arch)
   }
 
   for (l = 0; l<arch->N_layers; l++)
-  { if (!SPLIT_KERNELS 
-          && pre->memused+arch->N_hidden[l] <= allowed_elements)
+  { if (pre->memused+arch->N_hidden[l] <= allowed_elements)
     { pre->bwgpumem[l] = pre->memused;
       pre->memused += arch->N_hidden[l];
     }
@@ -549,7 +560,8 @@ void mc_app_initialize
 
 #   if __CUDACC__
     {
-      decide_gpu_shared_mem_use (&pre, arch);
+      decide_gpu_shared_mem_use 
+        (&pre, arch, flgs, allowed_shared_mem / sizeof(net_value));
 
       if (show_info)
       { int l;

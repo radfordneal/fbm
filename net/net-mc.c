@@ -369,8 +369,8 @@ void mc_app_initialize
           exit(1);
         }
       }
-      if (blkcases*THREADS_PER_CASE > MAX_THREADS)
-      { blkcases = MAX_THREADS / THREADS_PER_CASE;
+      if (blkcases > MAX_BLKCASES)
+      { blkcases = MAX_BLKCASES;
         fprintf(stderr,"BLKCASES too large, reduced to %d\n",blkcases);
       }
       if ((blkcases&GROUP_MASK)!=0)
@@ -413,6 +413,9 @@ void mc_app_initialize
 
       allowed_shared_mem = !USE_FAST_SHARED_MEM ? 0
         : (cuda_prop.sharedMemPerMultiprocessor / needed_blocks) / blkcases;
+      if (allowed_shared_mem * blkcases > cuda_prop.sharedMemPerBlock)
+      { allowed_shared_mem = cuda_prop.sharedMemPerBlock / blkcases;
+      }
 
       if (show_info)
       { printf (
@@ -2296,6 +2299,7 @@ void cuda_setup
 #if !SPLIT_KERNELS
 
 __global__ void training_kernel
+__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE)
 (
   double *restrict case_energy, /* Places to store energy, null if not needed */
   net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
@@ -2308,6 +2312,7 @@ __global__ void training_kernel
 #else 
 
 __global__ void forward_kernel
+__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE)
 (
   int start,		/* Start of cases to look at */
   int end 		/* End of cases to look at (index after last case) */
@@ -2331,6 +2336,7 @@ __global__ void forward_kernel
 
 }
 __global__ void energy_kernel
+__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE)
 (
   double *restrict case_energy, /* Places to store energy, null if not needed */
   int start,		/* Start of cases to look at */
@@ -2429,6 +2435,7 @@ __global__ void energy_kernel
 
 }
 __global__ void backward_gradient_kernel
+__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE)
 (
   net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
   int start,		/* Start of cases to look at */
@@ -2484,6 +2491,7 @@ __global__ void backward_gradient_kernel
 
 }
 __global__ void gradient_reduction_kernel
+__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE)
 (
   net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
   int start,            /* Start of cases to look at */
@@ -2650,6 +2658,7 @@ static void net_training_cases_gpu
       { training_kernel <<<blks, threads, shared_mem>>>
           (energy ? case_energy : 0, gr ? group_grad : 0,
            i, i+cases, en_weight, gr_weight);
+
         if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching training_kernel");
       }

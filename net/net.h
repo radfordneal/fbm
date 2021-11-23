@@ -52,7 +52,7 @@
 
 /* CONSTANTS RELATING TO GPU COMPUTATIONS: */
 
-#define THREADS_PER_CASE 4   /* Number of GPU threads used per training case,
+#define THREADS_PER_CASE 8   /* Number of GPU threads used per training case,
                                 must be a power of two */
 
 #define GROUP_SHIFT 2        /* Log2 of number of training cases in a group for
@@ -73,10 +73,7 @@
                                 1 = parameters going to gpu only,
                                 2 = parameters + energy & deriv from gpu */
 
-#define MAX_THREADS 128      /* Limit on # of threads in a block, to avoid
-			        exceeding the per-block register use limit
-			        (max 255 reg/thread, min 32K reg/block) */
-
+#define MAX_BLKCASES 32      /* Maximum allowed, relates to register usage */
 #define DEFAULT_BLKCASES 32  /* Default, if not set by BLKCASES env var */
 #define DEFAULT_MAXBLKS	500  /* Default, if not set by MAXBLKS env var */
 

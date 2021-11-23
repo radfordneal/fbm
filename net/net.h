@@ -73,8 +73,8 @@
                                 1 = parameters going to gpu only,
                                 2 = parameters + energy & deriv from gpu */
 
-#define MAX_BLKCASES 16      /* Maximum allowed, relates to register usage */
-#define DEFAULT_BLKCASES 16  /* Default, if not set by BLKCASES env var */
+#define MAX_BLKCASES 32      /* Maximum allowed, relates to register usage */
+#define DEFAULT_BLKCASES 32  /* Default, if not set by BLKCASES env var */
 #define DEFAULT_MAXBLKS	500  /* Default, if not set by MAXBLKS env var */
 
 #define USE_FAST_SHARED_MEM 1  /* Use fast shared GPU memory for unit values

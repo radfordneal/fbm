@@ -1,4 +1,4 @@
-Commit: 660b956abc8a5daa9055bb86a483e1961bdbe457
+Commit: 29c265a4311e5516916765b4d0c0fca57df3b336
 
 Running exr with dbl-gpu on K20c:
 
@@ -6,14 +6,14 @@ Number of training cases: 100
 Number of test cases: 1000
 Precision: FP64, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
 Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
-Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
-Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 384 bytes/case
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 768 bytes/case
 Hid layer shrd mem: 0:8:FB
 With 100 cases, need 1 launches, max 4 blocks/launch
 Precision: FP64, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
 Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
-Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
-Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 384 bytes/case
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 768 bytes/case
 Hid layer shrd mem: 0:8:FB
 With 100 cases, need 1 launches, max 4 blocks/launch
  
@@ -26,4 +26,4 @@ Number of test cases: 1000
 Average log probability of targets:     0.858+-0.019
 Average squared error guessing mean:    0.01215+-0.00102
 
-elapsed 8.84s
+elapsed 7.93s

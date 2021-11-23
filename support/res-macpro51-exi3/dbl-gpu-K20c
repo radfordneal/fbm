@@ -1,19 +1,19 @@
-Commit: 660b956abc8a5daa9055bb86a483e1961bdbe457
+Commit: 29c265a4311e5516916765b4d0c0fca57df3b336
 
 Running exi3 with dbl-gpu on K20c:
 
 Number of training cases: 499
 Precision: FP64, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
 Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
-Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
-Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 384 bytes/case
-Hid layer shrd mem: 0:20:F 1:20:F 2:20:- 3:20:- 4:20:- 5:10:-
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 768 bytes/case
+Hid layer shrd mem: 0:20:F 1:20:F 2:20:F 3:20:F 4:20:- 5:10:F
 With 499 cases, need 1 launches, max 16 blocks/launch
 Precision: FP64, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
 Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
-Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
-Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 384 bytes/case
-Hid layer shrd mem: 0:20:F 1:20:F 2:20:- 3:20:- 4:20:- 5:10:-
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 768 bytes/case
+Hid layer shrd mem: 0:20:F 1:20:F 2:20:F 3:20:F 4:20:- 5:10:F
 With 499 cases, need 1 launches, max 16 blocks/launch
 
 Number of iterations used: 6
@@ -24,4 +24,4 @@ Average log probability of targets:    -1.386+-0.004
 Fraction of guesses that were wrong:    0.7400+-0.0441
 Average squared error guessing mean:    0.75012+-0.00213
 
-elapsed 57.97s
+elapsed 66.96s

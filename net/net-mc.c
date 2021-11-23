@@ -275,6 +275,43 @@ void mc_app_record_sizes
 }
 
 
+/* DECIDE HOW TO USE FAST GPU SHARED MEMORY.  Sets fields in pre. */
+
+#if __CUDACC__
+
+void decide_gpu_shared_mem_use (net_precomputed *pre, net_arch *arch)
+{
+  int allowed_elements = allowed_shared_mem / sizeof(net_value);
+  int l;
+
+  pre->memused = 0;
+
+  for (l = 0; l<arch->N_layers; l++)
+  { if (!SPLIT_KERNELS 
+          && pre->memused+arch->N_hidden[l] <= allowed_elements)
+    { pre->fwgpumem[l] = pre->memused;
+      pre->memused += arch->N_hidden[l];
+    }
+    else
+    { pre->fwgpumem[l] = -1;
+    }
+  }
+
+  for (l = 0; l<arch->N_layers; l++)
+  { if (!SPLIT_KERNELS 
+          && pre->memused+arch->N_hidden[l] <= allowed_elements)
+    { pre->bwgpumem[l] = pre->memused;
+      pre->memused += arch->N_hidden[l];
+    }
+    else
+    { pre->bwgpumem[l] = -1;
+    }
+  }
+}
+
+#endif
+
+
 /* INITIALIZE AND SET UP DYNAMIC STATE STRUCTURE.  Skips some stuff
    if it's already been done, as indicated by the initialize_done
    variable. */
@@ -508,39 +545,15 @@ void mc_app_initialize
       net_prior_generate (&params, &sigmas, arch, flgs, model, priors, 1, 0, 0);
     }
 
-    /* Do precomputations for GPU usage. */
+    /* Do precomputation of how to use fast GPU shared memory. */
 
 #   if __CUDACC__
     {
-      int allowed_elements = allowed_shared_mem / sizeof(net_value);
-      int l;
-
-      pre.memused = 0;
-
-      for (l = 0; l<arch->N_layers; l++)
-      { if (!SPLIT_KERNELS 
-              && pre.memused+arch->N_hidden[l] <= allowed_elements)
-        { pre.fwgpumem[l] = pre.memused;
-          pre.memused += arch->N_hidden[l];
-        }
-        else
-        { pre.fwgpumem[l] = -1;
-        }
-      }
-
-      for (l = 0; l<arch->N_layers; l++)
-      { if (!SPLIT_KERNELS 
-              && pre.memused+arch->N_hidden[l] <= allowed_elements)
-        { pre.bwgpumem[l] = pre.memused;
-          pre.memused += arch->N_hidden[l];
-        }
-        else
-        { pre.bwgpumem[l] = -1;
-        }
-      }
+      decide_gpu_shared_mem_use (&pre, arch);
 
       if (show_info)
-      { printf("Hid layer shrd mem:");
+      { int l;
+        printf("Hid layer shrd mem:");
         for (l = 0; l<arch->N_layers; l++)
         { printf (" %d:%d:%s", l, arch->N_hidden[l],
             pre.fwgpumem[l]>=0 && pre.bwgpumem[l]>=0 ? "FB"
@@ -2274,8 +2287,6 @@ void cuda_setup
 #endif
 
 
-#if __CUDACC__
-
 /* GPU CODE FOR FORWARD, MODEL/ENERGY, BACKWARD, AND GRADIENT COMPUTATION.
 
    Done as one CUDA kernel, or split into four or five kernels, according 
@@ -2283,6 +2294,8 @@ void cuda_setup
 
    References the const_... variables in GPU constant memory with things  
    such as the network architecture. */
+
+#if __CUDACC__
 
 #define KDEBUG 0        /* Set to 1 to enable debug output below */
 

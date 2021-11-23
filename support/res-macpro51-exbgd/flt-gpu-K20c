@@ -1,14 +1,14 @@
-Commit: 1e462b2e5d7de75851c24c37c8a5cfd50fc6acb8
+Commit: 368ea837f0f798cb8b9608c5e4355d3be39d73e5
 
 Running exbgd with flt-gpu on K20c:
 
 Number of training cases: 800
 Precision: FP32, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
 Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
-Specified 16 cases per block, max 500 blocks per launch, threads/case: 4
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
 Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 384 bytes/case
 Hid layer shrd mem: 0:15:FB
-With 800 cases, need 1 launches, max 50 blocks/launch
+With 800 cases, need 1 launches, max 25 blocks/launch
 
 Number of iterations used: 1
 
@@ -18,4 +18,4 @@ Average log probability of targets:    -0.238+-0.025
 Fraction of guesses that were wrong:    0.1120+-0.0141
 Average squared error guessing mean:    0.07571+-0.00848
 
-elapsed 9.26s
+elapsed 9.13s

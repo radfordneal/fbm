@@ -1,4 +1,4 @@
-Commit: cc66285668ca74c05a911fd09ec4664d630fed93
+Commit: c4cfe3860371f968891eac9b698da32cf263ecf0
 
 Running exi2 with flt-gpu on K20c:
 
@@ -7,13 +7,13 @@ Precision: FP32, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
 Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
 Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
 Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 384 bytes/case
-Hid layer shrd mem: 0:80:F
+Hid layer shrd mem: 0:80:0,-1 T 80
 With 4999 cases, need 1 launches, max 157 blocks/launch
 Precision: FP32, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
 Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
 Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
 Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 384 bytes/case
-Hid layer shrd mem: 0:80:F
+Hid layer shrd mem: 0:80:0,-1 T 80
 With 4999 cases, need 1 launches, max 157 blocks/launch
 
 Number of iterations used: 2
@@ -24,4 +24,4 @@ Average log probability of targets:    -0.756+-0.107
 Fraction of guesses that were wrong:    0.2700+-0.0446
 Average squared error guessing mean:    0.38772+-0.04793
 
-elapsed 19.31s
+elapsed 19.35s

@@ -1,4 +1,4 @@
-Commit: cc66285668ca74c05a911fd09ec4664d630fed93
+Commit: c4cfe3860371f968891eac9b698da32cf263ecf0
 
 Running exbgd with flt:
 
@@ -13,4 +13,4 @@ Average log probability of targets:    -0.238+-0.025
 Fraction of guesses that were wrong:    0.1120+-0.0141
 Average squared error guessing mean:    0.07571+-0.00848
 
-elapsed 16.76s
+elapsed 17.66s

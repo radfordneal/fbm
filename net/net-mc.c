@@ -288,36 +288,96 @@ static void decide_gpu_shared_mem_use
 {
   int l;
 
-  pre->memused = 0;
-
-  for (l = 0; l<arch->N_layers; l++)
-  { pre->fwgpumem[l] = -1;
-    pre->bwgpumem[l] = -1;
-  }
-
   if (SPLIT_KERNELS)
-  { return;
-  }
-
-  for (l = 0; l<arch->N_layers; l++)
-  { if (pre->memused+arch->N_hidden[l] <= allowed_elements)
-    { pre->fwgpumem[l] = pre->memused;
-      pre->memused += arch->N_hidden[l];
-    }
-    else
+  { for (l = 0; l<arch->N_layers; l++)
     { pre->fwgpumem[l] = -1;
+      pre->bwgpumem[l] = -1;
+    }
+    pre->memused = 0;
+    return;
+  }
+
+  int fwshared[Max_layers], bwshared[Max_layers];
+  int in_use, max_in_use, nonseq;
+  
+  in_use = 0;
+  nonseq = 0;
+  for (l=arch->N_layers-1; l>=0; l--)
+  { fwshared[l] = in_use+arch->N_hidden[l] <= allowed_elements-nonseq;
+    if (fwshared[l])
+    { in_use += arch->N_hidden[l];
+    }
+    if (arch->has_nsq[l])
+    { bwshared[l] = nonseq+arch->N_hidden[l] <= allowed_elements-nonseq;
+      if (bwshared[l])
+      { nonseq += arch->N_hidden[l];
+      }
+    }
+  }
+  max_in_use = in_use;
+  for (l = arch->N_layers-1; l>=0; l--)
+  { if (!arch->has_nsq[l])
+    { bwshared[l] = in_use+arch->N_hidden[l] <= allowed_elements-nonseq;
+      if (bwshared[l])
+      { in_use += arch->N_hidden[l];
+        if (in_use>max_in_use)
+        { max_in_use = in_use;
+        }
+      }
+    }
+    if (fwshared[l])
+    { in_use -= arch->N_hidden[l];
+    }
+    if (l+1<arch->N_layers && !arch->has_nsq[l+1] && bwshared[l+1])
+    { in_use -= arch->N_hidden[l+1];
+    }
+  }
+
+  int fwloc[Max_layers], bwloc[Max_layers];
+  int below, above;
+
+  below = 0;
+  above = max_in_use;
+  for (l = 0; l<arch->N_layers; l++)
+  { if (!fwshared[l])
+    { fwloc[l] = l==0 ? 0 : l==1 ? max_in_use : fwloc[l-2];
+    }
+    else
+    { if (l&1) /* odd layer */
+      { above -= arch->N_hidden[l];
+        fwloc[l] = above;
+      }
+      else /* even layer */
+      { fwloc[l] = below;
+        below += arch->N_hidden[l];
+      }
+      if (above<below) abort();
+    }
+  }
+
+  int ns = 0;
+  for (l = 0; l<arch->N_layers; l++)
+  { if (arch->has_nsq[l])
+    { if (bwshared[l])
+      { bwloc[l] = max_in_use + ns;
+        ns += arch->N_hidden[l];
+      }
+    }
+    else
+    { if (bwshared[l])
+      { bwloc[l] = l&1 ? fwloc[l-1]+arch->N_hidden[l-1]
+                 : l==0 ? max_in_use-arch->N_hidden[l]
+                 : fwloc[l-1]-arch->N_hidden[l];
+      }
     }
   }
 
   for (l = 0; l<arch->N_layers; l++)
-  { if (pre->memused+arch->N_hidden[l] <= allowed_elements)
-    { pre->bwgpumem[l] = pre->memused;
-      pre->memused += arch->N_hidden[l];
-    }
-    else
-    { pre->bwgpumem[l] = -1;
-    }
+  { pre->fwgpumem[l] = fwshared[l] ? fwloc[l] : -1;
+    pre->bwgpumem[l] = bwshared[l] ? bwloc[l] : -1;
   }
+
+  pre->memused = max_in_use + nonseq;
 }
 
 #endif
@@ -567,11 +627,17 @@ void mc_app_initialize
       { int l;
         printf("Hid layer shrd mem:");
         for (l = 0; l<arch->N_layers; l++)
-        { printf (" %d:%d:%s", l, arch->N_hidden[l],
-            pre.fwgpumem[l]>=0 && pre.bwgpumem[l]>=0 ? "FB"
-             : pre.fwgpumem[l]>=0 ? "F" : pre.bwgpumem[l]>=0 ? "B" : "-");
+        { if (1) /* used for debugging */
+          { printf (" %d:%d:%d,%d", l, arch->N_hidden[l],
+                    pre.fwgpumem[l], pre.bwgpumem[l]);
+          }
+          else   /* all the user needs */
+          { printf (" %d:%d:%s", l, arch->N_hidden[l],
+              pre.fwgpumem[l]>=0 && pre.bwgpumem[l]>=0 ? "FB"
+               : pre.fwgpumem[l]>=0 ? "F" : pre.bwgpumem[l]>=0 ? "B" : "-");
+          }
         }
-        printf("\n");
+        printf(" T %d\n",pre.memused);
       }
     }
 #   endif

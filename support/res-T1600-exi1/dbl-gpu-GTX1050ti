@@ -1,0 +1,27 @@
+Commit: c63ffbc844806221c73a9c3596b428a2f4fc9284
+
+Running exi1 with dbl-gpu on GTX1050ti:
+
+Number of training cases: 4999
+Precision: FP64, SIMD capability: AVX, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
+NVIDIA GeForce GTX 1050 Ti, Compute Capability 6.1, 6 SM processors, 3.9 GBytes
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
+Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32 -> 768 bytes/case
+Hid layer shrd mem: 0:80:0,-1 T 80
+With 4999 cases, need 1 launches, max 157 blocks/launch
+Precision: FP64, SIMD capability: AVX, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
+NVIDIA GeForce GTX 1050 Ti, Compute Capability 6.1, 6 SM processors, 3.9 GBytes
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
+Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32 -> 768 bytes/case
+Hid layer shrd mem: 0:80:0,-1 T 80
+With 4999 cases, need 1 launches, max 157 blocks/launch
+
+Number of iterations used: 2
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.050+-0.081
+Fraction of guesses that were wrong:    0.4900+-0.0502
+Average squared error guessing mean:    0.57732+-0.04266
+
+elapsed 22.47s

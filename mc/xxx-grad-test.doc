@@ -6,7 +6,11 @@ There is a version of this program for each 'mc' application (eg,
 net-grad-test).  These programs are used to check the energy gradient
 computed by the application-specific 'mc' module against that found by
 taking differences using the straight energy computation procedure of
-the same module.  
+the same module.
+
+If there is a GPU version of the xxx-mc program, there will also be a
+GPU version of xxx-grad-test, so that gradient computations on the GPU
+can be tested.
 
 These programs are meant for debugging, not for ordinary use.
 
@@ -20,4 +24,4 @@ the specified index in the log file.  It is compared to the gradient
 found using finite differences with the given difference value.  The
 results are written to standard output.
 
-            Copyright (c) 1995-2004 by Radford M. Neal
+            Copyright (c) 1995-2021 by Radford M. Neal

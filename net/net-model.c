@@ -13,7 +13,7 @@
  * application.  All use of these programs is entirely at the user's own risk.
  */
 
-#ifndef SRC_INCLUDE  /* Not included in another source file */
+#ifndef GPU_SRC_INCLUDE  /* Not included in another source file */
 
 #include <stdlib.h>
 #include <string.h>
@@ -44,7 +44,7 @@
 
 /* CHECK THAT A DATA MODEL IS PRESENT. */
 
-void net_model_check (model_specification const*m)
+void STATIC_IF_INCLUDED net_model_check (model_specification const*m)
 {
   if (m->type==0)
   { fprintf(stderr,"Network has no data model defined\n");
@@ -76,7 +76,7 @@ void net_model_check (model_specification const*m)
    By passing zero pointers, computation of either the log probability or of
    its derivatives may be suppressed, with a possible saving in time. */
 
-HOSTDEV void net_model_prob
+HOSTDEV STATIC_IF_INCLUDED void net_model_prob
 ( net_values const*v,	/* Values for units in network */
   net_value const*t,	/* Target values, fudged for piecewise const hazard */
   double *restrict pr,	/* Place to store log probability, zero if not wanted */
@@ -296,7 +296,7 @@ HOSTDEV void net_model_prob
 
 #if __CUDACC__
 
-__device__ void net_model_prob_gpu
+__device__ STATIC_IF_INCLUDED void net_model_prob_gpu
 ( int th,		/* Thread index, if negative, just sync */
   net_values const*v,	/* Values for units in network */
   net_value const*t,	/* Target values */
@@ -528,7 +528,7 @@ sync_e:
  
    A data model must be specified to use this procedure. */
 
-void net_model_max_second
+void STATIC_IF_INCLUDED net_model_max_second
 ( net_value *msd,	/* Place to store maximum second derivatives */
   net_arch *a,		/* Network architecture */
   model_specification *m, /* Data model */
@@ -626,7 +626,7 @@ void net_model_max_second
    If no data model is specified, a real-valued data model with no noise
    is assumed. */
 
-void net_model_guess
+void STATIC_IF_INCLUDED net_model_guess
 ( net_values *v,	/* Values for units in network */
   net_value *t,		/* Place to store guesses at targets */
   net_arch *a,		/* Network architecture */

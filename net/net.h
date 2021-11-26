@@ -14,9 +14,24 @@
  */
 
 
+/* TRICKS FOR GPU COMPILATION. */
+
 #ifndef HOSTDEV
 #define HOSTDEV  /* don't declare some procedures as __host__ or __device__ */
 #define __device__
+#endif
+
+
+/* SETUP TO ALLOW SOURCE INCLUSION.  Used to include net-func.c, net-model.c,
+   and net-back-grad.c in net-mc.c, with functions in those files declared 
+   static.  (They may still be compiled on their own for other uses.)  
+
+   This may allow the compilers to generate better code. */
+
+#ifdef GPU_SRC_INCLUDE
+#define STATIC_IF_INCLUDED static
+#else
+#define STATIC_IF_INCLUDED
 #endif
 
 
@@ -502,39 +517,48 @@ void net_prior_prob (net_params *, net_sigmas *, double *, net_params *,
 void net_prior_max_second (net_params *, net_sigmas *, net_arch *, net_flags *,
                            net_priors *);
 
+STATIC_IF_INCLUDED
 void net_func (net_values *restrict, int, net_arch const*, 
                net_precomputed const*, net_flags const*, 
                net_params const*, int);
 
-__device__ void net_func_gpu (int, net_values *restrict, int, net_arch const*, 
-                              net_precomputed const*, net_flags const*, 
-                              net_params const*, int, int);
+__device__ STATIC_IF_INCLUDED
+void net_func_gpu (int, net_values *restrict, int, net_arch const*, 
+                   net_precomputed const*, net_flags const*, 
+                   net_params const*, int, int);
 
+STATIC_IF_INCLUDED
 void net_back_add_grad (net_params *restrict, 
                         net_values const*, net_values *restrict, 
                         net_arch const*, net_precomputed const*,
                         net_flags const*, net_params const*, int);
 
-__device__ void net_back_grad_gpu (int, int, net_params *restrict, 
-                                   net_values const*, net_values *restrict, 
-                                   net_arch const*, net_precomputed const*,
-                                   net_flags const*, net_params const*, int);
+__device__ STATIC_IF_INCLUDED
+void net_back_grad_gpu (int, int, net_params *restrict, 
+                        net_values const*, net_values *restrict, 
+                        net_arch const*, net_precomputed const*,
+                        net_flags const*, net_params const*, int);
 
-HOSTDEV void net_model_prob (net_values const*, net_value const*, 
-                             double *restrict, net_values *restrict, 
-                             net_arch const*, model_specification const*,
-                             model_survival const*, net_sigma const*, int);
+HOSTDEV STATIC_IF_INCLUDED
+void net_model_prob (net_values const*, net_value const*, 
+                     double *restrict, net_values *restrict, 
+                     net_arch const*, model_specification const*,
+                     model_survival const*, net_sigma const*, int);
 
-__device__ void net_model_prob_gpu (int, net_values const*, net_value const*, 
-                             double *restrict, net_values *restrict, 
-                             net_arch const*, model_specification const*,
-                             net_sigma const*, net_value *restrict, int, int);
+__device__ STATIC_IF_INCLUDED
+void net_model_prob_gpu (int, net_values const*, net_value const*, 
+                         double *restrict, net_values *restrict, 
+                         net_arch const*, model_specification const*,
+                         net_sigma const*, net_value *restrict, int, int);
 
+STATIC_IF_INCLUDED 
 void net_model_check (model_specification const*);
 
+STATIC_IF_INCLUDED
 void net_model_max_second (net_value *, net_arch *, model_specification *,
                            model_survival *, net_sigma *);
 
+STATIC_IF_INCLUDED
 void net_model_guess (net_values *, net_value *, net_arch *, 
                       net_precomputed *, net_flags *,
                       model_specification *, model_survival *, net_params *,

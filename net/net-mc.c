@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <math.h>
 
+#define GPU_SRC_INCLUDE  /* Allows inclusion of .c files below */
+
 #include "cuda-use.h"
 
 #include "misc.h"
@@ -39,9 +41,8 @@
 
 /* INCLUDE NETWORK COMPUTATION PROCEDURES AS SOURCE HERE.  This may
    allow for some compiler optimizations that would not be possible if
-   they were compiled separately and linked as .o files. */
-
-#define SRC_INCLUDE
+   they were compiled separately and linked as .o files.  Uses fact
+   that GPU_SRC_INCLUDE is defined above. */
 
 #include "net-func.c"
 #include "net-model.c"

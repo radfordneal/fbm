@@ -157,15 +157,15 @@ net-grad-test:	mc-grad-test.o	net-mc.o ars.o net-plt.o misc.o log.o rand.o \
 				mc-util.o mc-metropolis.o mc-hybrid.o \
 				mc-slice.o net-setup.o prior.o net-prior.o \
 				net-data.o model.o net-util.o net-config.o \
-				net-quantities.o \
+				net-quantities.o net-model.o net-func.o \
 				mc-quantities.o quantities.o mc-heatbath.o 
 		$(CC) $(LFLAGS) mc-grad-test.o net-mc.o ars.o misc.o log.o \
 		  rand.o numin.o data-trans.o mc-iter.o mc-traj.o mc-util.o \
 		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
 		  net-setup.o prior.o net-prior.o \
-		  net-data.o model.o net-util.o \
-		  net-config.o \
-		  net-plt.o net-quantities.o mc-quantities.o quantities.o \
+		  net-data.o model.o net-util.o net-func.o \
+		  net-config.o net-plt.o net-quantities.o net-model.o  \
+		  mc-quantities.o quantities.o \
 		  -lm -o net-grad-test
 
 net-stepsizes:	mc-stepsizes.o	net-mc.o ars.o net-plt.o misc.o log.o rand.o \
@@ -173,14 +173,15 @@ net-stepsizes:	mc-stepsizes.o	net-mc.o ars.o net-plt.o misc.o log.o rand.o \
 				mc-util.o mc-heatbath.o \
 				mc-metropolis.o mc-hybrid.o mc-slice.o \
 				net-setup.o prior.o net-prior.o net-data.o \
-				model.o net-util.o net-config.o \
-				net-quantities.o mc-quantities.o quantities.o 
+				model.o net-util.o net-config.o net-model.o \
+				net-func.o net-quantities.o mc-quantities.o \
+				quantities.o 
 		$(CC) $(LFLAGS) mc-stepsizes.o net-mc.o ars.o misc.o log.o \
 		  rand.o numin.o data-trans.o mc-iter.o mc-traj.o mc-util.o \
 		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
 		  net-setup.o prior.o net-prior.o \
 		  net-data.o model.o net-util.o \
-		  net-config.o \
+		  net-config.o net-model.o net-func.o \
 		  net-plt.o net-quantities.o mc-quantities.o quantities.o \
 		  -lm -o net-stepsizes
 
@@ -190,14 +191,14 @@ net-genp:	mc-genp.o	net-mc.o ars.o net-plt.o misc.o log.o rand.o \
 				mc-metropolis.o mc-hybrid.o mc-slice.o \
 				net-setup.o prior.o net-prior.o net-data.o \
 				model.o net-util.o net-config.o \
-				net-quantities.o \
+				net-quantities.o net-model.o net-func.o \
 				mc-quantities.o quantities.o 
 		$(CC) $(LFLAGS) mc-genp.o net-mc.o ars.o misc.o log.o \
 		  rand.o numin.o data-trans.o mc-iter.o mc-traj.o mc-util.o \
 		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
 		  net-setup.o prior.o net-prior.o \
 		  net-data.o model.o net-util.o \
-		  net-config.o \
+		  net-config.o net-model.o net-func.o \
 		  net-plt.o net-quantities.o mc-quantities.o quantities.o \
 		  -lm -o net-genp
 
@@ -213,13 +214,14 @@ net-mc:		mc.o net-mc.o	ars.o misc.o log.o rand.o numin.o data-trans.o \
 				mc-metropolis.o mc-hybrid.o mc-slice.o \
 				net-setup.o prior.o net-prior.o net-data.o \
 				model.o net-util.o net-config.o \
-				net-quantities.o \
+				net-quantities.o net-model.o net-func.o \
 				mc-quantities.o quantities.o mc-heatbath.o 
 		$(CC) $(LFLAGS) mc.o net-mc.o ars.o misc.o log.o rand.o numin.o\
 		  data-trans.o mc-iter.o mc-traj.o mc-util.o \
 		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
 		  net-setup.o prior.o net-prior.o \
-		  net-plt.o net-quantities.o mc-quantities.o quantities.o \
+		  net-plt.o net-quantities.o net-model.o \
+		  mc-quantities.o quantities.o net-func.o \
 		  net-data.o model.o net-util.o \
 		  net-config.o -lm -o net-mc
 
@@ -227,17 +229,17 @@ net-his:	mc-his.o net-mc.o ars.o misc.o log.o rand.o data-trans.o \
 				numin.o \
 				net-plt.o mc-traj.o mc-util.o \
 				net-setup.o prior.o net-prior.o \
-				net-data.o \
+				net-data.o net-func.o \
 				model.o net-util.o net-config.o \
-				net-quantities.o \
+				net-quantities.o net-model.o \
 				mc-quantities.o quantities.o mc-heatbath.o 
 		$(CC) $(LFLAGS) mc-his.o net-mc.o ars.o misc.o log.o rand.o \
 		  data-trans.o mc-traj.o mc-util.o numin.o \
 		  mc-heatbath.o \
-		  net-setup.o prior.o net-prior.o \
+		  net-setup.o prior.o net-prior.o net-func.o \
 		  net-plt.o net-quantities.o mc-quantities.o quantities.o \
 		  net-data.o model.o net-util.o \
-		  net-config.o -lm -o net-his
+		  net-config.o net-model.o -lm -o net-his
 
 net-mc.o:	net-mc.c	misc.h rand.h log.h mc.h data.h prior.h \
 				model.h net.h net-data.h net-mc.h cuda-use.h \
@@ -245,12 +247,12 @@ net-mc.o:	net-mc.c	misc.h rand.h log.h mc.h data.h prior.h \
 
 net-gd:		net-gd.o	net-setup.o net-data.o \
 				net-prior.o net-util.o \
-				net-config.o net-mc.o \
+				net-config.o net-mc.o net-model.o net-func.o \
 				model.o misc.o log.o rand.o \
 				numin.o data-trans.o prior.o ars.o
 		$(CC) $(LFLAGS) net-gd.o net-setup.o \
 		  net-data.o net-prior.o net-util.o \
-		  net-config.o net-mc.o \
+		  net-config.o net-mc.o net-model.o net-func.o \
 		  model.o misc.o log.o rand.o numin.o data-trans.o prior.o \
 		  ars.o -lm -o net-gd
 
@@ -258,38 +260,37 @@ net-gd.o:	net-gd.c	misc.h rand.h log.h mc.h data.h prior.h \
 				model.h	net.h net-data.h net-mc.h
 
 net-plt:	net-plt.o	net-mc.o ars.o net-setup.o prior.o net-prior.o \
-				net-quantities.o \
-				net-util.o net-config.o \
-				net-model.o \
+				net-quantities.o net-model.o \
+				net-util.o net-config.o net-func.o \
 				mc-quantities.o mc-util.o plt.o quantities.o \
 				misc.o log.o rand.o numin.o data-trans.o 
 		$(CC) $(LFLAGS) net-plt.o net-mc.o ars.o net-setup.o prior.o \
-		  net-data.o model.o net-quantities.o \
-		  net-util.o net-config.o net-prior.o \
+		  net-data.o model.o net-quantities.o net-model.o \
+		  net-util.o net-config.o net-prior.o net-func.o \
 		  mc-quantities.o mc-util.o plt.o quantities.o \
 		  misc.o log.o rand.o numin.o data-trans.o \
 		  -lm -o net-plt
 
 net-tbl:	net-plt.o	net-mc.o ars.o net-setup.o prior.o net-prior.o \
 				net-data.o model.o net-quantities.o \
-				net-util.o net-config.o \
+				net-model.o net-util.o net-config.o net-func.o \
 				mc-quantities.o mc-util.o tbl.o quantities.o \
 				misc.o log.o rand.o numin.o data-trans.o 
 		$(CC) $(LFLAGS) net-plt.o net-mc.o ars.o net-setup.o prior.o \
-		  net-data.o model.o net-quantities.o \
-		  net-util.o net-config.o net-prior.o \
+		  net-data.o model.o net-quantities.o net-model.o \
+		  net-util.o net-config.o net-prior.o net-func.o \
 		  mc-quantities.o mc-util.o tbl.o quantities.o \
 		  misc.o log.o rand.o numin.o data-trans.o \
 		  -lm -o net-tbl
 
 net-hist:	net-plt.o	net-mc.o ars.o net-setup.o prior.o net-prior.o \
 				net-data.o model.o net-quantities.o \
-				net-util.o net-config.o \
+				net-model.o net-util.o net-config.o net-func.o \
 				mc-quantities.o mc-util.o hist.o quantities.o \
 				misc.o log.o rand.o numin.o data-trans.o
 		$(CC) $(LFLAGS) net-plt.o net-mc.o ars.o net-setup.o prior.o \
 		  net-prior.o net-data.o model.o \
-		  net-quantities.o net-util.o \
+		  net-quantities.o net-model.o net-util.o net-func.o \
 		  net-config.o mc-quantities.o mc-util.o hist.o quantities.o \
 		  misc.o log.o rand.o numin.o data-trans.o \
 		  -lm -o net-hist
@@ -306,8 +307,8 @@ net-mc-gpu:	mc.o net-mc-gpu.o \
 		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
 		  net-setup-gpu.o net-prior-gpu.o \
 		  mc-quantities.o quantities.o model.o \
-		  net-plt-gpu.o net-quantities-gpu.o \
-                  net-data-gpu.o net-util-gpu.o net-config-gpu.o
+		  net-plt-gpu.o net-quantities-gpu.o net-model-gpu.o \
+                  net-data-gpu.o net-util-gpu.o net-config-gpu.o net-func-gpu.o
 		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets \
 		  mc.o net-mc-gpu.o \
 		  ars.o misc.o log.o rand.o numin.o prior.o \
@@ -315,8 +316,8 @@ net-mc-gpu:	mc.o net-mc-gpu.o \
 		  mc-metropolis.o mc-hybrid.o mc-slice.o mc-heatbath.o \
 		  net-setup-gpu.o net-prior-gpu.o \
 		  mc-quantities.o quantities.o model.o \
-		  net-plt-gpu.o net-quantities-gpu.o \
-		  net-data-gpu.o net-util-gpu.o net-config-gpu.o \
+		  net-plt-gpu.o net-quantities-gpu.o net-model-gpu.o \
+		  net-data-gpu.o net-util-gpu.o net-config-gpu.o net-func-gpu.o\
 		  -lm -o net-mc-gpu
 
 net-mc-gpu.o:	net-mc.c misc.h rand.h log.h mc.h data.h prior.h \
@@ -326,14 +327,14 @@ net-mc-gpu.o:	net-mc.c misc.h rand.h log.h mc.h data.h prior.h \
 		  net-mc.c -o net-mc-gpu.o
 
 net-gd-gpu:	net-gd-gpu.o	net-setup-gpu.o net-data-gpu.o \
-				net-prior-gpu.o net-util-gpu.o \
-				net-config-gpu.o net-mc-gpu.o \
+				net-prior-gpu.o net-util-gpu.o net-func-gpu.o \
+				net-config-gpu.o net-mc-gpu.o net-model-gpu.o \
 				model.o misc.o log.o rand.o \
 				numin.o data-trans.o prior.o ars.o
 		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets \
 		  net-gd-gpu.o net-setup-gpu.o \
-		  net-data-gpu.o net-prior-gpu.o \
-		  net-util-gpu.o net-config-gpu.o net-mc-gpu.o \
+		  net-data-gpu.o net-prior-gpu.o net-func-gpu.o \
+		  net-util-gpu.o net-config-gpu.o net-mc-gpu.o net-model-gpu.o \
 		  model.o misc.o log.o rand.o numin.o data-trans.o prior.o \
 		  ars.o -lm -o net-gd-gpu
 
@@ -347,8 +348,8 @@ net-grad-test-gpu:	mc-grad-test.o \
 				numin.o data-trans.o mc-iter.o mc-traj.o \
 				mc-util.o mc-metropolis.o mc-hybrid.o \
 				mc-quantities.o quantities.o mc-heatbath.o \
-				mc-slice.o prior.o model.o \
-				net-data-gpu.o net-util-gpu.o \
+				mc-slice.o prior.o model.o net-func-gpu.o \
+				net-data-gpu.o net-util-gpu.o net-model-gpu.o \
 				net-config-gpu.o net-quantities-gpu.o \
 				net-plt-gpu.o net-setup-gpu.o net-prior-gpu.o
 		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets \
@@ -357,8 +358,8 @@ net-grad-test-gpu:	mc-grad-test.o \
 				numin.o data-trans.o mc-iter.o mc-traj.o \
 				mc-util.o mc-metropolis.o mc-hybrid.o \
 				mc-quantities.o quantities.o mc-heatbath.o \
-				mc-slice.o prior.o model.o \
-				net-data-gpu.o net-util-gpu.o \
+				mc-slice.o prior.o model.o net-func-gpu.o \
+				net-data-gpu.o net-util-gpu.o net-model-gpu.o \
 				net-config-gpu.o net-quantities-gpu.o \
 				net-plt-gpu.o net-setup-gpu.o net-prior-gpu.o \
 		  -lm -o net-grad-test-gpu

@@ -13,7 +13,7 @@
  * application.  All use of these programs is entirely at the user's own risk.
  */
 
-#ifndef SRC_INCLUDE  /* Not included in another source file */
+#ifndef GPU_SRC_INCLUDE  /* Not included in another source file */
 
 #include <stdlib.h>
 #include <string.h>
@@ -80,7 +80,7 @@ static void add_connections_config (net_value *restrict,
    correct unit values for that number of hidden layers are assumed to be
    already present in the net_values structure. */
 
-void net_func 
+void STATIC_IF_INCLUDED net_func 
 ( net_values *restrict v, /* Place to get inputs and store outputs */
   int start,		/* Number of hidden layers with known values */
   net_arch const* a,	/* Network architecture */
@@ -1509,7 +1509,7 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
    that this means that outputs for different cases will not have been
    synchronized. */
 
-__device__ void net_func_gpu
+__device__ STATIC_IF_INCLUDED void net_func_gpu
 ( int th,		/* Thread index */
   net_values *restrict v, /* Place to get inputs and store outputs */
   int start,		/* Number of hidden layers with known values */

@@ -13,7 +13,7 @@
  * application.  All use of these programs is entirely at the user's own risk.
  */
 
-#ifndef SRC_INCLUDE  /* Not included in another source file */
+#ifndef GPU_SRC_INCLUDE  /* Not included in another source file */
 
 #include <stdlib.h>
 #include <string.h>
@@ -2903,7 +2903,7 @@ __device__ static void net_store4_grad2_config
    of energy with respect to hidden units, and with respect to input units,
    if input offsets are present. */
 
-void net_back_add_grad
+void STATIC_IF_INCLUDED net_back_add_grad
 ( net_params *restrict g, /* Gradient with respect to parameters to add to */
   net_values const*v,	/* Values for units in network */
   net_values *restrict d,/* Has output derivatives, storage for other derivs */
@@ -3479,7 +3479,7 @@ __device__ static void store_grad2_config
   }
 }
 
-__device__ void net_back_grad_gpu
+__device__ STATIC_IF_INCLUDED void net_back_grad_gpu
 ( int thrg,		/* Which thread, from 0 to GTH-1 */
   int gsz,		/* Size of gradient group (maybe < GROUP_SIZE at end) */
   net_params *restrict g, /* Gradient with respect to parameters to add to */

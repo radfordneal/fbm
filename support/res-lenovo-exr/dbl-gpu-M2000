@@ -1,29 +1,9 @@
-Commit: 842b443fdf597a056c2607d50d064d5f54dec6ae
+Commit: 70e971a1b953a1745d44a0f5467c3c8458e2c77a
 
 Running exr with dbl-gpu on M2000:
 
 Number of training cases: 100
 Number of test cases: 1000
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
-Quadro M2000, Compute Capability 5.2, 6 SM processors, 3.9 GBytes
-Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
-Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32 -> 768 bytes/case
-Hid layer shrd mem: 0:8:0,8 T 16
-With 100 cases, need 1 launches, max 4 blocks/launch
-Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
-Quadro M2000, Compute Capability 5.2, 6 SM processors, 3.9 GBytes
-Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
-Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32 -> 768 bytes/case
-Hid layer shrd mem: 0:8:0,8 T 16
-With 100 cases, need 1 launches, max 4 blocks/launch
- 
-Predictions after running for 1000 iterations:
-
-Number of iterations used: 80
-
-Number of test cases: 1000
-
-Average log probability of targets:     0.849+-0.020
-Average squared error guessing mean:    0.01577+-0.00239
-
-elapsed 5.11s
+Command terminated by signal 2
+elapsed 7.82s

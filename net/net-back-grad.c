@@ -2530,10 +2530,10 @@ __device__ static void net_store3_grad2_config
 __device__ static void net_store4_grad1
 ( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to store to */
-  net_value const* d0,    /* Derivatives with respect to unit values, case 0 */
-  net_value const* d1,    /* Derivatives with respect to unit values, case 1 */
-  net_value const* d2,    /* Derivatives with respect to unit values, case 2 */
-  net_value const* d3,    /* Derivatives with respect to unit values, case 3 */
+  net_value const*restrict d0,  /* Derivs with respect to unit values, case 0 */
+  net_value const*restrict d1,  /* Derivs with respect to unit values, case 1 */
+  net_value const*restrict d2,  /* Derivs with respect to unit values, case 2 */
+  net_value const*restrict d3,  /* Derivs with respect to unit values, case 3 */
   int n			  /* Number of units */
 )
 { 
@@ -2552,11 +2552,11 @@ __device__ static void net_store4_grad1
 __device__ static void net_store4_grad1_config
 ( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to store to */
-  net_value const* d0,    /* Derivatives with respect to unit values, case 0 */
-  net_value const* d1,    /* Derivatives with respect to unit values, case 1 */
-  net_value const* d2,    /* Derivatives with respect to unit values, case 2 */
-  net_value const* d3,    /* Derivatives with respect to unit values, case 3 */
-  net_config const* cf    /* Configuration for biases */
+  net_value const*restrict d0,  /* Derivs with respect to unit values, case 0 */
+  net_value const*restrict d1,  /* Derivs with respect to unit values, case 1 */
+  net_value const*restrict d2,  /* Derivs with respect to unit values, case 2 */
+  net_value const*restrict d3,  /* Derivs with respect to unit values, case 3 */
+  net_config const*restrict cf  /* Configuration for biases */
 )
 { net_connection *cn;
   int c, j, j2, k, m, ix;
@@ -2705,16 +2705,16 @@ do \
 __device__ static void net_store4_grad2
 ( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to store to */
-  net_value const* v0,    /* Source unit values, case 0 */
-  net_value const* v1,    /* Source unit values, case 1 */
-  net_value const* v2,    /* Source unit values, case 2 */
-  net_value const* v3,    /* Source unit values, case 3 */
+  net_value const*restrict v0,  /* Source unit values, case 0 */
+  net_value const*restrict v1,  /* Source unit values, case 1 */
+  net_value const*restrict v2,  /* Source unit values, case 2 */
+  net_value const*restrict v3,  /* Source unit values, case 3 */
   net_param const* off,   /* Offsets for source units, or zero if no offsets */
   int nv,		  /* Number of source units */
-  net_value const* d0,    /* Derivatives with respect to destination units, 0 */
-  net_value const* d1,    /* Derivatives with respect to destination units, 1 */
-  net_value const* d2,    /* Derivatives with respect to destination units, 2 */
-  net_value const* d3,    /* Derivatives with respect to destination units, 3 */
+  net_value const*restrict d0,  /* Derivs with respect to unit values, case 0 */
+  net_value const*restrict d1,  /* Derivs with respect to unit values, case 1 */
+  net_value const*restrict d2,  /* Derivs with respect to unit values, case 2 */
+  net_value const*restrict d3,  /* Derivs with respect to unit values, case 3 */
   int nd,		  /* Number of destination units */
   unsigned short const* omit, /* Omit flags, null if not present */
   int ob,		  /* Bit to look at in omit flags (mask, not number) */
@@ -2758,16 +2758,16 @@ __device__ static void net_store4_grad2
 __device__ static void net_store4_grad2_config
 ( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to add to */
-  net_value const* s0,    /* Source unit values, case 0 */
-  net_value const* s1,    /* Source unit values, case 1 */
-  net_value const* s2,    /* Source unit values, case 2 */
-  net_value const* s3,    /* Source unit values, case 3 */
+  net_value const*restrict s0,  /* Source unit values, case 0 */
+  net_value const*restrict s1,  /* Source unit values, case 1 */
+  net_value const*restrict s2,  /* Source unit values, case 2 */
+  net_value const*restrict s3,  /* Source unit values, case 3 */
   net_param const* off,   /* Offsets for source units, or zero if no offsets */
-  net_value const* d0,    /* Derivatives with respect to destination units, 0 */
-  net_value const* d1,    /* Derivatives with respect to destination units, 1 */
-  net_value const* d2,    /* Derivatives with respect to destination units, 2 */
-  net_value const* d3,    /* Derivatives with respect to destination units, 3 */
-  net_config const* cf    /* Configuration for connections and weights */
+  net_value const*restrict d0,  /* Derivs with respect to unit values, case 0 */
+  net_value const*restrict d1,  /* Derivs with respect to unit values, case 1 */
+  net_value const*restrict d2,  /* Derivs with respect to unit values, case 2 */
+  net_value const*restrict d3,  /* Derivs with respect to unit values, case 3 */
+  net_config const*restrict cf  /* Configuration for connections and weights */
 )
 {
   net_connection *cn;
@@ -3361,10 +3361,10 @@ __device__ static void store_grad1
 ( int th,                 /* Which thread (0 to GTH-1) */
   int gsz,                /* Number of cases in this group (<= GROUP_SIZE) */
   net_param *restrict g,  /* Array of derivatives to store to */
-  net_value const* d0,    /* Derivatives with respect to unit values, case 0 */
-  net_value const* d1,    /* Derivatives with respect to unit values, case 1 */
-  net_value const* d2,    /* Derivatives with respect to unit values, case 2 */
-  net_value const* d3,    /* Derivatives with respect to unit values, case 3 */
+  net_value const*restrict d0,  /* Derivs with respect to unit values, case 0 */
+  net_value const*restrict d1,  /* Derivs with respect to unit values, case 1 */
+  net_value const*restrict d2,  /* Derivs with respect to unit values, case 2 */
+  net_value const*restrict d3,  /* Derivs with respect to unit values, case 3 */
   int n                   /* Number of units */
 )
 {
@@ -3386,11 +3386,11 @@ __device__ static void store_grad1_config
 ( int th,                 /* Which thread (0 to GTH-1) */
   int gsz,                /* Number of cases in this group (<= GROUP_SIZE) */
   net_param *restrict g,  /* Array of derivatives to store to */
-  net_value const* d0,    /* Derivatives with respect to unit values, case 0 */
-  net_value const* d1,    /* Derivatives with respect to unit values, case 1 */
-  net_value const* d2,    /* Derivatives with respect to unit values, case 2 */
-  net_value const* d3,    /* Derivatives with respect to unit values, case 3 */
-  net_config const* cf    /* Configuration for biases */
+  net_value const*restrict d0,  /* Derivs with respect to unit values, case 0 */
+  net_value const*restrict d1,  /* Derivs with respect to unit values, case 1 */
+  net_value const*restrict d2,  /* Derivs with respect to unit values, case 2 */
+  net_value const*restrict d3,  /* Derivs with respect to unit values, case 3 */
+  net_config const*restrict cf  /* Configuration for biases */
 )
 {
   if (GTH>=4 && gsz==4)
@@ -3411,18 +3411,18 @@ __device__ static void store_grad2
 ( int th,                 /* Which thread (0 to GTH-1) */
   int gsz,                /* Number of cases in this group (<= GROUP_SIZE) */
   net_param *restrict g,  /* Array of derivatives to store to */
-  net_value const* v0,    /* Source unit values, case 0 */
-  net_value const* v1,    /* Source unit values, case 1 */
-  net_value const* v2,    /* Source unit values, case 2 */
-  net_value const* v3,    /* Source unit values, case 3 */
-  net_param const* off,   /* Offsets for source units, or zero if no offsets */
-  int nv,                 /* Number of source units */
-  net_value const* d0,    /* Derivatives with respect to destination units, 0 */
-  net_value const* d1,    /* Derivatives with respect to destination units, 1 */
-  net_value const* d2,    /* Derivatives with respect to destination units, 2 */
-  net_value const* d3,    /* Derivatives with respect to destination units, 3 */
+  net_value const*restrict v0,  /* Source unit values, case 0 */
+  net_value const*restrict v1,  /* Source unit values, case 1 */
+  net_value const*restrict v2,  /* Source unit values, case 2 */
+  net_value const*restrict v3,  /* Source unit values, case 3 */
+  net_param const*restrict off, /* Offsets for source units, 0 if no offsets */
+  int nv,                       /* Number of source units */
+  net_value const*restrict d0,  /* Derivatives with respect to dest units, 0 */
+  net_value const*restrict d1,  /* Derivatives with respect to dest units, 1 */
+  net_value const*restrict d2,  /* Derivatives with respect to dest units, 2 */
+  net_value const*restrict d3,  /* Derivatives with respect to dest units, 3 */
   int nd,                 /* Number of destination units */
-  unsigned short const* omit, /* Omit flags, null if not present */
+  unsigned short const*restrict omit, /* Omit flags, null if not present */
   int ob,                 /* Bit to look at in omit flags (mask, not number) */
   int sparse              /* Might source unit values often be zero? */
 )
@@ -3449,16 +3449,16 @@ __device__ static void store_grad2_config
 ( int th,                 /* Which thread (0 to GTH-1) */
   int gsz,                /* Number of cases in this group (<= GROUP_SIZE) */
   net_param *restrict g,  /* Array of derivatives to add to */
-  net_value const* v0,    /* Source unit values, case 0 */
-  net_value const* v1,    /* Source unit values, case 1 */
-  net_value const* v2,    /* Source unit values, case 2 */
-  net_value const* v3,    /* Source unit values, case 3 */
-  net_param const* off,   /* Offsets for source units, or zero if no offsets */
-  net_value const* d0,    /* Derivatives with respect to destination units, 0 */
-  net_value const* d1,    /* Derivatives with respect to destination units, 1 */
-  net_value const* d2,    /* Derivatives with respect to destination units, 2 */
-  net_value const* d3,    /* Derivatives with respect to destination units, 3 */
-  net_config const* cf    /* Configuration for connections and weights */
+  net_value const*restrict v0,  /* Source unit values, case 0 */
+  net_value const*restrict v1,  /* Source unit values, case 1 */
+  net_value const*restrict v2,  /* Source unit values, case 2 */
+  net_value const*restrict v3,  /* Source unit values, case 3 */
+  net_param const*restrict off, /* Offsets for source units, 0 if no offsets */
+  net_value const*restrict d0,  /* Derivatives with respect to dest units, 0 */
+  net_value const*restrict d1,  /* Derivatives with respect to dest units, 1 */
+  net_value const*restrict d2,  /* Derivatives with respect to dest units, 2 */
+  net_value const*restrict d3,  /* Derivatives with respect to dest units, 3 */
+  net_config const*restrict cf  /* Configuration for connections and weights */
 )
 {
   if (GTH>=4 && gsz==4)
@@ -3482,19 +3482,17 @@ __device__ static void store_grad2_config
 __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
 ( int thrg,		/* Which thread, from 0 to GTH-1 */
   int gsz,		/* Size of gradient group (maybe < GROUP_SIZE at end) */
-  net_params *restrict g, /* Gradient with respect to parameters to add to */
-  net_values const*v0,	/* Values for units in network, first training case */
-  net_values *restrict d0, /* Place for derivatives, first training case */
-  net_arch const*a,	/* Network architecture */
-  net_precomputed const* pre,  /* Precomputed aspects of architecture */
-  net_flags const*flgs,	/* Network flags, null if none */
-  net_params const*w,	/* Network parameters */
+  net_params *restrict g,   /* Gradient with respect to parameters to add to */
+  net_values const*restrict v,/* Values for units in network, 1st train case */
+  net_values *restrict d,    /* Place for derivatives, first training case */
+  net_arch const*restrict a, /* Network architecture */
+  net_precomputed const*restrict pre, /* Precomputed aspects of architecture */
+  net_flags const*restrict flgs,      /* Network flags, null if none */
+  net_params const*restrict w,        /* Network parameters */
   int sparse            /* Might source unit values often be zero? */
 )
 {
   int l, ld, ls, nsqi, i;
-  const net_values *d1 = d0+1, *d2 = d1+1, *d3 = d2+1;
-  const net_values *v1 = v0+1, *v2 = v1+1, *v3 = v2+1;
 
   /* Add parts of gradients that don't depend on computing derivatives
      with respect to hidden or input unit values - only on inputs and hidden
@@ -3502,27 +3500,28 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
 
   if (a->has_bo)
   { if (a->bias_config[a->N_layers])
-    { store_grad1_config (thrg, gsz, g->bo, d0->o, d1->o, d2->o, d3->o,
+    { store_grad1_config (thrg, gsz, g->bo, d[0].o, d[1].o, d[2].o, d[3].o,
                           a->bias_config[a->N_layers]);
     }
     else
-    { store_grad1 (thrg, gsz, g->bo, d0->o, d1->o, d2->o, d3->o, a->N_outputs);
+    { store_grad1 (thrg, gsz, g->bo, d[0].o, d[1].o, d[2].o, d[3].o, 
+                   a->N_outputs);
     }
   }
 
   if (a->has_io)
   { if (a->input_config[a->N_layers])
     { store_grad2_config (thrg, gsz, g->io, 
-                          v0->i, v1->i, v2->i, v3->i, 
+                          v[0].i, v[1].i, v[2].i, v[3].i, 
                           a->has_ti ? w->ti : 0, 
-                          d0->o, d1->o, d2->o, d3->o,
+                          d[0].o, d[1].o, d[2].o, d[3].o,
                           a->input_config[a->N_layers]);
     }
     else
     { store_grad2 (thrg, gsz, g->io, 
-                   v0->i, v1->i, v2->i, v3->i, 
+                   v[0].i, v[1].i, v[2].i, v[3].i, 
                    a->has_ti ? w->ti : 0, a->N_inputs,
-                   d0->o, d1->o, d2->o, d3->o, a->N_outputs,
+                   d[0].o, d[1].o, d[2].o, d[3].o, a->N_outputs,
                    flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
                    sparse);
     }
@@ -3532,24 +3531,24 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
   {
     if (a->has_ho[l])
     { 
-      const net_value *u0 = fw_hidden_loc_grad(pre,v0,l,0);
-      const net_value *u1 = fw_hidden_loc_grad(pre,v0,l,1);
-      const net_value *u2 = fw_hidden_loc_grad(pre,v0,l,2);
-      const net_value *u3 = fw_hidden_loc_grad(pre,v0,l,3);
+      const net_value *u0 = fw_hidden_loc_grad(pre,v,l,0);
+      const net_value *u1 = fw_hidden_loc_grad(pre,v,l,1);
+      const net_value *u2 = fw_hidden_loc_grad(pre,v,l,2);
+      const net_value *u3 = fw_hidden_loc_grad(pre,v,l,3);
 
       int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { store_grad2_config (thrg, gsz, g->ho[l], 
                             u0, u1, u2, u3,
                             a->has_th[l] ? w->th[l] : 0,
-                            d0->o, d1->o, d2->o, d3->o, 
+                            d[0].o, d[1].o, d[2].o, d[3].o, 
                             a->hidden_config[k]);
       }
       else
       { store_grad2 (thrg, gsz, g->ho[l], 
                      u0, u1, u2, u3,
                      a->has_th[l] ? w->th[l] : 0, a->N_hidden[l], 
-                     d0->o, d1->o, d2->o, d3->o, a->N_outputs, 
+                     d[0].o, d[1].o, d[2].o, d[3].o, a->N_outputs, 
                      (unsigned short *) 0, 0, 0);
       }
     }
@@ -3558,15 +3557,15 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
   /* Find case handled by this thread for backpropagation, and index, thrb, of
      this thread within that case (0 to NTH-1, except -1 for unused thread). */
 
-  const net_values *d, *v;
+  const net_values *dth, *vth;
   int thrb;
   if (thrg>=gsz*NTH)
   { thrb = -1;
   }
   else
   { thrb = thrg & (NTH-1);
-    d = d0 + thrg / NTH;
-    v = v0 + thrg / NTH;
+    dth = d + thrg / NTH;
+    vth = v + thrg / NTH;
   }
 
   /* Start computation of derivatives with respect to input values, if
@@ -3576,17 +3575,17 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
   if (a->has_ti && thrb>=0)
   { 
     for (i = thrb; i<a->N_inputs; i+=NTH)
-    { d->i[i] = 0;
+    { dth->i[i] = 0;
     }
 
     if (a->has_io)
     { if (a->input_config[a->N_layers])
       { sum_derivatives_config_gpu 
-         (thrb, d->o, d->i, w->io, a->input_config[a->N_layers]);
+         (thrb, dth->o, dth->i, w->io, a->input_config[a->N_layers]);
       }
       else
       { sum_derivatives_gpu 
-         (thrb, d->o, a->N_outputs, d->i, a->N_inputs, w->io,
+         (thrb, dth->o, a->N_outputs, dth->i, a->N_inputs, w->io,
           flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1);
       }
     }
@@ -3605,7 +3604,7 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
 
     if (thrb<0) goto sync_layer;
 
-    dh = bw_hidden_loc(pre,d,l);
+    dh = bw_hidden_loc(pre,dth,l);
 
     /* Find derivatives with respect to values of units in this hidden layer. */
 
@@ -3617,18 +3616,18 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
     { int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { sum_derivatives_config_gpu 
-         (thrb, d->o, dh, w->ho[l], a->hidden_config[k]);
+         (thrb, dth->o, dh, w->ho[l], a->hidden_config[k]);
       }
       else
       { sum_derivatives_gpu 
-          (thrb, d->o, a->N_outputs, dh, N_hidden,
+          (thrb, dth->o, a->N_outputs, dh, N_hidden,
            w->ho[l], (unsigned short *) 0, 0);
       }
     }
 
     for (ld = l+1; ld<a->N_layers; ld++)
     { int nsqi = pre->nonseq[l][ld];
-      net_value *restrict dhd = bw_hidden_loc(pre,d,ld);
+      net_value *restrict dhd = bw_hidden_loc(pre,dth,ld);
       if (nsqi>=0)
       { if (a->nonseq_config[nsqi])
         { sum_derivatives_config_gpu
@@ -3643,7 +3642,7 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
     }
 
     if (l<a->N_layers-1 && a->has_hh[l])
-    { net_value *restrict dhd = bw_hidden_loc(pre,d,l+1);
+    { net_value *restrict dhd = bw_hidden_loc(pre,dth,l+1);
       if (a->hidden_config[l+1])
       { sum_derivatives_config_gpu 
           (thrb, dhd, dh, w->hh[l], a->hidden_config[l+1]);
@@ -3666,10 +3665,10 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
     { 
       __syncthreads();
 
-      const net_value *c0 = bw_hidden_loc_grad(pre,d0,l,0);
-      const net_value *c1 = bw_hidden_loc_grad(pre,d0,l,1);
-      const net_value *c2 = bw_hidden_loc_grad(pre,d0,l,2);
-      const net_value *c3 = bw_hidden_loc_grad(pre,d0,l,3);
+      const net_value *c0 = bw_hidden_loc_grad(pre,d,l,0);
+      const net_value *c1 = bw_hidden_loc_grad(pre,d,l,1);
+      const net_value *c2 = bw_hidden_loc_grad(pre,d,l,2);
+      const net_value *c3 = bw_hidden_loc_grad(pre,d,l,3);
 
       store_grad1 (thrg, gsz, g->th[l], c0, c1, c2, c3, N_hidden);
     }
@@ -3679,7 +3678,7 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
 
     if (thrb>=0)
     {
-      const net_value *vh = fw_hidden_loc(pre,v,l);
+      const net_value *vh = fw_hidden_loc(pre,vth,l);
 
       if (flgs==0 || flgs->layer_type[l]==Tanh_type)
       { for (i = thrb; i<N_hidden; i+=NTH)
@@ -3706,11 +3705,11 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
     { 
       if (a->has_ih[l])
       { if (a->input_config[l])
-        { sum_derivatives_config_gpu (thrb, dh, d->i, w->ih[l], 
+        { sum_derivatives_config_gpu (thrb, dh, dth->i, w->ih[l], 
                                       a->input_config[l]);
         }
         else
-        { sum_derivatives_gpu (thrb, dh, a->N_hidden[l], d->i, a->N_inputs, 
+        { sum_derivatives_gpu (thrb, dh, a->N_hidden[l], dth->i, a->N_inputs, 
              w->ih[l], flgs && flgs->any_omitted[l]? flgs->omit : 0, 1<<(l+1));
         }
       }
@@ -3719,10 +3718,10 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
     /* Add to gradients that depend on the derivatives of energy with respect 
        to the inputs of units in this hidden layer. */
 
-    const net_value *c0 = bw_hidden_loc_grad(pre,d0,l,0);
-    const net_value *c1 = bw_hidden_loc_grad(pre,d0,l,1);
-    const net_value *c2 = bw_hidden_loc_grad(pre,d0,l,2);
-    const net_value *c3 = bw_hidden_loc_grad(pre,d0,l,3);
+    const net_value *c0 = bw_hidden_loc_grad(pre,d,l,0);
+    const net_value *c1 = bw_hidden_loc_grad(pre,d,l,1);
+    const net_value *c2 = bw_hidden_loc_grad(pre,d,l,2);
+    const net_value *c3 = bw_hidden_loc_grad(pre,d,l,3);
 
     if (a->has_bh[l])
     { if (a->bias_config[l])
@@ -3738,14 +3737,14 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
     if (a->has_ih[l])
     { if (a->input_config[l])
       { store_grad2_config (thrg, gsz, g->ih[l], 
-                            v0->i, v1->i, v2->i, v3->i, 
+                            v[0].i, v[1].i, v[2].i, v[3].i, 
                             a->has_ti ? w->ti : 0, 
                             c0, c1, c2, c3,
                             a->input_config[l]);
       }
       else
       { store_grad2 (thrg, gsz, g->ih[l], 
-                     v0->i, v1->i, v2->i, v3->i,
+                     v[0].i, v[1].i, v[2].i, v[3].i,
                      a->has_ti ? w->ti : 0, a->N_inputs,
                      c0, c1, c2, c3, N_hidden,
                      flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
@@ -3758,10 +3757,10 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
       { nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { 
-          net_value *u0 = fw_hidden_loc_grad(pre,v0,ls,0);
-          net_value *u1 = fw_hidden_loc_grad(pre,v0,ls,1);
-          net_value *u2 = fw_hidden_loc_grad(pre,v0,ls,2);
-          net_value *u3 = fw_hidden_loc_grad(pre,v0,ls,3);
+          net_value *u0 = fw_hidden_loc_grad(pre,v,ls,0);
+          net_value *u1 = fw_hidden_loc_grad(pre,v,ls,1);
+          net_value *u2 = fw_hidden_loc_grad(pre,v,ls,2);
+          net_value *u3 = fw_hidden_loc_grad(pre,v,ls,3);
 
           if (a->nonseq_config[nsqi])
           { store_grad2_config (thrg, gsz, g->nsq[nsqi], 
@@ -3782,10 +3781,10 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
 
     if (l>0 && a->has_hh[l-1])
     { 
-      net_value *u0 = fw_hidden_loc_grad(pre,v0,l-1,0);
-      net_value *u1 = fw_hidden_loc_grad(pre,v0,l-1,1);
-      net_value *u2 = fw_hidden_loc_grad(pre,v0,l-1,2);
-      net_value *u3 = fw_hidden_loc_grad(pre,v0,l-1,3);
+      net_value *u0 = fw_hidden_loc_grad(pre,v,l-1,0);
+      net_value *u1 = fw_hidden_loc_grad(pre,v,l-1,1);
+      net_value *u2 = fw_hidden_loc_grad(pre,v,l-1,2);
+      net_value *u3 = fw_hidden_loc_grad(pre,v,l-1,3);
 
       if (a->hidden_config[l])
       { store_grad2_config (thrg, gsz, g->hh[l-1], 
@@ -3813,7 +3812,7 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
     {__syncthreads();
     }
 
-    store_grad1 (thrg, gsz, g->ti, d0->i, d1->i, d2->i, d3->i, a->N_inputs);
+    store_grad1 (thrg, gsz, g->ti, d[0].i, d[1].i, d[2].i, d[3].i, a->N_inputs);
   }
 }
 

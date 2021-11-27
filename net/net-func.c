@@ -76,13 +76,10 @@ static void add_connections_config (net_value *restrict,
 /* ---------------------------- net_func ----------------------------------- */
 
 /* EVALUATE NETWORK FUNCTION FOR GIVEN INPUTS.  The inputs are taken from
-   the net_values structure passed.  When 'start' is greater than zero, the
-   correct unit values for that number of hidden layers are assumed to be
-   already present in the net_values structure. */
+   the net_values structure passed. */
 
 void STATIC_IF_INCLUDED net_func 
 ( net_values *restrict v, /* Place to get inputs and store outputs */
-  int start,		/* Number of hidden layers with known values */
   net_arch const* a,	/* Network architecture */
   net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const* flgs,/* Network flags, null if none */
@@ -94,7 +91,7 @@ void STATIC_IF_INCLUDED net_func
 
   /* Compute values for successive hidden layers. */
 
-  for (l = start; l<a->N_layers; l++)
+  for (l = 0; l<a->N_layers; l++)
   {
     int N_hidden = a->N_hidden[l];
 
@@ -1479,9 +1476,7 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
 
 
 /* EVALUATE NETWORK FUNCTION FOR GIVEN INPUTS.  The inputs are taken
-   from the net_values structure passed.  When 'start' is greater than
-   zero, the correct unit values for that number of hidden layers are
-   assumed to be already present in the net_values structure.
+   from the net_values structure passed. 
 
    This version uses THREADS_PER_CASE (power of two) GPU threads to do
    the computation.  It should be called from each of these threads,
@@ -1495,30 +1490,29 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
    layer.  Note that ALL threads must call this function so that all
    will make the __syncthreads calls here.
 
+   Synchronization is avoided when there is only one thread - note
+   that this means that outputs for different cases will not have been
+   synchronized.
+
    Thread 'th' is used to compute the units whose index is 'th' mod
    THREADS_PER_CASE.  Consistent use of this scheme for the various
    componenets avoids any need to synchronize threads within
    computations for a single layer.
 
-   If 'sync' is non-zero, threads are synchronized after the outputs
-   are computed (if necessary).  Without synchronization, thread 'th'
-   will have computed output values with index mod THREADS_PER_CASE
-   equal to 'th', and may use these values without synchronization. 
-
-   Synchronization is avoided when there is only one thread - note
-   that this means that outputs for different cases will not have been
-   synchronized. */
+   No synchronization is done after computing the outputs.  Without
+   further synchronization, thread 'th' will have computed output
+   values with index mod THREADS_PER_CASE equal to 'th', and may use
+   these values without synchronization.
+*/
 
 __device__ STATIC_IF_INCLUDED void net_func_gpu
 ( int th,		/* Thread index */
   net_values *restrict v, /* Place to get inputs and store outputs */
-  int start,		/* Number of hidden layers with known values */
   net_arch const* a,	/* Network architecture */
   net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const* flgs,/* Network flags, null if none */
   net_params const* w,	/* Network parameters */
-  int sparse,		/* Are input values sparse? */
-  int sync		/* Sync threads after last layer computation? */
+  int sparse		/* Are input values sparse? */
 )
 {
   net_value *vhp;
@@ -1526,7 +1520,7 @@ __device__ STATIC_IF_INCLUDED void net_func_gpu
 
   /* Compute values for successive hidden layers. */
 
-  for (l = start; l<a->N_layers; l++)
+  for (l = 0; l<a->N_layers; l++)
   {
     int N_hidden = a->N_hidden[l];
     net_value *restrict vh;
@@ -1624,7 +1618,9 @@ __device__ STATIC_IF_INCLUDED void net_func_gpu
 
   /* Compute values for the outputs. */
 
-  if (th<0) goto sync_output;
+  if (th<0) 
+  { return;
+  }
 
   if (a->has_bo)
   { if (a->bias_config[a->N_layers])
@@ -1667,14 +1663,6 @@ __device__ STATIC_IF_INCLUDED void net_func_gpu
                              (unsigned short *) 0, 0, 0);
       }
     }
-  }
-
-  /* Synchronize threads so outputs will be seen by all threads, if asked to,
-     and necessary. */
-
-sync_output:
-  if (NTH>1 && sync) 
-  { __syncthreads();
   }
 }
 

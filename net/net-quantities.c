@@ -368,7 +368,7 @@ void net_evaluate
       && (strchr("uoyglbacv",letter)!=0 || letter=='n' && model_type=='C'))
       { if (!have_train_data) abort();
         for (i = 0; i<N_train; i++)
-        { net_func (&train_values[i], 0, arch, &pre, flgs, &params, 1);
+        { net_func (&train_values[i], arch, &pre, flgs, &params, 1);
         }
         ev_train = 1;
       }
@@ -377,7 +377,7 @@ void net_evaluate
       && (strchr("OYGLBACV",letter)!=0 || letter=='N' && model_type=='C'))
       { if (!have_test_data) abort();
         for (i = 0; i<N_test; i++)
-        { net_func (&test_values[i], 0, arch, &pre, flgs, &params, 1);
+        { net_func (&test_values[i], arch, &pre, flgs, &params, 1);
         }
         ev_test = 1;
       }
@@ -476,7 +476,7 @@ void net_evaluate
 
               for (;;)
               {
-                net_func (&cases[i], 0, arch, &pre, flgs, &params, 1);
+                net_func (&cases[i], arch, &pre, flgs, &params, 1);
           
                 ft = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
 

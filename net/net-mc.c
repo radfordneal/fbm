@@ -1471,7 +1471,7 @@ static void gibbs_noise
   int i, j;
 
   for (i = 0; i<N_train; i++) 
-  { net_func (&train_values[i], 0, arch, &pre, flgs, &params, sparse);
+  { net_func (&train_values[i], arch, &pre, flgs, &params, sparse);
   }
 
   pr = &model->noise;
@@ -1575,7 +1575,7 @@ static void rgrid_met_noise
   int i, j;
 
   for (i = 0; i<N_train; i++) 
-  { net_func (&train_values[i], 0, arch, &pre, flgs, &params, sparse);
+  { net_func (&train_values[i], arch, &pre, flgs, &params, sparse);
   }
 
   pr = &model->noise;
@@ -2114,7 +2114,7 @@ void net_training_cases
     
       for (;;)
       {
-        net_func (&train_values[i], 0, arch, &pre, flgs, &params, sparse);
+        net_func (&train_values[i], arch, &pre, flgs, &params, sparse);
         
         net_value fudged_target 
                     = ot>t1 ? -(t1-t0) : censored ? -(ot-t0) : (ot-t0);
@@ -2165,7 +2165,7 @@ void net_training_cases
         // printf("train_values[%d]->i[1] = %f\n",i,train_vals_i->i[1]);
       }
 
-      net_func (train_vals_i, 0, arch, &pre, flgs, &params, sparse);
+      net_func (train_vals_i, arch, &pre, flgs, &params, sparse);
 
       if (DEBUG_NET_TRAINING_CASES)
       { printf("train_values[%d]->o[0] = %f\n",i,train_vals_i->o[0]);
@@ -2421,8 +2421,8 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
   }
 
   net_func_gpu 
-    (th, train_vals_h, 0, &const_arch, &const_pre, flgs, &const_params, 
-     const_sparse, 0);
+    (th, train_vals_h, &const_arch, &const_pre, flgs, &const_params, 
+     const_sparse);
 
 #if SPLIT_KERNELS
 

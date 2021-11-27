@@ -737,7 +737,7 @@ void STATIC_IF_INCLUDED net_model_guess
  
           for (;;)
           {
-            net_func (v, 0, a, pre, flgs, params, 1);
+            net_func (v, a, pre, flgs, params, 1);
             h = exp(v->o[0]);
             
             if (type==0)

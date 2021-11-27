@@ -518,14 +518,14 @@ void net_prior_max_second (net_params *, net_sigmas *, net_arch *, net_flags *,
                            net_priors *);
 
 STATIC_IF_INCLUDED
-void net_func (net_values *restrict, int, net_arch const*, 
+void net_func (net_values *restrict, net_arch const*, 
                net_precomputed const*, net_flags const*, 
                net_params const*, int);
 
 __device__ STATIC_IF_INCLUDED
-void net_func_gpu (int, net_values *restrict, int, net_arch const*, 
+void net_func_gpu (int, net_values *restrict, net_arch const*, 
                    net_precomputed const*, net_flags const*, 
-                   net_params const*, int, int);
+                   net_params const*, int);
 
 STATIC_IF_INCLUDED
 void net_back_add_grad (net_params *restrict, 

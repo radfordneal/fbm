@@ -1,0 +1,8 @@
+echo PROPERTIES OF SYSTEM $SYSTEM
+echo " "
+fgrep "model name" /proc/cpuinfo | head -1
+echo " "
+lstopo --of console
+echo " "
+nvidia-smi -a
+

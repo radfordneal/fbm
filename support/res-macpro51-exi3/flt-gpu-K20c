@@ -1,4 +1,4 @@
-Commit: c4cfe3860371f968891eac9b698da32cf263ecf0
+Commit: 337edb785ad51330a49380c9c1bfd87e491c0372
 
 Running exi3 with flt-gpu on K20c:
 
@@ -24,4 +24,4 @@ Average log probability of targets:    -1.383+-0.004
 Fraction of guesses that were wrong:    0.7200+-0.0451
 Average squared error guessing mean:    0.74821+-0.00177
 
-elapsed 43.09s
+elapsed 42.19s

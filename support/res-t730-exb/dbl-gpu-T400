@@ -1,0 +1,27 @@
+Commit: 08dfcb4522513b49dc4ece9f19e425ee432eec27
+
+Running exb with dbl-gpu on T400:
+
+Number of training cases: 300
+Number of test cases: 1000
+Precision: FP64, SIMD capability: AVX, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+NVIDIA T400, Compute Capability 7.5, 6 SM processors, 1.8 GBytes
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 16 -> 512 bytes/case
+Hid layer shrd mem: 0:15:0,15 T 30
+With 300 cases, need 1 launches, max 10 blocks/launch
+Precision: FP64, SIMD capability: AVX, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+NVIDIA T400, Compute Capability 7.5, 6 SM processors, 1.8 GBytes
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 16 -> 512 bytes/case
+Hid layer shrd mem: 0:15:0,15 T 30
+With 300 cases, need 1 launches, max 10 blocks/launch
+
+Number of iterations used: 20
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.247+-0.017
+Fraction of guesses that were wrong:    0.1130+-0.0100
+
+elapsed 2.39s

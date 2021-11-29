@@ -2,6 +2,8 @@ PROPERTIES OF SYSTEM t730
  
 model name	: AMD RX-427BB with AMD Radeon(tm) R7 Graphics
  
+gcc version 9.3.0 (Ubuntu 9.3.0-17ubuntu1~20.04) 
+ 
 Machine (6893MB total)
   Package L#0
     NUMANode L#0 (P#0 6893MB)
@@ -26,7 +28,7 @@ Machine (6893MB total)
 
 ==============NVSMI LOG==============
 
-Timestamp                                 : Sun Nov 28 22:25:09 2021
+Timestamp                                 : Sun Nov 28 22:28:00 2021
 Driver Version                            : 470.82.00
 CUDA Version                              : 11.5
 

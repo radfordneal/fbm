@@ -3479,16 +3479,18 @@ __device__ static void store_grad2_config
   }
 }
 
+#define A const_arch
+#define PRE const_pre
+#define FLGS const_flgs
+#define W const_params
+#define HAS_FLGS const_has_flgs
+
 __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
 ( int thrg,		/* Which thread, from 0 to GTH-1 */
   int gsz,		/* Size of gradient group (maybe < GROUP_SIZE at end) */
-  net_params *restrict g,   /* Gradient with respect to parameters to add to */
-  net_values const*restrict v,/* Values for units in network, 1st train case */
-  net_values *restrict d,    /* Place for derivatives, first training case */
-  net_arch const*restrict a, /* Network architecture */
-  net_precomputed const*restrict pre, /* Precomputed aspects of architecture */
-  net_flags const*restrict flgs,      /* Network flags, null if none */
-  net_params const*restrict w,        /* Network parameters */
+  net_params *restrict g,    /* Gradient with respect to parameters to add to */
+  net_values const*restrict v, /* Values for units in network, 1st train case */
+  net_values *restrict d,      /* Place for derivatives, first training case */
   int sparse            /* Might source unit values often be zero? */
 )
 {
@@ -3498,57 +3500,57 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
      with respect to hidden or input unit values - only on inputs and hidden
      unit values, and on derivatives with respect to outputs, */
 
-  if (a->has_bo)
-  { if (a->bias_config[a->N_layers])
+  if (A.has_bo)
+  { if (A.bias_config[A.N_layers])
     { store_grad1_config (thrg, gsz, g->bo, d[0].o, d[1].o, d[2].o, d[3].o,
-                          a->bias_config[a->N_layers]);
+                          A.bias_config[A.N_layers]);
     }
     else
     { store_grad1 (thrg, gsz, g->bo, d[0].o, d[1].o, d[2].o, d[3].o, 
-                   a->N_outputs);
+                   A.N_outputs);
     }
   }
 
-  if (a->has_io)
-  { if (a->input_config[a->N_layers])
+  if (A.has_io)
+  { if (A.input_config[A.N_layers])
     { store_grad2_config (thrg, gsz, g->io, 
                           v[0].i, v[1].i, v[2].i, v[3].i, 
-                          a->has_ti ? w->ti : 0, 
+                          A.has_ti ? W.ti : 0, 
                           d[0].o, d[1].o, d[2].o, d[3].o,
-                          a->input_config[a->N_layers]);
+                          A.input_config[A.N_layers]);
     }
     else
     { store_grad2 (thrg, gsz, g->io, 
                    v[0].i, v[1].i, v[2].i, v[3].i, 
-                   a->has_ti ? w->ti : 0, a->N_inputs,
-                   d[0].o, d[1].o, d[2].o, d[3].o, a->N_outputs,
-                   flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
+                   A.has_ti ? W.ti : 0, A.N_inputs,
+                   d[0].o, d[1].o, d[2].o, d[3].o, A.N_outputs,
+                   HAS_FLGS && FLGS.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
                    sparse);
     }
   }
 
-  for (l = 0; l<a->N_layers; l++)
+  for (l = 0; l<A.N_layers; l++)
   {
-    if (a->has_ho[l])
+    if (A.has_ho[l])
     { 
-      const net_value *u0 = fw_hidden_loc_grad(pre,v,l,0);
-      const net_value *u1 = fw_hidden_loc_grad(pre,v,l,1);
-      const net_value *u2 = fw_hidden_loc_grad(pre,v,l,2);
-      const net_value *u3 = fw_hidden_loc_grad(pre,v,l,3);
+      const net_value *u0 = fw_hidden_loc_grad(&PRE,v,l,0);
+      const net_value *u1 = fw_hidden_loc_grad(&PRE,v,l,1);
+      const net_value *u2 = fw_hidden_loc_grad(&PRE,v,l,2);
+      const net_value *u3 = fw_hidden_loc_grad(&PRE,v,l,3);
 
-      int k = 2*a->N_layers-1-l;
-      if (a->hidden_config[k])
+      int k = 2*A.N_layers-1-l;
+      if (A.hidden_config[k])
       { store_grad2_config (thrg, gsz, g->ho[l], 
                             u0, u1, u2, u3,
-                            a->has_th[l] ? w->th[l] : 0,
+                            A.has_th[l] ? W.th[l] : 0,
                             d[0].o, d[1].o, d[2].o, d[3].o, 
-                            a->hidden_config[k]);
+                            A.hidden_config[k]);
       }
       else
       { store_grad2 (thrg, gsz, g->ho[l], 
                      u0, u1, u2, u3,
-                     a->has_th[l] ? w->th[l] : 0, a->N_hidden[l], 
-                     d[0].o, d[1].o, d[2].o, d[3].o, a->N_outputs, 
+                     A.has_th[l] ? W.th[l] : 0, A.N_hidden[l], 
+                     d[0].o, d[1].o, d[2].o, d[3].o, A.N_outputs, 
                      (unsigned short *) 0, 0, 0);
       }
     }
@@ -3572,21 +3574,21 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
      they will be needed, with possible contribution from input-output
      connections. */
 
-  if (a->has_ti && thrb>=0)
+  if (A.has_ti && thrb>=0)
   { 
-    for (i = thrb; i<a->N_inputs; i+=NTH)
+    for (i = thrb; i<A.N_inputs; i+=NTH)
     { dth->i[i] = 0;
     }
 
-    if (a->has_io)
-    { if (a->input_config[a->N_layers])
+    if (A.has_io)
+    { if (A.input_config[A.N_layers])
       { sum_derivatives_config_gpu 
-         (thrb, dth->o, dth->i, w->io, a->input_config[a->N_layers]);
+         (thrb, dth->o, dth->i, W.io, A.input_config[A.N_layers]);
       }
       else
       { sum_derivatives_gpu 
-         (thrb, dth->o, a->N_outputs, dth->i, a->N_inputs, w->io,
-          flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1);
+         (thrb, dth->o, A.N_outputs, dth->i, A.N_inputs, W.io,
+          HAS_FLGS && FLGS.any_omitted[A.N_layers] ? FLGS.omit : 0, 1);
       }
     }
   }
@@ -3594,9 +3596,9 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
   /* Go backwards through hidden layers, computing derivatives with respect to
      hidden unit values, and then adding to gradients that depend on these. */
 
-  for (l = a->N_layers-1; l>=0; l--)
+  for (l = A.N_layers-1; l>=0; l--)
   {
-    int N_hidden = a->N_hidden[l];
+    int N_hidden = A.N_hidden[l];
 
     /* Place to store derivatives computed for this hidden layer. */
 
@@ -3604,7 +3606,7 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
 
     if (thrb<0) goto sync_layer;
 
-    dh = bw_hidden_loc(pre,dth,l);
+    dh = bw_hidden_loc(&PRE,dth,l);
 
     /* Find derivatives with respect to values of units in this hidden layer. */
 
@@ -3612,45 +3614,45 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
     { dh[i] = 0;
     }
 
-    if (a->has_ho[l])
-    { int k = 2*a->N_layers-1-l;
-      if (a->hidden_config[k])
+    if (A.has_ho[l])
+    { int k = 2*A.N_layers-1-l;
+      if (A.hidden_config[k])
       { sum_derivatives_config_gpu 
-         (thrb, dth->o, dh, w->ho[l], a->hidden_config[k]);
+         (thrb, dth->o, dh, W.ho[l], A.hidden_config[k]);
       }
       else
       { sum_derivatives_gpu 
-          (thrb, dth->o, a->N_outputs, dh, N_hidden,
-           w->ho[l], (unsigned short *) 0, 0);
+          (thrb, dth->o, A.N_outputs, dh, N_hidden,
+           W.ho[l], (unsigned short *) 0, 0);
       }
     }
 
-    for (ld = l+1; ld<a->N_layers; ld++)
-    { int nsqi = pre->nonseq[l][ld];
-      net_value *restrict dhd = bw_hidden_loc(pre,dth,ld);
+    for (ld = l+1; ld<A.N_layers; ld++)
+    { int nsqi = PRE.nonseq[l][ld];
+      net_value *restrict dhd = bw_hidden_loc(&PRE,dth,ld);
       if (nsqi>=0)
-      { if (a->nonseq_config[nsqi])
+      { if (A.nonseq_config[nsqi])
         { sum_derivatives_config_gpu
-            (thrb, dhd, dh, w->nsq[nsqi], a->nonseq_config[nsqi]);
+            (thrb, dhd, dh, W.nsq[nsqi], A.nonseq_config[nsqi]);
         }
         else
         { sum_derivatives_gpu
-            (thrb, dhd, a->N_hidden[ld], dh, N_hidden,
-             w->nsq[nsqi], (unsigned short *) 0, 0);
+            (thrb, dhd, A.N_hidden[ld], dh, N_hidden,
+             W.nsq[nsqi], (unsigned short *) 0, 0);
         }
       }
     }
 
-    if (l<a->N_layers-1 && a->has_hh[l])
-    { net_value *restrict dhd = bw_hidden_loc(pre,dth,l+1);
-      if (a->hidden_config[l+1])
+    if (l<A.N_layers-1 && A.has_hh[l])
+    { net_value *restrict dhd = bw_hidden_loc(&PRE,dth,l+1);
+      if (A.hidden_config[l+1])
       { sum_derivatives_config_gpu 
-          (thrb, dhd, dh, w->hh[l], a->hidden_config[l+1]);
+          (thrb, dhd, dh, W.hh[l], A.hidden_config[l+1]);
       }
       else
       { sum_derivatives_gpu 
-          (thrb, dhd, a->N_hidden[l+1], dh, N_hidden,
-           w->hh[l], (unsigned short *) 0, 0);
+          (thrb, dhd, A.N_hidden[l+1], dh, N_hidden,
+           W.hh[l], (unsigned short *) 0, 0);
       }
     }
 
@@ -3661,14 +3663,14 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
        derivatives with respect to the summed input, prior to the activation
        function). */
 
-    if (a->has_th[l])
+    if (A.has_th[l])
     { 
       __syncthreads();
 
-      const net_value *c0 = bw_hidden_loc_grad(pre,d,l,0);
-      const net_value *c1 = bw_hidden_loc_grad(pre,d,l,1);
-      const net_value *c2 = bw_hidden_loc_grad(pre,d,l,2);
-      const net_value *c3 = bw_hidden_loc_grad(pre,d,l,3);
+      const net_value *c0 = bw_hidden_loc_grad(&PRE,d,l,0);
+      const net_value *c1 = bw_hidden_loc_grad(&PRE,d,l,1);
+      const net_value *c2 = bw_hidden_loc_grad(&PRE,d,l,2);
+      const net_value *c3 = bw_hidden_loc_grad(&PRE,d,l,3);
 
       store_grad1 (thrg, gsz, g->th[l], c0, c1, c2, c3, N_hidden);
     }
@@ -3678,14 +3680,14 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
 
     if (thrb>=0)
     {
-      const net_value *vh = fw_hidden_loc(pre,vth,l);
+      const net_value *vh = fw_hidden_loc(&PRE,vth,l);
 
-      if (flgs==0 || flgs->layer_type[l]==Tanh_type)
+      if (!HAS_FLGS || FLGS.layer_type[l]==Tanh_type)
       { for (i = thrb; i<N_hidden; i+=NTH)
         { dh[i] *= (1 - vh[i]*vh[i]);
         }
       }
-      else if (flgs->layer_type[l]==Softplus_type)
+      else if (FLGS.layer_type[l]==Softplus_type)
       { for (i = thrb; i<N_hidden; i+=NTH)
         { net_value e = prec_exp(vh[i]);
           dh[i] *= (e-1) / e;
@@ -3701,16 +3703,16 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
     /* Add contribution from this hidden layer's derivatives to the derivatives
        with respect to inputs, if they will be needed. */
 
-    if (a->has_ti && thrb>=0)
+    if (A.has_ti && thrb>=0)
     { 
-      if (a->has_ih[l])
-      { if (a->input_config[l])
-        { sum_derivatives_config_gpu (thrb, dh, dth->i, w->ih[l], 
-                                      a->input_config[l]);
+      if (A.has_ih[l])
+      { if (A.input_config[l])
+        { sum_derivatives_config_gpu (thrb, dh, dth->i, W.ih[l], 
+                                      A.input_config[l]);
         }
         else
-        { sum_derivatives_gpu (thrb, dh, a->N_hidden[l], dth->i, a->N_inputs, 
-             w->ih[l], flgs && flgs->any_omitted[l]? flgs->omit : 0, 1<<(l+1));
+        { sum_derivatives_gpu (thrb, dh, A.N_hidden[l], dth->i, A.N_inputs, 
+            W.ih[l], HAS_FLGS && FLGS.any_omitted[l]? FLGS.omit : 0, 1<<(l+1));
         }
       }
     }
@@ -3718,15 +3720,15 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
     /* Add to gradients that depend on the derivatives of energy with respect 
        to the inputs of units in this hidden layer. */
 
-    const net_value *c0 = bw_hidden_loc_grad(pre,d,l,0);
-    const net_value *c1 = bw_hidden_loc_grad(pre,d,l,1);
-    const net_value *c2 = bw_hidden_loc_grad(pre,d,l,2);
-    const net_value *c3 = bw_hidden_loc_grad(pre,d,l,3);
+    const net_value *c0 = bw_hidden_loc_grad(&PRE,d,l,0);
+    const net_value *c1 = bw_hidden_loc_grad(&PRE,d,l,1);
+    const net_value *c2 = bw_hidden_loc_grad(&PRE,d,l,2);
+    const net_value *c3 = bw_hidden_loc_grad(&PRE,d,l,3);
 
-    if (a->has_bh[l])
-    { if (a->bias_config[l])
+    if (A.has_bh[l])
+    { if (A.bias_config[l])
       { store_grad1_config (thrg, gsz, g->bh[l], 
-                            c0, c1, c2, c3, a->bias_config[l]);
+                            c0, c1, c2, c3, A.bias_config[l]);
       }
       else
       { store_grad1 (thrg, gsz, g->bh[l], 
@@ -3734,44 +3736,44 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
       }
     }
 
-    if (a->has_ih[l])
-    { if (a->input_config[l])
+    if (A.has_ih[l])
+    { if (A.input_config[l])
       { store_grad2_config (thrg, gsz, g->ih[l], 
                             v[0].i, v[1].i, v[2].i, v[3].i, 
-                            a->has_ti ? w->ti : 0, 
+                            A.has_ti ? W.ti : 0, 
                             c0, c1, c2, c3,
-                            a->input_config[l]);
+                            A.input_config[l]);
       }
       else
       { store_grad2 (thrg, gsz, g->ih[l], 
                      v[0].i, v[1].i, v[2].i, v[3].i,
-                     a->has_ti ? w->ti : 0, a->N_inputs,
+                     A.has_ti ? W.ti : 0, A.N_inputs,
                      c0, c1, c2, c3, N_hidden,
-                     flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
+                     HAS_FLGS && FLGS.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1),
                      sparse);
       }
     }
 
-    if (a->has_nsq[l])
+    if (A.has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { nsqi = pre->nonseq[ls][l];
+      { nsqi = PRE.nonseq[ls][l];
         if (nsqi>=0)
         { 
-          net_value *u0 = fw_hidden_loc_grad(pre,v,ls,0);
-          net_value *u1 = fw_hidden_loc_grad(pre,v,ls,1);
-          net_value *u2 = fw_hidden_loc_grad(pre,v,ls,2);
-          net_value *u3 = fw_hidden_loc_grad(pre,v,ls,3);
+          net_value *u0 = fw_hidden_loc_grad(&PRE,v,ls,0);
+          net_value *u1 = fw_hidden_loc_grad(&PRE,v,ls,1);
+          net_value *u2 = fw_hidden_loc_grad(&PRE,v,ls,2);
+          net_value *u3 = fw_hidden_loc_grad(&PRE,v,ls,3);
 
-          if (a->nonseq_config[nsqi])
+          if (A.nonseq_config[nsqi])
           { store_grad2_config (thrg, gsz, g->nsq[nsqi], 
                                 u0, u1, u2, u3,
-                                a->has_th[ls] ? w->th[ls] : 0,
-                                c0, c1, c2, c3, a->nonseq_config[nsqi]);
+                                A.has_th[ls] ? W.th[ls] : 0,
+                                c0, c1, c2, c3, A.nonseq_config[nsqi]);
           }
           else
           { store_grad2 (thrg, gsz, g->nsq[nsqi], 
                          u0, u1, u2, u3,
-                         a->has_th[ls] ? w->th[ls] : 0, a->N_hidden[ls], 
+                         A.has_th[ls] ? W.th[ls] : 0, A.N_hidden[ls], 
                          c0, c1, c2, c3, N_hidden, 
                          (unsigned short *)0, 0, 0);
           }
@@ -3779,24 +3781,24 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
       }
     }
 
-    if (l>0 && a->has_hh[l-1])
+    if (l>0 && A.has_hh[l-1])
     { 
-      net_value *u0 = fw_hidden_loc_grad(pre,v,l-1,0);
-      net_value *u1 = fw_hidden_loc_grad(pre,v,l-1,1);
-      net_value *u2 = fw_hidden_loc_grad(pre,v,l-1,2);
-      net_value *u3 = fw_hidden_loc_grad(pre,v,l-1,3);
+      net_value *u0 = fw_hidden_loc_grad(&PRE,v,l-1,0);
+      net_value *u1 = fw_hidden_loc_grad(&PRE,v,l-1,1);
+      net_value *u2 = fw_hidden_loc_grad(&PRE,v,l-1,2);
+      net_value *u3 = fw_hidden_loc_grad(&PRE,v,l-1,3);
 
-      if (a->hidden_config[l])
+      if (A.hidden_config[l])
       { store_grad2_config (thrg, gsz, g->hh[l-1], 
                             u0, u1, u2, u3,
-                            a->has_th[l-1] ? w->th[l-1] : 0,
+                            A.has_th[l-1] ? W.th[l-1] : 0,
                             c0, c1, c2, c3,
-                            a->hidden_config[l]);
+                            A.hidden_config[l]);
       }
       else
       { store_grad2 (thrg, gsz, g->hh[l-1], 
                      u0, u1, u2, u3,
-                     a->has_th[l-1] ? w->th[l-1] : 0, a->N_hidden[l-1], 
+                     A.has_th[l-1] ? W.th[l-1] : 0, A.N_hidden[l-1], 
                      c0, c1, c2, c3, N_hidden, 
                      (unsigned short *)0, 0, 0);
       }
@@ -3806,14 +3808,20 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
   /* Add to gradients for input offsets, now that derivatives with respect
      to inputs have been computed. */
 
-  if (a->has_ti)
+  if (A.has_ti)
   { 
-    if (a->N_layers==0)  /* otherwise done at end of loop above */
+    if (A.N_layers==0)  /* otherwise done at end of loop above */
     {__syncthreads();
     }
 
-    store_grad1 (thrg, gsz, g->ti, d[0].i, d[1].i, d[2].i, d[3].i, a->N_inputs);
+    store_grad1 (thrg, gsz, g->ti, d[0].i, d[1].i, d[2].i, d[3].i, A.N_inputs);
   }
 }
+
+#undef A
+#undef PRE
+#undef FLGS
+#undef W
+#undef HAS_FLGS
 
 #endif

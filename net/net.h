@@ -517,39 +517,34 @@ void net_prior_prob (net_params *, net_sigmas *, double *, net_params *,
 void net_prior_max_second (net_params *, net_sigmas *, net_arch *, net_flags *,
                            net_priors *);
 
+void net_print_params (net_params *, net_sigmas *, net_arch *, net_flags *,
+                       model_specification *);
+void net_print_sigmas (net_sigmas *, net_arch *, net_flags *,
+                       model_specification *);
+
+void net_record_sizes        (log_gobbled *);
+void net_check_specs_present (net_arch *, net_priors *, int,
+                              model_specification *, model_survival *);
+
+net_config *net_config_read (char *, int, int);
+net_config *net_config_to_gpu (net_config *);
+
+void net_training_cases (double *, net_params *, int, int, double, double);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 STATIC_IF_INCLUDED
 void net_func (net_values *restrict, net_arch const*, 
                net_precomputed const*, net_flags const*, 
                net_params const*, int);
-
-__device__ STATIC_IF_INCLUDED
-void net_func_gpu (int, net_values *restrict, net_arch const*, 
-                   net_precomputed const*, net_flags const*, 
-                   net_params const*, int);
-
-STATIC_IF_INCLUDED
-void net_back_add_grad (net_params *restrict, 
-                        net_values const*, net_values *restrict, 
-                        net_arch const*, net_precomputed const*,
-                        net_flags const*, net_params const*, int);
-
-__device__ STATIC_IF_INCLUDED
-void net_back_grad_gpu (int, int, net_params *restrict, 
-                        net_values const*, net_values *restrict, 
-                        net_arch const*, net_precomputed const*,
-                        net_flags const*, net_params const*, int);
 
 HOSTDEV STATIC_IF_INCLUDED
 void net_model_prob (net_values const*, net_value const*, 
                      double *restrict, net_values *restrict, 
                      net_arch const*, model_specification const*,
                      model_survival const*, net_sigma const*, int);
-
-__device__ STATIC_IF_INCLUDED
-void net_model_prob_gpu (int, net_values const*, net_value const*, 
-                         double *restrict, net_values *restrict, 
-                         net_arch const*, model_specification const*,
-                         net_sigma const*, net_value *restrict, int, int);
 
 STATIC_IF_INCLUDED 
 void net_model_check (model_specification const*);
@@ -564,16 +559,6 @@ void net_model_guess (net_values *, net_value *, net_arch *,
                       model_specification *, model_survival *, net_params *,
                       net_sigma *, int);
 
-void net_print_params (net_params *, net_sigmas *, net_arch *, net_flags *,
-                       model_specification *);
-void net_print_sigmas (net_sigmas *, net_arch *, net_flags *,
-                       model_specification *);
-
-void net_record_sizes        (log_gobbled *);
-void net_check_specs_present (net_arch *, net_priors *, int,
-                              model_specification *, model_survival *);
-
-net_config *net_config_read (char *, int, int);
-net_config *net_config_to_gpu (net_config *);
-
-void net_training_cases (double *, net_params *, int, int, double, double);
+#ifdef __cplusplus
+}
+#endif

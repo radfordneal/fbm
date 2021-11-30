@@ -39,16 +39,6 @@
 #include "sleef-use.h"
 
 
-/* INCLUDE NETWORK COMPUTATION PROCEDURES AS SOURCE HERE.  This may
-   allow for some compiler optimizations that would not be possible if
-   they were compiled separately and linked as .o files.  Uses fact
-   that GPU_SRC_INCLUDE is defined above. */
-
-#include "net-func.c"
-#include "net-model.c"
-#include "net-back-grad.c"
-
-
 #if __CUDACC__
 
 /* CUDA-RELATED VARIABLES. */
@@ -264,6 +254,16 @@ static double sum_squares (net_param *, net_sigma *, int);
 
 static double rgrid_sigma (double, mc_iter *, double, 
                            double, double, double, double, int);
+
+
+/* INCLUDE NETWORK COMPUTATION PROCEDURES AS SOURCE HERE.  This may
+   allow for some compiler optimizations that would not be possible if
+   they were compiled separately and linked as .o files.  Uses fact
+   that GPU_SRC_INCLUDE is defined above. */
+
+#include "net-func.c"
+#include "net-model.c"
+#include "net-back-grad.c"
 
 
 /* SET UP REQUIRED RECORD SIZES PRIOR TO GOBBLING RECORDS. */
@@ -2379,7 +2379,6 @@ void cuda_setup
 #define KDEBUG 0        /* Set to 1 to enable debug output below */
 
 #define KERNEL_PRELUDE \
-  net_flags const*flgs = const_has_flgs ? &const_flgs : 0; \
   int m = threadIdx.x / NTH; \
   int i = blockIdx.x*const_blkcases + m; \
   int h = start + i; \
@@ -2420,9 +2419,7 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
             blockIdx.x,threadIdx.x,start,end);
   }
 
-  net_func_gpu 
-    (th, train_vals_h, &const_arch, &const_pre, flgs, &const_params, 
-     const_sparse);
+  net_func_gpu (th, train_vals_h, const_sparse);
 
 #if SPLIT_KERNELS
 
@@ -2468,11 +2465,9 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
     }
   }
   else
-  { net_value *restrict scratch_i = 
-      const_scratch + SCRATCH_PER_CASE(const_arch.N_outputs) * i;
-    net_model_prob_gpu (th, train_vals_h, targ_h, log_prob_h, deriv_i, 
-                        &const_arch, &const_model, const_noise, 
-                        scratch_i, Cheap_energy, 0);
+  { net_model_prob_gpu (th, train_vals_h, targ_h, log_prob_h, deriv_i, 
+                        SCRATCH_PER_CASE(const_arch.N_outputs) * i,
+                        Cheap_energy, 0);
   }
 
   if (KDEBUG) 
@@ -2576,7 +2571,6 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
                                     : group_grad + o,
                      train_vals_h - thm, 
                      deriv_i - thm, 
-                     &const_arch, &const_pre, flgs, &const_params,
                      const_sparse);
 
 #if SPLIT_KERNELS

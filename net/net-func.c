@@ -1505,13 +1505,15 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
    these values without synchronization.
 */
 
+#define A const_arch
+#define PRE const_pre
+#define FLGS const_flgs
+#define W const_params
+#define HAS_FLGS const_has_flgs
+
 __device__ STATIC_IF_INCLUDED void net_func_gpu
 ( int th,		/* Thread index */
   net_values *restrict v, /* Place to get inputs and store outputs */
-  net_arch const* a,	/* Network architecture */
-  net_precomputed const* pre,  /* Precomputed aspects of architecture */
-  net_flags const* flgs,/* Network flags, null if none */
-  net_params const* w,	/* Network parameters */
   int sparse		/* Are input values sparse? */
 )
 {
@@ -1520,23 +1522,23 @@ __device__ STATIC_IF_INCLUDED void net_func_gpu
 
   /* Compute values for successive hidden layers. */
 
-  for (l = 0; l<a->N_layers; l++)
+  for (l = 0; l<A.N_layers; l++)
   {
-    int N_hidden = a->N_hidden[l];
+    int N_hidden = A.N_hidden[l];
     net_value *restrict vh;
 
     if (th<0) goto sync_layer;
 
-    vh = fw_hidden_loc(pre,v,l);
+    vh = fw_hidden_loc(&PRE,v,l);
 
     /* Find summed inputs into each hidden unit in the layer. */
 
-    if (a->has_bh[l])
-    { if (a->bias_config[l])
-      { bias_values_config_gpu (th, vh, N_hidden, w->bh[l], a->bias_config[l]);
+    if (A.has_bh[l])
+    { if (A.bias_config[l])
+      { bias_values_config_gpu (th, vh, N_hidden, W.bh[l], A.bias_config[l]);
       }
       else
-      { bias_values_gpu (th, vh, N_hidden, w->bh[l]);
+      { bias_values_gpu (th, vh, N_hidden, W.bh[l]);
       }
     }
     else
@@ -1545,56 +1547,56 @@ __device__ STATIC_IF_INCLUDED void net_func_gpu
       }
     }
 
-    if (a->has_ih[l])
-    { if (a->input_config[l])
-      { add_connections_config_gpu (th, vh, v->i, w->ih[l], 
-          a->has_ti ? w->ti : 0, a->input_config[l]);
+    if (A.has_ih[l])
+    { if (A.input_config[l])
+      { add_connections_config_gpu (th, vh, v->i, W.ih[l], 
+          A.has_ti ? W.ti : 0, A.input_config[l]);
       }
       else
-      { add_connections_gpu (th, vh, N_hidden, v->i, a->N_inputs, 
-          w->ih[l], a->has_ti ? w->ti : 0, 
-          flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), sparse);
+      { add_connections_gpu (th, vh, N_hidden, v->i, A.N_inputs, 
+          W.ih[l], A.has_ti ? W.ti : 0, 
+          HAS_FLGS && FLGS.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1), sparse);
       }
     }
 
-    if (a->has_nsq[l])
+    if (A.has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { int nsqi = pre->nonseq[ls][l];
-        net_value *vhs = fw_hidden_loc(pre,v,ls);
+      { int nsqi = PRE.nonseq[ls][l];
+        net_value *vhs = fw_hidden_loc(&PRE,v,ls);
         if (nsqi>=0)
-        { if (a->nonseq_config[nsqi])
-          { add_connections_config_gpu (th, vh, vhs, w->nsq[nsqi],
-              a->has_th[ls] ? w->th[ls] : 0, a->nonseq_config[nsqi]);
+        { if (A.nonseq_config[nsqi])
+          { add_connections_config_gpu (th, vh, vhs, W.nsq[nsqi],
+              A.has_th[ls] ? W.th[ls] : 0, A.nonseq_config[nsqi]);
           }
           else
-          { add_connections_gpu (th, vh, N_hidden, vhs, a->N_hidden[ls],
-              w->nsq[nsqi], a->has_th[ls] ? w->th[ls] : 0,
+          { add_connections_gpu (th, vh, N_hidden, vhs, A.N_hidden[ls],
+              W.nsq[nsqi], A.has_th[ls] ? W.th[ls] : 0,
               (unsigned short *) 0, 0, 0);
           }
         }
       }
     }
 
-    if (l>0 && a->has_hh[l-1])
-    { if (a->hidden_config[l])
-      { add_connections_config_gpu (th, vh, vhp, w->hh[l-1], 
-          a->has_th[l-1] ? w->th[l-1] : 0, a->hidden_config[l]);
+    if (l>0 && A.has_hh[l-1])
+    { if (A.hidden_config[l])
+      { add_connections_config_gpu (th, vh, vhp, W.hh[l-1], 
+          A.has_th[l-1] ? W.th[l-1] : 0, A.hidden_config[l]);
       }
       else
-      { add_connections_gpu (th, vh, N_hidden, vhp, a->N_hidden[l-1],
-          w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0, (unsigned short *) 0, 
+      { add_connections_gpu (th, vh, N_hidden, vhp, A.N_hidden[l-1],
+          W.hh[l-1], A.has_th[l-1] ? W.th[l-1] : 0, (unsigned short *) 0, 
           0, 0);
       }
     }
 
     /* Put values through hidden unit activation function. */
 
-    if (flgs==0 || flgs->layer_type[l]==Tanh_type)
+    if (!HAS_FLGS || FLGS.layer_type[l]==Tanh_type)
     { for (j = th; j<N_hidden; j+=NTH)
       { vh[j] = TANH (vh[j]);
       }
     }
-    else if (flgs->layer_type[l]==Softplus_type)
+    else if (FLGS.layer_type[l]==Softplus_type)
     { for (j = th; j<N_hidden; j+=NTH)
       { net_value a = vh[j];
         net_value v = 
@@ -1622,44 +1624,44 @@ __device__ STATIC_IF_INCLUDED void net_func_gpu
   { return;
   }
 
-  if (a->has_bo)
-  { if (a->bias_config[a->N_layers])
-    { bias_values_config_gpu (th, v->o, a->N_outputs, w->bo, a->bias_config[l]);
+  if (A.has_bo)
+  { if (A.bias_config[A.N_layers])
+    { bias_values_config_gpu (th, v->o, A.N_outputs, W.bo, A.bias_config[l]);
     }
     else
-    { bias_values_gpu (th, v->o, a->N_outputs, w->bo);
+    { bias_values_gpu (th, v->o, A.N_outputs, W.bo);
     }
   }
   else
-  { for (j = th; j < a->N_outputs; j+=NTH)
+  { for (j = th; j < A.N_outputs; j+=NTH)
     { v->o[j] = 0;
     }
   }
 
-  if (a->has_io)
-  { if (a->input_config[a->N_layers])
-    { add_connections_config_gpu (th, v->o, v->i, w->io,
-        a->has_ti ? w->ti : 0, a->input_config[a->N_layers]);
+  if (A.has_io)
+  { if (A.input_config[A.N_layers])
+    { add_connections_config_gpu (th, v->o, v->i, W.io,
+        A.has_ti ? W.ti : 0, A.input_config[A.N_layers]);
     }
     else
-    { add_connections_gpu (th, v->o, a->N_outputs, v->i, a->N_inputs,
-                    w->io, a->has_ti ? w->ti : 0, 
-                    flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
+    { add_connections_gpu (th, v->o, A.N_outputs, v->i, A.N_inputs,
+                    W.io, A.has_ti ? W.ti : 0, 
+                    HAS_FLGS && FLGS.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
                     sparse);
     }
   }
 
-  for (l = 0; l<a->N_layers; l++)
-  { if (a->has_ho[l])
-    { vhp = fw_hidden_loc(pre,v,l);
-      int k = 2*a->N_layers-1-l;
-      if (a->hidden_config[k])
-      { add_connections_config_gpu (th, v->o, vhp, w->ho[l], 
-                         a->has_th[l] ? w->th[l] : 0, a->hidden_config[k]);
+  for (l = 0; l<A.N_layers; l++)
+  { if (A.has_ho[l])
+    { vhp = fw_hidden_loc(&PRE,v,l);
+      int k = 2*A.N_layers-1-l;
+      if (A.hidden_config[k])
+      { add_connections_config_gpu (th, v->o, vhp, W.ho[l], 
+                         A.has_th[l] ? W.th[l] : 0, A.hidden_config[k]);
       }
       else
-      { add_connections_gpu (th, v->o, a->N_outputs, vhp, a->N_hidden[l], 
-                             w->ho[l], a->has_th[l] ? w->th[l] : 0, 
+      { add_connections_gpu (th, v->o, A.N_outputs, vhp, A.N_hidden[l], 
+                             W.ho[l], A.has_th[l] ? W.th[l] : 0, 
                              (unsigned short *) 0, 0, 0);
       }
     }
@@ -1939,5 +1941,11 @@ __device__ static void add_connections_config_gpu
     s[j] += vi * w[k];
   }
 }
+
+#undef A
+#undef PRE
+#undef FLGS
+#undef W
+#undef HAS_FLGS
 
 #endif

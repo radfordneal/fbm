@@ -278,245 +278,6 @@ HOSTDEV STATIC_IF_INCLUDED void net_model_prob
 }
 
 
-/* VERSION OF NET_MODEL_PROB USING MULTIPLE GPU THREADS.  Must not be used
-   for survival models (type 'V').  
-
-   The probability pointed to by 'pr' is updated by the thread with
-   th==0.
-
-   The derivative at index i in 'dp' is computed by the thread with 'th'
-   equal to i mod THREADS_PER_CASE.
-
-   A __syncthreads call is made after these computations are done if
-   'sync' is non-zero.  If threads are not synchronized, only the
-   threads that computed a value can reliably access it. 
-
-   Assumes that on entry the i'th output is accessible to thread 'th'
-   if i mod THREADS_PER_CASE is 'th'. */
-
-#if __CUDACC__
-
-__device__ STATIC_IF_INCLUDED void net_model_prob_gpu
-( int th,		/* Thread index, if negative, just sync */
-  net_values const*v,	/* Values for units in network */
-  net_value const*t,	/* Target values */
-  double *restrict pr,	/* Place to store log probability, zero if not wanted */
-  net_values *restrict dp,/* Place to store log probability derivatives, or 0 */
-  net_arch const*a,	/* Network architecture */
-  model_specification const*m, /* Data model */
-  net_sigma const*noise,/* Noise sigmas, or null */
-  net_value *restrict scratch, /* Scratch memory, for twice number of outputs */
-  int op,		/* Can we ignore some factors? */
-  int sync		/* Sync threads after computation? */
-)
-{
-  int N_outputs = a->N_outputs;
-  int i;
-
-  switch (m->type)
-  {
-    case 'B':  /* Binary data values */
-    { 
-      if (th<0) break;
-
-      for (i = th; i<N_outputs; i+=NTH)
-      { 
-        if (isnan(t[i]))  /* target not observed */
-        { if (dp) dp->o[i] = 0;
-          if (pr) scratch[i] = 0;
-          continue;
-        }
-
-        net_value oi = v->o[i];
-        net_value sign_oi = prec_copysign((net_value)1.0,oi);
-        net_value abs_oi = prec_fabs(oi);
-
-        /* Note: The exp computation below never overflows. */
-
-        net_value ep1 = prec_exp (-abs_oi) + 1;
-
-        if (dp)  /* find derivative of log probability */
-        { dp->o[i] = sign_oi/ep1 + 0.5*(1.0-sign_oi) - t[i];
-        }
-
-        if (pr)  /* store log probability in scratch */
-        { scratch[i] = (t[i] - 0.5*(sign_oi+1)) * oi - prec_log(ep1);
-        }
-      }
-
-      break;
-    }
-
-    case 'C':  /* Single class with multiple possible values */
-    {
-      if (isnan(*t))  /* target not observed */
-      { if (th<0) goto sync_e;
-        if (dp) 
-        { for (i = th; i<N_outputs; i+=NTH)
-          { dp->o[i] = 0;
-          }
-        }
-        if (pr && th==0) *pr = 0;
-        goto sync_e;
-      }
-
-      if (th<0) goto sync_c;
-
-      for (i = th; i<N_outputs; i+=NTH)
-      { if (v->o[i]>88 || v->o[i]<-88) /* exp overflows/underflows with FP32 */
-        { scratch[i] = 0;
-          scratch[i+N_outputs] = v->o[i];
-        }
-        else
-        { scratch[i] = prec_exp (v->o[i]);
-          scratch[i+N_outputs] = 0;
-        }
-      }
-
-    sync_c:
-      if (NTH>1)
-      { __syncthreads();
-      }
-
-      if (th<0) goto sync_e;
-
-      net_value m;
-
-      m = scratch[N_outputs];
-      for (i = 1; i<N_outputs; i++)
-      { if (scratch[i+N_outputs]>m)
-        { m = scratch[i+N_outputs];
-        }
-      }
-
-      net_value s = 0;
-
-      if (m==0)  /* no big ones, not all small ones */
-      {  for (i = 0; i<N_outputs; i++)
-         { s += scratch[i];
-         }
-      }
-      else  /* some big ones, or all small ones - can ignore normal ones */
-      { for (i = 0; i<N_outputs; i++)
-         { if (scratch[i+N_outputs]!=0)
-           { s += prec_exp (scratch[i+N_outputs] - m);
-           }
-         }
-      }
-
-      if (pr && th==0) 
-      { *pr = v->o[(int)*t] - m - prec_log(s);
-      }
-
-      if (dp)
-      { s = 1/s;
-        int w = *t;
-        for (i = th; i<N_outputs; i+=NTH)
-        { if (m==0) 
-          { dp->o[i] = s * scratch[i];
-          }
-          else if (scratch[i+N_outputs]==0)
-          { dp->o[i] = 0;
-          }
-          else
-          { dp->o[i] = s * prec_exp (scratch[i+N_outputs] - m);
-          }
-          if (i==w) dp->o[i] -= 1;
-        }
-      }
-
-      goto sync_e;
-    }
-
-    case 'R':  /* Real-valued target */
-    { 
-      if (th<0) break;
-
-      double alpha = m->noise.alpha[2];
-
-      if (alpha==0) /* Gaussian distribution for noise */
-      { 
-        double nconst = op>0 ? 0 : - 0.5 * Log2pi;
-
-        for (i = th; i<N_outputs; i+=NTH)
-        { if (isnan(t[i]))  /* target not observed */
-          { if (dp) dp->o[i] = 0;
-            if (pr) scratch[i] = 0;
-            continue;
-          }
-          net_sigma rn = 1 / noise[i];
-          net_value d = (v->o[i] - t[i]) * rn;
-          if (d<-1e10) d = -1e10;
-          if (d>+1e10) d = +1e10;
-          if (pr) 
-          { scratch[i] = nconst - 0.5 * (d*d);
-            if (op<2) scratch[i] += prec_log(rn);
-          }
-          if (dp)
-          { dp->o[i] = d * rn;
-          }
-        }
-      }
-
-      else /* Student t distribution for noise */
-      {
-        double nconst = op>0 ? 0 : m->alpha_cnst;
-
-        for (i = th; i<N_outputs; i+=NTH)
-        { if (isnan(t[i]))  /* target not observed */
-          { if (dp) dp->o[i] = 0;
-            if (pr) scratch[i] = 0;
-            continue;
-          }
-          net_sigma rn = 1 / noise[i];
-          net_value d = (v->o[i] - t[i]) * rn;
-          if (d<-1e10) d = -1e10;
-          if (d>+1e10) d = +1e10;
-          net_value x = 1 + d*d/(net_value)alpha;
-          if (pr) 
-          { scratch[i] = nconst - ((alpha+1)/2) * prec_log(x);
-            if (op<2) scratch[i] += log(rn);
-          }
-          if (dp)
-          { dp->o[i] = (net_value)((alpha+1)/alpha) * (d*rn) / x;
-          }
-        }
-      }
-
-      break;
-    }
-  }
-
-  /* Compute total log probability from scratch values (except class models). */
-
-  if (pr)
-  { 
-    if (NTH>1 && N_outputs>1) 
-    { __syncthreads();
-    }
-
-    if (th==0)
-    { double p = 0;
-      for (i = 0; i<N_outputs; i++)
-      { p += scratch[i];
-      }
-      *pr = p;
-    }
-  }
-
-  /* Synchronize threads if asked to - otherwise, threads have
-     computed parts as described above, and can refer to the parts
-     they computed without synchronization. */
-
-sync_e:
-  if (NTH>1 && sync)
-  { __syncthreads();
-  }
-}
-
-#endif
-
-
 /* COMPUTE MAXIMUM LOG LIKELIHOOD SECOND DERIVATIVES.  Computes the maximum
    values of the second derivatives of minus the log probability of the targets
    in the training set with respect to the outputs of the net, for the current 
@@ -790,3 +551,248 @@ void STATIC_IF_INCLUDED net_model_guess
     }
   }
 }
+
+
+/* VERSION OF NET_MODEL_PROB USING MULTIPLE GPU THREADS.  Must not be used
+   for survival models (type 'V').  
+
+   The probability pointed to by 'pr' is updated by the thread with
+   th==0.
+
+   The derivative at index i in 'dp' is computed by the thread with 'th'
+   equal to i mod THREADS_PER_CASE.
+
+   A __syncthreads call is made after these computations are done if
+   'sync' is non-zero.  If threads are not synchronized, only the
+   threads that computed a value can reliably access it. 
+
+   Assumes that on entry the i'th output is accessible to thread 'th'
+   if i mod THREADS_PER_CASE is 'th'. */
+
+#if __CUDACC__
+
+#define A const_arch
+#define M const_model
+#define NOISE const_noise
+
+__device__ STATIC_IF_INCLUDED void net_model_prob_gpu
+( int th,		/* Thread index, if negative, just sync */
+  net_values const*v,	/* Values for units in network */
+  net_value const*t,	/* Target values */
+  double *restrict pr,	/* Place to store log probability, zero if not wanted */
+  net_values *restrict dp,/* Place to store log probability derivatives, or 0 */
+  int scroff,           /* Scratch memory offset, for twice number of outputs */
+  int op,		/* Can we ignore some factors? */
+  int sync		/* Sync threads after computation? */
+)
+{
+  int N_outputs = A.N_outputs;
+  int i;
+
+  switch (M.type)
+  {
+    case 'B':  /* Binary data values */
+    { 
+      if (th<0) break;
+
+      for (i = th; i<N_outputs; i+=NTH)
+      { 
+        if (isnan(t[i]))  /* target not observed */
+        { if (dp) dp->o[i] = 0;
+          if (pr) const_scratch[scroff+i] = 0;
+          continue;
+        }
+
+        net_value oi = v->o[i];
+        net_value sign_oi = prec_copysign((net_value)1.0,oi);
+        net_value abs_oi = prec_fabs(oi);
+
+        /* Note: The exp computation below never overflows. */
+
+        net_value ep1 = prec_exp (-abs_oi) + 1;
+
+        if (dp)  /* find derivative of log probability */
+        { dp->o[i] = sign_oi/ep1 + 0.5*(1.0-sign_oi) - t[i];
+        }
+
+        if (pr)  /* store log probability in scratch */
+        { const_scratch[scroff+i] = 
+            (t[i] - 0.5*(sign_oi+1)) * oi - prec_log(ep1);
+        }
+      }
+
+      break;
+    }
+
+    case 'C':  /* Single class with multiple possible values */
+    {
+      if (isnan(*t))  /* target not observed */
+      { if (th<0) goto sync_e;
+        if (dp) 
+        { for (i = th; i<N_outputs; i+=NTH)
+          { dp->o[i] = 0;
+          }
+        }
+        if (pr && th==0) *pr = 0;
+        goto sync_e;
+      }
+
+      if (th<0) goto sync_c;
+
+      for (i = th; i<N_outputs; i+=NTH)
+      { if (v->o[i]>88 || v->o[i]<-88) /* exp overflows/underflows with FP32 */
+        { const_scratch[scroff+i] = 0;
+          const_scratch[scroff+i+N_outputs] = v->o[i];
+        }
+        else
+        { const_scratch[scroff+i] = prec_exp (v->o[i]);
+          const_scratch[scroff+i+N_outputs] = 0;
+        }
+      }
+
+    sync_c:
+      if (NTH>1)
+      { __syncthreads();
+      }
+
+      if (th<0) goto sync_e;
+
+      net_value m;
+
+      m = const_scratch[scroff+N_outputs];
+      for (i = 1; i<N_outputs; i++)
+      { if (const_scratch[scroff+i+N_outputs]>m)
+        { m = const_scratch[scroff+i+N_outputs];
+        }
+      }
+
+      net_value s = 0;
+
+      if (m==0)  /* no big ones, not all small ones */
+      {  for (i = 0; i<N_outputs; i++)
+         { s += const_scratch[scroff+i];
+         }
+      }
+      else  /* some big ones, or all small ones - can ignore normal ones */
+      { for (i = 0; i<N_outputs; i++)
+         { if (const_scratch[scroff+i+N_outputs]!=0)
+           { s += prec_exp (const_scratch[scroff+i+N_outputs] - m);
+           }
+         }
+      }
+
+      if (pr && th==0) 
+      { *pr = v->o[(int)*t] - m - prec_log(s);
+      }
+
+      if (dp)
+      { s = 1/s;
+        int w = *t;
+        for (i = th; i<N_outputs; i+=NTH)
+        { if (m==0) 
+          { dp->o[i] = s * const_scratch[scroff+i];
+          }
+          else if (const_scratch[scroff+i+N_outputs]==0)
+          { dp->o[i] = 0;
+          }
+          else
+          { dp->o[i] = s * prec_exp (const_scratch[scroff+i+N_outputs] - m);
+          }
+          if (i==w) dp->o[i] -= 1;
+        }
+      }
+
+      goto sync_e;
+    }
+
+    case 'R':  /* Real-valued target */
+    { 
+      if (th<0) break;
+
+      double alpha = M.noise.alpha[2];
+
+      if (alpha==0) /* Gaussian distribution for noise */
+      { 
+        double nconst = op>0 ? 0 : - 0.5 * Log2pi;
+
+        for (i = th; i<N_outputs; i+=NTH)
+        { if (isnan(t[i]))  /* target not observed */
+          { if (dp) dp->o[i] = 0;
+            if (pr) const_scratch[scroff+i] = 0;
+            continue;
+          }
+          net_sigma rn = 1 / NOISE[i];
+          net_value d = (v->o[i] - t[i]) * rn;
+          if (d<-1e10) d = -1e10;
+          if (d>+1e10) d = +1e10;
+          if (pr) 
+          { const_scratch[scroff+i] = nconst - 0.5 * (d*d);
+            if (op<2) const_scratch[scroff+i] += prec_log(rn);
+          }
+          if (dp)
+          { dp->o[i] = d * rn;
+          }
+        }
+      }
+
+      else /* Student t distribution for noise */
+      {
+        double nconst = op>0 ? 0 : M.alpha_cnst;
+
+        for (i = th; i<N_outputs; i+=NTH)
+        { if (isnan(t[i]))  /* target not observed */
+          { if (dp) dp->o[i] = 0;
+            if (pr) const_scratch[scroff+i] = 0;
+            continue;
+          }
+          net_sigma rn = 1 / NOISE[i];
+          net_value d = (v->o[i] - t[i]) * rn;
+          if (d<-1e10) d = -1e10;
+          if (d>+1e10) d = +1e10;
+          net_value x = 1 + d*d/(net_value)alpha;
+          if (pr) 
+          { const_scratch[scroff+i] = nconst - ((alpha+1)/2) * prec_log(x);
+            if (op<2) const_scratch[scroff+i] += log(rn);
+          }
+          if (dp)
+          { dp->o[i] = (net_value)((alpha+1)/alpha) * (d*rn) / x;
+          }
+        }
+      }
+
+      break;
+    }
+  }
+
+  /* Compute total log probability from scratch values (except class models). */
+
+  if (pr)
+  { 
+    if (NTH>1 && N_outputs>1) 
+    { __syncthreads();
+    }
+
+    if (th==0)
+    { double p = 0;
+      for (i = 0; i<N_outputs; i++)
+      { p += const_scratch[scroff+i];
+      }
+      *pr = p;
+    }
+  }
+
+  /* Synchronize threads if asked to - otherwise, threads have
+     computed parts as described above, and can refer to the parts
+     they computed without synchronization. */
+
+sync_e:
+  if (NTH>1 && sync)
+  { __syncthreads();
+  }
+}
+
+#undef A
+#undef M
+#undef NOISE
+
+#endif

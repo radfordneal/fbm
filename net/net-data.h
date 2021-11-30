@@ -38,7 +38,15 @@ extern net_value *test_targets;   /* True targets for test cases */
 
 /* PROCEDURES. */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void net_data_read (int, int, net_arch *, 
                     model_specification *, model_survival *);
 
 void net_data_free (void);
+
+#ifdef __cplusplus
+}
+#endif

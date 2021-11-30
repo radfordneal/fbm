@@ -488,6 +488,12 @@ __device__ static inline net_value *bw_hidden_loc_grad
 
 /* PROCEDURES. */
 
+void net_training_cases (double *, net_params *, int, int, double, double);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 unsigned net_setup_sigma_count (net_arch *, net_flags *, model_specification *);
 unsigned net_setup_param_count (net_arch *, net_flags *, net_precomputed *);
 
@@ -527,13 +533,6 @@ void net_check_specs_present (net_arch *, net_priors *, int,
                               model_specification *, model_survival *);
 
 net_config *net_config_read (char *, int, int);
-net_config *net_config_to_gpu (net_config *);
-
-void net_training_cases (double *, net_params *, int, int, double, double);
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 STATIC_IF_INCLUDED
 void net_func (net_values *restrict, net_arch const*, 

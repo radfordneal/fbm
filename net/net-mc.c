@@ -342,7 +342,35 @@ net_config *net_config_to_gpu (net_config *cf)
 #endif
 
 
-/* DECIDE HOW TO USE FAST GPU SHARED MEMORY. */
+/* DECIDE HOW TO USE FAST GPU SHARED MEMORY. 
+
+   The fast GPU shared memory is used for values of hidden units in
+   training cases (computed in the forward pass), and for derivatives
+   of the log probability of the targets with respect to hidden unit
+   values (computed in the backward pass).  
+
+   The available memory is allocated greedily (when it wouldn't exceed
+   the maximum) for hidden unit values, starting with the last hidden
+   layer, with successive allocations for even-numbered layers stacked
+   at the front of the memory area, and those for odd-numbered layers
+   stacked from the back of the memory area.
+   
+   After this, memory for derivatives with respect to sequential
+   hidden layers is allocated greedily in backward backward fashion.
+   At the point when memory for derivatives for a layer is needed, the
+   memory for hidden unit values of later layers is no longer needed,
+   and so can be overlapped with memory for derivatives.  Also,
+   derivatives for sequential layers is no longer needed after the
+   derivatives for the layer before are computed.  To facilitate this
+   memory re-use, the memory for derivatives in a leyer is stacked
+   opposite the memory for the values in that layer.
+
+   Memory for derivatives for hidden layers with input from
+   non-sequential connections is allocated in a separate area, that
+   does not overlap with any other allocations, when there is
+   available space when the layer is reached in the backward scan for
+   allocating space for hidden unit values.
+*/
 
 #if __CUDACC__
 
@@ -355,6 +383,9 @@ static void decide_gpu_shared_mem_use
 {
   int l;
 
+  /* Shared memory isn't used when the kernels are split, since it wouldn't
+     persist to the next phase. */
+
   if (SPLIT_KERNELS)
   { for (l = 0; l<arch->N_layers; l++)
     { pre->fwgpumem[l] = -1;
@@ -363,6 +394,11 @@ static void decide_gpu_shared_mem_use
     pre->memused = 0;
     return;
   }
+
+  /* Decide which layers will use shared memory for values (forward pass)
+     and derivatives (backward pass).  Also find the maximum memory used
+     for unit values and sequential derivatives, and the amount for
+     non-sequential derivatives. */
 
   int fwshared[Max_layers], bwshared[Max_layers];
   int in_use, max_in_use, nonseq;
@@ -399,6 +435,9 @@ static void decide_gpu_shared_mem_use
     { in_use -= arch->N_hidden[l+1];
     }
   }
+
+  /* Set the actual locations of the blocks of shared memory used for
+     unit values and derivatives. */
 
   int fwloc[Max_layers], bwloc[Max_layers];
   int below, above;
@@ -438,6 +477,9 @@ static void decide_gpu_shared_mem_use
       }
     }
   }
+
+  /* Record locations allocated in 'pre' structure, with -1 indicating that
+     the values/derivatives are not in shared memory. */
 
   for (l = 0; l<arch->N_layers; l++)
   { pre->fwgpumem[l] = fwshared[l] ? fwloc[l] : -1;

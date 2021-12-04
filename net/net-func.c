@@ -35,6 +35,11 @@
 #endif
 
 
+#ifndef CHECK_NAN
+#define CHECK_NAN 0                 /* Normally 0, can set to 1 for debugging */
+#endif
+
+
 #define USE_QUICK_AND_DIRTY_TANH 1  /* Whether to use the faster tanh below */
 
 #if USE_QUICK_AND_DIRTY_TANH
@@ -67,7 +72,7 @@ static void add_connections (net_value *restrict, int, net_value const*,
                              int, net_param const*, net_param const*,
                              unsigned short const*, int, int);
 
-static void add_connections_config (net_value *restrict, 
+static void add_connections_config (net_value *restrict, int,
                                     net_value const*,
                                     net_param const*, net_param const*,
                                     net_config const*);
@@ -111,7 +116,7 @@ void STATIC_IF_INCLUDED net_func
 
     if (a->has_ih[l])
     { if (a->input_config[l])
-      { add_connections_config (vh, v->i, w->ih[l], 
+      { add_connections_config (vh, N_hidden, v->i, w->ih[l], 
           a->has_ti ? w->ti : 0, a->input_config[l]);
       }
       else
@@ -126,7 +131,7 @@ void STATIC_IF_INCLUDED net_func
       { int nsqi = pre->nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
-          { add_connections_config (vh, v->h[ls], w->nsq[nsqi], 
+          { add_connections_config (vh, N_hidden, v->h[ls], w->nsq[nsqi], 
               a->has_th[ls] ? w->th[ls] : 0, a->nonseq_config[nsqi]);
           }
           else
@@ -140,7 +145,7 @@ void STATIC_IF_INCLUDED net_func
 
     if (l>0 && a->has_hh[l-1])
     { if (a->hidden_config[l])
-      { add_connections_config (vh, v->h[l-1], w->hh[l-1], 
+      { add_connections_config (vh, N_hidden, v->h[l-1], w->hh[l-1], 
           a->has_th[l-1] ? w->th[l-1] : 0, a->hidden_config[l]);
       }
       else
@@ -493,6 +498,12 @@ void STATIC_IF_INCLUDED net_func
     else /* identity */
     { /* nothing to do */
     }
+
+    if (CHECK_NAN)
+    { for (j = 0; j<N_hidden; j++)
+      { if (isnan(vh[j])) abort();
+      }
+    }
   }
 
   /* Compute values for the outputs. */
@@ -511,7 +522,7 @@ void STATIC_IF_INCLUDED net_func
 
   if (a->has_io)
   { if (a->input_config[a->N_layers])
-    { add_connections_config (v->o, v->i, w->io,
+    { add_connections_config (v->o, a->N_outputs, v->i, w->io,
         a->has_ti ? w->ti : 0, a->input_config[a->N_layers]);
     }
     else
@@ -526,7 +537,7 @@ void STATIC_IF_INCLUDED net_func
   { if (a->has_ho[l])
     { int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
-      { add_connections_config (v->o, v->h[l], w->ho[l], 
+      { add_connections_config (v->o, a->N_outputs, v->h[l], w->ho[l], 
                          a->has_th[l] ? w->th[l] : 0, a->hidden_config[k]);
       }
       else
@@ -550,6 +561,12 @@ static void bias_values
   int j;
   for (j = 0; j<n; j++)
   { v[j] = b[j];
+  }
+
+  if (CHECK_NAN)  /* check for NaN */
+  { for (j = 0; j<n; j++)
+    { if (isnan(v[j])) abort();
+    }
   }
 }
 
@@ -600,6 +617,12 @@ static void bias_values_config
   for (c = 0; (k = cn[c].w) >= 0; c++)
   { j = cn[c].d;
     v[j] += b[k];
+  }
+
+  if (CHECK_NAN)  /* check for NaN */
+  { for (j = 0; j<n; j++)
+    { if (isnan(v[j])) abort();
+    }
   }
 }
 
@@ -1123,6 +1146,13 @@ static void add_connections
       }
     }
   }
+
+  if (CHECK_NAN)  /* check for NaN */
+  { int j;
+    for (j = 0; j<nd; j++)
+    { if (isnan(s[j])) abort();
+    }
+  }
 }
 
 
@@ -1132,6 +1162,7 @@ static void add_connections
 
 static void add_connections_config
 ( net_value *restrict s,  /* Summed input for destination units to add to */
+  int nd,		  /* Number of destination units, for debug check only*/
   net_value const* v,     /* Values for source units */
   net_param const* w,     /* Connection weights */
   net_param const* off,   /* Offsets to add to source unit values */
@@ -1450,6 +1481,13 @@ static void add_connections_config
   { for (c = 0; (k = cn[c].w) >= 0; c++)
     { i = cn[c].s; j = cn[c].d;
       s[j] += v[i] * w[k];
+    }
+  }
+
+  if (CHECK_NAN)  /* check for NaN */
+  { int j;
+    for (j = 0; j<nd; j++)
+    { if (isnan(s[j])) abort();
     }
   }
 }

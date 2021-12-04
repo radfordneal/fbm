@@ -35,6 +35,11 @@
 #endif
 
 
+#ifndef CHECK_NAN
+#define CHECK_NAN 0                 /* Normally 0, can set to 1 for debugging */
+#endif
+
+
 /* -------------------------------------------------------------------------- */
 
 
@@ -382,6 +387,12 @@ HOSTDEV static void sum_derivatives
       }
     }
   }
+
+  if (CHECK_NAN)
+  { for (i = 0; i<ns; i++)
+    { if (isnan(ds[i])) abort();
+    }
+  }
 }
 
 
@@ -392,6 +403,7 @@ HOSTDEV static void sum_derivatives
 HOSTDEV static void sum_derivatives_config
 ( net_value const* dd,    /* Derivatives with respect to destination units */
   net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
+  int ns,		  /* Number of source units, for debug check only */
   net_param const* w,     /* Connection weights */
   net_config const* cf    /* Configuration for connections and weights */
 )
@@ -533,6 +545,12 @@ HOSTDEV static void sum_derivatives_config
   { i = cn[c].s; j = cn[c].d;
     ds[i] += dd[j] * w[k];
   }
+
+  if (CHECK_NAN)
+  { for (i = 0; i<ns; i++)
+    { if (isnan(ds[i])) abort();
+    }
+  }
 }
 
 #if __CUDACC__
@@ -659,6 +677,7 @@ static void add_grad1
   int i;
   for (i = 0; i<n; i++)
   { g[i] += d[i];
+    if (CHECK_NAN && isnan(g[i])) abort();
   }
 }
 
@@ -696,6 +715,12 @@ static void add_grad1_config
   for (c = 0; (k = cn[c].w) >= 0; c++)
   { j = cn[c].d;
     g[k] += d[j];
+  }
+
+  if (CHECK_NAN)
+  { for (k = 0; k<cf->N_wts; k++)
+    { if (isnan(g[k])) abort();
+    }
   }
 }
 
@@ -1529,6 +1554,13 @@ static void add_grad2_config
   { for (c = 0; (k = cn[c].w) >= 0; c++)
     { i = cn[c].s; j = cn[c].d;
       g[k] += s[i] * d[j];
+    }
+  }
+
+  if (CHECK_NAN)
+  { int k;
+    for (k = 0; k<cf->N_wts; k++)
+    { if (isnan(g[k])) abort();
     }
   }
 }
@@ -2967,7 +2999,8 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
     if (a->has_io)
     { if (a->input_config[a->N_layers])
-      { sum_derivatives_config(d->o, d->i, w->io, a->input_config[a->N_layers]);
+      { sum_derivatives_config (d->o, d->i, a->N_inputs, w->io, 
+                                a->input_config[a->N_layers]);
       }
       else
       { sum_derivatives (d->o, a->N_outputs, d->i, a->N_inputs, w->io,
@@ -2994,7 +3027,8 @@ void STATIC_IF_INCLUDED net_back_add_grad
     if (a->has_ho[l])
     { int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
-      { sum_derivatives_config (d->o, dh, w->ho[l], a->hidden_config[k]);
+      { sum_derivatives_config (d->o, dh, N_hidden, 
+                                w->ho[l], a->hidden_config[k]);
       }
       else
       { sum_derivatives (d->o, a->N_outputs, dh, N_hidden,
@@ -3006,8 +3040,8 @@ void STATIC_IF_INCLUDED net_back_add_grad
     { int nsqi = pre->nonseq[l][ld];
       if (nsqi>=0)
       { if (a->nonseq_config[nsqi])
-        { sum_derivatives_config
-            (d->h[ld], dh, w->nsq[nsqi], a->nonseq_config[nsqi]);
+        { sum_derivatives_config (d->h[ld], dh, N_hidden, 
+                                  w->nsq[nsqi], a->nonseq_config[nsqi]);
         }
         else
         { sum_derivatives
@@ -3019,7 +3053,8 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
     if (l<a->N_layers-1 && a->has_hh[l])
     { if (a->hidden_config[l+1])
-      { sum_derivatives_config (d->h[l+1], dh, w->hh[l], a->hidden_config[l+1]);
+      { sum_derivatives_config (d->h[l+1], dh, N_hidden, 
+                                w->hh[l], a->hidden_config[l+1]);
       }
       else
       { sum_derivatives (d->h[l+1], a->N_hidden[l+1], dh, N_hidden,
@@ -3254,6 +3289,12 @@ void STATIC_IF_INCLUDED net_back_add_grad
     { /* nothing to do */
     }
 
+    if (CHECK_NAN)
+    { for (i = 0; i<N_hidden; i++)
+      { if (isnan(dh[i])) abort();
+      }
+    }
+
     /* Add to gradients for that depend on the derivatives with respect to
        the inputs of units in this hidden layer. */
 
@@ -3314,7 +3355,8 @@ void STATIC_IF_INCLUDED net_back_add_grad
     if (a->has_ti)
     { if (a->has_ih[l])
       { if (a->input_config[l])
-        { sum_derivatives_config (dh, d->i, w->ih[l], a->input_config[l]);
+        { sum_derivatives_config (dh, d->i, a->N_inputs, 
+                                  w->ih[l], a->input_config[l]);
         }
         else
         { sum_derivatives (dh, a->N_hidden[l], d->i, a->N_inputs, w->ih[l],

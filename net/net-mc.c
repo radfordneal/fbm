@@ -471,7 +471,7 @@ static void decide_gpu_shared_mem_use
     }
     else
     { if (bwshared[l])
-      { bwloc[l] = l&1 ? fwloc[l-1]+arch->N_hidden[l-1]
+      { bwloc[l] = l&1 ? fwloc[l-1]+fwshared[l-1]*arch->N_hidden[l-1]
                  : l==0 ? max_in_use-arch->N_hidden[l]
                  : fwloc[l-1]-arch->N_hidden[l];
       }

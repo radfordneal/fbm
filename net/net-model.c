@@ -80,7 +80,7 @@ HOSTDEV STATIC_IF_INCLUDED void net_model_prob
 ( net_values const*v,	/* Values for units in network */
   net_value const*t,	/* Target values, fudged for piecewise const hazard */
   double *restrict pr,	/* Place to store log probability, zero if not wanted */
-  net_values *restrict dp,/* Place to store log probability derivatives, or 0 */
+  net_values *restrict dp,/* Place to store neg log probability derivs, or 0 */
   net_arch const*a,	/* Network architecture */
   model_specification const*m, /* Data model */
   model_survival const*sv,/* Type of hazard function for survival model, or 0 */
@@ -567,7 +567,12 @@ void STATIC_IF_INCLUDED net_model_guess
    threads that computed a value can reliably access it. 
 
    Assumes that on entry the i'th output is accessible to thread 'th'
-   if i mod THREADS_PER_CASE is 'th'. */
+   if i mod THREADS_PER_CASE is 'th'. 
+
+   The memory pointed to by const_scratch is used temporarily for the
+   class model, at offset 'scroff', with space there for twice the 
+   number of outputs. 
+*/
 
 #if __CUDACC__
 
@@ -580,7 +585,7 @@ __device__ STATIC_IF_INCLUDED void net_model_prob_gpu
   net_values const*v,	/* Values for units in network */
   net_value const*t,	/* Target values */
   double *restrict pr,	/* Place to store log probability, zero if not wanted */
-  net_values *restrict dp,/* Place to store log probability derivatives, or 0 */
+  net_values *restrict dp,/* Place to store neg log probability derivs, or 0 */
   int scroff,           /* Scratch memory offset, for twice number of outputs */
   int op,		/* Can we ignore some factors? */
   int sync		/* Sync threads after computation? */
@@ -639,8 +644,21 @@ __device__ STATIC_IF_INCLUDED void net_model_prob_gpu
 
       if (th<0) goto sync_c;
 
+      /* Compute things in scratch memory.  Either value at i is
+         exponential of the output, and that at i+N_outputs is zero,
+         or value at i is zero and that at i+N_outputs is the
+         unchanged output.  Avoids the exponential computation at this
+         point if it might overflow or underflow, while doing as many
+         exponentials in parallel as possible (typically all of them). */
+
+      net_value possible_exp_overflow;
+      possible_exp_overflow = 77.2;  /* Maximum value so exp of +- this won't
+                                        overflow with FP32, and such values
+                                        still won't overflow in a summation 
+                                        of up to 100,000 terms */
+
       for (i = th; i<N_outputs; i+=NTH)
-      { if (v->o[i]>88 || v->o[i]<-88) /* exp overflows/underflows with FP32 */
+      { if (v->o[i]>possible_exp_overflow || v->o[i]<-possible_exp_overflow) 
         { const_scratch[scroff+i] = 0;
           const_scratch[scroff+i+N_outputs] = v->o[i];
         }
@@ -656,6 +674,8 @@ __device__ STATIC_IF_INCLUDED void net_model_prob_gpu
       }
 
       if (th<0) goto sync_e;
+
+      /* Find sum of exponentials (redundantly in all threads being used). */
 
       net_value m;
 
@@ -681,9 +701,13 @@ __device__ STATIC_IF_INCLUDED void net_model_prob_gpu
          }
       }
 
+      /* Compute log probability in thread 0. */
+
       if (pr && th==0) 
       { *pr = v->o[(int)*t] - m - prec_log(s);
       }
+
+      /* Compute derivatives of log probability using all threads in use. */
 
       if (dp)
       { s = 1/s;

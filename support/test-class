@@ -2,18 +2,20 @@
 
 echo " "; echo "--- A"; echo " "
 
-net-spec log 3 5 / io=1000
+net-spec log 4 5 / io=1000
 model-spec log class
 cat >data <<end
-1 0 0  0
-0 1 0  1
-0 0 1  2
+1 0 0 0  0
+0 1 0 0  1
+0 0 1 0  2
+0 0 0 1  4
 end
-data-spec log 3 1 5 / data .
+data-spec log 4 1 5 / data .
 net-gen log fix - <<end
 3 -100 3 3 3
 -100 -1000 -100 -1000 -1000
 -100 0 -100 0 100
+87.99 87.99 87.99 87.99 87.99
 end
 net-display log 0
 net-tbl -h o0@ log 0

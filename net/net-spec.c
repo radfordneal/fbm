@@ -610,10 +610,30 @@ int main
     exit(1); 
   }
 
-  for (l = 0; l<=a->N_layers; l++)  /* hidden and output layers */
-  { if (flgs->input_config[l] && (p->ih[l].scale || p->ih[l].alpha[1]!=0)
-     || flgs->hidden_config[l] && (p->hh[l].scale || p->hh[l].alpha[1]!=0))
-    { fprintf(stderr,"Illegal prior for weights with configuration file\n");
+  for (l = 0; l<a->N_layers; l++)
+  { if (flgs->input_config[l] && (p->ih[l].scale || p->ih[l].alpha[1]!=0))
+    { fprintf (stderr, 
+        "Illegal prior for weights with input configuration file (ih%d)\n",l);
+      exit(1); 
+    }
+    if (l>0 && flgs->hidden_config[l] 
+            && (p->hh[l-1].scale || p->hh[l-1].alpha[1]!=0))
+    { fprintf (stderr,
+        "Illegal prior for weights with hidden configuration file (hh%d)\n",l);
+      exit(1); 
+    }
+  }
+
+  if (flgs->input_config[a->N_layers] && (p->io.scale || p->io.alpha[1]!=0))
+  { fprintf (stderr, 
+      "Illegal prior for weights with input configuration file (io)\n");
+    exit(1); 
+  }
+  for (l = 0; l<a->N_layers; l++)
+  { if (flgs->hidden_config[2*a->N_layers-l-1] 
+         && (p->ho[l].scale || p->ho[l].alpha[1]!=0))
+    { fprintf (stderr,
+        "Illegal prior for weights with hidden configuration file (h%do)\n",l);
       exit(1); 
     }
   }

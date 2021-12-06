@@ -300,7 +300,7 @@ typedef struct
 typedef struct
 { 
   prior_spec ti;		/* Prior for offsets of input units */
-  prior_spec hh[Max_layers-1];	/* Priors for hidden to hidden wieghts */
+  prior_spec hh[Max_layers-1];	/* Priors for hidden to (next) hidden weights */
   prior_spec ih[Max_layers];	/* Priors for input to hidden weights */
   prior_spec bh[Max_layers];	/* Priors for biases of hidden units */
   prior_spec th[Max_layers];	/* Priors for offsets of hidden units */

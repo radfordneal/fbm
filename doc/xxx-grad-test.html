@@ -19,13 +19,19 @@ These programs are meant for debugging, not for ordinary use.
 
 Usage:
 
-    xxx-grad-test log-file index delta
+    xxx-grad-test log-file index delta [ "-" | pix ]
  
 Here 'xxx' is a prefix identifying the particular incarnation of this
-program.  The gradient computation is tested at the point stored with
-the specified index in the log file.  It is compared to the gradient
-found using finite differences with the given difference value.  The
-results are written to standard output.
+program.  The energy and gradient computations are tested at the point
+stored with the specified index in the log file.  The gradient is
+compared to the gradient found using finite differences of the energy
+with the given difference value.  If the optional final argument is
+"-", only the energy is computed (and displayed).  If a parameter
+index 'pix' (from 0) is given as the optional final argument, only the
+component of the gradient with that index is checked.  (This is much
+faster that checking the full gradient for high-dimensional problems.)
+
+The results are written to standard output.
 
             Copyright (c) 1995-2021 by Radford M. Neal
 </pre>

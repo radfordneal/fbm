@@ -50,17 +50,27 @@ int main
 
   double maxlr;
   int negr;
+
+  int energy_only;
+  int not_full;
+  int pix;
  
   int i;
 
   /* Look at program arguments. */
 
-  if (argc!=4 
+  not_full = argc==5;
+  pix = -1;
+  if (argc!=4 && argc!=5
    || (index = atoi(argv[2]))<=0 && strcmp(argv[2],"0")!=0
-   || (delta = atof(argv[3]))<=0)
-  { fprintf(stderr,"Usage: xxx-grad-test log-file index delta\n");
+   || (delta = atof(argv[3]))<=0
+   || argc==5 && strcmp(argv[4],"-")!=0 
+              && (pix = atoi(argv[4]))<=0 && strcmp(argv[4],"0")!=0)
+  { fprintf(stderr,
+            "Usage: xxx-grad-test log-file index delta [ \"-\" | pix ]\n");
     exit(1);
   }
+  energy_only = not_full && pix==-1;
 
   logf.file_name = argv[1];
 
@@ -97,25 +107,29 @@ int main
   { rand_use_state(logg.data['r']);
   }
 
-  grad = chk_alloc (ds.dim, sizeof *grad);
-
-  EF = chk_alloc (ds.dim, sizeof *EF);
-  EB = chk_alloc (ds.dim, sizeof *EB);
+  if (!energy_only)
+  { grad = chk_alloc (ds.dim, sizeof *grad);
+    EF = chk_alloc (ds.dim, sizeof *EF);
+    EB = chk_alloc (ds.dim, sizeof *EB);
+  }
 
   /* Find gradient using application-specific gradient procedure. */
 
-  mc_app_energy (&ds, 1, 1, &E, grad);
+  mc_app_energy (&ds, 1, 1, &E, energy_only ? 0 : grad);
 
   /* Gather differences. */
 
-  for (i = 0; i<ds.dim; i++)
-  { mc_value t;
-    t = ds.q[i];
-    ds.q[i] = t + delta/2;
-    mc_app_energy (&ds, 1, 1, &EF[i], 0);
-    ds.q[i] = t - delta/2;
-    mc_app_energy (&ds, 1, 1, &EB[i], 0);
-    ds.q[i] = t;
+  if (!energy_only)
+  { for (i = 0; i<ds.dim; i++)
+    { mc_value t;
+      if (not_full && i!=pix) continue;
+      t = ds.q[i];
+      ds.q[i] = t + delta/2;
+      mc_app_energy (&ds, 1, 1, &EF[i], 0);
+      ds.q[i] = t - delta/2;
+      mc_app_energy (&ds, 1, 1, &EB[i], 0);
+      ds.q[i] = t;
+    }
   }
 
   /* Print results. */
@@ -124,6 +138,10 @@ int main
 
   printf("Log file: %s  Index: %d  Delta: %.6f  Energy: %.2f\n\n",
           logf.file_name, index, delta, E);
+
+  if (energy_only)
+  { exit(0);
+  }
 
   printf(
    "  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio\n\n");
@@ -134,6 +152,8 @@ int main
   for (i = 0; i<ds.dim; i++)
   { 
     double r, lr;
+
+    if (not_full && i!=pix) continue;
 
     printf ("%6d %+7.2f   %+11.4e  %+11.4e   %+11.4e  %+11.4e", 
             i, ds.q[i], EF[i]-E, E-EB[i], (EF[i]-EB[i])/delta, grad[i]);
@@ -154,6 +174,10 @@ int main
       if (lr<0) lr = -lr;
       if (lr>maxlr) maxlr = lr;
     }
+  }
+
+  if (pix>=0)
+  { exit(0);
   }
 
   if (negr) printf("\nLargest absolute log ratio: ********\n\n");

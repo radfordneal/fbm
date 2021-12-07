@@ -3735,8 +3735,7 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
       }
       else if (FLGS.layer_type[l]==Softplus_type)
       { for (i = thrb; i<N_hidden; i+=NTH)
-        { net_value e = prec_exp(vh[i]);
-          dh[i] *= (e-1) / e;
+        { dh[i] *= 1 - prec_exp(-vh[i]);
         }
       }
       else /* identity */
@@ -3745,9 +3744,7 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
 
       if (CHECK_NAN)
       { for (i = thrb; i<N_hidden; i+=NTH)
-        { if (isnan(dh[i]))
-          { printf("NaN for derivative wrt hidden layer %d unit %d\n",l,i);
-          }
+        { if (isnan(dh[i])) abort();
         }
       }
     }

@@ -3,7 +3,7 @@
  
 Number of training cases: 100
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.001000  Energy: 1911.81
 
@@ -3321,7 +3321,7 @@ Average squared error guessing mean:    1.14565+-0.19410
  
 Number of training cases: 100
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.001000  Energy: 1829.20
 
@@ -6599,7 +6599,7 @@ Average squared error guessing mean:    0.82511+-0.11793
  
 Number of training cases: 100
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.001000  Energy: 1812.53
 
@@ -9874,7 +9874,7 @@ Average squared error guessing mean:    1.00120+-0.16770
  
 Number of training cases: 100
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.001000  Energy: 355.58
 
@@ -10357,7 +10357,7 @@ Average squared error guessing mean:    0.85401+-0.16162
  
 Number of training cases: 99
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.001000  Energy: 439.68
 

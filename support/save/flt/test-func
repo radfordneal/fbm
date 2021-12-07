@@ -26,7 +26,7 @@ Noise levels
        o0@0            o1@0     
  2.84000000e+03  3.45000000e+03 
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.001000  Energy: 9874114.19
 
@@ -75,7 +75,7 @@ Noise levels
        o0@0            o1@0     
  2.84000000e+03  3.45000000e+03 
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.001000  Energy: 9874117.19
 
@@ -128,7 +128,7 @@ Noise levels
        o0@0     
  2.84000000e+03 
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.001000  Energy: 3984718.53
 
@@ -175,7 +175,7 @@ Noise levels
        o0@0            o1@0     
  2.64000000e+03  3.15000000e+03 
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.001000  Energy: 8344917.19
 
@@ -228,7 +228,7 @@ Noise levels
        o0@0            o1@0     
  8.40000000e+02  1.05000000e+03 
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.001000  Energy: 871317.19
 
@@ -281,7 +281,7 @@ Noise levels
        o0@0            o1@0     
  4.00000000e+01  5.00000000e+01 
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.001000  Energy: 917.19
 

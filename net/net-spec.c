@@ -64,7 +64,6 @@ int main
 
   int show_sizes = 0;
   int show_configs = 0;
-  int show_config_details = 0;
 
   while (argc>2)
   { if (strcmp(argv[argc-1],"config")==0 || strcmp(argv[argc-1],"config+")==0)
@@ -770,7 +769,7 @@ int main
 
 /* PRINT WEIGHT CONFIGURATION. */
 
-void print_config (net_config *cf, int biases)
+static void print_config (net_config *cf, int biases)
 { int k;
   printf("\n%d connections, %d %s\n\n",cf->N_conn,cf->N_wts,
                                        biases ? "biases" : "weights");

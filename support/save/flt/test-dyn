@@ -26,7 +26,7 @@ Noise levels
        o0@0            o1@0     
  2.84000000e+03  3.45000000e+03 
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.001000  Energy: 9874114.19
 
@@ -44,7 +44,7 @@ Log file: log  Index: 0  Delta: 0.001000  Energy: 9874114.19
 Largest absolute log ratio: 0.1344
 
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 10  Delta: 0.001000  Energy: 1925973.47
 
@@ -123,7 +123,7 @@ Noise levels
        o0@0            o0@1            o1@0            o1@1     
  2.84000000e+03  2.85000000e+03  3.45000000e+03  3.46300000e+03 
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.001000  Energy: 19820100.52
 
@@ -141,7 +141,7 @@ Log file: log  Index: 0  Delta: 0.001000  Energy: 19820100.52
 Largest absolute log ratio: 0.0563
 
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 10  Delta: 0.001000  Energy: 3805584.55
 
@@ -220,7 +220,7 @@ Noise levels
        o0@0            o0@1            o1@0            o1@1     
  2.84000000e+03  2.85000000e+03  3.45000000e+03  3.46300000e+03 
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.001000  Energy: 19820100.52
 
@@ -238,7 +238,7 @@ Log file: log  Index: 0  Delta: 0.001000  Energy: 19820100.52
 Largest absolute log ratio: 0.0563
 
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 1  Delta: 0.001000  Energy: 3805584.55
 
@@ -290,7 +290,7 @@ Noise levels
        o0@0            o0@1            o1@0            o1@1     
  2.84000000e+03  2.85000000e+03  3.45000000e+03  3.46300000e+03 
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.001000  Energy: 19820100.52
 
@@ -308,7 +308,7 @@ Log file: log  Index: 0  Delta: 0.001000  Energy: 19820100.52
 Largest absolute log ratio: 0.0563
 
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 3  Delta: 0.001000  Energy: 1407871.12
 

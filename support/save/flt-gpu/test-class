@@ -36,7 +36,7 @@ Case   Means
    4    0.20   0.20   0.20   0.20   0.20
 
 
-Comparison of computed gradient with finite differences
+Computed energy and gradient, compared with that from finite differences
 
 Log file: log  Index: 0  Delta: 0.010000  Energy: 1105.24
 

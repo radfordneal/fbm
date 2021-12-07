@@ -39,6 +39,11 @@
 #include "sleef-use.h"
 
 
+#ifndef CHECK_NAN
+#define CHECK_NAN 0                 /* Normally 0, can set to 1 for debugging */
+#endif
+
+
 #if __CUDACC__
 
 /* CUDA-RELATED VARIABLES. */

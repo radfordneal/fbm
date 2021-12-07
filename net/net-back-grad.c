@@ -32,11 +32,10 @@
 #include "intrinsics-use.h"
 #include "sleef-use.h"
 
-#endif
-
-
 #ifndef CHECK_NAN
 #define CHECK_NAN 0                 /* Normally 0, can set to 1 for debugging */
+#endif
+
 #endif
 
 
@@ -3384,19 +3383,19 @@ void STATIC_IF_INCLUDED net_back_add_grad
 /* FIND GRADIENT, USING BACKPROPAGATED DERIVATIVES, GPU VERSION.
    
    Called by each thread in a block, with threads divided according to
-   which group of cases they handle.  The 'th' argument (0 to GTH-1)
+   which group of cases they handle.  The 'thrg' argument (0 to GTH-1)
    identifies the thread within such a group, while 'gsz' gives the
    size of the group - it will be GROUP_SIZE except when there are
    extra cases at the end of the training set, or it may be zero or
    negative for threads that are not used, but must be synchronized.
 
-   The v0 and d0 arguments point to the places where hidden unit
-   values are found, where derivatives with respect to the outputs are
-   found, and where derivatives with respect to hidden and/or input
-   units may be stored - v0 and d0 are for the first case in the
-   group, with other cases following.  If USE_FAST_SHARED_MEM is 1,
-   fast shared memory may be used insteadd to hold values for some or
-   all hidden units, and/or derivatives with respect to hidden units. 
+   The v and d arguments point to the places where hidden unit values
+   are found, where derivatives with respect to the outputs are found,
+   and where derivatives with respect to hidden and/or input units may
+   be stored - v and d are for the first case in the group, with other
+   cases following.  If USE_FAST_SHARED_MEM is 1, fast shared memory
+   may be used instead to hold values for some or all hidden units,
+   and/or derivatives with respect to hidden units.
 
    The gradient due to the cases in the group is stored in 'g'. */
 
@@ -3535,7 +3534,7 @@ __device__ static void store_grad2_config
 __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
 ( int thrg,		/* Which thread, from 0 to GTH-1 */
   int gsz,		/* Size of gradient group (maybe < GROUP_SIZE at end) */
-  net_params *restrict g,    /* Gradient with respect to parameters to add to */
+  net_params *restrict g,   /* Where to store gradient with respect to params */
   net_values const*restrict v, /* Values for units in network, 1st train case */
   net_values *restrict d,      /* Place for derivatives, first training case */
   int sparse            /* Might source unit values often be zero? */
@@ -3743,6 +3742,14 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
       else /* identity */
       { /* nothing to do */
       }
+
+      if (CHECK_NAN)
+      { for (i = thrb; i<N_hidden; i+=NTH)
+        { if (isnan(dh[i]))
+          { printf("NaN for derivative wrt hidden layer %d unit %d\n",l,i);
+          }
+        }
+      }
     }
 
     __syncthreads();
@@ -3862,6 +3869,22 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
     }
 
     store_grad1 (thrg, gsz, g->ti, d[0].i, d[1].i, d[2].i, d[3].i, A.N_inputs);
+  }
+
+  if (CHECK_NAN)
+  { if (blockIdx.x==0)
+    { __syncthreads();
+      if (thrg==0)
+      { int k;
+        for (k = 0; k<g->total_params; k++)
+        { if (isnan(g->param_block[k]))
+          { if (k==265646)
+            { printf("NaN in gradient component %d, block %d\n",k,blockIdx.x);
+            }
+          }
+        }
+      }
+    }
   }
 }
 

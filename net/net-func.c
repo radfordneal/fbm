@@ -32,11 +32,10 @@
 #include "intrinsics-use.h"
 #include "sleef-use.h"
 
-#endif
-
-
 #ifndef CHECK_NAN
 #define CHECK_NAN 0                 /* Normally 0, can set to 1 for debugging */
+#endif
+
 #endif
 
 

@@ -62,12 +62,30 @@ int main
 
   /* See if we are to display specifications for existing network. */
 
-  if (argc==2 
-   || argc==3 && (strcmp(argv[2],"config")==0 || strcmp(argv[2],"config+")==0))
-  {
-    int show_configs = argc==3;
+  int show_sizes = 0;
+  int show_configs = 0;
+  int show_config_details = 0;
 
-    show_config_details = show_configs && strcmp(argv[2],"config+")==0;
+  while (argc>2)
+  { if (strcmp(argv[argc-1],"config")==0 || strcmp(argv[argc-1],"config+")==0)
+    { if (show_configs) usage();
+      show_configs = 1;
+      show_config_details = strcmp(argv[argc-1],"config+")==0;
+      argc -= 1;
+    }
+    else if (strcmp(argv[argc-1],"sizes")==0)
+    { if (show_sizes) usage();
+      show_sizes = 1;
+      argc -= 1;
+    }
+    else
+    { break;
+    }
+  }
+
+  if (argc==2 || show_configs || show_sizes)
+  {
+    if (argc>2) usage();
 
     /* Open log file and gobble up initial records. */
   
@@ -218,7 +236,7 @@ int main
 
     if (l<a->N_layers || a->has_ao)
     {
-       if (a->N_layers>0 && l<a->N_layers)
+      if (a->N_layers>0 && l<a->N_layers)
       { printf("\n  Hidden adjustments: ");
         for (l = 0; l<a->N_layers; l++)
         { if (p->ah[l]==0) printf(" -");
@@ -235,6 +253,76 @@ int main
     }
   
     printf("\n");
+
+    net_precomputed pre;
+    unsigned total;
+
+    if (show_sizes || show_configs)
+    { total = net_setup_param_count (a, flgs, &pre);
+    }
+
+    if (show_sizes)
+    { 
+      printf("\nNumbers of parameters in groups (total %u):\n\n",total);
+  
+      char t[100];
+        
+      if (a->has_ti) 
+      { printf("  %-27s:%6d\n","Input Offsets:", a->N_inputs);
+      }
+    
+      nsqi = 0;
+      for (l = 0; l<a->N_layers; l++)
+      { int lp;
+        for (lp = 0; lp<l; lp++)
+        { if ((a->has_nsq[l]>>lp) & 1)
+          { sprintf(t, "Hidden%d-Hidden%d Weights:", lp, l);
+            printf("  %-27s%6d\n", t, a->nonseq_config[nsqi] ?
+              a->nonseq_config[nsqi]->N_wts : a->N_hidden[lp]*a->N_hidden[l]);
+            nsqi += 1;
+          }
+        }
+        if (l>0 && a->has_hh[l-1])
+        { sprintf(t, "Hidden%d-Hidden%d Weights:", l-1, l);
+          printf("  %-27s%6d\n", t, a->hidden_config[l] ?
+             a->hidden_config[l]->N_wts : a->N_hidden[l-1]*a->N_hidden[l]);
+        }
+        if (a->has_ih[l]) 
+        { sprintf(t, "Input-Hidden%d Weights:", l);
+          printf("  %-27s%6d\n", t, a->input_config[l] ?
+             a->input_config[l]->N_wts : a->N_inputs*a->N_hidden[l]);
+        }
+        if (a->has_bh[l]) 
+        { sprintf(t, "Hidden%d Biases:", l);
+          printf("  %-27s%6d\n", t, a->bias_config[l] ?
+             a->bias_config[l]->N_wts : a->N_hidden[l]);
+        }
+        if (a->has_th[l]) 
+        { sprintf(t, "Hidden%d Offsets:", l);
+          printf("  %-27s%6d\n", t, a->N_hidden[l]);
+        }
+      }
+
+      for (l = a->N_layers-1; l>=0; l--)
+      { if (a->has_ho[l]) 
+        { sprintf(t, "Hidden%d-Output Weights:", l);
+          printf("  %-27s%6d\n", t, a->hidden_config[2*a->N_layers-l-1] ?
+              a->hidden_config[2*a->N_layers-l-1]->N_wts : 
+              a->N_hidden[l]*a->N_outputs);
+        }
+      }
+
+      if (a->has_io) 
+      { printf("  %-27s%6d\n", "Input-Output Weights:", 
+                a->N_inputs*a->N_outputs);
+      }
+
+      if (a->has_bo) 
+      { printf("  %-27s%6d\n", "Output Biases:", a->N_outputs);
+      }
+    
+      printf("\n");
+    }
 
     nsqi = 0;
     if (show_configs && flgs)
@@ -883,7 +971,7 @@ static void usage(void)
    "                / { group=prior }\n");
 
   fprintf(stderr,
-   "   or: net-spec log-file [ \"config\" ]  (displays stored specifications)\n");
+   "   or: net-spec log-file [ \"sizes\" ] [ \"config\" ]  (display specifications)\n");
 
   fprintf(stderr,
    "Group: ti ih# bh# th# h#h# h#o io bo ah# ao\n");

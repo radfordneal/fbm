@@ -65,21 +65,24 @@ Feature changes in the version:
    useful if the output is piped to a plotting program that is capable
    of following continuing input, updating the plot in real time.
 
-10) The xxx-grad-test programs (eg, net-grad-test) can now optionally
+10) The net-spec program now has an option for displaying the numbers
+    of parameters in each group.  See net-spec.doc for details.
+
+11) The xxx-grad-test programs (eg, net-grad-test) can now optionally
     display only the computed gradient, or only the energy, or can be
     restricted to display and check against the result from finite
     differences only one component of the gradient.  (Useful since
     checking the full gradient can be very slow for high-dimensional
     models.)  See xxx-grad-test.doc for details.
 
-11) The old (positional) syntax for net-spec is no longer allowed.  It
+12) The old (positional) syntax for net-spec is no longer allowed.  It
     would not have supported the new feature of non-sequential hidden
     layer connections.
 
-12) The maximum number of hidden layers in a neural network is now 15
+13) The maximum number of hidden layers in a neural network is now 15
     (up from 7 before).
 
-13) The maximum number of iterations that can be used when making
+14) The maximum number of iterations that can be used when making
     predictions with the median has been increased from 200 to 1000.
 
 Performance changes in this version:

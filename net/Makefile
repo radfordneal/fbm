@@ -73,10 +73,11 @@ net-quantities.o: net-quantities.c misc.h log.h prior.h model.h net.h data.h \
 				net-data.h quantities.h cuda-use.h
 
 
-net-spec:	net-spec.o	net-util.o net-config.o prior.o \
+net-spec:	net-spec.o	net-util.o net-config.o prior.o net-setup.o \
 				net-prior.o ars.o misc.o log.o rand.o
 		$(CC) $(LFLAGS) net-spec.o net-util.o net-config.o prior.o \
-		  net-prior.o ars.o misc.o log.o rand.o -lm -o net-spec
+		  net-setup.o net-prior.o ars.o misc.o log.o rand.o \
+		  -lm -o net-spec
 
 net-spec.o:	net-spec.c	misc.h prior.h model.h net.h log.h data.h
 

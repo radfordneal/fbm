@@ -15,14 +15,16 @@ Usage:
 
 or: 
 
-    net-spec log-file [ "config" ]
+    net-spec log-file [ "sizes" ] [ "config" ]
 
 The first form above is for specifying a network archicture. 
 
 The second form is for displaying the network architecture stored in
-the specified log file.  The optional "config" argument causes the
-detailed configurations from cfg-i, cfg-h, and cfg-b flags to be
-output, in fully-expanded form (as individual triplets or pairs).
+the specified log file.  If the optional "sizes" argument is
+specified, the numbers of parameters for each group are output.  The
+optional "config" argument causes the detailed configurations from
+cfg-i, cfg-h, and cfg-b flags to be output, in fully-expanded form (as
+individual triplets or pairs).
 
 
 Specifying layer sizes and flags.

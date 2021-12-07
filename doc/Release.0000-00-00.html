@@ -68,11 +68,12 @@ Feature changes in the version:
    useful if the output is piped to a plotting program that is capable
    of following continuing input, updating the plot in real time.
 
-10) The xxx-grad-test programs (eg, net-grad-test) now take an
-    optional argument that can be used to restrict the check to only
-    one component of the gradient, or to only print the energy.
-    (Useful since checking the full gradient can be very slow for
-    high-dimensional models.)
+10) The xxx-grad-test programs (eg, net-grad-test) can now optionally
+    display only the computed gradient, or only the energy, or can be
+    restricted to display and check against the result from finite
+    differences only one component of the gradient.  (Useful since
+    checking the full gradient can be very slow for high-dimensional
+    models.)  See <A HREF="xxx-grad-test.html">xxx-grad-test.doc</A> for details.
 
 11) The old (positional) syntax for net-spec is no longer allowed.  It
     would not have supported the new feature of non-sequential hidden

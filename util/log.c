@@ -663,11 +663,17 @@ static size_t readf (void *restrict ptr, size_t nbytes, log_file *logf)
   size_t m = 0;
   for (;;) {
     size_t n = fread (ptr+m, 1, nbytes-m, logf->file_struct);
-    if (m+n==nbytes || !logf->follow || !feof(logf->file_struct)) 
+    if (ferror(logf->file_struct))
+    { perror("Error reading log file");
+      exit(1);
+    }
+    if (m+n==nbytes || !logf->follow)
     { return m+n;
     }
     m += n;
-    clearerr (logf->file_struct);
+    if (feof(logf->file_struct)) 
+    { clearerr (logf->file_struct);
+    }
     sleep(1);
   }
 }

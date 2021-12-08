@@ -32,11 +32,11 @@ typedef struct
 
 /* STATE OF A LOG FILE.  Used in connection with the low-level procedures 
    for reading and writing records, and maybe gobbling with the higher-level
-   procedurs too.  The at_end flag is set when the file pointer is past
+   procedures too.  The at_end flag is set when the file pointer is past
    the last record.  The at_beginning flag is set when the file pointer is
    at the start of the first record; it is not set when the file is empty.
-   If the follow flag is set (by the application, after opening), when EOF
-   is reached, the read is retried indefinitely (after sleeping for one second
+   If the follow flag is set (via log_file_open), when EOF is reached,
+   the read is retried indefinitely (after sleeping for one second
    each time), so that data being appended will be followed. */
 
 typedef struct

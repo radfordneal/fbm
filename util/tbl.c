@@ -222,6 +222,8 @@ int main
 
     /* Go through all the records in the indicated range. */
 
+    int last_index_plotted = -1;
+
     for (;;)
     {
       /* Gather values for this iteration. */
@@ -242,6 +244,8 @@ int main
       printf("\n");
       if (logf.follow) fflush(stdout);
 
+      last_index_plotted = logg.last_index;
+
       /* Skip to next desired index, or to end of range. */
 
       if (logf.header.magic==0) log_file_read_header(&logf,0);
@@ -257,7 +261,9 @@ int main
 
       /* Gobble up records for next index. */
 
-      log_gobble(&logf,&logg);
+      do
+      { log_gobble(&logf,&logg);
+      } while (!logf.at_end && logg.last_index==last_index_plotted);
     }
 
     fflush(stdout);

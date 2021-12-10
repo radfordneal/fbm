@@ -1,4 +1,4 @@
-Commit: 6a98cb9981c8b379ccf8e9d226937d797486a4cf
+Commit: b168c97687d1e5d0c707b032446980423062bddb
 
 Running exb with dbl-gpu on T400:
 
@@ -24,4 +24,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.247+-0.017
 Fraction of guesses that were wrong:    0.1130+-0.0100
 
-elapsed 2.51s
+elapsed 2.40s

@@ -1,4 +1,4 @@
-Commit: 08dfcb4522513b49dc4ece9f19e425ee432eec27
+Commit: 964a12c179494876e2b98dfdfddfca8c45b6d99f
 
 Running exi1 with flt-gpu on T400:
 
@@ -24,4 +24,4 @@ Average log probability of targets:    -1.050+-0.081
 Fraction of guesses that were wrong:    0.4900+-0.0502
 Average squared error guessing mean:    0.57732+-0.04266
 
-elapsed 14.45s
+elapsed 13.93s

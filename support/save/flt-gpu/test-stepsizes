@@ -1,0 +1,405 @@
+ 
+--- A
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 1  identity
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    2.000
+  Hidden Biases:           5.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  10.000
+  Output Biases:           30.000
+
+
+Debugging stepsizes
+
+Typical values for hidden layer 0:
+ 1.000
+
+Estimated 2nd derivatives for outputs:
+ 1.000
+
+Estimated 2nd derivatives for hidden layer 0:
+ 100.000
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.001000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +2.00000   -8.6667e-02  -8.6417e-02     +2.00001
+     1   +2.00000   +4.7601e-02  +4.7851e-02     +2.00001
+     2   +2.00000   -2.2631e-01  -2.2606e-01     +1.99995
+     3   +2.00000   -8.3305e-01  -8.3280e-01     +2.00007
+     4   +2.00000   +5.7359e-01  +5.7384e-01     +2.00007
+     5   +2.00000   -3.9191e-01  -3.9166e-01     +2.00007
+     6   +2.00000   -5.9707e-01  -5.9683e-01     +2.00007
+     7   +2.00000   -9.4197e-02  -9.3947e-02     +2.00001
+     8   +2.00000   -1.8825e-01  -1.8800e-01     +1.99995
+     9   +2.00000   -5.9983e-01  -5.9958e-01     +2.00007
+    10   +5.00000   -1.8214e-01  -1.8210e-01     +4.99940
+    11  +10.00000   -5.8556e-02  -5.8546e-02     +9.99880
+    12  +30.00000   +2.7291e-02  +2.7292e-02    +30.01317
+
+ 
+--- B
+ 
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 1  identity
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    2.000
+  Hidden Biases:           0.100
+
+         Output Layer
+
+  Hidden0-Output Weights:  10.000
+  Output Biases:           30.000
+
+Number of training cases: 1
+
+Debugging stepsizes
+
+Values for sqrt average squared input:
+
+ 2.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+
+Typical values for hidden layer 0:
+ 7.212
+
+Estimated 2nd derivatives for outputs:
+ 1.000
+
+Estimated 2nd derivatives for hidden layer 0:
+ 100.000
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.001000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +0.04998   -9.6285e+02  -9.6271e+02     +0.08531
+     1   +0.09988   -4.8131e+02  -4.8128e+02     +0.17006
+     2   +0.09988   -4.8159e+02  -4.8155e+02     +0.17014
+     3   +0.09988   -4.8220e+02  -4.8216e+02     +0.17006
+     4   +0.09988   -4.8079e+02  -4.8075e+02     +0.17021
+     5   +0.09988   -4.8175e+02  -4.8172e+02     +0.17006
+     6   +0.09988   -4.8196e+02  -4.8192e+02     +0.17021
+     7   +0.09988   -4.8146e+02  -4.8142e+02     +0.16999
+     8   +0.09988   -4.8155e+02  -4.8152e+02     +0.17021
+     9   +0.09988   -4.8196e+02  -4.8193e+02     +0.17021
+    10   +0.07071   -4.9052e+02  -4.9038e+02     +0.08629
+    11   +0.13865   -8.2357e+02  -8.2347e+02     +0.09983
+    12   +0.99944   +8.2237e+01  +8.2238e+01     +1.00027
+
+ 
+--- C
+ 
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 1  identity
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    2.000
+  Hidden Biases:           0.100
+
+         Output Layer
+
+  Hidden0-Output Weights:  10.000
+  Output Biases:           30.000
+
+Number of training cases: 1
+
+Debugging stepsizes
+
+Values for sqrt average squared input:
+
+ 10.000 10.000 10.000 10.000 10.000 10.000 10.000 10.000 10.000 10.000
+
+Typical values for hidden layer 0:
+ 63.246
+
+Estimated 2nd derivatives for outputs:
+ 1.000
+
+Estimated 2nd derivatives for hidden layer 0:
+ 100.000
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.001000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +0.01000   -3.4252e+04  -3.4249e+04     +0.01708
+     1   +0.01000   -3.4252e+04  -3.4249e+04     +0.01709
+     2   +0.01000   -3.4253e+04  -3.4249e+04     +0.01708
+     3   +0.01000   -3.4253e+04  -3.4250e+04     +0.01708
+     4   +0.01000   -3.4252e+04  -3.4248e+04     +0.01708
+     5   +0.01000   -3.4253e+04  -3.4249e+04     +0.01709
+     6   +0.01000   -3.4253e+04  -3.4249e+04     +0.01708
+     7   +0.01000   -3.4252e+04  -3.4249e+04     +0.01708
+     8   +0.01000   -3.4252e+04  -3.4249e+04     +0.01709
+     9   +0.01000   -3.4253e+04  -3.4249e+04     +0.01709
+    10   +0.07071   -3.4342e+03  -3.4341e+03     +0.08630
+    11   +0.01581   -5.6095e+04  -5.6086e+04     +0.01043
+    12   +0.99944   +5.8500e+02  +5.8500e+02     +1.01193
+
+ 
+--- D
+ 
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 1  identity
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    2.000
+  Hidden Biases:           3.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  10.000
+  Output Biases:           0.200
+
+Number of training cases: 1
+
+Debugging stepsizes
+
+Values for sqrt average squared input:
+
+ 3.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+
+Typical values for hidden layer 0:
+ 9.000
+
+Estimated 2nd derivatives for outputs:
+ 10000.000
+
+Estimated 2nd derivatives for hidden layer 0:
+ 1000000.000
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.001000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +0.00033   -1.3228e+07  -1.3225e+07     +0.00057
+     1   +0.00100   -4.4090e+06  -4.4087e+06     +0.00171
+     2   +0.00100   -4.4090e+06  -4.4087e+06     +0.00171
+     3   +0.00100   -4.4090e+06  -4.4087e+06     +0.00171
+     4   +0.00100   -4.4090e+06  -4.4087e+06     +0.00171
+     5   +0.00100   -4.4090e+06  -4.4087e+06     +0.00171
+     6   +0.00100   -4.4090e+06  -4.4087e+06     +0.00171
+     7   +0.00100   -4.4090e+06  -4.4087e+06     +0.00171
+     8   +0.00100   -4.4090e+06  -4.4087e+06     +0.00171
+     9   +0.00100   -4.4090e+06  -4.4087e+06     +0.00171
+    10   +0.00100   -4.4090e+06  -4.4087e+06     +0.00171
+    11   +0.00111   -9.7925e+06  -9.7908e+06     +0.00077
+    12   +0.00999   +7.5300e+05  +7.5301e+05     +0.00994
+
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 1  identity
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    2.000
+  Hidden Biases:           3.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  10.000
+  Output Biases:           0.200
+
+Number of training cases: 1
+
+Debugging stepsizes
+
+Values for sqrt average squared input:
+
+ 3.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+
+Typical values for hidden layer 0:
+ 9.000
+
+Estimated 2nd derivatives for outputs:
+ 10000.000
+
+Estimated 2nd derivatives for hidden layer 0:
+ 1000000.000
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.001000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +0.00033   +1.0838e+06  +1.0850e+06     +0.00092
+     1   +0.00100   +3.6141e+05  +3.6154e+05     +0.00276
+     2   +0.00100   +3.6141e+05  +3.6154e+05     +0.00276
+     3   +0.00100   +3.6141e+05  +3.6154e+05     +0.00276
+     4   +0.00100   +3.6141e+05  +3.6154e+05     +0.00276
+     5   +0.00100   +3.6141e+05  +3.6154e+05     +0.00276
+     6   +0.00100   +3.6141e+05  +3.6154e+05     +0.00276
+     7   +0.00100   +3.6141e+05  +3.6154e+05     +0.00276
+     8   +0.00100   +3.6141e+05  +3.6154e+05     +0.00276
+     9   +0.00100   +3.6141e+05  +3.6154e+05     +0.00276
+    10   +0.00100   +3.6141e+05  +3.6154e+05     +0.00276
+    11   +0.00111   +3.0245e+05  +3.0254e+05     +0.00330
+    12   +0.00999   +9.9794e+04  +9.9804e+04     +0.00999
+
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 1  identity
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    2.000
+  Hidden Biases:           3.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  10.000
+  Output Biases:           0.200
+
+Number of training cases: 1
+
+Debugging stepsizes
+
+Values for sqrt average squared input:
+
+ 3.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+
+Typical values for hidden layer 0:
+ 9.000
+
+Estimated 2nd derivatives for outputs:
+ 10000.000
+
+Estimated 2nd derivatives for hidden layer 0:
+ 1000000.000
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.001000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +0.00033   +1.5691e+02  +1.5691e+02     +0.69418
+     1   +0.00100   +5.1931e+01  +5.1931e+01     +1.49049
+     2   +0.00100   +5.2481e+01  +5.2481e+01     +1.48421
+     3   +0.00100   +5.3150e+01  +5.3150e+01     +1.48421
+     4   +0.00100   +5.0841e+01  +5.0841e+01     +1.49049
+     5   +0.00100   +5.1781e+01  +5.1781e+01     +1.49049
+     6   +0.00100   +5.1930e+01  +5.1931e+01     +1.48421
+     7   +0.00100   +5.1181e+01  +5.1181e+01     +1.49049
+     8   +0.00100   +5.1524e+01  +5.1525e+01     +1.48421
+     9   +0.00100   +5.1554e+01  +5.1554e+01     +1.49049
+    10   +0.00100   +5.1610e+01  +5.1610e+01     +1.77718
+    11   +0.00111   -1.9293e+05  -1.9016e+05     +0.00060
+    12   +0.00999   -1.1527e+04  -1.1517e+04     +0.00999
+
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 1  identity
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    2.000
+  Hidden Biases:           3.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  10.000
+  Output Biases:           0.200
+
+Number of training cases: 1
+
+Debugging stepsizes
+
+Values for sqrt average squared input:
+
+ 3.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+
+Typical values for hidden layer 0:
+ 9.000
+
+Estimated 2nd derivatives for outputs:
+ 10000.000
+
+Estimated 2nd derivatives for hidden layer 0:
+ 1000000.000
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.001000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +0.00033   +8.6485e+06  +8.6686e+06     +0.00022
+     1   +0.00100   +2.8851e+06  +2.8873e+06     +0.00067
+     2   +0.00100   +2.8851e+06  +2.8873e+06     +0.00067
+     3   +0.00100   +2.8851e+06  +2.8873e+06     +0.00067
+     4   +0.00100   +2.8851e+06  +2.8873e+06     +0.00067
+     5   +0.00100   +2.8851e+06  +2.8873e+06     +0.00067
+     6   +0.00100   +2.8851e+06  +2.8873e+06     +0.00067
+     7   +0.00100   +2.8851e+06  +2.8873e+06     +0.00067
+     8   +0.00100   +2.8851e+06  +2.8873e+06     +0.00067
+     9   +0.00100   +2.8851e+06  +2.8873e+06     +0.00067
+    10   +0.00100   +2.8851e+06  +2.8873e+06     +0.00067
+    11   +0.00111   +2.6027e+05  +2.6029e+05     +0.00742
+    12   +0.00999   +1.9298e+05  +1.9299e+05     +0.00998
+

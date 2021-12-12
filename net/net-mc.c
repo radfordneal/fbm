@@ -3200,7 +3200,15 @@ void mc_app_stepsizes
 
   if (getenv("DEBUG_STEPSIZES") && strcmp(getenv("DEBUG_STEPSIZES"),"1")==0)
   { debug = 1;
-    printf("\nDebugging stepsizes\n\n");
+    printf("\nDebugging stepsizes\n");
+  }
+
+  if (debug && N_train>0)    
+  { printf("\nValues for sqrt average squared input:\n\n");
+    for (i = 0; i<arch->N_inputs; i++)
+    { printf(" %.3f",sqrt(train_sumsq[i]/N_train));
+    }
+    printf("\n");
   }
 
   inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
@@ -3321,7 +3329,7 @@ void mc_app_stepsizes
     }
 
     if (debug)
-    { printf("Typical values for hidden layer %d:\n",l);
+    { printf("\nTypical values for hidden layer %d:\n",l);
       for (j = 0; j<arch->N_hidden[l]; j++)
       { printf(" %.3f",sqrt(typl[j]));
       }

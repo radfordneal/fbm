@@ -280,12 +280,12 @@ HOSTDEV STATIC_IF_INCLUDED void net_model_prob
 
 /* COMPUTE MAXIMUM LOG LIKELIHOOD SECOND DERIVATIVES.  Computes the maximum
    values of the second derivatives of minus the log probability of the targets
-   in the training set with respect to the outputs of the net, for the current 
-   values of the hyperparameters.  The maximum is with respect to possible 
-   values of the outputs of the net (the real outputs must not be looked at,
-   or validity of the Markov chain methods would be undermined), and of the
-   true targets (which could be looked at, but which aren't here).  In some 
-   cases, one must make do with approximations.
+   in a (single) training case with respect to the outputs of the net, for the 
+   current values of the hyperparameters.  The maximum is with respect to 
+   possible values of the outputs of the net (the real outputs must not be 
+   looked at, or validity of the Markov chain methods would be undermined), 
+   and of the true targets (which could be looked at, but which aren't here). 
+   In some cases, one must make do with approximations.
  
    A data model must be specified to use this procedure. */
 

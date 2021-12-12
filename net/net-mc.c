@@ -3196,6 +3196,12 @@ void mc_app_stepsizes
   double inv_temp, w;
   int i, j, k, l, ls, nsqi;
   unsigned bits;
+  int debug = 0;
+
+  if (getenv("DEBUG_STEPSIZES") && strcmp(getenv("DEBUG_STEPSIZES"),"1")==0)
+  { debug = 1;
+    printf("\nDebugging stepsizes\n\n");
+  }
 
   inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
 
@@ -3205,7 +3211,7 @@ void mc_app_stepsizes
   for (l = 0; l<arch->N_layers; l++)
   { net_value *typl = typical.h[l];
     double alpha, var_adj;
-    if (TYPICAL_VALUES_ALL_ONE)
+    if (TYPICAL_VALUES_ALL_ONE || N_train==0)
     { for (j = 0; j<arch->N_hidden[l]; j++)
       { typl[j] = 1;
       }
@@ -3313,6 +3319,14 @@ void mc_app_stepsizes
         }
       }
     }
+
+    if (debug)
+    { printf("Typical values for hidden layer %d:\n",l);
+      for (j = 0; j<arch->N_hidden[l]; j++)
+      { printf(" %.3f",sqrt(typl[j]));
+      }
+      printf("\n");
+    }
   }
 
   /* Compute estimated second derivatives of minus log likelihood for
@@ -3324,6 +3338,14 @@ void mc_app_stepsizes
   { for (i = 0; i<arch->N_outputs; i++)
     { seconds.o[i] *= inv_temp;
     }
+  }
+
+  if (debug)
+  { printf("\nEstimated 2nd derivatives for outputs:\n");
+    for (i = 0; i<arch->N_outputs; i++)
+    { printf(" %.3f",seconds.o[i]);
+    }
+    printf("\n");
   }
 
   char ns[Max_nonseq][Max_nonseq];
@@ -3424,6 +3446,14 @@ void mc_app_stepsizes
       }
     }
 
+    if (debug)
+    { printf("\nEstimated 2nd derivatives for hidden layer %d:\n",l);
+      for (i = 0; i<arch->N_hidden[l]; i++)
+      { printf(" %.3f",seconds.h[l][i]);
+      }
+      printf("\n");
+    }
+
   }
 
   if (arch->has_ti)
@@ -3474,6 +3504,14 @@ void mc_app_stepsizes
           }
         }
       }
+    }
+
+    if (debug)
+    { printf("\nEstimated 2nd derivatives for inputs:\n");
+      for (i = 0; i<arch->N_inputs; i++)
+      { printf(" %.3f",seconds.i[i]);
+      }
+      printf("\n");
     }
   }
 

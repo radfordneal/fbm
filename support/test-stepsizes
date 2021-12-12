@@ -39,3 +39,13 @@ for seed in 1 2 3 4; do
   net-gen log
   net-stepsizes log 0 0.001
 done
+
+echo " "; echo "--- E"; echo " "
+
+net-spec log 10 1 identity 2 identity 2 identity 1 \
+              / ih0=2 bh0=1 h0h1=7 h1h2=6 h0h2=5 ho=10 bo=30
+model-spec log real 1
+net-spec log
+data-spec log 10 1 / "%echo 2 1 1 1 1 1 1 1 1 1 1" .
+net-gen log
+net-stepsizes log 0 0.001

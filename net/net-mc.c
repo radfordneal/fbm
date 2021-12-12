@@ -3280,13 +3280,13 @@ void mc_app_stepsizes
           { for (k = 0; k<arch->nonseq_config[nsqi]->N_conn; k++)
             { i = arch->nonseq_config[nsqi]->conn[k].s;
               j = arch->nonseq_config[nsqi]->conn[k].d;
-              typl[j] += var_adj * sq (typical.h[ls][i] * *sigmas.nsq_cm[nsqi]);
+              typl[j] += var_adj * typical.h[ls][i] * sq(*sigmas.nsq_cm[nsqi]);
             }
           }
           else
           { for (j = 0; j<arch->N_hidden[l]; j++)
             { for (i = 0; i<arch->N_hidden[ls]; i++)
-              { typl[j] += var_adj * sq(typical.h[ls][i] * sigmas.nsq[nsqi][i]);
+              { typl[j] += var_adj * typical.h[ls][i] * sq(sigmas.nsq[nsqi][i]);
               }
             }
           }
@@ -3300,13 +3300,13 @@ void mc_app_stepsizes
         { for (k = 0; k<arch->hidden_config[l]->N_conn; k++)
           { i = arch->hidden_config[l]->conn[k].s;
             j = arch->hidden_config[l]->conn[k].d;
-            typl[j] += var_adj * sq (typical.h[l-1][i] * *sigmas.hh_cm[l-1]);
+            typl[j] += var_adj * typical.h[l-1][i] * sq(*sigmas.hh_cm[l-1]);
           }
         }
         else
         { for (j = 0; j<arch->N_hidden[l]; j++)
           { for (i = 0; i<arch->N_hidden[l-1]; i++)
-            { typl[j] += var_adj * sq (typical.h[l-1][i] * sigmas.hh[l-1][i]);
+            { typl[j] += var_adj * typical.h[l-1][i] * sq(sigmas.hh[l-1][i]);
             }
           }
         }

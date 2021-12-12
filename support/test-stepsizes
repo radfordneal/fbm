@@ -1,0 +1,41 @@
+#!/bin/bash
+
+export DEBUG_STEPSIZES=1
+
+echo " "; echo "--- A"; #echo " "
+
+net-spec log 10 1 identity 1 / ih=2 bh=5 ho=10 bo=30
+model-spec log real 1
+net-spec log
+net-gen log
+net-stepsizes log 0 0.001
+
+echo " "; echo "--- B"; echo " "
+
+net-spec log 10 1 identity 1 / ih=2 bh=0.1 ho=10 bo=30
+model-spec log real 1
+net-spec log
+data-spec log 10 1 / "%echo 2 1 1 1 1 1 1 1 1 1 1" .
+net-gen log
+net-stepsizes log 0 0.001
+
+echo " "; echo "--- C"; echo " "
+
+net-spec log 10 1 identity 1 / ih=2 bh=0.1 ho=10 bo=30
+model-spec log real 1
+net-spec log
+data-spec log 10 1 / "%echo 10 10 10 10 10 10 10 10 10 10 1" .
+net-gen log
+net-stepsizes log 0 0.001
+
+echo " "; echo "--- D"; echo " "
+
+for seed in 1 2 3 4; do 
+  net-spec log 10 1 identity 1 / ih=2 bh=3 ho=10 bo=0.2
+  model-spec log real 0.01
+  net-spec log
+  data-spec log 10 1 / "%echo 3 1 1 1 1 1 1 1 1 1 1" .
+  rand-seed log $seed
+  net-gen log
+  net-stepsizes log 0 0.001
+done

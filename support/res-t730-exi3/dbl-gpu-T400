@@ -1,4 +1,4 @@
-Commit: 964a12c179494876e2b98dfdfddfca8c45b6d99f
+Commit: bc326fb5e9917da97aebb6c1dfd8fe2d74f76efe
 
 Running exi3 with dbl-gpu on T400:
 
@@ -20,8 +20,8 @@ Number of iterations used: 6
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.316+-0.028
-Fraction of guesses that were wrong:    0.6600+-0.0476
-Average squared error guessing mean:    0.71483+-0.01394
+Average log probability of targets:    -1.378+-0.005
+Fraction of guesses that were wrong:    0.7300+-0.0446
+Average squared error guessing mean:    0.74584+-0.00275
 
-elapsed 69.38s
+elapsed 69.66s

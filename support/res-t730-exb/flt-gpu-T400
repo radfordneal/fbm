@@ -1,4 +1,4 @@
-Commit: 964a12c179494876e2b98dfdfddfca8c45b6d99f
+Commit: bc326fb5e9917da97aebb6c1dfd8fe2d74f76efe
 
 Running exb with flt-gpu on T400:
 
@@ -24,4 +24,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.243+-0.017
 Fraction of guesses that were wrong:    0.1060+-0.0097
 
-elapsed 1.63s
+elapsed 1.68s

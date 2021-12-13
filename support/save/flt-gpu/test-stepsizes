@@ -403,3 +403,95 @@ Log file: log  Index: 0  Delta: 0.001000
     11   +0.00111   +2.6027e+05  +2.6029e+05     +0.00742
     12   +0.00999   +1.9298e+05  +1.9299e+05     +0.00998
 
+ 
+--- E
+ 
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 1  identity
+  Hidden layer 1:  size 2  identity
+  Hidden layer 2:  size 2  identity
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    2.000
+  Hidden Biases:           1.000
+
+         Hidden Layer 1
+
+  Hidden-Hidden Weights:   7.000
+
+         Hidden Layer 2
+
+  Hidden0-Hidden Weights:  5.000
+  Hidden-Hidden Weights:   6.000
+
+         Output Layer
+
+  Hidden2-Output Weights:  10.000
+  Output Biases:           30.000
+
+Number of training cases: 1
+
+Debugging stepsizes
+
+Values for sqrt average squared input:
+
+ 2.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+
+Typical values for hidden layer 0:
+ 7.280
+
+Typical values for hidden layer 1:
+ 50.961 50.961
+
+Typical values for hidden layer 2:
+ 433.946 433.946
+
+Estimated 2nd derivatives for outputs:
+ 1.000
+
+Estimated 2nd derivatives for hidden layer 2:
+ 100.000 100.000
+
+Estimated 2nd derivatives for hidden layer 1:
+ 7200.000 7200.000
+
+Estimated 2nd derivatives for hidden layer 0:
+ 710600.000
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.001000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +0.00059   -1.5677e+08  -1.5674e+08     +0.00019
+     1   +0.00119   -7.8380e+07  -7.8373e+07     +0.00037
+     2   +0.00119   -7.8380e+07  -7.8373e+07     +0.00037
+     3   +0.00119   -7.8380e+07  -7.8373e+07     +0.00037
+     4   +0.00119   -7.8380e+07  -7.8373e+07     +0.00037
+     5   +0.00119   -7.8380e+07  -7.8373e+07     +0.00037
+     6   +0.00119   -7.8380e+07  -7.8373e+07     +0.00037
+     7   +0.00119   -7.8380e+07  -7.8373e+07     +0.00037
+     8   +0.00119   -7.8380e+07  -7.8373e+07     +0.00037
+     9   +0.00119   -7.8380e+07  -7.8373e+07     +0.00037
+    10   +0.00119   -7.8380e+07  -7.8373e+07     +0.00037
+    11   +0.00162   -7.6918e+07  -7.6911e+07     +0.00038
+    12   +0.00162   +7.5513e+07  +7.5520e+07     +0.00039
+    13   +5.00000   -7.9643e+06  -7.9642e+06     +0.00365
+    14   +5.00000   +4.2305e+05  +4.2305e+05     +0.06761
+    15   +0.00196   +3.2641e+07  +3.2643e+07     +0.00089
+    16   +0.00196   -1.7339e+06  -1.7339e+06     +0.01721
+    17   +0.00196   -4.5646e+07  -4.5644e+07     +0.00064
+    18   +0.00196   +2.4246e+06  +2.4246e+06     +0.01195
+    19   +0.00230   +3.3847e+07  +3.3848e+07     +0.00086
+    20   +0.00230   +3.5353e+06  +3.5353e+06     +0.00823
+    21   +0.99944   +2.9129e+04  +2.9129e+04     +0.71554
+

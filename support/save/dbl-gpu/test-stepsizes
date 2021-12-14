@@ -495,3 +495,63 @@ Log file: log  Index: 0  Delta: 0.001000
     20   +0.00230   +3.5353e+06  +3.5353e+06     +0.00824
     21   +0.99944   +2.9129e+04  +2.9129e+04     +0.99944
 
+ 
+--- F
+ 
+
+Network Architecture:
+
+  Input layer:     size 10
+  Hidden layer 0:  size 2  identity  cfg-i:%echo 1 1 3  1 2 1  3 1 1  5 1 4
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    2.000
+
+         Output Layer
+
+  Hidden0-Output Weights:  5.000
+
+Hidden layer 0 input weight configuration
+
+4 connections, 4 weights
+
+     1      1      3
+     1      2      1
+     3      1      1
+     5      1      4
+
+Number of training cases: 1
+
+Debugging stepsizes
+
+Values for sqrt average squared input:
+
+ 2.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+
+Typical values for hidden layer 0:
+ 4.899 4.000
+
+Estimated 2nd derivatives for outputs:
+ 1.000
+
+Estimated 2nd derivatives for hidden layer 0:
+ 25.000 25.000
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.001000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +0.08935   +6.2383e+01  +6.2388e+01     +0.46354
+     1   +2.00000   +4.7601e-02  +4.7851e-02     +2.00000
+     2   +0.09988   -3.4187e+02  -3.4173e+02     +0.08707
+     3   +0.19901   -1.7164e+02  -1.7160e+02     +0.17365
+     4   +0.20395   +1.6357e+02  +1.6360e+02     +0.18212
+     5   +0.24969   +2.0453e+01  +2.0454e+01     +1.38765
+

@@ -30,6 +30,10 @@
 #include "net.h"
 #include "rand.h"
 
+#include "intrinsics-use.h"
+#define __SLEEF_REMPITAB__  /* Need to leave undefined in exactly one file */
+#include "sleef-use.h"
+
 #endif
 
 

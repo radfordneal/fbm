@@ -84,6 +84,5 @@
 
 # undef USE_SIMD_INTRINSICS
 # undef USE_FMA
-# undef USE_SLEEF
 
 #endif

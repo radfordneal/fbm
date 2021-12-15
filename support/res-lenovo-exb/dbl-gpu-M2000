@@ -1,4 +1,4 @@
-Commit: 51ca0e0adf90d465bd1bd3c81746195dcfd17545
+Commit: 16603b0d7511e03b1fb9b9cdfa7581016169d15e
 
 Running exb with dbl-gpu on M2000:
 
@@ -21,7 +21,7 @@ Number of iterations used: 20
 
 Number of test cases: 1000
 
-Average log probability of targets:    -0.241+-0.017
-Fraction of guesses that were wrong:    0.1060+-0.0097
+Average log probability of targets:    -0.247+-0.017
+Fraction of guesses that were wrong:    0.1130+-0.0100
 
-elapsed 2.09s
+elapsed 2.07s

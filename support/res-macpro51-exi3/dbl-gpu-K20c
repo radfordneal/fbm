@@ -1,4 +1,4 @@
-Commit: 337edb785ad51330a49380c9c1bfd87e491c0372
+Commit: ceb46ae5ddab325ef3b73c1defc0d256f4bf24d3
 
 Running exi3 with dbl-gpu on K20c:
 
@@ -7,21 +7,21 @@ Precision: FP64, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
 Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
 Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
 Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 384 bytes/case
-Hid layer shrd mem: 0:20:-1,-1 1:20:-1,20 2:20:-1,-1 3:20:-1,20 4:20:0,-1 5:10:20,30 T 40
+Hid layer shrd mem: 0:20:-1,-1 1:20:-1,0 2:20:-1,-1 3:20:-1,0 4:20:0,-1 5:10:20,30 T 40
 With 499 cases, need 1 launches, max 16 blocks/launch
 Precision: FP64, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
 Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
 Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
 Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 384 bytes/case
-Hid layer shrd mem: 0:20:-1,-1 1:20:-1,20 2:20:-1,-1 3:20:-1,20 4:20:0,-1 5:10:20,30 T 40
+Hid layer shrd mem: 0:20:-1,-1 1:20:-1,0 2:20:-1,-1 3:20:-1,0 4:20:0,-1 5:10:20,30 T 40
 With 499 cases, need 1 launches, max 16 blocks/launch
 
 Number of iterations used: 6
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.386+-0.003
-Fraction of guesses that were wrong:    0.7600+-0.0429
-Average squared error guessing mean:    0.74996+-0.00163
+Average log probability of targets:    -1.369+-0.007
+Fraction of guesses that were wrong:    0.6300+-0.0485
+Average squared error guessing mean:    0.74111+-0.00350
 
-elapsed 53.26s
+elapsed 52.79s

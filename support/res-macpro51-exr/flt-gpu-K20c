@@ -1,4 +1,4 @@
-Commit: ceb46ae5ddab325ef3b73c1defc0d256f4bf24d3
+Commit: d777017c6aef71b3af02946d5f42fef81a29f736
 
 Running exr with flt-gpu on K20c:
 
@@ -23,7 +23,7 @@ Number of iterations used: 80
 
 Number of test cases: 1000
 
-Average log probability of targets:     0.847+-0.020
-Average squared error guessing mean:    0.01548+-0.00223
+Average log probability of targets:     0.858+-0.019
+Average squared error guessing mean:    0.01374+-0.00167
 
-elapsed 8.00s
+elapsed 8.63s

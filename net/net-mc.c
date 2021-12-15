@@ -18,7 +18,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#define GPU_SRC_INCLUDE  /* Allows inclusion of .c files below */
+#define GPU_SRC_INCLUDE   /* Allows inclusion of .c files below */
+#define CUDA_SLEEF_HERE 1 /* Use SLEEF's CUDA functions (only done in 1 file) */
 
 #include "cuda-use.h"
 

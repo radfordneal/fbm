@@ -17,8 +17,9 @@
 /* DEFINE SHORT FORMS FOR SLEEF FUNCTIONS.  For sin, cos, and tanh, one could
    decide to use either the u10 or u35 forms (with different precisions). 
 
-   For CUDA use, redefines the standard functions exp, expf, etc. 
-   CURRENTLY DISABLED DUE TO PROBLEM.
+   For CUDA use, redefines the standard functions exp, expf, etc.  Only
+   happens if CUDA_SLEEF_HERE is defined as 1, which can be done in only
+   one file.
 
    If used in more than one file, __SLEEF_REMPITAB__ must be defined in 
    all but exactly one of the files, before including this file.
@@ -121,21 +122,24 @@
 #   define sleef_tanhd2 Sleef_tanhd2_u35sse2
 #   define sleef_fabsd2 Sleef_fabsd2_sse2
 #   define sleef_copysignd2 Sleef_copysignd2_sse2
-# elif __CUDACC__ && __CUDA_ARCH__ && 0
+# endif
+# if __CUDACC__ && CUDA_SLEEF_HERE
 #   include "../sleef-include/sleefinline_cuda.h"
-#   define exp Sleef_expd1_u10cuda
-#   define log Sleef_logd1_u35cuda
-#   define sin Sleef_sind1_u35cuda
-#   define cos Sleef_cosd1_u35cuda
-#   define tanh Sleef_tanhd1_u35cuda
-#   define fabs Sleef_fabsd1_cuda
-#   define copysign Sleef_copysignd1_cuda
-#   define expf Sleef_expf1_u10cuda
-#   define logf Sleef_logf1_u35cuda
-#   define sinf Sleef_sinf1_u35cuda
-#   define cosf Sleef_cosf1_u35cuda
-#   define tanhf Sleef_tanhf1_u35cuda
-#   define fabsf Sleef_fabsf1_cuda
-#   define copysignf Sleef_copysignf1_cuda
+#   if __CUDA_ARCH__
+#     define exp Sleef_expd1_u10cuda
+#     define log Sleef_logd1_u35cuda
+#     define sin Sleef_sind1_u35cuda
+#     define cos Sleef_cosd1_u35cuda
+#     define tanh Sleef_tanhd1_u35cuda
+#     define fabs Sleef_fabsd1_cuda
+#     define copysign Sleef_copysignd1_cuda
+#     define expf Sleef_expf1_u10cuda
+#     define logf Sleef_logf1_u35cuda
+#     define sinf Sleef_sinf1_u35cuda
+#     define cosf Sleef_cosf1_u35cuda
+#     define tanhf Sleef_tanhf1_u35cuda
+#     define fabsf Sleef_fabsf1_cuda
+#     define copysignf Sleef_copysignf1_cuda
+#   endif
 # endif
 #endif

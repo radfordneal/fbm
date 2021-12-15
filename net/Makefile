@@ -52,26 +52,22 @@ clean:
 include ../util/util.make
 include ../mc/mc.make
 
-
-net-func.o:	net-func.c	misc.h log.h prior.h model.h net.h data.h \
-				intrinsics-use.h sleef-use.h cuda-use.h
-net-util.o:	net-util.c	misc.h log.h prior.h model.h net.h data.h \
-				cuda-use.h
 net-config.o:	net-config.c	misc.h log.h prior.h model.h net.h data.h \
 				cuda-use.h
-net-setup.o:	net-setup.c	misc.h log.h prior.h model.h net.h data.h \
-				cuda-use.h
-net-prior.o:	net-prior.c	misc.h log.h prior.h model.h net.h data.h \
-				rand.h cuda-use.h
-net-model.o:	net-model.c	misc.h log.h prior.h model.h net.h data.h \
-				rand.h cuda-use.h
 net-data.o:	net-data.c	misc.h log.h prior.h model.h net.h data.h \
 				net-data.h numin.h cuda-use.h
-net-print.o:	net-print.c	misc.h log.h prior.h model.h net.h data.h \
+net-func.o:	net-func.c	misc.h log.h prior.h model.h net.h data.h \
+				intrinsics-use.h sleef-use.h cuda-use.h
+net-model.o:	net-model.c	misc.h log.h prior.h model.h net.h data.h \
+				rand.h intrinsics-use.h sleef-use.h cuda-use.h
+net-print.o:	net-print.c	misc.h log.h prior.h model.h net.h data.h
+net-prior.o:	net-prior.c	misc.h log.h prior.h model.h net.h data.h rand.h
+net-setup.o:	net-setup.c	misc.h log.h prior.h model.h net.h data.h \
 				cuda-use.h
 net-quantities.o: net-quantities.c misc.h log.h prior.h model.h net.h data.h \
 				net-data.h quantities.h cuda-use.h
-
+net-util.o:	net-util.c	misc.h log.h prior.h model.h net.h data.h \
+				cuda-use.h
 
 net-spec:	net-spec.o	net-util.o net-config.o prior.o net-setup.o \
 				net-prior.o ars.o misc.o log.o rand.o
@@ -110,8 +106,7 @@ net-eval:	net-eval.o	net-util.o net-config.o prior.o net-prior.o \
 		  net-setup.o net-func.o net-model.o model.o misc.o \
 		  log.o rand.o ars.o -lm -o net-eval
 
-net-eval.o:	net-eval.c	misc.h prior.h model.h net.h data.h log.h \
-				cuda-use.h
+net-eval.o:	net-eval.c	misc.h prior.h model.h net.h data.h log.h
 
 net-values:	net-values.o	net-util.o net-config.o prior.o net-prior.o \
 				net-setup.o \
@@ -241,8 +236,9 @@ net-his:	mc-his.o net-mc.o ars.o misc.o log.o rand.o data-trans.o \
 		  net-config.o net-model.o -lm -o net-his
 
 net-mc.o:	net-mc.c	misc.h rand.h log.h mc.h data.h prior.h \
-				model.h net.h net-data.h net-mc.h cuda-use.h \
-				net-func.c net-model.c net-back-grad.c
+				model.h net.h net-data.h net-mc.h \
+				net-func.c net-model.c net-back-grad.c \
+				cuda-use.h intrinsics-use.h sleef-use.h
 
 net-gd:		net-gd.o	net-setup.o net-data.o \
 				net-prior.o net-util.o \
@@ -256,7 +252,7 @@ net-gd:		net-gd.o	net-setup.o net-data.o \
 		  ars.o -lm -o net-gd
 
 net-gd.o:	net-gd.c	misc.h rand.h log.h mc.h data.h prior.h \
-				model.h	net.h net-data.h net-mc.h
+				model.h	net.h net-data.h net-mc.h cuda-use.h
 
 net-plt:	net-plt.o	net-mc.o ars.o net-setup.o prior.o net-prior.o \
 				net-quantities.o net-model.o \
@@ -294,7 +290,7 @@ net-hist:	net-plt.o	net-mc.o ars.o net-setup.o prior.o net-prior.o \
 		  misc.o log.o rand.o numin.o data-trans.o \
 		  -lm -o net-hist
 
-net-plt.o:	net-plt.c	misc.h log.h quantities.h mc.h \
+net-plt.o:	net-plt.c	misc.h log.h quantities.h mc.h mc-quantities.h \
 				cuda-use.h
 
 
@@ -321,13 +317,14 @@ net-mc-gpu:	mc.o net-mc-gpu.o \
 
 net-mc-gpu.o:	net-mc.c misc.h rand.h log.h mc.h data.h prior.h \
 		  model.h net.h net-data.h cuda-use.h \
-                  net-func.c net-model.c net-back-grad.c
+                  net-func.c net-model.c net-back-grad.c \
+		  cuda-use.h intrinsics-use.h sleef-use.h
 		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
 		  net-mc.c -o net-mc-gpu.o
 
 net-gd-gpu:	net-gd-gpu.o	net-setup.o net-data.o \
 				net-prior.o net-util.o net-func.o \
-				net-config.o net-mc.o net-model.o \
+				net-config.o net-mc-gpu.o net-model.o \
 				model.o misc.o log.o rand.o \
 				numin.o data-trans.o prior.o ars.o
 		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets \
@@ -338,7 +335,7 @@ net-gd-gpu:	net-gd-gpu.o	net-setup.o net-data.o \
 		  ars.o -lm -o net-gd-gpu
 
 net-gd-gpu.o:	net-gd.c	misc.h rand.h log.h mc.h data.h prior.h \
-				model.h	net.h net-data.h net-mc.h
+				model.h	net.h net-data.h net-mc.h cuda-use.h
 		nvcc $(NVCC_OPTIONS) -Wno-deprecated-gpu-targets -x cu -dc \
 		  net-gd.c -o net-gd-gpu.o
 

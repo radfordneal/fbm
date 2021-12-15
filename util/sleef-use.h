@@ -123,23 +123,26 @@
 #   define sleef_fabsd2 Sleef_fabsd2_sse2
 #   define sleef_copysignd2 Sleef_copysignd2_sse2
 # endif
-# if __CUDACC__ && CUDA_SLEEF_HERE
-#   include "../sleef-include/sleefinline_cuda.h"
-#   if __CUDA_ARCH__
-#     define exp Sleef_expd1_u10cuda
-#     define log Sleef_logd1_u35cuda
-#     define sin Sleef_sind1_u35cuda
-#     define cos Sleef_cosd1_u35cuda
-#     define tanh Sleef_tanhd1_u35cuda
-#     define fabs Sleef_fabsd1_cuda
-#     define copysign Sleef_copysignd1_cuda
-#     define expf Sleef_expf1_u10cuda
-#     define logf Sleef_logf1_u35cuda
-#     define sinf Sleef_sinf1_u35cuda
-#     define cosf Sleef_cosf1_u35cuda
-#     define tanhf Sleef_tanhf1_u35cuda
-#     define fabsf Sleef_fabsf1_cuda
-#     define copysignf Sleef_copysignf1_cuda
-#   endif
+#endif
+
+#if USE_SLEEF_CUDA && __CUDACC__ && CUDA_SLEEF_HERE
+# include <math.h>
+# include <stdint.h>
+# include "../sleef-include/sleefinline_cuda.h"
+# if __CUDA_ARCH__
+#   define exp Sleef_expd1_u10cuda
+#   define log Sleef_logd1_u35cuda
+#   define sin Sleef_sind1_u35cuda
+#   define cos Sleef_cosd1_u35cuda
+#   define tanh Sleef_tanhd1_u35cuda
+#   define fabs Sleef_fabsd1_cuda
+#   define copysign Sleef_copysignd1_cuda
+#   define expf Sleef_expf1_u10cuda
+#   define logf Sleef_logf1_u35cuda
+#   define sinf Sleef_sinf1_u35cuda
+#   define cosf Sleef_cosf1_u35cuda
+#   define tanhf Sleef_tanhf1_u35cuda
+#   define fabsf Sleef_fabsf1_cuda
+#   define copysignf Sleef_copysignf1_cuda
 # endif
 #endif

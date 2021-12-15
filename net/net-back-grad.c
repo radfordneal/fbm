@@ -3265,7 +3265,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
         __m128 ONE = _mm_set1_ps(1.0f);
         i = 3;
         while (i<N_hidden)
-        { __m128 E = sleef_expf4 (_mm_sub_pd (ZERO,
+        { __m128 E = sleef_expf4 (_mm_sub_ps (ZERO,
                                               _mm_loadu_ps(vh+i-3)));
           _mm_storeu_ps (dh+i-3, _mm_mul_ps (_mm_loadu_ps(dh+i-3),
                                              _mm_sub_ps(ONE,E)));
@@ -3273,7 +3273,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
         }
         i -= 2;
         if (i<N_hidden)
-        { __m128 E = sleef_expf4 (_mm_sub_pd (ZERO,
+        { __m128 E = sleef_expf4 (_mm_sub_ps (ZERO,
                                          _mm_loadl_pi(ZERO,(__m64 *)(vh+i-1))));
           _mm_storel_pi ((__m64 *)(dh+i-1), _mm_mul_ps (_mm_loadu_ps(dh+i-1),
                                                         _mm_sub_ps(ONE,E)));

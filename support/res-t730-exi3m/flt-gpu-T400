@@ -1,13 +1,13 @@
-Commit: 207d9c9c07dd36d99332c521f443b0fe13a13fb7
+Commit: bc85eea82b7b4c55738bdc50f7e6ded777509495
 
 Running exi3m with flt-gpu on T400:
 
 Number of training cases: 499
 Precision: FP32, SIMD capability: AVX, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 NVIDIA T400, Compute Capability 7.5, 6 SM processors, 1.8 GBytes
-Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
-Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 16 -> 512 bytes/case
-Hid layer shrd mem: 0:20:0,90 1:20:90,20 2:20:20,70 3:20:70,40 4:20:40,-1 5:10:60,110 T 120
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 16 -> 1024 bytes/case
+Hid layer shrd mem: 0:20:0,100 1:20:100,20 2:20:20,80 3:20:80,40 4:20:40,60 5:10:70,120 T 130
 With 499 cases, need 1 launches, max 16 blocks/launch
 
 Number of iterations used: 2
@@ -18,4 +18,4 @@ Average log probability of targets:    -1.380+-0.006
 Fraction of guesses that were wrong:    0.7600+-0.0429
 Average squared error guessing mean:    0.74710+-0.00290
 
-elapsed 4.50s
+elapsed 3.90s

@@ -1,12 +1,12 @@
-Commit: 85ff561ef09a92d10f72c33f52f89d1709cd18af
+Commit: 5290e5a2d6409f97cf3c1ce8c07b3acaef9c5edb
 
 Running exbgd with dbl-gpu on K20c:
 
 Number of training cases: 800
 Precision: FP64, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
 Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
-Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
-Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 384 bytes/case
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 768 bytes/case
 Hid layer shrd mem: 0:15:0,15 T 30
 With 800 cases, need 1 launches, max 25 blocks/launch
 
@@ -18,4 +18,4 @@ Average log probability of targets:    -0.238+-0.025
 Fraction of guesses that were wrong:    0.1120+-0.0141
 Average squared error guessing mean:    0.07571+-0.00848
 
-elapsed 10.19s
+elapsed 13.18s

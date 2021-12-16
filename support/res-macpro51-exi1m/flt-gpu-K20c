@@ -1,0 +1,21 @@
+Commit: 03e530ee253274a2b3bb13b4c23bb76431a19b6b
+
+Running exi1m with flt-gpu on K20c:
+
+Number of training cases: 4999
+Precision: FP32, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
+Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 384 bytes/case
+Hid layer shrd mem: 0:80:0,-1 T 80
+With 4999 cases, need 1 launches, max 157 blocks/launch
+
+Number of iterations used: 1
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.326+-0.027
+Fraction of guesses that were wrong:    0.6900+-0.0465
+Average squared error guessing mean:    0.72257+-0.01381
+
+elapsed 16.62s

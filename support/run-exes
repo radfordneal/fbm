@@ -3,7 +3,7 @@
 set -e
 
 if [ x$1 == x ]; then
-  list="exr exb exc exbgd exi1 exi2 exi3"
+  list="exr exb exc exbgd exi1 exi2 exi3 exi1m exi2m exi3m"
 else
   list="$@"
 fi

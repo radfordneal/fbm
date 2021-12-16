@@ -1,0 +1,21 @@
+Commit: 207d9c9c07dd36d99332c521f443b0fe13a13fb7
+
+Running exi3m with dbl-gpu on T400:
+
+Number of training cases: 499
+Precision: FP64, SIMD capability: AVX, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+NVIDIA T400, Compute Capability 7.5, 6 SM processors, 1.8 GBytes
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 16 -> 512 bytes/case
+Hid layer shrd mem: 0:20:-1,30 1:20:-1,0 2:20:-1,30 3:20:30,0 4:20:0,-1 5:10:20,50 T 60
+With 499 cases, need 1 launches, max 16 blocks/launch
+
+Number of iterations used: 2
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.380+-0.006
+Fraction of guesses that were wrong:    0.7600+-0.0429
+Average squared error guessing mean:    0.74710+-0.00290
+
+elapsed 12.66s

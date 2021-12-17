@@ -1176,6 +1176,16 @@ void mc_app_initialize
 
 #   endif
 
+    /* Set shared memory config for good performance with 64-bit versus
+       32-bit accesses. */
+
+#   if __CUDACC__
+
+      cudaDeviceSetSharedMemConfig (FP32 ? cudaSharedMemBankSizeFourByte
+                                         : cudaSharedMemBankSizeEightByte);
+
+#   endif
+
     /* Make sure we don't do all this again. */
 
     initialize_done = 1;

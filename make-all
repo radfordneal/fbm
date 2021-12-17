@@ -17,7 +17,7 @@ set -e   # Exit on any error
 NET_PRECISION=double   # The default, may be either 'float' or 'double'
 
 if [ x$3 != x ]; then
-  echo 'Usage:  make-all [ "flt" | "dbl" ] [ "gpu " ]'
+  echo 'Usage:  make-all [ "flt" | "dbl" ] [ "gpu" ]'
   exit 1
 fi
 
@@ -42,13 +42,13 @@ elif [ x$2 != x ]; then
 fi
 
 
-# Remove programs (and .o files) in the various module sub-directories if 
-# were not compiled for the precision we're compiling for now.  (The 
+# Remove programs (and .o files) in the various net sub-directory 
+# if not compiled for the precision we're compiling for now.  (The 
 # file "precision" in bin-fbm records the last precision compiled for.)
 
 touch bin-fbm/precision
 if ! (echo $NET_PRECISION | cmp --quiet - bin-fbm/precision); then 
-  make-clean
+  (cd net;  echo " "; echo "Cleaning net directory"; echo " "; make clean)
 fi
 
 echo $NET_PRECISION >bin-fbm/precision

@@ -67,7 +67,7 @@
 
 /* CONSTANTS RELATING TO GPU COMPUTATIONS: */
 
-#define THREADS_PER_CASE 4   /* Number of GPU threads used per training case,
+#define THREADS_PER_CASE 8   /* Number of GPU threads used per training case,
                                 must be a power of two */
 
 #define GROUP_SHIFT 2        /* Log2 of number of training cases in a group for

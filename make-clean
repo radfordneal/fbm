@@ -1,3 +1,4 @@
+#!/bin/bash
 
 (cd util; echo " "; echo "Cleaning util directory"; echo " "; make clean)
 (cd mc;   echo " "; echo "Cleaning mc directory"; echo " "; make clean)

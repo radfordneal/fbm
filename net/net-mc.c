@@ -968,8 +968,7 @@ void mc_app_initialize
        launching of CUDA kernels. */
 
 #   if __CUDACC__
-    { 
-      if (N_train>0)
+    { if (N_train>0)
       { n_launches = (N_train + blkcases*maxblks-1) / (blkcases*maxblks);
         max_cases_per_launch = (N_train + n_launches - 1) / n_launches;
         max_blocks_per_launch = (max_cases_per_launch + blkcases-1) / blkcases;
@@ -979,7 +978,13 @@ void mc_app_initialize
                   N_train, n_launches, max_blocks_per_launch);
         }
       }
-#     endif
+      else
+      { if (show_info)
+        { printf ("No training cases\n");
+        }
+      }
+    }
+#   endif
 
     /* Copy training inputs and training targets to GPU memory, and allocate
        space on GPU for values in all training cases, with pointers set up. */
@@ -1063,11 +1068,11 @@ void mc_app_initialize
       check_cuda_error (cudaMalloc (&dev_scratch, sz),
                         "cudaMalloc of dev_scratch");
 
+      grad_aligned_total = (params.total_params + GRAD_ALIGN_ELEMENTS - 1)
+                              & ~(GRAD_ALIGN_ELEMENTS - 1);
+
       free(tmp_values);
     }
-
-    grad_aligned_total = (params.total_params + GRAD_ALIGN_ELEMENTS - 1)
-                            & ~(GRAD_ALIGN_ELEMENTS - 1);
 #   endif
 
     /* Copy some data to constant memory in the GPU, if using CUDA. 
@@ -1141,8 +1146,8 @@ void mc_app_initialize
     }
 #   endif
 
-      /* Set GPU to use memory for L1 cache rather than for shared memory when
-         executing the kernels (which don't use shared memory). */
+    /* Set up GPU use of available fast memory for shared memory vs. L1 cache 
+       according to GPU_CACHE_PREFERENCE setting. */
 
 #   if __CUDACC__
 
@@ -1169,7 +1174,6 @@ void mc_app_initialize
       }
 #     endif
 
-    }
 #   endif
 
     /* Make sure we don't do all this again. */

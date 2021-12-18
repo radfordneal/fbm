@@ -464,7 +464,7 @@ static int cmp_s_wmd_d (const void *a0, const void *b0)
 }
 
 /* Copy connections already sorted by w mod M (terminated by w of -1), 
-   inserting  w of -1 after the end of each section.  Returns the number 
+   inserting a w of -1 after the end of each section.  Returns the number 
    of connections, including the M with -1s.  Stores starting indexes
    for section for each mod value in start, if it is not null.  M must
    be a power of two. */
@@ -499,7 +499,7 @@ static int copy_wmod
 }
 
 /* Copy connections already sorted by d mod M (terminated by w of -1), 
-   inserting  w of -1 after the end of each section.  Returns the number 
+   inserting a w of -1 after the end of each section.  Returns the number 
    of connections, including the M with -1s.  Stores starting indexes
    for section for each mod value in start, if it is not null.  M must
    be a power of two. */
@@ -535,7 +535,7 @@ static int copy_dmod
 }
 
 /* Copy connections already sorted by s mod M (terminated by w of -1), 
-   inserting  w of -1 after the end of each section.  Returns the number 
+   inserting a w of -1 after the end of each section.  Returns the number 
    of connections, including the M with -1s.  Stores starting indexes
    for section for each mod value in start, if it is not null.  M must
    be a power of two. */
@@ -605,7 +605,7 @@ static void copy_pairs
 
 static void net_config_sort (net_config *cf, int biases)
 { 
-  int minus_ones = 2*GTH + 8 + 3;  /* should be more than enough for each set,
+  int minus_ones = 5*GTH + 8 + 3;  /* should be more than enough for each set,
                                       with +3 to ensure AVX loads are OK */
   int n = cf->N_conn;
   int i;
@@ -623,6 +623,49 @@ static void net_config_sort (net_config *cf, int biases)
 
   net_connection *left = (net_connection *) chk_alloc(n+1, sizeof *left);
   int l;  /* number of items in 'left' */
+
+  /* Find groups of eight connections with same value for s, and
+     sequential values for d and w.  Condense these to single entries,
+     stored in 'oct', with number in 'q8'.  Put remaining connections
+     in 'rem8', with number in 'r8'. */
+
+  int q8;  /* number of items in oct, not including -1 at end */
+  int r8;  /* number of items not in oct, not including -1 at end */
+
+  net_connection *oct = 
+    (net_connection *) chk_alloc (n+1, sizeof *oct); /* one -1 at end */
+  net_connection *rem8 = 
+    (net_connection *) chk_alloc (n+1, sizeof *rem8);  /* one -1 at end */
+
+  memcpy (rem8, cf->conn, (n+1) * sizeof *rem8);
+  qsort (rem8, n, sizeof *rem8, cmp_s_wmd_d);
+
+  i = 0;
+  r8 = 0;
+  q8 = 0;
+  while (i < n)
+  { int s = rem8[i].s;
+    int wmd = rem8[i].w-rem8[i].d;
+    if (n-i >= 8 
+      && rem8[i+1].s==s  && rem8[i+2].s==s && rem8[i+3].s==s
+      && rem8[i+4].s==s  && rem8[i+5].s==s && rem8[i+6].s==s && rem8[i+7].s==s
+      && rem8[i+1].w-rem8[i+1].d==wmd && rem8[i+2].w-rem8[i+2].d==wmd 
+      && rem8[i+3].w-rem8[i+3].d==wmd && rem8[i+4].w-rem8[i+4].d==wmd
+      && rem8[i+5].w-rem8[i+5].d==wmd && rem8[i+6].w-rem8[i+6].d==wmd
+      && rem8[i+7].w-rem8[i+7].d==wmd)
+    { oct[q8] = rem8[i];
+      q8 += 1;
+      i += 4;
+    }
+    else
+    { rem8[r8] = rem8[i];
+      r8 += 1;
+      i += 1;
+    }
+  }
+
+  rem8[r8].w = -1;
+  oct[q8].w = -1;
 
   /* Find groups of four connections with same value for s, and
      sequential values for d and w.  Condense these to single entries,
@@ -899,9 +942,29 @@ static void net_config_sort (net_config *cf, int biases)
   cf->other_wgpu = all_gpu+a_gpu;
   a_gpu += copy_wmod (cf->other_wgpu, tmp, cf->start_other_wgpu, GTH);
 
-  /* Similarly, the quad_s_4d_4w_dgpu connections are used for gpu
+  /* The oct_s_8d_8w_dgpu connections are used for gpu forward
      function computations, sorted by d, but a paired version is not
      set up. In sections by d mod NTH. */
+
+  if (!CONFIG_OCT_GPU_S_8D_8W)
+  { int e;
+    cf->oct_s_8d_8w_dgpu = all_gpu+a_gpu;
+    for (e = 0; e<8; e++) all_gpu[a_gpu++].w = -1;
+    memcpy (left, cf->conn, (n+1) * sizeof *left);
+    l = n;
+  }
+  else
+  { memcpy (tmp, oct, (q8+1) * sizeof *tmp);
+    qsort (tmp, q8, sizeof *tmp, cmp_dmodNTH_d_w_s);
+    cf->oct_s_8d_8w_dgpu = all_gpu+a_gpu;
+    a_gpu += copy_dmod (cf->oct_s_8d_8w_dgpu, tmp, 0, NTH);
+    memcpy (left, rem8, (r8+1) * sizeof *left);
+    l = r8;
+  }
+
+  /* Similarly for quad_s_4d_4w_dgpu connections... */
+
+/* NEEDS CHANGE IF OCT ARE ENABLED */
 
   if (!CONFIG_QUAD_GPU_S_4D_4W)
   { int e;
@@ -919,8 +982,8 @@ static void net_config_sort (net_config *cf, int biases)
     l = r;
   }
 
-  /* Set up other connections (not in quad_s_4d_4w_dgpu) for use in gpu
-     forward pass computations. */
+  /* Set up other connections (not in oct_s_8d_8w_dgpu and quad_s_4d_4w_dgpu)
+     for use in gpu forward pass computations. */
 
   memcpy (tmp, left, (l+1) * sizeof *tmp);  
   qsort (tmp, l, sizeof *tmp, cmp_dmodNTH_d_w_s);

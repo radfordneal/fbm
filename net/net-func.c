@@ -1740,6 +1740,44 @@ __device__ static void bias_values_config_gpu
   { v[j] = 0;
   }
 
+  if (CONFIG_OCT_GPU_S_8D_8W)
+  { cn = cf->oct_s_8d_8w_dgpu;
+    c = 0;
+    for (m = 0; m<NTH; m++)
+    { if (NTH>1) ix = (th+NTH-m)&(NTH-1);
+      for (;;)
+      { j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        if (NTH==1)
+        { v[j] += b[k];
+          v[j+1] += b[k+1];
+          v[j+2] += b[k+2];
+          v[j+3] += b[k+3];
+          v[j+4] += b[k+4];
+          v[j+5] += b[k+5];
+          v[j+6] += b[k+6];
+          v[j+7] += b[k+7];
+        }
+        else if (NTH==2)
+        { v[j+ix] += b[k+ix];
+          v[j+ix+2] += b[k+ix+2];
+          v[j+ix+4] += b[k+ix+4];
+          v[j+ix+6] += b[k+ix+6];
+        }
+        else if (NTH==4)
+        { v[j+ix] += b[k+ix];
+          v[j+ix+4] += b[k+ix+4];
+        }
+        else if (NTH==8)
+        { v[j+ix] += b[k+ix];
+        }
+        else if (ix<8)
+        { v[j+ix] += b[k+ix];
+        }
+      }
+    }
+  }
+
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w_dgpu;
     c = 0;
@@ -1938,6 +1976,46 @@ __device__ static void add_connections_config_gpu
   net_connection *cn;
   int c, i, j, k, m, ix;
   net_value vi;
+
+  if (CONFIG_OCT_GPU_S_8D_8W)
+  { cn = cf->oct_s_8d_8w_dgpu;
+    c = 0;
+    for (m = 0; m<NTH; m++)
+    { if (NTH>1) ix = (th+NTH-m)&(NTH-1);
+      for (;;)
+      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        if (k<0) break;
+        vi = v[i];
+        if (off) vi += off[i];
+        if (NTH==1)
+        { s[j] += vi * w[k];
+          s[j+1] += vi * w[k+1];
+          s[j+2] += vi * w[k+2];
+          s[j+3] += vi * w[k+3];
+          s[j+4] += vi * w[k+4];
+          s[j+5] += vi * w[k+5];
+          s[j+6] += vi * w[k+6];
+          s[j+7] += vi * w[k+7];
+        }
+        else if (NTH==2)
+        { s[j+ix] += vi * w[k+ix];
+          s[j+ix+2] += vi * w[k+ix+2];
+          s[j+ix+4] += vi * w[k+ix+4];
+          s[j+ix+6] += vi * w[k+ix+6];
+        }
+        else if (NTH==4)
+        { s[j+ix] += vi * w[k+ix];
+          s[j+ix+4] += vi * w[k+ix+4];
+        }
+        else if (NTH==8)
+        { s[j+ix] += vi * w[k+ix];
+        }
+        else if (ix<8)
+        { s[j+ix] += vi * w[k+ix];
+        }
+      }
+    }
+  }
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w_dgpu;

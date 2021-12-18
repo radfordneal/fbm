@@ -67,7 +67,7 @@
 
 /* CONSTANTS RELATING TO GPU COMPUTATIONS: */
 
-#define THREADS_PER_CASE 16  /* Number of GPU threads used per training case,
+#define THREADS_PER_CASE 8   /* Number of GPU threads used per training case,
                                 must be a power of two */
 
 #define GROUP_SHIFT 2        /* Log2 of number of training cases in a group for
@@ -148,11 +148,12 @@ typedef struct
 #define CONFIG_ORIGINAL 0	/* Use original weight configuration array  */
 				/*  --- meant only for testing, not for GPU */
 
-#define CONFIG_SINGLE4		(!CONFIG_ORIGINAL && 1)
 #define CONFIG_QUAD_S_4D_4W	(!CONFIG_ORIGINAL && 1)
+#define CONFIG_SINGLE4		(!CONFIG_ORIGINAL && 1)
 
 #define MAKE_QUAD_PAIRS 1	/* Make quad_s_4d_4w_2 versions with pairs? */
 
+#define CONFIG_OCT_GPU_S_8D_8W 0   /* Make oct_s_8d_8w_dgpu groups? */
 #define CONFIG_QUAD_GPU_S_4D_4W	1  /* Make quad_s_4d_4w_?gpu groups? */
 #define MAKE_QUAD_GPU_PAIRS 1	/* Make quad_s_4d_4w_2_?gpu ver with pairs? */
 #define MAKE_OTHER_GPU_PAIRS 1	/* Make other_2_?gpu versions with pairs? */
@@ -165,6 +166,7 @@ typedef struct
 
   net_connection *conn;		/* Array of connections, in original order */
 
+  /* For CPU computions */
   net_connection *single;	/* Single connections, taken one-at-a-time */
   net_connection *single4_s;	/* Single connections, in groups of 4, same s */
   net_connection *single4_d;	/* Single connections, in groups of 4, same d */
@@ -174,6 +176,25 @@ typedef struct
   net_connection *all;		/* Pointer to block with items above */
   int all_length;		/* Length of 'all' block in use */
 
+  /* For GPU forward computations: */
+
+  net_connection *oct_s_8d_8w_dgpu;  /* Eight connections, same s, sequential
+                                        d & w, sorted by d, grouped d mod NTH*/
+  net_connection *quad_s_4d_4w_dgpu;  /* Four connections, same s, sequential
+                                         d & w, sorted by d, grouped d mod NTH*/
+  net_connection *other_dgpu;	/* Other connections for dest, has NTH -1s */
+  int start_other_dgpu[NTH];	/* Start indexes for sections in other_dgpu */
+
+  /* For GPU backward computations: */
+
+  net_connection *quad_s_4d_4w_sgpu;  /* Four connections, same s, sequential
+                                         d & w, sorted by s, grouped s mod NTH*/
+  int start_quad_sgpu[NTH];	/* Start indexes for sections in quad...sgpu */
+  net_connection *other_sgpu;	/* Other connections for dource, has NTH -1s */
+  int start_other_sgpu[NTH];	/* Start indexes for sections in other_sgpu */
+
+  /* For GPU gradient computations: */
+
   net_connection *quad_s_4d_4w_wgpu;  /* GPU grad version, GTH -1 terminators*/
   int start_quad_wgpu[GTH];	/* Starts for sections in quad_s_4d_4w_wgpu */
   net_connection *quad_s_4d_4w_2_wgpu;/* GPU grad version, GTH -1 terminators*/
@@ -182,17 +203,6 @@ typedef struct
   int start_other_wgpu[GTH];	/* Start indexes for sections in other_wgpu */
   net_connection *other_2_wgpu;	/* Pairs of other connections, same w for pair*/
   int start_other_2_wgpu[GTH];	/* Start indexes for sections in other_2_wgpu */
-
-  net_connection *quad_s_4d_4w_dgpu;  /* Four connections, same s, sequential
-                                         d & w, sorted by d, grouped d mod NTH*/
-  net_connection *other_dgpu;	/* Other connections for dest, has 4 -1s */
-  int start_other_dgpu[NTH];	/* Start indexes for sections in other_dgpu */
-
-  net_connection *quad_s_4d_4w_sgpu;  /* Four connections, same s, sequential
-                                         d & w, sorted by s, grouped s mod NTH*/
-  int start_quad_sgpu[NTH];	/* Start indexes for sections in quad...sgpu */
-  net_connection *other_sgpu;	/* Other connections for dource, has NTH -1s */
-  int start_other_sgpu[NTH];	/* Start indexes for sections in other_sgpu */
 
   net_connection *all_gpu;	/* Pointer to block with items above */
   int all_gpu_length;		/* Length of 'all_gpu' block in use */

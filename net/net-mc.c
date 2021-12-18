@@ -2540,7 +2540,14 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
             blockIdx.x,threadIdx.x,start,end);
   }
 
-  net_func_gpu (th, train_vals_h, const_sparse);
+  unsigned syncmask;
+  int t = NTH * (end - (h - m % (32/NTH)));
+  syncmask = t >= 32 ? 0xffffffff : (1<<t) - 1;
+
+  //printf("blk=%d, thrd=%d, syncmask=%x, start=%d, end=%d, h=%d, m=%d, t=%d\n",
+  //        blockIdx.x, threadIdx.x, syncmask, start, end, h, m, t);
+
+  net_func_gpu (th, train_vals_h, const_sparse, syncmask);
 
 #if SPLIT_KERNELS
 

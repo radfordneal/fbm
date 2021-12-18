@@ -1498,19 +1498,20 @@ static void add_connections_config
 #if __CUDACC__
 
 __device__ static void bias_values_gpu (int th, net_value *restrict, int, 
-                                        net_param const*);
+                                        net_param const*, unsigned);
 
 __device__ static void bias_values_config_gpu (int, net_value *restrict, int, 
-                                        net_param const*, net_config const*);
+                                        net_param const*, net_config const*,
+                                        unsigned);
 
 __device__ static void add_connections_gpu (int, net_value *restrict, int, 
                       net_value const*, int, net_param const*, net_param const*,
-                      unsigned short const*, int, int);
+                      unsigned short const*, int, int, unsigned);
 
 __device__ static void add_connections_config_gpu (int, net_value *restrict, 
                                     net_value const*,
                                     net_param const*, net_param const*,
-                                    net_config const*);
+                                    net_config const*, unsigned);
 
 
 /* EVALUATE NETWORK FUNCTION FOR GIVEN INPUTS.  The inputs are taken
@@ -1552,7 +1553,8 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
 __device__ STATIC_IF_INCLUDED void net_func_gpu
 ( int th,		/* Thread index */
   net_values *restrict v, /* Place to get inputs and store outputs */
-  int sparse		/* Are input values sparse? */
+  int sparse,		/* Are input values sparse? */
+  unsigned syncmask     /* Mask of active threads */
 )
 {
   net_value *vhp;
@@ -1573,27 +1575,30 @@ __device__ STATIC_IF_INCLUDED void net_func_gpu
 
     if (A.has_bh[l])
     { if (A.bias_config[l])
-      { bias_values_config_gpu (th, vh, N_hidden, W.bh[l], A.bias_config[l]);
+      { bias_values_config_gpu (th, vh, N_hidden, W.bh[l], A.bias_config[l], 
+                                syncmask);
       }
       else
-      { bias_values_gpu (th, vh, N_hidden, W.bh[l]);
+      { bias_values_gpu (th, vh, N_hidden, W.bh[l], syncmask);
       }
     }
     else
     { for (j = th; j < N_hidden; j+=NTH)
       { vh[j] = 0;
       }
+      if (SYNC_AFTER && N_hidden % NTH != 0) __syncwarp(syncmask);
     }
 
     if (A.has_ih[l])
     { if (A.input_config[l])
       { add_connections_config_gpu (th, vh, v->i, W.ih[l], 
-          A.has_ti ? W.ti : 0, A.input_config[l]);
+          A.has_ti ? W.ti : 0, A.input_config[l], syncmask);
       }
       else
       { add_connections_gpu (th, vh, N_hidden, v->i, A.N_inputs, 
           W.ih[l], A.has_ti ? W.ti : 0, 
-          HAS_FLGS && FLGS.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1), sparse);
+          HAS_FLGS && FLGS.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1), 
+          sparse, syncmask);
       }
     }
 
@@ -1604,12 +1609,12 @@ __device__ STATIC_IF_INCLUDED void net_func_gpu
         if (nsqi>=0)
         { if (A.nonseq_config[nsqi])
           { add_connections_config_gpu (th, vh, vhs, W.nsq[nsqi],
-              A.has_th[ls] ? W.th[ls] : 0, A.nonseq_config[nsqi]);
+              A.has_th[ls] ? W.th[ls] : 0, A.nonseq_config[nsqi], syncmask);
           }
           else
           { add_connections_gpu (th, vh, N_hidden, vhs, A.N_hidden[ls],
               W.nsq[nsqi], A.has_th[ls] ? W.th[ls] : 0,
-              (unsigned short *) 0, 0, 0);
+              (unsigned short *) 0, 0, 0, syncmask);
           }
         }
       }
@@ -1618,12 +1623,12 @@ __device__ STATIC_IF_INCLUDED void net_func_gpu
     if (l>0 && A.has_hh[l-1])
     { if (A.hidden_config[l])
       { add_connections_config_gpu (th, vh, vhp, W.hh[l-1], 
-          A.has_th[l-1] ? W.th[l-1] : 0, A.hidden_config[l]);
+          A.has_th[l-1] ? W.th[l-1] : 0, A.hidden_config[l], syncmask);
       }
       else
       { add_connections_gpu (th, vh, N_hidden, vhp, A.N_hidden[l-1],
           W.hh[l-1], A.has_th[l-1] ? W.th[l-1] : 0, (unsigned short *) 0, 
-          0, 0);
+          0, 0, syncmask);
       }
     }
 
@@ -1633,6 +1638,7 @@ __device__ STATIC_IF_INCLUDED void net_func_gpu
     { for (j = th; j<N_hidden; j+=NTH)
       { vh[j] = TANH (vh[j]);
       }
+      if (SYNC_AFTER && N_hidden % NTH != 0) __syncwarp(syncmask);
     }
     else if (FLGS.layer_type[l]==Softplus_type)
     { for (j = th; j<N_hidden; j+=NTH)
@@ -1642,6 +1648,7 @@ __device__ STATIC_IF_INCLUDED void net_func_gpu
         if (a>0) v += a;
         vh[j] = v;
       }
+      if (SYNC_AFTER && N_hidden % NTH != 0) __syncwarp(syncmask);
     }
     else /* identity */ 
     { /* nothing to do */
@@ -1664,28 +1671,30 @@ __device__ STATIC_IF_INCLUDED void net_func_gpu
 
   if (A.has_bo)
   { if (A.bias_config[A.N_layers])
-    { bias_values_config_gpu (th, v->o, A.N_outputs, W.bo, A.bias_config[l]);
+    { bias_values_config_gpu (th, v->o, A.N_outputs, W.bo, A.bias_config[l],
+                              syncmask);
     }
     else
-    { bias_values_gpu (th, v->o, A.N_outputs, W.bo);
+    { bias_values_gpu (th, v->o, A.N_outputs, W.bo, syncmask);
     }
   }
   else
   { for (j = th; j < A.N_outputs; j+=NTH)
     { v->o[j] = 0;
     }
+    if (SYNC_AFTER && A.N_outputs % NTH != 0) __syncwarp(syncmask);
   }
 
   if (A.has_io)
   { if (A.input_config[A.N_layers])
     { add_connections_config_gpu (th, v->o, v->i, W.io,
-        A.has_ti ? W.ti : 0, A.input_config[A.N_layers]);
+        A.has_ti ? W.ti : 0, A.input_config[A.N_layers], syncmask);
     }
     else
     { add_connections_gpu (th, v->o, A.N_outputs, v->i, A.N_inputs,
                     W.io, A.has_ti ? W.ti : 0, 
                     HAS_FLGS && FLGS.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
-                    sparse);
+                    sparse, syncmask);
     }
   }
 
@@ -1695,12 +1704,13 @@ __device__ STATIC_IF_INCLUDED void net_func_gpu
       int k = 2*A.N_layers-1-l;
       if (A.hidden_config[k])
       { add_connections_config_gpu (th, v->o, vhp, W.ho[l], 
-                         A.has_th[l] ? W.th[l] : 0, A.hidden_config[k]);
+                         A.has_th[l] ? W.th[l] : 0, A.hidden_config[k],
+                         syncmask);
       }
       else
       { add_connections_gpu (th, v->o, A.N_outputs, vhp, A.N_hidden[l], 
                              W.ho[l], A.has_th[l] ? W.th[l] : 0, 
-                             (unsigned short *) 0, 0, 0);
+                             (unsigned short *) 0, 0, 0, syncmask);
       }
     }
   }
@@ -1713,13 +1723,16 @@ __device__ static void bias_values_gpu
 ( int th,			/* Thread index */
   net_value *restrict v,	/* Array of unit values to set */
   int n,			/* Number of units */
-  net_param const* b		/* Biases */
+  net_param const* b,		/* Biases */
+  unsigned syncmask     	/* Mask of active threads */
 )
 { 
   int j;
   for (j = th; j<n; j+=NTH)
   { v[j] = b[j];
   }
+
+  if (SYNC_AFTER && n % NTH != 0) __syncwarp(syncmask);
 }
 
 
@@ -1730,7 +1743,8 @@ __device__ static void bias_values_config_gpu
   net_value *restrict v,	/* Array of unit values to set */
   int n,			/* Number of units */
   net_param const* b,		/* Biases */
-  net_config const* cf		/* Configuration for biases */
+  net_config const* cf,		/* Configuration for biases */
+  unsigned syncmask     	/* Mask of active threads */
 )
 { 
   net_connection *cn;
@@ -1739,6 +1753,8 @@ __device__ static void bias_values_config_gpu
   for (j = th; j < n; j+=NTH)
   { v[j] = 0;
   }
+
+  if (SYNC_AFTER && n % NTH != 0) __syncwarp(syncmask);
 
   if (CONFIG_OCT_GPU_S_8D_8W)
   { cn = cf->oct_s_8d_8w_dgpu;
@@ -1776,6 +1792,7 @@ __device__ static void bias_values_config_gpu
         }
       }
     }
+    if (SYNC_AFTER) __syncwarp(syncmask);
   }
 
   if (CONFIG_QUAD_S_4D_4W)
@@ -1804,6 +1821,7 @@ __device__ static void bias_values_config_gpu
         }
       }
     }
+    if (SYNC_AFTER) __syncwarp(syncmask);
   }
 
   cn = cf->other_dgpu;
@@ -1813,6 +1831,7 @@ __device__ static void bias_values_config_gpu
     if (k<0) break;
     v[j] += b[k];
   }
+  if (SYNC_AFTER) __syncwarp(syncmask);
 }
 
 
@@ -1830,6 +1849,7 @@ do \
       { for (j = th; j<nd; j+=NTH) \
         { s[j] += w[j] * tv; \
         } \
+        if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
       } \
       w += nd; \
     } \
@@ -1851,6 +1871,7 @@ do \
       } \
       s[j] += sv; \
     } \
+    if (SYNC_AFTER) __syncwarp(syncmask); \
   } \
   else \
   { for (j = th; j<nd; j+=NTH) \
@@ -1870,6 +1891,7 @@ do \
       } \
       s[j] = sv; \
     } \
+    if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
   } \
 } while (0)
 
@@ -1884,6 +1906,7 @@ do \
       { for (j = th; j<nd; j+=NTH) \
         { s[j] += w[j] * tv; \
         } \
+        if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
       } \
       w += nd; \
     } \
@@ -1898,6 +1921,7 @@ do \
       } \
       s[j] += sv; \
     } \
+    if (SYNC_AFTER) __syncwarp(syncmask); \
   } \
   else \
   { for (j = th; j<nd; j+=NTH) \
@@ -1915,6 +1939,7 @@ do \
       } \
       s[j] = sv; \
     } \
+    if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
   } \
 } while (0)
 
@@ -1928,7 +1953,8 @@ __device__ static void add_connections_gpu
   net_param const* off,   /* Offsets to add to source unit values */
   unsigned short const* omit, /* Omit flags, null if not present/relevant */
   int ob,		  /* Bit to look at in omit flags */
-  int sparse              /* Might source unit values often be zero? */
+  int sparse,             /* Might source unit values often be zero? */
+  unsigned syncmask       /* Mask of active threads */
 )
 {
   if (sparse && off==0)
@@ -1970,7 +1996,8 @@ __device__ static void add_connections_config_gpu
   net_value const* v,     /* Values for source units */
   net_param const* w,     /* Connection weights */
   net_param const* off,   /* Offsets to add to source unit values */
-  net_config const* cf    /* Configuration for connections and weights */
+  net_config const* cf,    /* Configuration for connections and weights */
+  unsigned syncmask       /* Mask of active threads */
 )
 {
   net_connection *cn;
@@ -2015,6 +2042,7 @@ __device__ static void add_connections_config_gpu
         }
       }
     }
+    if (SYNC_AFTER) __syncwarp(syncmask);
   }
 
   if (CONFIG_QUAD_S_4D_4W)
@@ -2045,6 +2073,7 @@ __device__ static void add_connections_config_gpu
         }
       }
     }
+    if (SYNC_AFTER) __syncwarp(syncmask);
   }
 
   cn = cf->other_dgpu;
@@ -2056,6 +2085,7 @@ __device__ static void add_connections_config_gpu
     if (off) vi += off[i];
     s[j] += vi * w[k];
   }
+  if (SYNC_AFTER) __syncwarp(syncmask);
 }
 
 #undef A

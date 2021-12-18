@@ -68,7 +68,7 @@
 /* CONSTANTS RELATING TO GPU COMPUTATIONS: */
 
 #define THREADS_PER_CASE 8   /* Number of GPU threads used per training case,
-                                must be a power of two */
+                                must be a power of two, max 32 (warpsize) */
 
 #define GROUP_SHIFT 2        /* Log2 of number of training cases in a group for
                                 computing gradients, must be 0, 1, or 2 */
@@ -87,6 +87,10 @@
 #define PIN_MEMORY 2         /* 0 = no host memory is pinned, 
                                 1 = parameters going to gpu only,
                                 2 = parameters + energy & deriv from gpu */
+
+#define SYNC_AFTER (NTH>1 && 1) /* Should __syncwarp be called after a code
+                                   section that could lead to threads diverging?
+                                   Note: for performance, not correctness. */
 
 #define MAX_BLKCASES 32      /* Maximum allowed, relates to register usage */
 #define DEFAULT_BLKCASES 32  /* Default, if not set by BLKCASES env var */

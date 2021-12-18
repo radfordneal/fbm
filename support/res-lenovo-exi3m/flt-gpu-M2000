@@ -1,0 +1,21 @@
+Commit: b67f0565d0a36076bf7aea05436c000f84bedbf3
+
+Running exi3m with flt-gpu on M2000:
+
+Number of training cases: 499
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Quadro M2000, Compute Capability 5.2, 6 SM processors, 3.9 GBytes
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
+Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32 -> 768 bytes/case
+Hid layer shrd mem: 0:20:0,100 1:20:100,20 2:20:20,80 3:20:80,40 4:20:40,60 5:10:70,120 T 130
+With 499 cases, need 1 launches, max 16 blocks/launch
+
+Number of iterations used: 2
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.380+-0.006
+Fraction of guesses that were wrong:    0.7600+-0.0429
+Average squared error guessing mean:    0.74710+-0.00290
+
+elapsed 5.33s

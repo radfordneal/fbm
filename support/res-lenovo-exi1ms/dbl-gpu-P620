@@ -1,0 +1,21 @@
+Commit: 91242419d0fdf82ee8c7793b826c082b7823b038
+
+Running exi1ms with dbl-gpu on P620:
+
+Number of training cases: 4999
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Quadro P620, Compute Capability 6.1, 4 SM processors, 2.0 GBytes
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32 -> 1536 bytes/case
+Hid layer shrd mem: 0:79:0,79 T 158
+With 4999 cases, need 1 launches, max 157 blocks/launch
+
+Number of iterations used: 1
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.278+-0.022
+Fraction of guesses that were wrong:    0.5500+-0.0500
+Average squared error guessing mean:    0.69480+-0.01233
+
+elapsed 21.52s

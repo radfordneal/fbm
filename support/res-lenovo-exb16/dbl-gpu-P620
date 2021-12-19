@@ -1,0 +1,27 @@
+Commit: 91242419d0fdf82ee8c7793b826c082b7823b038
+
+Running exb16 with dbl-gpu on P620:
+
+Number of training cases: 300
+Number of test cases: 1000
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Quadro P620, Compute Capability 6.1, 4 SM processors, 2.0 GBytes
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32 -> 1536 bytes/case
+Hid layer shrd mem: 0:16:0,16 T 32
+With 300 cases, need 1 launches, max 10 blocks/launch
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Quadro P620, Compute Capability 6.1, 4 SM processors, 2.0 GBytes
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32 -> 1536 bytes/case
+Hid layer shrd mem: 0:16:0,16 T 32
+With 300 cases, need 1 launches, max 10 blocks/launch
+
+Number of iterations used: 20
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.238+-0.017
+Fraction of guesses that were wrong:    0.1090+-0.0099
+
+elapsed 4.17s

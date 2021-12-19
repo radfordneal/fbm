@@ -1,0 +1,27 @@
+Commit: 91242419d0fdf82ee8c7793b826c082b7823b038
+
+Running exb16 with flt-gpu on A4000:
+
+Number of training cases: 300
+Number of test cases: 1000
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+NVIDIA RTX A4000, Compute Capability 8.6, 48 SM processors, 14.7 GBytes ECC
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16 -> 1536 bytes/case
+Hid layer shrd mem: 0:16:0,16 T 32
+With 300 cases, need 1 launches, max 10 blocks/launch
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+NVIDIA RTX A4000, Compute Capability 8.6, 48 SM processors, 14.7 GBytes ECC
+Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16 -> 1536 bytes/case
+Hid layer shrd mem: 0:16:0,16 T 32
+With 300 cases, need 1 launches, max 10 blocks/launch
+
+Number of iterations used: 20
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.244+-0.017
+Fraction of guesses that were wrong:    0.1150+-0.0101
+
+elapsed 1.21s

@@ -2505,8 +2505,10 @@ void cuda_setup
   int h = start + i; \
   net_values *restrict train_vals_h = const_train_values+h; \
   int th = threadIdx.x & (NTH-1); \
-  if (h >= end) th = -1;
-
+  if (h >= end) th = -1; \
+  unsigned syncmask; \
+  int tm = NTH * (end - (h - m % (32/NTH))); \
+  syncmask = tm >= 32 ? 0xffffffff : (1<<tm) - 1;
 
 #if !SPLIT_KERNELS
 
@@ -2539,13 +2541,6 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
   { printf("Forward computation: block %d, thread %d, start %d, end %d\n",
             blockIdx.x,threadIdx.x,start,end);
   }
-
-  unsigned syncmask;
-  int t = NTH * (end - (h - m % (32/NTH)));
-  syncmask = t >= 32 ? 0xffffffff : (1<<t) - 1;
-
-  //printf("blk=%d, thrd=%d, syncmask=%x, start=%d, end=%d, h=%d, m=%d, t=%d\n",
-  //        blockIdx.x, threadIdx.x, syncmask, start, end, h, m, t);
 
   net_func_gpu (th, train_vals_h, const_sparse, syncmask);
 
@@ -2591,11 +2586,12 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
                       &const_arch, &const_model, &const_surv, const_noise, 
                       Cheap_energy);
     }
+    if (SYNC_AFTER) __syncwarp(syncmask);
   }
   else
   { net_model_prob_gpu (th, train_vals_h, targ_h, log_prob_h, deriv_i, 
                         SCRATCH_PER_CASE(const_arch.N_outputs) * i,
-                        Cheap_energy, 0);
+                        Cheap_energy, syncmask);
   }
 
   if (KDEBUG) 

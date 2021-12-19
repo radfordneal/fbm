@@ -566,9 +566,9 @@ void STATIC_IF_INCLUDED net_model_guess
    The derivative at index i in 'dp' is computed by the thread with 'th'
    equal to i mod THREADS_PER_CASE.
 
-   A __syncthreads call is made after these computations are done if
-   'sync' is non-zero.  If threads are not synchronized, only the
-   threads that computed a value can reliably access it. 
+   A no syncthreads call is made after these computations are done, so
+   if threads are not synchronized later, only the threads that
+   computed a value can reliably access it.
 
    Assumes that on entry the i'th output is accessible to thread 'th'
    if i mod THREADS_PER_CASE is 'th'. 
@@ -592,7 +592,7 @@ __device__ STATIC_IF_INCLUDED void net_model_prob_gpu
   net_values *restrict dp,/* Place to store neg log probability derivs, or 0 */
   int scroff,           /* Scratch memory offset, for twice number of outputs */
   int op,		/* Can we ignore some factors? */
-  int sync		/* Sync threads after computation? */
+  int syncmask		/* Mask of active threads */
 )
 {
   int N_outputs = A.N_outputs;
@@ -630,20 +630,25 @@ __device__ STATIC_IF_INCLUDED void net_model_prob_gpu
         }
       }
 
+      if (SYNC_AFTER && N_outputs % NTH != 0) __syncwarp(syncmask);
+
       break;
     }
 
     case 'C':  /* Single class with multiple possible values */
     {
       if (isnan(*t))  /* target not observed */
-      { if (th<0) goto sync_e;
+      { if (th<0)
+        { return;
+        }
         if (dp) 
         { for (i = th; i<N_outputs; i+=NTH)
           { dp->o[i] = 0;
           }
         }
         if (pr && th==0) *pr = 0;
-        goto sync_e;
+        if (SYNC_AFTER && N_outputs % NTH != 0) __syncwarp(syncmask);
+        return;
       }
 
       if (th<0) goto sync_c;
@@ -677,7 +682,9 @@ __device__ STATIC_IF_INCLUDED void net_model_prob_gpu
       { __syncthreads();
       }
 
-      if (th<0) goto sync_e;
+      if (th<0)
+      { return;
+      }
 
       /* Find sum of exponentials (redundantly in all threads being used). */
 
@@ -730,7 +737,9 @@ __device__ STATIC_IF_INCLUDED void net_model_prob_gpu
         }
       }
 
-      goto sync_e;
+      if (SYNC_AFTER && N_outputs % NTH != 0) __syncwarp(syncmask);
+
+      return;
     }
 
     case 'R':  /* Real-valued target */
@@ -788,6 +797,8 @@ __device__ STATIC_IF_INCLUDED void net_model_prob_gpu
         }
       }
 
+      if (SYNC_AFTER && N_outputs % NTH != 0) __syncwarp(syncmask);
+
       break;
     }
   }
@@ -807,15 +818,6 @@ __device__ STATIC_IF_INCLUDED void net_model_prob_gpu
       }
       *pr = p;
     }
-  }
-
-  /* Synchronize threads if asked to - otherwise, threads have
-     computed parts as described above, and can refer to the parts
-     they computed without synchronization. */
-
-sync_e:
-  if (NTH>1 && sync)
-  { __syncthreads();
   }
 }
 

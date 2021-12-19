@@ -1,4 +1,4 @@
-Commit: e783fc087781a9a1082343d46578975b4211c40b
+Commit: 6cc210630b0e14f1db2f72fd6339c476927e5d38
 
 Running exi1s with flt-gpu on K20c:
 
@@ -24,4 +24,4 @@ Average log probability of targets:    -1.055+-0.090
 Fraction of guesses that were wrong:    0.4500+-0.0500
 Average squared error guessing mean:    0.57466+-0.04356
 
-elapsed 12.96s
+elapsed 12.95s

@@ -2586,12 +2586,11 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
                       &const_arch, &const_model, &const_surv, const_noise, 
                       Cheap_energy);
     }
-    if (SYNC_AFTER) __syncwarp(syncmask);
   }
   else
   { net_model_prob_gpu (th, train_vals_h, targ_h, log_prob_h, deriv_i, 
                         SCRATCH_PER_CASE(const_arch.N_outputs) * i,
-                        Cheap_energy, syncmask);
+                        Cheap_energy);
   }
 
   if (KDEBUG) 
@@ -2635,7 +2634,7 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
         }
       }
       else  /* must use multiple threads, as for computing deriv_i->o */ 
-      { for (k = th; k<const_arch.N_outputs; k += THREADS_PER_CASE)
+      { for (k = th; k<const_arch.N_outputs; k += NTH)
         { deriv_i->o[k] *= gr_weight;
         }
       }

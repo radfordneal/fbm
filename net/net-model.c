@@ -591,8 +591,7 @@ __device__ STATIC_IF_INCLUDED void net_model_prob_gpu
   double *restrict pr,	/* Place to store log probability, zero if not wanted */
   net_values *restrict dp,/* Place to store neg log probability derivs, or 0 */
   int scroff,           /* Scratch memory offset, for twice number of outputs */
-  int op,		/* Can we ignore some factors? */
-  int syncmask		/* Mask of active threads */
+  int op		/* Can we ignore some factors? */
 )
 {
   int N_outputs = A.N_outputs;
@@ -630,8 +629,6 @@ __device__ STATIC_IF_INCLUDED void net_model_prob_gpu
         }
       }
 
-      if (SYNC_AFTER && N_outputs % NTH != 0) __syncwarp(syncmask);
-
       break;
     }
 
@@ -647,7 +644,6 @@ __device__ STATIC_IF_INCLUDED void net_model_prob_gpu
           }
         }
         if (pr && th==0) *pr = 0;
-        if (SYNC_AFTER && N_outputs % NTH != 0) __syncwarp(syncmask);
         return;
       }
 
@@ -737,8 +733,6 @@ __device__ STATIC_IF_INCLUDED void net_model_prob_gpu
         }
       }
 
-      if (SYNC_AFTER && N_outputs % NTH != 0) __syncwarp(syncmask);
-
       return;
     }
 
@@ -796,8 +790,6 @@ __device__ STATIC_IF_INCLUDED void net_model_prob_gpu
           }
         }
       }
-
-      if (SYNC_AFTER && N_outputs % NTH != 0) __syncwarp(syncmask);
 
       break;
     }

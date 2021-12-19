@@ -1,4 +1,4 @@
-Commit: 91242419d0fdf82ee8c7793b826c082b7823b038
+Commit: 8a10c2480de5d11f9dd81008ed02efe6c98e3a33
 
 Running exc with dbl-gpu on M2000:
 
@@ -24,4 +24,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.477+-0.023
 Fraction of guesses that were wrong:    0.1940+-0.0125
 
-elapsed 7.62s
+elapsed 7.60s

@@ -1,4 +1,4 @@
-Commit: bc85eea82b7b4c55738bdc50f7e6ded777509495
+Commit: 0fb8cb68d379916fc0a429ff3434371c4ece3870
 
 Running exr with dbl-gpu on T400:
 
@@ -26,4 +26,4 @@ Number of test cases: 1000
 Average log probability of targets:     0.858+-0.019
 Average squared error guessing mean:    0.01073+-0.00059
 
-elapsed 5.61s
+elapsed 5.64s

@@ -1,4 +1,4 @@
-Commit: bc85eea82b7b4c55738bdc50f7e6ded777509495
+Commit: 0fb8cb68d379916fc0a429ff3434371c4ece3870
 
 Running exc with flt-gpu on T400:
 
@@ -24,4 +24,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.474+-0.024
 Fraction of guesses that were wrong:    0.1960+-0.0126
 
-elapsed 6.06s
+elapsed 6.11s

@@ -1,6 +1,6 @@
 Commit: 746c6343f614586bf633f0ef3a86be9eeaa48fd9
 
-Running exb with dbl:
+Running exb16 with dbl:
 
 Number of training cases: 300
 Number of test cases: 1000
@@ -11,7 +11,7 @@ Number of iterations used: 20
 
 Number of test cases: 1000
 
-Average log probability of targets:    -0.241+-0.016
-Fraction of guesses that were wrong:    0.1020+-0.0096
+Average log probability of targets:    -0.237+-0.016
+Fraction of guesses that were wrong:    0.1090+-0.0099
 
-elapsed 2.72s
+elapsed 2.83s

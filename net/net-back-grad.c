@@ -3427,6 +3427,8 @@ __device__ static void store_grad1
   else if (gsz==1)
   { net_store1_grad1 (th, g, d0, n);
   }
+
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
 }
 
 __device__ static void store_grad1_config
@@ -3452,6 +3454,8 @@ __device__ static void store_grad1_config
   else if (gsz==1)
   { net_store1_grad1_config (th, g, d0, cf);
   }
+
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
 }
 
 __device__ static void store_grad2
@@ -3490,6 +3494,8 @@ __device__ static void store_grad2
   { net_store1_grad2
      (th, g, v0, off, nv, d0, nd, omit, ob, sparse);
   }
+
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
 }
 
 __device__ static void store_grad2_config
@@ -3524,6 +3530,8 @@ __device__ static void store_grad2_config
   { net_store1_grad2_config
      (th, g, v0, off, d0, cf);
   }
+
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
 }
 
 #define A const_arch
@@ -3543,7 +3551,7 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
 {
   int l, ld, ls, nsqi, i;
 
-  /* Add parts of gradients that don't depend on computing derivatives
+  /* Compute parts of gradients that don't depend on computing derivatives
      with respect to hidden or input unit values - only on inputs and hidden
      unit values, and on derivatives with respect to outputs, */
 

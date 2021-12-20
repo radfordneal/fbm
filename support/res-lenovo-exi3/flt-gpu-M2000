@@ -1,4 +1,4 @@
-Commit: 763f218f7de620bdc87446f405e73cb28b22a687
+Commit: 99b4824ff682403deb2c1a757e5df92f1cf18a20
 
 Running exi3 with flt-gpu on M2000:
 
@@ -24,4 +24,4 @@ Average log probability of targets:    -1.316+-0.043
 Fraction of guesses that were wrong:    0.6400+-0.0482
 Average squared error guessing mean:    0.71337+-0.02008
 
-elapsed 28.72s
+elapsed 29.49s

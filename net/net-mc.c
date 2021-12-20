@@ -2505,7 +2505,10 @@ void cuda_setup
   int h = start + i; \
   net_values *restrict train_vals_h = const_train_values+h; \
   int th = threadIdx.x & (NTH-1); \
-  if (h >= end) th = -1; 
+  if (h >= end) th = -1; \
+  unsigned syncmask; \
+  int tm = NTH * (end - (h - m % (32/NTH))); \
+  syncmask = tm >= 32 ? 0xffffffff : (1<<tm) - 1;
 
 #if !SPLIT_KERNELS
 
@@ -2538,10 +2541,6 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
   { printf("Forward computation: block %d, thread %d, start %d, end %d\n",
             blockIdx.x,threadIdx.x,start,end);
   }
-
-  unsigned syncmask;
-  int tm = NTH * (end - (h - m % (32/NTH)));
-  syncmask = tm >= 32 ? 0xffffffff : (1<<tm) - 1;
 
   net_func_gpu (th, train_vals_h, const_sparse, syncmask);
 
@@ -2695,7 +2694,7 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
                                     : group_grad + o,
                      train_vals_h - thm, 
                      deriv_i - thm, 
-                     const_sparse);
+                     const_sparse, syncmask);
 
 #if SPLIT_KERNELS
 

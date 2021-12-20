@@ -565,7 +565,8 @@ __device__ static void sum_derivatives_gpu
   int ns,		  /* Number of source units */
   net_param const* w,     /* Connection weights */
   unsigned short const* omit,  /* Omit flags, null if not present */
-  int bit		  /* Bit to look at in omit flags */
+  int bit,		  /* Bit to look at in omit flags */
+  unsigned syncmask       /* Mask of active threads for backprop */
 )
 {
   net_value tv;
@@ -624,6 +625,7 @@ __device__ static void sum_derivatives_gpu
       }
     }
   }
+  if (SYNC_AFTER && ns % NTH != 0) __syncwarp(syncmask);
 }
 
 
@@ -634,7 +636,8 @@ __device__ static void sum_derivatives_config_gpu
   net_value const* dd,    /* Derivatives with respect to destination units */
   net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
   net_param const* w,     /* Connection weights */
-  net_config const* cf    /* Configuration for connections and weights */
+  net_config const* cf,   /* Configuration for connections and weights */
+  unsigned syncmask       /* Mask of active threads for backprop */
 )
 {
   net_connection *cn;
@@ -651,6 +654,8 @@ __device__ static void sum_derivatives_config_gpu
     }
   }
 
+  if (SYNC_AFTER) __syncwarp(syncmask);
+
   cn = cf->other_sgpu;
   c = cf->start_other_sgpu[th];
   for (;;)
@@ -658,6 +663,8 @@ __device__ static void sum_derivatives_config_gpu
     if (k<0) break;
     ds[i] += dd[j] * w[k];
   }
+
+  if (SYNC_AFTER) __syncwarp(syncmask);
 }
 
 #endif
@@ -3546,7 +3553,8 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
   net_params *restrict g,   /* Where to store gradient with respect to params */
   net_values const*restrict v, /* Values for units in network, 1st train case */
   net_values *restrict d,      /* Place for derivatives, first training case */
-  int sparse            /* Might source unit values often be zero? */
+  int sparse,           /* Might source unit values often be zero? */
+  unsigned syncmask     /* Mask of active threads for backprop */
 )
 {
   int l, ld, ls, nsqi, i;
@@ -3635,15 +3643,18 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
     { dth->i[i] = 0;
     }
 
+    if (SYNC_AFTER && A.N_inputs % NTH != 0) __syncwarp(syncmask);
+
     if (A.has_io)
     { if (A.input_config[A.N_layers])
       { sum_derivatives_config_gpu 
-         (thrb, dth->o, dth->i, W.io, A.input_config[A.N_layers]);
+         (thrb, dth->o, dth->i, W.io, A.input_config[A.N_layers], syncmask);
       }
       else
       { sum_derivatives_gpu 
          (thrb, dth->o, A.N_outputs, dth->i, A.N_inputs, W.io,
-          HAS_FLGS && FLGS.any_omitted[A.N_layers] ? FLGS.omit : 0, 1);
+          HAS_FLGS && FLGS.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
+          syncmask);
       }
     }
   }
@@ -3669,16 +3680,18 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
     { dh[i] = 0;
     }
 
+    if (SYNC_AFTER && N_hidden % NTH != 0) __syncwarp(syncmask);
+
     if (A.has_ho[l])
     { int k = 2*A.N_layers-1-l;
       if (A.hidden_config[k])
       { sum_derivatives_config_gpu 
-         (thrb, dth->o, dh, W.ho[l], A.hidden_config[k]);
+         (thrb, dth->o, dh, W.ho[l], A.hidden_config[k], syncmask);
       }
       else
       { sum_derivatives_gpu 
           (thrb, dth->o, A.N_outputs, dh, N_hidden,
-           W.ho[l], (unsigned short *) 0, 0);
+           W.ho[l], (unsigned short *) 0, 0, syncmask);
       }
     }
 
@@ -3688,12 +3701,12 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
       if (nsqi>=0)
       { if (A.nonseq_config[nsqi])
         { sum_derivatives_config_gpu
-            (thrb, dhd, dh, W.nsq[nsqi], A.nonseq_config[nsqi]);
+            (thrb, dhd, dh, W.nsq[nsqi], A.nonseq_config[nsqi], syncmask);
         }
         else
         { sum_derivatives_gpu
             (thrb, dhd, A.N_hidden[ld], dh, N_hidden,
-             W.nsq[nsqi], (unsigned short *) 0, 0);
+             W.nsq[nsqi], (unsigned short *) 0, 0, syncmask);
         }
       }
     }
@@ -3702,12 +3715,12 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
     { net_value *restrict dhd = bw_hidden_loc(&PRE,dth,l+1);
       if (A.hidden_config[l+1])
       { sum_derivatives_config_gpu 
-          (thrb, dhd, dh, W.hh[l], A.hidden_config[l+1]);
+          (thrb, dhd, dh, W.hh[l], A.hidden_config[l+1], syncmask);
       }
       else
       { sum_derivatives_gpu 
           (thrb, dhd, A.N_hidden[l+1], dh, N_hidden,
-           W.hh[l], (unsigned short *) 0, 0);
+           W.hh[l], (unsigned short *) 0, 0, syncmask);
       }
     }
 
@@ -3768,11 +3781,12 @@ __device__ STATIC_IF_INCLUDED void net_back_grad_gpu
       if (A.has_ih[l])
       { if (A.input_config[l])
         { sum_derivatives_config_gpu (thrb, dh, dth->i, W.ih[l], 
-                                      A.input_config[l]);
+                                      A.input_config[l], syncmask);
         }
         else
         { sum_derivatives_gpu (thrb, dh, A.N_hidden[l], dth->i, A.N_inputs, 
-            W.ih[l], HAS_FLGS && FLGS.any_omitted[l]? FLGS.omit : 0, 1<<(l+1));
+            W.ih[l], HAS_FLGS && FLGS.any_omitted[l]? FLGS.omit : 0, 1<<(l+1),
+            syncmask);
         }
       }
     }

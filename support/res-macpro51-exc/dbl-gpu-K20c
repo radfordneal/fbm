@@ -1,4 +1,4 @@
-Commit: 6cc210630b0e14f1db2f72fd6339c476927e5d38
+Commit: b359f0484a30b3ab2bc35767af4a95305e0c1e9f
 
 Running exc with dbl-gpu on K20c:
 
@@ -24,4 +24,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.467+-0.022
 Fraction of guesses that were wrong:    0.1940+-0.0125
 
-elapsed 6.06s
+elapsed 5.80s

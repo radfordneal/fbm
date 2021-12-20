@@ -1692,6 +1692,7 @@ do \
         { g[j] = tv0*d0[j]; \
         } \
       } \
+      if (SYNC_AFTER && GTH>=32 && nd % GTH != 0) __syncwarp(); \
       g += nd; \
     } \
   } \
@@ -1705,6 +1706,7 @@ do \
       for (j = th; j<nd; j+=GTH) \
       { g[j] = tv0*d0[j]; \
       } \
+      if (SYNC_AFTER && GTH>=32 && nd % GTH != 0) __syncwarp(); \
       g += nd; \
     } \
   } \
@@ -2013,12 +2015,14 @@ do \
       for (j = th; j<nd; j+=GTH) \
       { g[j] = tvh * dh[j]; \
       } \
+      if (SYNC_AFTER && GTH>=32 && nd % GTH != 0) __syncwarp(); \
       g += nd; \
       continue; \
     alllab: \
       for (j = th; j<nd; j+=GTH) \
       { g[j] = tv0*d0[j] + tv1*d1[j]; \
       } \
+      if (SYNC_AFTER && GTH>=32 && nd % GTH != 0) __syncwarp(); \
       g += nd; \
     } \
   } \
@@ -2033,6 +2037,7 @@ do \
       for (j = th; j<nd; j+=GTH) \
       { g[j] = tv0*d0[j] + tv1*d1[j]; \
       } \
+      if (SYNC_AFTER && GTH>=32 && nd % GTH != 0) __syncwarp(); \
       g += nd; \
     } \
   } \
@@ -2354,12 +2359,14 @@ do \
       for (j = th; j<nd; j+=GTH) \
       { g[j] = tvh * dh[j]; \
       } \
+      if (SYNC_AFTER && GTH>=32 && nd % GTH != 0) __syncwarp(); \
       g += nd; \
       continue; \
     alllab: \
       for (j = th; j<nd; j+=GTH) \
       { g[j] = tv0*d0[j] + tv1*d1[j] + tv2*d2[j]; \
       } \
+      if (SYNC_AFTER && GTH>=32 && nd % GTH != 0) __syncwarp(); \
       g += nd; \
     } \
   } \
@@ -2375,6 +2382,7 @@ do \
       for (j = th; j<nd; j+=GTH) \
       { g[j] = tv0*d0[j] + tv1*d1[j] + tv2*d2[j]; \
       } \
+      if (SYNC_AFTER && GTH>=32 && nd % GTH != 0) __syncwarp(); \
       g += nd; \
     } \
   } \
@@ -2714,12 +2722,14 @@ do \
       for (j = th; j<nd; j+=GTH) \
       { g[j] = tvh * dh[j]; \
       } \
+      if (SYNC_AFTER && GTH>=32 && nd % GTH != 0) __syncwarp(); \
       g += nd; \
       continue; \
     alllab: \
       for (j = th; j<nd; j+=GTH) \
       { g[j] = tv0*d0[j] + tv1*d1[j] + tv2*d2[j] + tv3*d3[j]; \
       } \
+      if (SYNC_AFTER && GTH>=32 && nd % GTH != 0) __syncwarp(); \
       g += nd; \
     } \
   } \
@@ -2736,6 +2746,7 @@ do \
       for (j = th; j<nd; j+=GTH) \
       { g[j] = tv0*d0[j] + tv1*d1[j] + tv2*d2[j] + tv3*d3[j]; \
       } \
+      if (SYNC_AFTER && GTH>=32 && nd % GTH != 0) __syncwarp(); \
       g += nd; \
     } \
   } \

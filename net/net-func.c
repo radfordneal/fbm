@@ -1921,9 +1921,28 @@ do \
         } \
       } \
       else \
-      { for (i = 0; i<ns; i++) \
-        { sv += v[i] * *wj; \
+      { i = 3; \
+        while (i<ns) \
+        { sv += v[i-3] * *wj; \
           wj += nd; \
+          sv += v[i-2] * *wj; \
+          wj += nd; \
+          sv += v[i-1] * *wj; \
+          wj += nd; \
+          sv += v[i] * *wj; \
+          wj += nd; \
+          i += 4; \
+        } \
+        i -= 2; \
+        if (i<ns) \
+        { sv += v[i-1] * *wj; \
+          wj += nd; \
+          sv += v[i] * *wj; \
+          wj += nd; \
+          i += 2; \
+        } \
+        if (i<=ns) \
+        { sv += v[i-1] * *wj; \
         } \
       } \
       s[j] = sv; \

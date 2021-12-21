@@ -1,4 +1,4 @@
-Commit: eb310170f02ec4c3d788144b35f244819dc5ce68
+Commit: 27cd542de76d7d4fac62463682cb08e98cf51508
 
 Running exi3m with dbl-gpu on K20c:
 
@@ -7,7 +7,7 @@ Precision: FP64, SIMD capability: SSE4.2, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
 Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
 Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 768 bytes/case
-Hid layer shrd mem: 0:20:-1,60 1:20:-1,0 2:20:0,60 3:20:60,20 4:20:20,40 5:10:50,80 T 90
+Hid layer shrd mem: 0:20:-1,50 1:20:-1,0 2:20:0,50 3:20:50,20 4:20:20,-1 5:10:40,70 T 88
 With 499 cases, need 1 launches, max 16 blocks/launch
 
 Number of iterations used: 2
@@ -18,4 +18,4 @@ Average log probability of targets:    -1.380+-0.006
 Fraction of guesses that were wrong:    0.7600+-0.0429
 Average squared error guessing mean:    0.74710+-0.00290
 
-elapsed 6.98s
+elapsed 7.52s

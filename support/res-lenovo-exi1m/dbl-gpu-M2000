@@ -1,4 +1,4 @@
-Commit: eb310170f02ec4c3d788144b35f244819dc5ce68
+Commit: 27cd542de76d7d4fac62463682cb08e98cf51508
 
 Running exi1m with dbl-gpu on M2000:
 
@@ -7,7 +7,7 @@ Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro M2000, Compute Capability 5.2, 6 SM processors, 3.9 GBytes
 Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32 -> 1536 bytes/case
-Hid layer shrd mem: 0:80:0,80 T 160
+Hid layer shrd mem: 0:80:0,80 T 168
 With 4999 cases, need 1 launches, max 157 blocks/launch
 
 Number of iterations used: 1
@@ -18,4 +18,4 @@ Average log probability of targets:    -1.326+-0.027
 Fraction of guesses that were wrong:    0.6900+-0.0465
 Average squared error guessing mean:    0.72257+-0.01381
 
-elapsed 18.01s
+elapsed 16.36s

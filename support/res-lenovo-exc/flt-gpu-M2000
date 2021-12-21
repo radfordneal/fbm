@@ -1,4 +1,4 @@
-Commit: eb310170f02ec4c3d788144b35f244819dc5ce68
+Commit: 27cd542de76d7d4fac62463682cb08e98cf51508
 
 Running exc with flt-gpu on M2000:
 
@@ -8,13 +8,13 @@ Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro M2000, Compute Capability 5.2, 6 SM processors, 3.9 GBytes
 Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32 -> 1536 bytes/case
-Hid layer shrd mem: 0:8:0,8 T 16
+Hid layer shrd mem: 0:8:0,8 T 24
 With 400 cases, need 1 launches, max 13 blocks/launch
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro M2000, Compute Capability 5.2, 6 SM processors, 3.9 GBytes
 Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32 -> 1536 bytes/case
-Hid layer shrd mem: 0:8:0,8 T 16
+Hid layer shrd mem: 0:8:0,8 T 24
 With 400 cases, need 1 launches, max 13 blocks/launch
 
 Number of iterations used: 30
@@ -24,4 +24,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.474+-0.024
 Fraction of guesses that were wrong:    0.1960+-0.0126
 
-elapsed 6.28s
+elapsed 4.19s

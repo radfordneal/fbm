@@ -363,14 +363,14 @@ net_config *net_config_to_gpu (net_config *cf)
    stacked from the back of the memory area.
    
    After this, memory for derivatives with respect to sequential
-   hidden layers is allocated greedily in backward backward fashion.
-   At the point when memory for derivatives for a layer is needed, the
-   memory for hidden unit values of later layers is no longer needed,
-   and so can be overlapped with memory for derivatives.  Also,
-   derivatives for sequential layers is no longer needed after the
-   derivatives for the layer before are computed.  To facilitate this
-   memory re-use, the memory for derivatives in a leyer is stacked
-   opposite the memory for the values in that layer.
+   hidden layers is allocated greedily in backward fashion.  At the
+   point when memory for derivatives for a layer is needed, the memory
+   for hidden unit values of later layers is no longer needed, and so
+   can be overlapped with memory for derivatives.  Also, derivatives
+   for sequential layers are no longer needed after the derivatives
+   for the layer before are computed.  To facilitate this memory
+   re-use, the memory for derivatives in a leyer is stacked opposite
+   the memory for the values in that layer.
 
    Memory for derivatives for hidden layers with input from
    non-sequential connections is allocated in a separate area, that
@@ -385,15 +385,26 @@ static void decide_gpu_shared_mem_use
 ( net_precomputed *pre,	/* Place to store result in fwgpumem & bwgpumem fields*/
   net_arch *arch,	/* Network architecture */
   net_flags *flgs,	/* Flags for layers (eg, activation function) */
-  int allowed_elements	/* Number of elements allowed in shared memory */
+  int allowed_elements	/* # of elements allowed in shared memory, per case */
 )
 {
   int l;
 
-  /* Shared memory isn't used when the kernels are split, since it wouldn't
-     persist to the next phase. */
+  /* To avoid bank conflicts between threads processing different
+     cases, we make the total number of shared memory elements per
+     case mod 32 be an odd multiple of THREADS_PER_CASE.  This may
+     require up to 2*THREADS_PER_CASE-1 padding elements, so
+     allowed_elements is reduced as needed here. */
 
-  if (SPLIT_KERNELS)
+  while (allowed_elements > 0 
+          && (allowed_elements & (2*THREADS_PER_CASE-1)) != THREADS_PER_CASE)
+  { allowed_elements -= 1;
+  }
+
+  /* Shared memory isn't used when the kernels are split, since it wouldn't
+     persist to the next phase.  Also not used when none available. */
+
+  if (SPLIT_KERNELS || allowed_elements==0)
   { for (l = 0; l<arch->N_layers; l++)
     { pre->fwgpumem[l] = -1;
       pre->bwgpumem[l] = -1;
@@ -494,6 +505,14 @@ static void decide_gpu_shared_mem_use
   }
 
   pre->memused = max_in_use + nonseq;
+
+  /* To avoid bank conflicts between threads processing different
+     cases, make the total number of shared memory elements per
+     case mod 32 be an odd multiple of THREADS_PER_CASE. */
+
+  while ((pre->memused & (2*THREADS_PER_CASE-1)) != THREADS_PER_CASE)
+  { pre->memused += 1;
+  }
 }
 
 #endif

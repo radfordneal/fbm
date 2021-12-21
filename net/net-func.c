@@ -1854,7 +1854,7 @@ do \
       w += nd; \
     } \
   } \
-  else if (!off && nd>NTH) \
+  else if (0 && !off && nd>NTH) /* DISABLE FOR NOW */ \
   { i = 3; \
     while (i<ns) \
     { net_value tv0 = v[i-3]; \

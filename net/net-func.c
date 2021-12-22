@@ -1906,7 +1906,7 @@ do \
           w += 1; \
         } \
       } \
-      s[j] += sv; \
+      s[0] += sv; \
     } \
     if (SYNC_AFTER) __syncwarp(syncmask); \
   } \

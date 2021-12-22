@@ -1,4 +1,4 @@
-Commit: 25380c9e89269f88bb1838842dce2772f229c1cc
+Commit: c22461e8daaddd0babad4c8621d268649e130ea4
 
 Running exbgd with dbl:
 
@@ -13,4 +13,4 @@ Average log probability of targets:    -0.238+-0.025
 Fraction of guesses that were wrong:    0.1120+-0.0141
 Average squared error guessing mean:    0.07571+-0.00848
 
-elapsed 10.19s
+elapsed 10.31s

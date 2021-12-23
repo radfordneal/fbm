@@ -105,7 +105,8 @@ Performance changes in this version:
    on a GPU (one that support CUDA with compute capability 3.5 or
    later).  See Install.doc for how to do this.  Note that for
    networks with few parameters, or that are trained on a small data
-   set, the GPU version will not necessarily be faster.
+   set, the GPU version will not necessarily be faster.  Also, GPU
+   computation is not done for survival models.
 
 Bug fixes.
 

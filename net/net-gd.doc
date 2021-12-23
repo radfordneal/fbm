@@ -9,9 +9,9 @@ A scheme using differential stepsizes for weights out of different
 units can be used (in combination with "early stopping") to try to get
 some of the advantages of a hierarchical Bayesian model.
 
-For net-gd, computaton of the network model log likelihood and its
-gradient may be done on a GPU, if a version of the program compiled
-for a GPU is used.
+Computaton of the network model log likelihood and its gradient may be
+done on a GPU (except for survival models), if a version of net-gd
+compiled for a GPU is used.
 
 Usage:
 

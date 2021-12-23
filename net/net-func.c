@@ -1860,53 +1860,55 @@ do \
     } \
     if (SYNC_AFTER && NTH>1) __syncwarp(syncmask); \
   } \
-  else if (sprs && nd>4 /* adjustable */) \
-  { for (i = 0; i<ns; i++) \
-    { net_value tv = off ? v[i] + off[i] : v[i]; \
-      if (tv!=0) \
-      { for (j = th; j<nd; j+=NTH) \
-        { s[j] += w[j] * tv; \
-        } \
-      } \
-      if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
-      w += nd; \
-    } \
-  } \
   else if (nd>4 /* adjustable */) \
-  { i = 3; \
-    while (i<ns) \
-    { net_value tv0 = off ? v[i-3] + off[i-3] : v[i-3]; \
-      net_value tv1 = off ? v[i-2] + off[i-2] : v[i-2]; \
-      net_value tv2 = off ? v[i-1] + off[i-1] : v[i-1]; \
-      net_value tv3 = off ? v[i] + off[i] : v[i]; \
-      net_param const* w1 = w+nd; \
-      net_param const* w2 = w1+nd; \
-      net_param const* w3 = w2+nd; \
-      for (j = th; j<nd; j+=NTH) \
-      { s[j] = s[j] + w[j] * tv0 + w1[j] * tv1 + w2[j] * tv2 + w3[j] * tv3; \
+  { if (sprs) \
+    { for (i = 0; i<ns; i++) \
+      { net_value tv = off ? v[i] + off[i] : v[i]; \
+        if (tv!=0) \
+        { for (j = th; j<nd; j+=NTH) \
+          { s[j] += w[j] * tv; \
+          } \
+        } \
+        if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
+        w += nd; \
       } \
-      if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
-      w = w3 + nd; \
-      i += 4; \
     } \
-    i -= 2; \
-    if (i<ns) \
-    { net_value tv0 = off ? v[i-1] + off[i-1] : v[i-1]; \
-      net_value tv1 = off ? v[i] + off[i] : v[i]; \
-      net_param const* w1 = w+nd; \
-      for (j = th; j<nd; j+=NTH) \
-      { s[j] = s[j] + w[j] * tv0 + w1[j] * tv1; \
+    else \
+    { i = 3; \
+      while (i<ns) \
+      { net_value tv0 = off ? v[i-3] + off[i-3] : v[i-3]; \
+        net_value tv1 = off ? v[i-2] + off[i-2] : v[i-2]; \
+        net_value tv2 = off ? v[i-1] + off[i-1] : v[i-1]; \
+        net_value tv3 = off ? v[i] + off[i] : v[i]; \
+        net_param const* w1 = w+nd; \
+        net_param const* w2 = w1+nd; \
+        net_param const* w3 = w2+nd; \
+        for (j = th; j<nd; j+=NTH) \
+        { s[j] = s[j] + w[j] * tv0 + w1[j] * tv1 + w2[j] * tv2 + w3[j] * tv3; \
+        } \
+        if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
+        w = w3 + nd; \
+        i += 4; \
       } \
-      if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
-      w = w1 + nd; \
-      i += 2; \
-    } \
-    if (i<=ns) \
-    { net_value tv = off ? v[i-1] + off[i-1] : v[i-1]; \
-      for (j = th; j<nd; j+=NTH) \
-      { s[j] = s[j] + w[j] * tv; \
+      i -= 2; \
+      if (i<ns) \
+      { net_value tv0 = off ? v[i-1] + off[i-1] : v[i-1]; \
+        net_value tv1 = off ? v[i] + off[i] : v[i]; \
+        net_param const* w1 = w+nd; \
+        for (j = th; j<nd; j+=NTH) \
+        { s[j] = s[j] + w[j] * tv0 + w1[j] * tv1; \
+        } \
+        if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
+        w = w1 + nd; \
+        i += 2; \
       } \
-      if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
+      if (i<=ns) \
+      { net_value tv = off ? v[i-1] + off[i-1] : v[i-1]; \
+        for (j = th; j<nd; j+=NTH) \
+        { s[j] = s[j] + w[j] * tv; \
+        } \
+        if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
+      } \
     } \
   } \
   else \

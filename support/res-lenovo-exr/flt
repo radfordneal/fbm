@@ -1,4 +1,4 @@
-Commit: 2f4cbecf695d06ca3baab725f50d3691e2c84b27
+Commit: ea530ccca7ae67ef17ad9ab7fda93f2b56afdd9c
 
 Running exr with flt:
 
@@ -16,4 +16,4 @@ Number of test cases: 1000
 Average log probability of targets:     0.824+-0.023
 Average squared error guessing mean:    0.01834+-0.00322
 
-elapsed 0.80s
+elapsed 0.81s

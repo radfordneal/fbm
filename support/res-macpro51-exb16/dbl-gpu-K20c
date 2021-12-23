@@ -1,4 +1,4 @@
-Commit: c5c6cec28a21f3cd556c1abc9b87d645acee1f9c
+Commit: ea530ccca7ae67ef17ad9ab7fda93f2b56afdd9c
 
 Running exb16 with dbl-gpu on K20c:
 
@@ -24,4 +24,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.241+-0.017
 Fraction of guesses that were wrong:    0.1070+-0.0098
 
-elapsed 3.03s
+elapsed 2.52s

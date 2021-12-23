@@ -391,14 +391,16 @@ static void decide_gpu_shared_mem_use
   int l;
 
   /* To avoid bank conflicts between threads processing different
-     cases, we make the total number of shared memory elements per
-     case mod 32 be an odd multiple of THREADS_PER_CASE.  This may
+     cases, we may make the total number of shared memory elements per
+     case mod 32 be an odd multiple of THREADS_PER_CASE.  This could
      require up to 2*THREADS_PER_CASE-1 padding elements, so
      allowed_elements is reduced as needed here. */
 
-  while (allowed_elements > 0 
-          && (allowed_elements & (2*THREADS_PER_CASE-1)) != THREADS_PER_CASE)
-  { allowed_elements -= 1;
+  if (AVOID_BANK_CONFLICTS)
+  { while (allowed_elements > 0 
+            && (allowed_elements & (2*THREADS_PER_CASE-1)) != THREADS_PER_CASE)
+    { allowed_elements -= 1;
+    }
   }
 
   /* Shared memory isn't used when the kernels are split, since it wouldn't

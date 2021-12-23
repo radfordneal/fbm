@@ -99,6 +99,9 @@
 #define USE_FAST_SHARED_MEM 1  /* Use fast shared GPU memory for unit values
                                   and derivatives? */
 
+#define AVOID_BANK_CONFLICTS 1 /* Increase size of shared memory per case if
+                                  necessary to avoid bank conflicts? */
+
 #define GPU_CACHE_PREFERENCE \
  (!USE_FAST_SHARED_MEM || SPLIT_KERNELS \
    ? cudaFuncCachePreferL1      /* L1 is better if shared memory isn't used */ \

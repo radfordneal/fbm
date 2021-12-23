@@ -2217,7 +2217,7 @@ void net_training_cases
   int k;
 
 # if __CUDACC__
-  { if (n > 0)
+  { if (n > 0 && model->type!='V')
     { net_training_cases_gpu (energy, grd, i, n, en_weight, gr_weight);
     }
     return;
@@ -2596,21 +2596,9 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
   net_values *restrict deriv_i = need_deriv ? const_deriv+i : 0;
   double *restrict log_prob_h = case_energy ? case_energy+i : 0;
 
-  int single_thread = THREADS_PER_CASE==1 
-                       || const_arch.N_outputs < 2 /* adjustable */
-                       || const_model.type=='V';
-  if (single_thread)
-  { if (th==0) 
-    { net_model_prob (train_vals_h, targ_h, log_prob_h, deriv_i, 
-                      &const_arch, &const_model, &const_surv, const_noise, 
+  net_model_prob_gpu (th, train_vals_h, targ_h, log_prob_h, deriv_i, 
+                      SCRATCH_PER_CASE(const_arch.N_outputs) * i,
                       Cheap_energy);
-    }
-  }
-  else
-  { net_model_prob_gpu (th, train_vals_h, targ_h, log_prob_h, deriv_i, 
-                        SCRATCH_PER_CASE(const_arch.N_outputs) * i,
-                        Cheap_energy);
-  }
 
   if (KDEBUG) 
   { printf("Before energy reduction: block %d, thread %d\n",
@@ -2645,17 +2633,8 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
   if (gr_weight!=1)
   { if (th>=0) 
     { int k;
-      if (single_thread) /* must use one thread, as for computing deriv_i->o */
-      { if (th==0)
-        { for (k = 0; k<const_arch.N_outputs; k++)
-          { deriv_i->o[k] *= gr_weight;
-          }
-        }
-      }
-      else  /* must use multiple threads, as for computing deriv_i->o */ 
-      { for (k = th; k<const_arch.N_outputs; k += NTH)
-        { deriv_i->o[k] *= gr_weight;
-        }
+      for (k = th; k<const_arch.N_outputs; k += NTH)
+      { deriv_i->o[k] *= gr_weight;
       }
     }
   }
@@ -2811,7 +2790,7 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
 #endif
 
 
-/* DO A SET OF CASES IN THE GPU. */
+/* DO A SET OF CASES IN THE GPU.  Should not be used for survival models. */
 
 #if __CUDACC__
 

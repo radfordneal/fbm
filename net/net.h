@@ -553,7 +553,7 @@ void net_func (net_values *restrict, net_arch const*,
                net_precomputed const*, net_flags const*, 
                net_params const*, int);
 
-HOSTDEV STATIC_IF_INCLUDED
+STATIC_IF_INCLUDED
 void net_model_prob (net_values const*, net_value const*, 
                      double *restrict, net_values *restrict, 
                      net_arch const*, model_specification const*,

@@ -80,7 +80,7 @@ void STATIC_IF_INCLUDED net_model_check (model_specification const*m)
    By passing zero pointers, computation of either the log probability or of
    its derivatives may be suppressed, with a possible saving in time. */
 
-HOSTDEV STATIC_IF_INCLUDED void net_model_prob
+STATIC_IF_INCLUDED void net_model_prob
 ( net_values const*v,	/* Values for units in network */
   net_value const*t,	/* Target values, fudged for piecewise const hazard */
   double *restrict pr,	/* Place to store log probability, zero if not wanted */
@@ -584,7 +584,7 @@ void STATIC_IF_INCLUDED net_model_guess
 #define M const_model
 #define NOISE const_noise
 
-__device__ STATIC_IF_INCLUDED void net_model_prob_gpu
+__device__ __forceinline__ static void net_model_prob_gpu
 ( int th,		/* Thread index, if negative, just sync */
   net_values const*v,	/* Values for units in network */
   net_value const*t,	/* Target values */

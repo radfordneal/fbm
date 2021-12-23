@@ -1550,7 +1550,7 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
 #define W const_params
 #define HAS_FLGS const_has_flgs
 
-__device__ STATIC_IF_INCLUDED void net_func_gpu
+__device__ __forceinline__ static void net_func_gpu
 ( int th,		/* Thread index */
   net_values *restrict v, /* Place to get inputs and store outputs */
   int sparse,		/* Are input values sparse? */

@@ -47,7 +47,7 @@
    Adds the weighted sum of derivatives due to connections from source
    units to a given destination layer to the totals for the source layer. */
 
-HOSTDEV static void sum_derivatives
+static void sum_derivatives
 ( net_value const* dd,    /* Derivatives with respect to destination units */
   int nd,		  /* Number of destination units */
   net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
@@ -400,7 +400,7 @@ HOSTDEV static void sum_derivatives
    Adds the weighted sum of derivatives due to connections from source units to
    a given destination layer to the totals for the source layer. */
 
-HOSTDEV static void sum_derivatives_config
+static void sum_derivatives_config
 ( net_value const* dd,    /* Derivatives with respect to destination units */
   net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
   int ns,		  /* Number of source units, for debug check only */
@@ -3558,7 +3558,7 @@ __device__ static void store_grad2_config
 #define W const_params
 #define HAS_FLGS const_has_flgs
 
-__device__ __forceinline__ STATIC_IF_INCLUDED void net_back_grad_gpu
+__device__ __forceinline__ static void net_back_grad_gpu
 ( int thrg,		/* Which thread, from 0 to GTH-1 */
   int gsz,		/* Size of gradient group (maybe < GROUP_SIZE at end) */
   net_params *restrict g,   /* Where to store gradient with respect to params */

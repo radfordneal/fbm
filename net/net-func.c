@@ -1837,30 +1837,48 @@ __device__ static void bias_values_config_gpu
 
 /* ADD CONTRIBUTION FROM ONE GROUP OF CONNECTIONS.  Adds the weighted input
    due to connections from one source layer to the current unit values for
-   the destination layer. */
+   the destination layer.  Note that off and sprs will be constants, so
+   compiler should eliminate much of any particular invokation as dead code. */
 
 #define ADD_CONNECTIONS_GPU(off,sprs) \
 do \
 { int i, j; \
-  if (sprs && nd>NTH) \
+  if (nd==1) \
+  { if (th==0) \
+    { net_value sv = 0; \
+      if (off) \
+      { for (i = 0; i<ns; i++) \
+        { sv += (v[i] + off[i]) * w[i]; \
+        } \
+      } \
+      else \
+      { for (i = 0; i<ns; i++) \
+        { sv += v[i] * w[i]; \
+        } \
+      } \
+      s[0] += sv; \
+    } \
+    if (SYNC_AFTER && NTH>1) __syncwarp(syncmask); \
+  } \
+  else if (sprs && nd>4 /* adjustable */) \
   { for (i = 0; i<ns; i++) \
     { net_value tv = off ? v[i] + off[i] : v[i]; \
       if (tv!=0) \
       { for (j = th; j<nd; j+=NTH) \
         { s[j] += w[j] * tv; \
         } \
-        if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
       } \
+      if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
       w += nd; \
     } \
   } \
-  else if (!off && nd>NTH) \
+  else if (nd>4 /* adjustable */) \
   { i = 3; \
     while (i<ns) \
-    { net_value tv0 = v[i-3]; \
-      net_value tv1 = v[i-2]; \
-      net_value tv2 = v[i-1]; \
-      net_value tv3 = v[i]; \
+    { net_value tv0 = off ? v[i-3] + off[i-3] : v[i-3]; \
+      net_value tv1 = off ? v[i-2] + off[i-2] : v[i-2]; \
+      net_value tv2 = off ? v[i-1] + off[i-1] : v[i-1]; \
+      net_value tv3 = off ? v[i] + off[i] : v[i]; \
       net_param const* w1 = w+nd; \
       net_param const* w2 = w1+nd; \
       net_param const* w3 = w2+nd; \
@@ -1873,8 +1891,8 @@ do \
     } \
     i -= 2; \
     if (i<ns) \
-    { net_value tv0 = v[i-1]; \
-      net_value tv1 = v[i]; \
+    { net_value tv0 = off ? v[i-1] + off[i-1] : v[i-1]; \
+      net_value tv1 = off ? v[i] + off[i] : v[i]; \
       net_param const* w1 = w+nd; \
       for (j = th; j<nd; j+=NTH) \
       { s[j] = s[j] + w[j] * tv0 + w1[j] * tv1; \
@@ -1884,31 +1902,12 @@ do \
       i += 2; \
     } \
     if (i<=ns) \
-    { net_value tv = v[i-1]; \
+    { net_value tv = off ? v[i-1] + off[i-1] : v[i-1]; \
       for (j = th; j<nd; j+=NTH) \
       { s[j] = s[j] + w[j] * tv; \
       } \
       if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
     } \
-  } \
-  else if (nd==1) \
-  { if (th==0) \
-    { net_value sv = 0; \
-      if (off) \
-      { for (i = 0; i<ns; i++) \
-        { sv += (v[i] + off[i]) * *w; \
-          w += 1; \
-        } \
-      } \
-      else \
-      { for (i = 0; i<ns; i++) \
-        { sv += v[i] * *w; \
-          w += 1; \
-        } \
-      } \
-      s[0] += sv; \
-    } \
-    if (SYNC_AFTER) __syncwarp(syncmask); \
   } \
   else \
   { for (j = th; j<nd; j+=NTH) \
@@ -1935,20 +1934,7 @@ do \
 #define ADD_CONNECTIONS_OMIT_GPU(off,sprs) \
 do \
 { int i, j; \
-  if (sprs && nd>NTH) \
-  { for (i = 0; i<ns; i++) \
-    { if (omit[i]&ob) continue; \
-      net_value tv = off ? v[i] + off[i] : v[i]; \
-      if (tv!=0)  \
-      { for (j = th; j<nd; j+=NTH) \
-        { s[j] += w[j] * tv; \
-        } \
-        if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
-      } \
-      w += nd; \
-    } \
-  } \
-  else if (nd==1) \
+  if (nd==1) \
   { if (th==0) \
     { net_value sv = 0; \
       for (i = 0; i<ns; i++) \
@@ -1956,9 +1942,22 @@ do \
         sv += off ? (v[i] + off[i]) * *w : v[i] * *w; \
         w += 1; \
       } \
-      s[j] += sv; \
+      s[0] += sv; \
     } \
     if (SYNC_AFTER) __syncwarp(syncmask); \
+  } \
+  else if (sprs && nd>4 /* adjustable */) \
+  { for (i = 0; i<ns; i++) \
+    { if (omit[i]&ob) continue; \
+      net_value tv = off ? v[i] + off[i] : v[i]; \
+      if (tv!=0)  \
+      { for (j = th; j<nd; j+=NTH) \
+        { s[j] += w[j] * tv; \
+        } \
+      } \
+      if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
+      w += nd; \
+    } \
   } \
   else \
   { for (j = th; j<nd; j+=NTH) \

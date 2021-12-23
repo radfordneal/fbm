@@ -1,4 +1,4 @@
-Commit: d655afb911322627c26a5fc30edd48f571ec87a0
+Commit: a191ec653747de0aa4bf05e22ba8cfa7532815c8
 
 Running exi1 with dbl-gpu on P620:
 
@@ -24,4 +24,4 @@ Average log probability of targets:    -1.050+-0.081
 Fraction of guesses that were wrong:    0.4900+-0.0502
 Average squared error guessing mean:    0.57732+-0.04266
 
-elapsed 31.24s
+elapsed 29.40s

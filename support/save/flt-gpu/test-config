@@ -73,14 +73,14 @@ Log file: log  Index: 0  Delta: 0.002000  Energy: 3.74
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
-     0   +0.10   -1.9731e-03  -1.9869e-03   -1.9800e+00  -1.9800e+00     0.0000
-     1   +0.20   -3.9246e-04  -3.9361e-04   -3.9303e-01  -3.9306e-01    -0.0001
-     2   +0.30   -1.2460e-03  -1.2474e-03   -1.2467e+00  -1.2468e+00     0.0000
-     3   +5.00   +3.3358e-05  +3.3585e-05   +3.3471e-02  +3.3453e-02    +0.0006
-     4   +6.00   +3.3728e-05  +3.3824e-05   +3.3776e-02  +3.3716e-02    +0.0018
+     0   +0.10   -1.9730e-03  -1.9869e-03   -1.9799e+00  -1.9800e+00     0.0000
+     1   +0.20   -3.9240e-04  -3.9361e-04   -3.9300e-01  -3.9306e-01    -0.0001
+     2   +0.30   -1.2460e-03  -1.2475e-03   -1.2468e+00  -1.2468e+00     0.0000
+     3   +5.00   +3.3596e-05  +3.3585e-05   +3.3591e-02  +3.3453e-02    +0.0041
+     4   +6.00   +3.3788e-05  +3.3764e-05   +3.3776e-02  +3.3716e-02    +0.0018
      5   +7.00   +8.6419e-05  +8.6396e-05   +8.6408e-02  +8.6420e-02    -0.0001
 
-Largest absolute log ratio: 0.0018
+Largest absolute log ratio: 0.0041
 
  
 --- B
@@ -485,14 +485,14 @@ Log file: log  Index: 0  Delta: 0.002000  Energy: 15.55
      2   -4.59   -4.9033e-04  -4.9053e-04   -4.9043e-01  -4.9047e-01    -0.0001
      3   +1.38   +1.4731e-04  +1.4721e-04   +1.4726e-01  +1.4724e-01    +0.0001
      4   -1.56   -1.7343e-05  -1.7399e-05   -1.7371e-02  -1.7336e-02    +0.0020
-     5   -4.97   -4.0954e-04  -4.1108e-04   -4.1031e-01  -4.1082e-01    -0.0013
+     5   -4.97   -4.0954e-04  -4.1155e-04   -4.1055e-01  -4.1082e-01    -0.0007
      6   -3.77   -2.9313e-04  -2.9321e-04   -2.9317e-01  -2.9321e-01    -0.0001
-     7   -2.43   -1.9664e-05  -2.1150e-05   -2.0407e-02  -1.9944e-02    +0.0229
-     8   +4.09   +5.3904e-04  +5.3947e-04   +5.3926e-01  +5.3931e-01    -0.0001
-     9  -12.95   -8.9840e-04  -8.9823e-04   -8.9831e-01  -8.9776e-01    +0.0006
-    10   -8.71   -4.7142e-04  -4.7190e-04   -4.7166e-01  -4.7171e-01    -0.0001
+     7   -2.43   -1.9187e-05  -2.1150e-05   -2.0168e-02  -1.9944e-02    +0.0112
+     8   +4.09   +5.3951e-04  +5.3947e-04   +5.3949e-01  +5.3931e-01    +0.0003
+     9  -12.95   -8.9840e-04  -8.9870e-04   -8.9855e-01  -8.9776e-01    +0.0009
+    10   -8.71   -4.7142e-04  -4.7237e-04   -4.7190e-01  -4.7171e-01    +0.0004
 
-Largest absolute log ratio: 0.0229
+Largest absolute log ratio: 0.0112
 
 
 Stepsizes selected by application and from second derivatives
@@ -625,14 +625,14 @@ Log file: log  Index: 0  Delta: 0.002000  Energy: 15.55
      2   -4.59   -4.9033e-04  -4.9053e-04   -4.9043e-01  -4.9047e-01    -0.0001
      3   +1.38   +1.4731e-04  +1.4721e-04   +1.4726e-01  +1.4724e-01    +0.0001
      4   -1.56   -1.7343e-05  -1.7399e-05   -1.7371e-02  -1.7336e-02    +0.0020
-     5   -4.97   -4.0954e-04  -4.1108e-04   -4.1031e-01  -4.1082e-01    -0.0013
+     5   -4.97   -4.0954e-04  -4.1155e-04   -4.1055e-01  -4.1082e-01    -0.0007
      6   -3.77   -2.9313e-04  -2.9321e-04   -2.9317e-01  -2.9321e-01    -0.0001
-     7   -2.43   -1.9664e-05  -2.1150e-05   -2.0407e-02  -1.9944e-02    +0.0229
-     8   +4.09   +5.3904e-04  +5.3947e-04   +5.3926e-01  +5.3931e-01    -0.0001
-     9  -12.95   -8.9840e-04  -8.9823e-04   -8.9831e-01  -8.9776e-01    +0.0006
-    10   -8.71   -4.7142e-04  -4.7190e-04   -4.7166e-01  -4.7171e-01    -0.0001
+     7   -2.43   -1.9187e-05  -2.1150e-05   -2.0168e-02  -1.9944e-02    +0.0112
+     8   +4.09   +5.3951e-04  +5.3947e-04   +5.3949e-01  +5.3931e-01    +0.0003
+     9  -12.95   -8.9840e-04  -8.9870e-04   -8.9855e-01  -8.9776e-01    +0.0009
+    10   -8.71   -4.7142e-04  -4.7237e-04   -4.7190e-01  -4.7171e-01    +0.0004
 
-Largest absolute log ratio: 0.0229
+Largest absolute log ratio: 0.0112
 
 
 Stepsizes selected by application and from second derivatives
@@ -1330,17 +1330,17 @@ Log file: log  Index: 0  Delta: 0.002000  Energy: 4.13
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
-     0   +0.10   +2.0812e-04  +2.0609e-04   +2.0710e-01  +2.0711e-01     0.0000
-     1   +0.20   +3.6113e-04  +3.5530e-04   +3.5822e-01  +3.5822e-01     0.0000
-     2   +0.30   +2.0210e-04  +2.0057e-04   +2.0133e-01  +2.0133e-01     0.0000
-     3   +0.40   +2.4145e-04  +2.3942e-04   +2.4044e-01  +2.4044e-01     0.0000
-     4   +5.00   +6.7313e-05  +6.7325e-05   +6.7319e-02  +6.7328e-02    -0.0001
-     5   +6.00   +8.2469e-05  +8.2466e-05   +8.2467e-02  +8.2474e-02    -0.0001
-     6   +7.00   +1.0602e-04  +1.0599e-04   +1.0600e-01  +1.0602e-01    -0.0002
+     0   +0.10   +2.0810e-04  +2.0608e-04   +2.0709e-01  +2.0711e-01    -0.0001
+     1   +0.20   +3.6107e-04  +3.5548e-04   +3.5827e-01  +3.5822e-01    +0.0001
+     2   +0.30   +2.0219e-04  +2.0065e-04   +2.0142e-01  +2.0133e-01    +0.0004
+     3   +0.40   +2.4143e-04  +2.3942e-04   +2.4042e-01  +2.4044e-01    -0.0001
+     4   +5.00   +6.7213e-05  +6.7440e-05   +6.7327e-02  +6.7328e-02     0.0000
+     5   +6.00   +8.2425e-05  +8.2640e-05   +8.2533e-02  +8.2474e-02    +0.0007
+     6   +7.00   +1.0597e-04  +1.0595e-04   +1.0596e-01  +1.0602e-01    -0.0006
      7   +8.00   +9.8805e-05  +9.8758e-05   +9.8782e-02  +9.8765e-02    +0.0002
      8   +9.00   +1.1114e-04  +1.1114e-04   +1.1114e-01  +1.1111e-01    +0.0003
 
-Largest absolute log ratio: 0.0003
+Largest absolute log ratio: 0.0007
 
   1.10000  1.20000  1.30000  1.40000  1.50000 +2.000000e-01 +3.000000e-01 +7.000000e-01 +0.000000e+00 +0.000000e+00
   1.10000  1.20000  1.30000  1.40000  1.50000 +7.700001e+00
@@ -1409,19 +1409,19 @@ Log file: log  Index: 0  Delta: 0.002000  Energy: 4.29
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
-     0   +0.10   +6.7989e-04  +6.7854e-04   +6.7921e-01  +6.7922e-01     0.0000
-     1   +0.20   +1.1938e-03  +1.1893e-03   +1.1915e+00  +1.1915e+00     0.0000
-     2   +0.30   +6.0649e-04  +6.0550e-04   +6.0599e-01  +6.0600e-01     0.0000
+     0   +0.10   +6.7969e-04  +6.7863e-04   +6.7916e-01  +6.7922e-01    -0.0001
+     1   +0.20   +1.1939e-03  +1.1895e-03   +1.1917e+00  +1.1915e+00    +0.0001
+     2   +0.30   +6.0655e-04  +6.0548e-04   +6.0601e-01  +6.0600e-01     0.0000
      3   +0.40   +4.4499e-05  +4.4389e-05   +4.4444e-02  +4.4444e-02     0.0000
      4   +0.50   +5.5611e-05  +5.5499e-05   +5.5555e-02  +5.5556e-02     0.0000
-     5   +0.60   +7.3522e-04  +7.3400e-04   +7.3461e-01  +7.3460e-01     0.0000
-     6   +5.00   +8.2308e-05  +8.2326e-05   +8.2317e-02  +8.2314e-02     0.0000
-     7   +6.00   +1.0451e-04  +1.0440e-04   +1.0445e-01  +1.0446e-01     0.0000
-     8   +7.00   +1.1685e-04  +1.1673e-04   +1.1679e-01  +1.1680e-01    -0.0001
+     5   +0.60   +7.3525e-04  +7.3418e-04   +7.3471e-01  +7.3460e-01    +0.0002
+     6   +5.00   +8.2234e-05  +8.2222e-05   +8.2228e-02  +8.2314e-02    -0.0010
+     7   +6.00   +1.0460e-04  +1.0457e-04   +1.0459e-01  +1.0446e-01    +0.0012
+     8   +7.00   +1.1694e-04  +1.1691e-04   +1.1693e-01  +1.1680e-01    +0.0011
      9   +8.00   +9.8805e-05  +9.8758e-05   +9.8782e-02  +9.8765e-02    +0.0002
-    10   +9.00   +1.6722e-04  +1.6716e-04   +1.6719e-01  +1.6712e-01    +0.0004
+    10   +9.00   +1.6717e-04  +1.6717e-04   +1.6717e-01  +1.6712e-01    +0.0003
 
-Largest absolute log ratio: 0.0004
+Largest absolute log ratio: 0.0012
 
   1.10000  1.20000  1.30000  1.40000  1.50000 +1.973753e-01 +2.913126e-01 +2.913126e-01 +0.000000e+00 +5.370495e-01
   1.10000  1.20000  1.30000  1.40000  1.50000 +9.607386e+00
@@ -1584,7 +1584,7 @@ Noise levels
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.002000  Energy: 3882508.15
+Log file: log  Index: 0  Delta: 0.002000  Energy: 3882508.19
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -1679,7 +1679,7 @@ Noise levels
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.002000  Energy: 80982941.03
+Log file: log  Index: 0  Delta: 0.002000  Energy: 80982938.50
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -1741,231 +1741,6 @@ Hidden layer 0 bias configuration
      3     11
      4     12
      5     13
-
-quad_s_4d_4w:
-  0   3-6     0-3  
-  0   7-10    4-7  
-  0   0-3    16-19 
-
-quad_s_4d_4w_2 (pairs with same w):
-  0   1-4     9-12 
-  0  13-16    9-12 
-
-quad_s_4d_4w_wgpu:
-start indexes: 0 3 4 5 6 8 9 10 11 12 13 14 15 16 17 18
-First weight 0 mod 16:
-  0   3-6     0-3  
-  0   0-3    16-19 
-
-First weight 1 mod 16:
-
-First weight 2 mod 16:
-
-First weight 3 mod 16:
-
-First weight 4 mod 16:
-  0   7-10    4-7  
-
-First weight 5 mod 16:
-
-First weight 6 mod 16:
-
-First weight 7 mod 16:
-
-First weight 8 mod 16:
-
-First weight 9 mod 16:
-
-First weight 10 mod 16:
-
-First weight 11 mod 16:
-
-First weight 12 mod 16:
-
-First weight 13 mod 16:
-
-First weight 14 mod 16:
-
-First weight 15 mod 16:
-
-
-quad_s_4d_4w_2_wgpu:
-start indexes: 0 1 2 3 4 5 6 7 8 9 12 13 14 15 16 17
-First weight 0 mod 16:
-
-First weight 1 mod 16:
-
-First weight 2 mod 16:
-
-First weight 3 mod 16:
-
-First weight 4 mod 16:
-
-First weight 5 mod 16:
-
-First weight 6 mod 16:
-
-First weight 7 mod 16:
-
-First weight 8 mod 16:
-
-First weight 9 mod 16:
-  0   1-4     9-12 
-  0  13-16    9-12 
-
-First weight 10 mod 16:
-
-First weight 11 mod 16:
-
-First weight 12 mod 16:
-
-First weight 13 mod 16:
-
-First weight 14 mod 16:
-
-First weight 15 mod 16:
-
-
-quad_s_4d_4w_dgpu:
-First destination unit 0 mod 4:
-  0   0-3    16-19 
-
-First destination unit 1 mod 4:
-  0   1-4     9-12 
-  0  13-16    9-12 
-
-First destination unit 2 mod 4:
-
-First destination unit 3 mod 4:
-  0   3-6     0-3  
-  0   7-10    4-7  
-
-
-quad_s_4d_4w_sgpu:
-Source unit 0 mod 4:
-  0   3-6     0-3  
-  0   7-10    4-7  
-  0   1-4     9-12 
-  0  13-16    9-12 
-  0   0-3    16-19 
-
-Source unit 1 mod 4:
-
-Source unit 2 mod 4:
-
-Source unit 3 mod 4:
-
-single4_s:
-single4_d:
-
-single:
-  0  11   8
-  0  16   1
-  0  18   6
-
-other for wgpu:
-start indexes: 0 1 3 4 5 6 7 9 10 12 13 14 15 16 17 18
-Weight 0 mod 16:
-
-Weight 1 mod 16:
-  0  16   1
-
-Weight 2 mod 16:
-
-Weight 3 mod 16:
-
-Weight 4 mod 16:
-
-Weight 5 mod 16:
-
-Weight 6 mod 16:
-  0  18   6
-
-Weight 7 mod 16:
-
-Weight 8 mod 16:
-  0  11   8
-
-Weight 9 mod 16:
-
-Weight 10 mod 16:
-
-Weight 11 mod 16:
-
-Weight 12 mod 16:
-
-Weight 13 mod 16:
-
-Weight 14 mod 16:
-
-Weight 15 mod 16:
-
-
-other_2 for wgpu (pairs with same w):
-start indexes: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
-Weight 0 mod 16:
-
-Weight 1 mod 16:
-
-Weight 2 mod 16:
-
-Weight 3 mod 16:
-
-Weight 4 mod 16:
-
-Weight 5 mod 16:
-
-Weight 6 mod 16:
-
-Weight 7 mod 16:
-
-Weight 8 mod 16:
-
-Weight 9 mod 16:
-
-Weight 10 mod 16:
-
-Weight 11 mod 16:
-
-Weight 12 mod 16:
-
-Weight 13 mod 16:
-
-Weight 14 mod 16:
-
-Weight 15 mod 16:
-
-
-other for dgpu:
-
-start indexes: 0 2 3 5
-
-Destination unit 0 mod 4:
-  0  16   1
-
-Destination unit 1 mod 4:
-
-Destination unit 2 mod 4:
-  0  18   6
-
-Destination unit 3 mod 4:
-  0  11   8
-
-
-other for sgpu:
-
-start indexes: 0 4 5 6
-
-Source unit 0 mod 4:
-  0  16   1
-  0  18   6
-  0  11   8
-
-Source unit 1 mod 4:
-
-Source unit 2 mod 4:
-
-Source unit 3 mod 4:
 
 Number of training cases: 4
 
@@ -2123,231 +1898,6 @@ Hidden layer 0 input weight configuration
      1      3     11
      1      4     12
      1      5     13
-
-quad_s_4d_4w:
-  0   3-6     0-3  
-  0   7-10    4-7  
-  0   0-3    16-19 
-
-quad_s_4d_4w_2 (pairs with same w):
-  0   1-4     9-12 
-  0  13-16    9-12 
-
-quad_s_4d_4w_wgpu:
-start indexes: 0 3 4 5 6 8 9 10 11 12 13 14 15 16 17 18
-First weight 0 mod 16:
-  0   3-6     0-3  
-  0   0-3    16-19 
-
-First weight 1 mod 16:
-
-First weight 2 mod 16:
-
-First weight 3 mod 16:
-
-First weight 4 mod 16:
-  0   7-10    4-7  
-
-First weight 5 mod 16:
-
-First weight 6 mod 16:
-
-First weight 7 mod 16:
-
-First weight 8 mod 16:
-
-First weight 9 mod 16:
-
-First weight 10 mod 16:
-
-First weight 11 mod 16:
-
-First weight 12 mod 16:
-
-First weight 13 mod 16:
-
-First weight 14 mod 16:
-
-First weight 15 mod 16:
-
-
-quad_s_4d_4w_2_wgpu:
-start indexes: 0 1 2 3 4 5 6 7 8 9 12 13 14 15 16 17
-First weight 0 mod 16:
-
-First weight 1 mod 16:
-
-First weight 2 mod 16:
-
-First weight 3 mod 16:
-
-First weight 4 mod 16:
-
-First weight 5 mod 16:
-
-First weight 6 mod 16:
-
-First weight 7 mod 16:
-
-First weight 8 mod 16:
-
-First weight 9 mod 16:
-  0   1-4     9-12 
-  0  13-16    9-12 
-
-First weight 10 mod 16:
-
-First weight 11 mod 16:
-
-First weight 12 mod 16:
-
-First weight 13 mod 16:
-
-First weight 14 mod 16:
-
-First weight 15 mod 16:
-
-
-quad_s_4d_4w_dgpu:
-First destination unit 0 mod 4:
-  0   0-3    16-19 
-
-First destination unit 1 mod 4:
-  0   1-4     9-12 
-  0  13-16    9-12 
-
-First destination unit 2 mod 4:
-
-First destination unit 3 mod 4:
-  0   3-6     0-3  
-  0   7-10    4-7  
-
-
-quad_s_4d_4w_sgpu:
-Source unit 0 mod 4:
-  0   3-6     0-3  
-  0   7-10    4-7  
-  0   1-4     9-12 
-  0  13-16    9-12 
-  0   0-3    16-19 
-
-Source unit 1 mod 4:
-
-Source unit 2 mod 4:
-
-Source unit 3 mod 4:
-
-single4_s:
-single4_d:
-
-single:
-  0  11   8
-  0  16   1
-  0  18   6
-
-other for wgpu:
-start indexes: 0 1 3 4 5 6 7 9 10 12 13 14 15 16 17 18
-Weight 0 mod 16:
-
-Weight 1 mod 16:
-  0  16   1
-
-Weight 2 mod 16:
-
-Weight 3 mod 16:
-
-Weight 4 mod 16:
-
-Weight 5 mod 16:
-
-Weight 6 mod 16:
-  0  18   6
-
-Weight 7 mod 16:
-
-Weight 8 mod 16:
-  0  11   8
-
-Weight 9 mod 16:
-
-Weight 10 mod 16:
-
-Weight 11 mod 16:
-
-Weight 12 mod 16:
-
-Weight 13 mod 16:
-
-Weight 14 mod 16:
-
-Weight 15 mod 16:
-
-
-other_2 for wgpu (pairs with same w):
-start indexes: 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
-Weight 0 mod 16:
-
-Weight 1 mod 16:
-
-Weight 2 mod 16:
-
-Weight 3 mod 16:
-
-Weight 4 mod 16:
-
-Weight 5 mod 16:
-
-Weight 6 mod 16:
-
-Weight 7 mod 16:
-
-Weight 8 mod 16:
-
-Weight 9 mod 16:
-
-Weight 10 mod 16:
-
-Weight 11 mod 16:
-
-Weight 12 mod 16:
-
-Weight 13 mod 16:
-
-Weight 14 mod 16:
-
-Weight 15 mod 16:
-
-
-other for dgpu:
-
-start indexes: 0 2 3 5
-
-Destination unit 0 mod 4:
-  0  16   1
-
-Destination unit 1 mod 4:
-
-Destination unit 2 mod 4:
-  0  18   6
-
-Destination unit 3 mod 4:
-  0  11   8
-
-
-other for sgpu:
-
-start indexes: 0 4 5 6
-
-Source unit 0 mod 4:
-  0  16   1
-  0  18   6
-  0  11   8
-
-Source unit 1 mod 4:
-
-Source unit 2 mod 4:
-
-Source unit 3 mod 4:
 
 Number of training cases: 4
 

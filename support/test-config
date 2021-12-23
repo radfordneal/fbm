@@ -316,7 +316,7 @@ cat >data <<end
 1 43350
 end
 net-spec log 1 20 identity cfg-b:cfg-b 1 / bh=1 ho=1
-net-spec log config+
+net-spec log config
 data-spec log 1 1 / data .
 model-spec log real 1
 net-gen log fix - <<end
@@ -368,7 +368,7 @@ cat >data <<end
 1 43350
 end
 net-spec log 1 20 identity cfg-i:cfg-i 1 / ih=1 ho=1
-net-spec log config+
+net-spec log config
 data-spec log 1 1 / data .
 model-spec log real 1
 net-gen log fix - <<end

@@ -3558,7 +3558,7 @@ __device__ static void store_grad2_config
 #define W const_params
 #define HAS_FLGS const_has_flgs
 
-__device__ STATIC_IF_INCLUDED void net_back_grad_gpu
+__device__ __forceinline__ STATIC_IF_INCLUDED void net_back_grad_gpu
 ( int thrg,		/* Which thread, from 0 to GTH-1 */
   int gsz,		/* Size of gradient group (maybe < GROUP_SIZE at end) */
   net_params *restrict g,   /* Where to store gradient with respect to params */

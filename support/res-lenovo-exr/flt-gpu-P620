@@ -1,4 +1,4 @@
-Commit: 40792b68b6e6941fdd9f081e1148e5ebf6bfde21
+Commit: cb11e278880ee2bc9e6690043bcdc6074e86a522
 
 Running exr with flt-gpu on P620:
 
@@ -26,4 +26,4 @@ Number of test cases: 1000
 Average log probability of targets:     0.859+-0.019
 Average squared error guessing mean:    0.01178+-0.00089
 
-elapsed 4.11s
+elapsed 4.12s

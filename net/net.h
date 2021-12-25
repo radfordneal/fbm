@@ -76,8 +76,18 @@
 #define GROUP_SIZE (1<<GROUP_SHIFT)  /* Number of cases in a gradient group */
 #define GROUP_MASK (GROUP_SIZE-1)
 
-#define NTH THREADS_PER_CASE		    /* abbreviations */
-#define GTH (GROUP_SIZE*THREADS_PER_CASE)
+#define BLKCASES 32          /* Number of training cases per thread block,
+                                must be a multiple of GROUP_SIZE */
+
+#define THREADS_PER_BLOCK (THREADS_PER_CASE*BLKCASES)
+#define THREADS_PER_GROUP (THREADS_PER_CASE*GROUP_SIZE)
+
+#define NTH THREADS_PER_CASE /* abbreviations */
+#define GTH THREADS_PER_GROUP
+#define BTH THREADS_PER_BLOCK
+
+#define MIN_WARPS_PER_SM 16  /* Desired minimum number of warps per SM */
+#define MIN_BLOCKS_PER_SM 2  /* Desired minimum number of blocks per SM */
 
 #define GRAD_ALIGN_BYTES 64  /* Alignment for gradient blocks in GPU, bytes
                                   - must be a power of two, minimum of 8 */
@@ -92,8 +102,6 @@
                                    section that could lead to threads diverging?
                                    Note: for performance, not correctness. */
 
-#define MAX_BLKCASES 32      /* Maximum allowed, relates to register usage */
-#define DEFAULT_BLKCASES 32  /* Default, if not set by BLKCASES env var */
 #define DEFAULT_MAXBLKS	500  /* Default, if not set by MAXBLKS env var */
 
 #define USE_FAST_SHARED_MEM 1  /* Use fast shared GPU memory for unit values

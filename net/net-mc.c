@@ -49,7 +49,6 @@
 
 /* CUDA-RELATED VARIABLES. */
 
-static int blkcases = DEFAULT_BLKCASES;	/* Number of cases handled per block */
 static int maxblks = DEFAULT_MAXBLKS;	/* Max number of blocks per kernel */
 
 static int n_launches;			/* Number of launches needed to 
@@ -190,8 +189,6 @@ static double *dev_scratch;	/* GPU scratch memory, for each case in launch*/
 __constant__ int const_N_train;    /* Copy of N_train in constant memory */
 __constant__ int const_N_inputs;   /* Copy of N_inputs in constant memory */
 __constant__ int const_N_targets;  /* Copy of N_targets in constant memory */
-
-__constant__ int const_blkcases;   /* Copy of blkcases in constant memory */
 
 __constant__ unsigned const_grad_aligned_total;  /* Copy in constant memory */
 
@@ -602,27 +599,9 @@ void mc_app_initialize
 
 #   if __CUDACC__
     {
-      char junk;
-      char *e_blkcases = getenv("BLKCASES");
-      if (e_blkcases)
-      { if (sscanf(e_blkcases,"%d%c",&blkcases,&junk)!=1)
-        { fprintf(stderr,"Bad format for BLKCASES\n");
-          exit(1);
-        }
-        if (blkcases<1)
-        { fprintf(stderr,"BLKCASES must be at least 1\n");
-          exit(1);
-        }
-      }
-      if (blkcases > MAX_BLKCASES)
-      { blkcases = MAX_BLKCASES;
-        fprintf(stderr,"BLKCASES too large, reduced to %d\n",blkcases);
-      }
-      if ((blkcases&GROUP_MASK)!=0)
-      { blkcases = (blkcases|GROUP_MASK) + 1;
-        fprintf(stderr,
-      "BLKCASES not a multiple of gradient groups size (%d), increased to %d\n",
-          GROUP_SIZE, blkcases);
+      if (BLKCASES<1 || (BLKCASES&GROUP_MASK)!=0)
+      { fprintf(stderr,"BLKCASES must be a multiple of gradient groups size\n");
+        exit(1);
       }
       char *e_maxblks = getenv("MAXBLKS");
       if (e_maxblks)
@@ -635,14 +614,11 @@ void mc_app_initialize
           exit(1);
         }
       }
+
       check_cuda_error (cudaGetDeviceProperties(&cuda_prop,0),
                         "Get properties");
 
-#     define MIN_WARPS_PER_SM 16
-#     define MIN_BLOCKS_PER_SM 2
-
-      int threads_per_block = blkcases * THREADS_PER_CASE;
-      int warps_per_block = (threads_per_block + cuda_prop.warpSize - 1)
+      int warps_per_block = (THREADS_PER_BLOCK + cuda_prop.warpSize - 1)
                               / cuda_prop.warpSize;
 
       int needed_blocks = MIN_BLOCKS_PER_SM;
@@ -657,9 +633,9 @@ void mc_app_initialize
       }
 
       allowed_shared_mem = !USE_FAST_SHARED_MEM ? 0
-        : (cuda_prop.sharedMemPerMultiprocessor / needed_blocks) / blkcases;
-      if (allowed_shared_mem * blkcases > cuda_prop.sharedMemPerBlock)
-      { allowed_shared_mem = cuda_prop.sharedMemPerBlock / blkcases;
+        : (cuda_prop.sharedMemPerMultiprocessor / needed_blocks) / BLKCASES;
+      if (allowed_shared_mem * BLKCASES > cuda_prop.sharedMemPerBlock)
+      { allowed_shared_mem = cuda_prop.sharedMemPerBlock / BLKCASES;
       }
 
       if (show_info)
@@ -671,8 +647,8 @@ void mc_app_initialize
           cuda_prop.ECCEnabled ? " ECC" : "");
 
         printf (
-"Specified %d cases per block, max %d blocks per launch, threads/case: %d\n",
-          blkcases, maxblks, THREADS_PER_CASE);
+       "Using %d cases per block, max %d blocks per launch, threads/case: %d\n",
+          BLKCASES, maxblks, THREADS_PER_CASE);
 
         printf (
 "Shared mem/blk: %d, Shared mem/SM: %d, Blks/SM: %d -> %d bytes/case\n",
@@ -991,10 +967,10 @@ void mc_app_initialize
 
 #   if __CUDACC__
     { if (N_train>0)
-      { n_launches = (N_train + blkcases*maxblks-1) / (blkcases*maxblks);
+      { n_launches = (N_train + BLKCASES*maxblks-1) / (BLKCASES*maxblks);
         max_cases_per_launch = (N_train + n_launches - 1) / n_launches;
-        max_blocks_per_launch = (max_cases_per_launch + blkcases-1) / blkcases;
-        max_cases_per_launch = max_blocks_per_launch * blkcases;
+        max_blocks_per_launch = (max_cases_per_launch + BLKCASES-1) / BLKCASES;
+        max_cases_per_launch = max_blocks_per_launch * BLKCASES;
         if (show_info)
         { printf ("With %d cases, need %d launches, max %d blocks/launch\n",
                   N_train, n_launches, max_blocks_per_launch);
@@ -1112,9 +1088,6 @@ void mc_app_initialize
       cudaMemcpyToSymbol (const_N_targets, &N_targets, sizeof N_targets);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_N_targets");
-      cudaMemcpyToSymbol (const_blkcases, &blkcases, sizeof blkcases);
-      check_cuda_error (cudaGetLastError(), 
-                        "After copying to const_blkcases");
       cudaMemcpyToSymbol (const_arch, &dev_arch, sizeof dev_arch);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_arch");
@@ -2405,8 +2378,8 @@ void cuda_setup
   mc_value *gr		/* Place to store gradient, null if not required */
 )
 {
-  n_grad_accum = ((blkcases+GROUP_MASK)>>GROUP_SHIFT) * max_blocks_per_launch;
-  n_energy_accum = blkcases * max_blocks_per_launch;
+  n_grad_accum = ((BLKCASES+GROUP_MASK)>>GROUP_SHIFT) * max_blocks_per_launch;
+  n_energy_accum = BLKCASES * max_blocks_per_launch;
 
   if (energy && case_energy==0)
   { 
@@ -2522,7 +2495,7 @@ void cuda_setup
 
 #define KERNEL_PRELUDE \
   int m = threadIdx.x / NTH; \
-  int i = blockIdx.x*const_blkcases + m; \
+  int i = blockIdx.x*BLKCASES + m; \
   int h = start + i; \
   net_values *restrict train_vals_h = const_train_values+h; \
   int th = threadIdx.x & (NTH-1); \
@@ -2534,7 +2507,7 @@ void cuda_setup
 #if !SPLIT_KERNELS
 
 __global__ void training_kernel
-__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
+__launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 (
   double *restrict case_energy, /* Places to store energy, null if not needed */
   net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
@@ -2547,7 +2520,7 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
 #else 
 
 __global__ void forward_kernel
-__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
+__launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 (
   int start,		/* Start of cases to look at */
   int end 		/* End of cases to look at (index after last case) */
@@ -2569,7 +2542,7 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
 
 }
 __global__ void energy_kernel
-__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
+__launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 (
   double *restrict case_energy, /* Places to store energy, null if not needed */
   int start,		/* Start of cases to look at */
@@ -2645,7 +2618,7 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
 
 }
 __global__ void backward_gradient_kernel
-__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
+__launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 (
   net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
   int start,		/* Start of cases to look at */
@@ -2670,7 +2643,7 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
   int thm = m & GROUP_MASK;
   int thrg = threadIdx.x & (GTH - 1);
 
-  int o = blockIdx.x * ((const_blkcases+GROUP_MASK)>>GROUP_SHIFT) 
+  int o = blockIdx.x * ((BLKCASES+GROUP_MASK)>>GROUP_SHIFT) 
             + (m>>GROUP_SHIFT);
 
   int gsz = GROUP_SIZE;
@@ -2678,8 +2651,8 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
   { if (gsz > end - (h-thm))
     { gsz = end - (h-thm);
     }
-    if ((m-thm) + gsz > const_blkcases)
-    { gsz = const_blkcases - (m-thm);
+    if ((m-thm) + gsz > BLKCASES)
+    { gsz = BLKCASES - (m-thm);
     }
   }
 
@@ -2700,7 +2673,7 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
 
 }
 __global__ void gradient_reduction_kernel
-__launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
+__launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 (
   net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
   int start,            /* Start of cases to look at */
@@ -2711,7 +2684,7 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
 
 #endif
 
-  if (const_blkcases<=GROUP_SIZE)
+  if (BLKCASES<=GROUP_SIZE)
   { return;
   }
 
@@ -2729,9 +2702,9 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
   int n_results;	/* Number of energy/grad results in this block, less
                            than n_blk_res if that would exceed training cases */
 
-  n_blk_res = (const_blkcases + GROUP_MASK) >> GROUP_SHIFT;
+  n_blk_res = (BLKCASES + GROUP_MASK) >> GROUP_SHIFT;
   n_results = 
-    (end - start - blockIdx.x*const_blkcases + GROUP_MASK) >> GROUP_SHIFT;
+    (end - start - blockIdx.x*BLKCASES + GROUP_MASK) >> GROUP_SHIFT;
   if (n_results > n_blk_res)
   { n_results = n_blk_res;
   }
@@ -2740,7 +2713,7 @@ __launch_bounds__(MAX_BLKCASES*THREADS_PER_CASE,2)
   net_param *accum_blk = accum->param_block;
 
   net_params *from = group_grad  /* Base for where to add from */
-                      + blockIdx.x * ((const_blkcases+GROUP_MASK)>>GROUP_SHIFT);
+                      + blockIdx.x * ((BLKCASES+GROUP_MASK)>>GROUP_SHIFT);
   size_t stride = const_grad_aligned_total;
   net_param *from_blk = from->param_block + stride;
   unsigned k;
@@ -2833,38 +2806,35 @@ static void net_training_cases_gpu
     if (n > 0)
     {
       cases = n < max_cases_per_launch ? n : max_cases_per_launch;
-      blks = (cases + blkcases-1) / blkcases;
+      blks = (cases + BLKCASES-1) / BLKCASES;
 
       check_cuda_error (cudaGetLastError(), "Before launching kernel(s)");
 
-      int shared_mem = blkcases * pre.memused * sizeof(net_value);
-      int threads = blkcases*THREADS_PER_CASE;
+      int shared_mem = BLKCASES * pre.memused * sizeof(net_value);
 
 #     if SPLIT_KERNELS
-      { forward_kernel <<<blks, threads, shared_mem>>>
+      { forward_kernel <<<blks, THREADS_PER_BLOCK, shared_mem>>>
           (i, i+cases);
         if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching forward_kernel");
-        energy_kernel <<<blks, threads, shared_mem>>> 
+        energy_kernel <<<blks, THREADS_PER_BLOCK, shared_mem>>> 
           (energy ? case_energy : 0, i, i+cases, en_weight, gr!=0, gr_weight);
         if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching energy_kernel");
         if (gr)
-        { backward_gradient_kernel <<<blks, threads, shared_mem>>>
+        { backward_gradient_kernel <<<blks, THREADS_PER_BLOCK, shared_mem>>>
             (group_grad, i, i+cases);
           if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching backward_gradient_kernel");
-          if (blkcases>GROUP_SIZE)
-          { gradient_reduction_kernel 
-              <<<blks, threads, shared_mem>>>
-              (group_grad, i, i+cases);
-            if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
-                     "Synchronizing after launching gradient_reduction_kernel");
-          }
+          gradient_reduction_kernel 
+            <<<blks, THREADS_PER_BLOCK, shared_mem>>>
+            (group_grad, i, i+cases);
+          if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
+                   "Synchronizing after launching gradient_reduction_kernel");
         }
       }
 #     else /* !SPLIT_KERNELS */
-      { training_kernel <<<blks, threads, shared_mem>>>
+      { training_kernel <<<blks, THREADS_PER_BLOCK, shared_mem>>>
           (energy ? case_energy : 0, gr ? group_grad : 0,
            i, i+cases, en_weight, gr_weight);
 

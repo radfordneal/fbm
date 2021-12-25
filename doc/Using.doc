@@ -114,13 +114,9 @@ environment variables, as follows:
 
     MAXBLKS    May be used to control the maximum number of GPU
                thread blocks in a GPU kernel launch.  Reducing
-               it from the default of 1000 may help if your GPU
+               it from the default of 500 may help if your GPU
                runs out of memory (perhaps if you are running 
                several program instances in parallel).
-
-    BLKCASES   May be used to control how many training cases
-               are handled by each GPU thread block.  Only 
-               useful if you know a lot about the implementation.
 
     CUDA_VISIBLE_DEVICES  May be set to the number of the GPU
                           to be used.  Useful only if you have 

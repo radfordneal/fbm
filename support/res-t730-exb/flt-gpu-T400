@@ -1,4 +1,4 @@
-Commit: 0fb8cb68d379916fc0a429ff3434371c4ece3870
+Commit: ad6bf28c97a9f2cec5369aa26df5eabbb9555d1c
 
 Running exb with flt-gpu on T400:
 
@@ -8,13 +8,13 @@ Precision: FP32, SIMD capability: AVX, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 NVIDIA T400, Compute Capability 7.5, 6 SM processors, 1.8 GBytes
 Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 16 -> 1024 bytes/case
-Hid layer shrd mem: 0:15:0,15 T 30
+Hid layer shrd mem: 0:15:0,15 T 40
 With 300 cases, need 1 launches, max 10 blocks/launch
 Precision: FP32, SIMD capability: AVX, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 NVIDIA T400, Compute Capability 7.5, 6 SM processors, 1.8 GBytes
 Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 16 -> 1024 bytes/case
-Hid layer shrd mem: 0:15:0,15 T 30
+Hid layer shrd mem: 0:15:0,15 T 40
 With 300 cases, need 1 launches, max 10 blocks/launch
 
 Number of iterations used: 20
@@ -24,4 +24,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.243+-0.017
 Fraction of guesses that were wrong:    0.1060+-0.0097
 
-elapsed 2.61s
+elapsed 1.57s

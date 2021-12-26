@@ -835,7 +835,7 @@ Network in file "log" with index 20
 
 Input to Hidden Layer 0 Weights [1]
 
- 2.09 1.55: +1.93  -2.45
+ 2.09 1.56: +1.95  -2.45
 
 Input to Hidden Layer 1 Weights [2]
 
@@ -843,17 +843,17 @@ Input to Hidden Layer 1 Weights [2]
 
 Hidden Layer 0 to Hidden Layer 2 Weights [3]
 
-12.79:     +12.44
+ 6.50:      +1.91
 
 Hidden Layer 1 to Hidden Layer 2 Weights [4]
 
- 1.83 1.83: -1.27  -1.89
+ 1.78 1.78: -1.09  -1.80
 
 Hidden Layer 2 to Output Weights [5]
 
- 5.64 9.86: +2.75
+ 5.64 9.97: +3.02
 
-      3.04: +2.55
+      2.97: +1.79
 
 Noise levels
 
@@ -1005,27 +1005,27 @@ Network in file "log" with index 20
 
 Input to Hidden Layer 0 Weights [1]
 
- 1.16 1.93: +2.00  -1.02
+ 1.17 1.94: +1.80  -1.03
 
 Input to Hidden Layer 1 Weights [2]
 
- 1.29 4.38: +3.05
+ 1.21 2.30: +3.16
 
 Hidden Layer 0 to Hidden Layer 2 Weights [3]
 
- 6.74 3.61: +4.07  -0.20
+ 3.29 4.96: +2.48  -0.47
 
-      5.97: -3.06  +3.43
+      3.86: -0.25  -0.49
 
 Hidden Layer 1 to Hidden Layer 2 Weights [4]
 
- 2.80 2.80: -1.14  -2.57
+ 1.17 1.17: -0.82  -1.92
 
 Hidden Layer 2 to Output Weights [5]
 
- 2.12 2.02: +3.07
+ 2.26 2.69: +2.47
 
-      2.45: +2.30
+      2.37: +1.36
 
 Noise levels
 

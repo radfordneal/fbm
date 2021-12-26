@@ -3617,6 +3617,7 @@ void mc_app_stepsizes
     }
   }
 
+  nsqi = 0;
   for (l = 0; l<arch->N_layers; l++)
   {
     if (arch->has_th[l])
@@ -3660,6 +3661,30 @@ void mc_app_stepsizes
             k += 1;
           }
         }
+      }
+    }
+
+    for (ls = 0, bits = arch->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        if (arch->nonseq_config[nsqi])
+        { for (k = 0; k<arch->nonseq_config[nsqi]->N_conn; k++)
+          { i = arch->nonseq_config[nsqi]->conn[k].s;
+            j = arch->nonseq_config[nsqi]->conn[k].d;
+            stepsizes.nsq [nsqi] [arch->nonseq_config[nsqi]->conn[k].w]
+              += N_train * typical.h[ls][i] * seconds.h[l][j];
+          }
+        }
+        else
+        { for (i = 0; i<arch->N_hidden[ls]; i++)
+          { net_value pv = N_train * typical.h[ls][i];
+            for (j = 0; j<arch->N_hidden[l]; j++)
+            { stepsizes.nsq [nsqi] [i*arch->N_hidden[l] + j] 
+                += pv * seconds.h[l][j];
+            }
+          }
+        }
+        nsqi += 1;
       }
     }
  

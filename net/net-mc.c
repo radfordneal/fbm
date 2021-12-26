@@ -150,6 +150,12 @@ static net_values seconds;	/* Second derivatives */
 static net_value *train_sumsq;	/* Sums of squared training input values */
 static net_values typical;	/* Typical squared values for hidden units */
 
+#if USE_TRANSPOSED_WEIGHTS
+
+static net_params params_trans; /* Transposed weights (only hidden-hidden) */
+
+#endif
+
 static net_params grad;		/* Pointers to gradient for network parameters*/
 
 /* Values used or computed by threads, in managed, device, or constant memory.  
@@ -207,6 +213,13 @@ __constant__ net_sigma *const_noise;  /* Pointer to GPU copy of noise sigmas */
 
 __constant__ net_params const_params; /* version of params in GPU */
 static net_param *dev_param_block;    /* parameter block in const_params */
+
+#if USE_TRANSPOSED_WEIGHTS
+
+__constant__ net_params const_params_trans; /* Transposed parameters in GPU */
+static net_param *dev_param_trans_block;    /* Block of transposed parameters */
+
+#endif
 
 __constant__ net_values *const_deriv;  /* Copy of deriv ptr in constant memory*/
 __constant__ net_values *const_train_values; /* Const copy of train_values ptr*/
@@ -528,7 +541,8 @@ void mc_app_initialize
 { 
   net_value *value_block;
   int value_count, value_count_noout, value_count_noinout;
-  int i, j, junk;
+  int i, j, junki;
+  char junkc;
 
   if (!initialize_done)
   {
@@ -605,7 +619,7 @@ void mc_app_initialize
       }
       char *e_maxblks = getenv("MAXBLKS");
       if (e_maxblks)
-      { if (sscanf(e_maxblks,"%d%c",&maxblks,&junk)!=1)
+      { if (sscanf(e_maxblks,"%d%c",&maxblks,&junkc)!=1)
         { fprintf(stderr,"Bad format for MAXBLKS\n");
           exit(1);
         }
@@ -729,6 +743,18 @@ void mc_app_initialize
       net_prior_generate (&params, &sigmas, arch, flgs, model, priors, 1, 0, 0);
     }
 
+    /* Set up CPU version of transposed parameter values. */
+
+#   if USE_TRANSPOSED_WEIGHTS
+
+      params_trans.total_params = params.total_params;
+      params_trans.param_block = 
+       (net_param *) chk_alloc (params_trans.total_params, sizeof (net_param));
+
+      net_setup_param_pointers (&params_trans, arch, flgs);
+
+#   endif
+
     /* Do precomputation of how to use fast GPU shared memory. */
 
 #   if __CUDACC__
@@ -802,7 +828,7 @@ void mc_app_initialize
     }
 #   endif    
 
-    /* Set up 'params' structure in GPU memory. */
+    /* Set up 'params' structure in GPU memory, plus transposed version. */
 
 #   if __CUDACC__
     { net_params tmp_params;
@@ -815,6 +841,16 @@ void mc_app_initialize
       check_cuda_error (cudaMemcpyToSymbol 
                           (const_params, &tmp_params, sizeof tmp_params),
                         "copy to const_params");
+#     if USE_TRANSPOSED_WEIGHTS
+        check_cuda_error(cudaMalloc (&dev_param_trans_block,
+                          params.total_params * sizeof *tmp_params.param_block),
+                         "alloc of params_trans block for GPU");
+        tmp_params.param_block = dev_param_trans_block;
+        net_setup_param_pointers (&tmp_params, arch, flgs);
+        check_cuda_error(cudaMemcpyToSymbol 
+                          (const_params_trans, &tmp_params, sizeof tmp_params),
+                          "copy to const_params_trans");
+#     endif
     }
 #   endif
 
@@ -922,7 +958,7 @@ void mc_app_initialize
         /* Count how many entries it has. */
 
         approx_count = 0;
-        while (fscanf(af,"%d",&junk)==1)
+        while (fscanf(af,"%d",&junki)==1)
         { approx_count += 1;
         }
 
@@ -3034,6 +3070,60 @@ static void net_training_cases_gpu
 #endif
 
 
+/* FIND TRANSPOSED WEIGHT MATRICES FOR HIDDEN-TO-HIDDEN WEIGHTS. */
+
+#if USE_TRANSPOSED_WEIGHTS
+
+static void transpose 
+( net_param *t,       /* Where to store transposed weights (src varies faster)*/
+  net_param const*w,  /* Weights, with destination varying faster */
+  int ns,             /* Number of source units */
+  int nd              /* Number of destination units */
+)
+{
+  int i, j;
+
+  if (0)
+  { printf("Before transpose (%d %d):\n",ns,nd);
+    for (i = 0; i<ns*nd; i++) printf(" %.3f",w[i]);
+    printf("\n");
+  }
+
+  for (j = 0; j<ns; j++)
+  { for (i = 0; i<nd; i++)
+    { t[j+i*ns] = w[i+j*nd];
+    }
+  }
+
+  if (0)
+  { printf("After transpose:\n");
+    for (i = 0; i<ns*nd; i++) printf(" %.3f",t[i]);
+    printf("\n");
+  }
+}
+
+static void transpose_hidden_to_hidden (void)
+{ 
+  int l, ls;
+
+  for (l = 1; l<arch->N_layers; l++)
+  { if (arch->has_hh[l-1] && !arch->hidden_config[l])
+    { transpose (params_trans.hh[l-1], params.hh[l-1],
+                 arch->N_hidden[l-1], arch->N_hidden[l]);
+    }
+    for (ls = 0; ls<l-1; ls++)
+    { int nsqi = pre.nonseq[ls][l];
+      if (nsqi>0 && !arch->nonseq_config[nsqi])
+      { transpose (params_trans.nsq[nsqi], params.nsq[nsqi],
+                   arch->N_hidden[l-1], arch->N_hidden[l]);
+      }
+    }
+  }
+}
+
+#endif
+
+
 /* APPLICATION-SPECIFIC ENERGY/GRADIENT PROCEDURE.  Called from 'mc' module. */
 
 void mc_app_energy
@@ -3054,6 +3144,10 @@ void mc_app_energy
   if (gr && grad.param_block!=gr)
   { grad.param_block = gr;
     net_setup_param_pointers (&grad, arch, flgs);
+  }
+
+  if (USE_TRANSPOSED_WEIGHTS && gr)
+  { transpose_hidden_to_hidden();
   }
 
   /* Compute part of energy and/or gradient due to the prior. */

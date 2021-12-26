@@ -45,6 +45,9 @@
                                       hidden unit values, thereby reverting to 
                                       the old stepsize heuristic */
 
+#define USE_TRANSPOSED_WEIGHTS 1   /* Should transposed weight matrices be
+                                      computed and used in the backward pass? */
+
 /* Alignment for value structures. */
 
 #define NET_VALUE_ALIGN_BYTES 16   /* Alignment for value arrays, in bytes

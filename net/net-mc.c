@@ -152,7 +152,8 @@ static net_values typical;	/* Typical squared values for hidden units */
 
 #if USE_TRANSPOSED_WEIGHTS
 
-static net_params params_trans; /* Transposed weights (only hidden-hidden) */
+static int any_transposed;	/* Are any weights stored in transposed form? */
+static net_params params_trans; /* Transposed weights (only from layers) */
 
 #endif
 
@@ -746,13 +747,38 @@ void mc_app_initialize
     /* Set up CPU version of transposed parameter values. */
 
 #   if USE_TRANSPOSED_WEIGHTS
+    { 
+      int l, ls;
+      any_transposed = 0;
+      for (l = 0; l<arch->N_layers; l++)
+      { if (arch->has_ho[l] && !arch->hidden_config[2*arch->N_layers-1-l]
+                            && TRANS_WEIGHTS(arch->N_hidden[l],arch->N_outputs))
+        { any_transposed = 1;
+          goto anytr;
+        }
+        if (l>0 && arch->has_hh[l-1] && !arch->hidden_config[l]
+                && TRANS_WEIGHTS(arch->N_hidden[l-1],arch->N_hidden[l]))
+        { any_transposed = 1;
+          goto anytr;
+        }
+        for (ls = 0; ls<l-1; ls++)
+        { int nsqi = pre.nonseq[ls][l];
+          if (nsqi>=0 && !arch->nonseq_config[nsqi]
+                      && TRANS_WEIGHTS(arch->N_hidden[ls],arch->N_hidden[l]))
+          { any_transposed = 1;
+            goto anytr;
+          }
+        }
+      }
 
-      params_trans.total_params = params.total_params;
-      params_trans.param_block = 
-       (net_param *) chk_alloc (params_trans.total_params, sizeof (net_param));
-
-      net_setup_param_pointers (&params_trans, arch, flgs);
-
+    anytr:
+      if (any_transposed)
+      { params_trans.total_params = params.total_params;
+        params_trans.param_block = 
+         (net_param *) chk_alloc(params_trans.total_params, sizeof (net_param));
+        net_setup_param_pointers (&params_trans, arch, flgs);
+      }
+    }
 #   endif
 
     /* Do precomputation of how to use fast GPU shared memory. */
@@ -842,14 +868,17 @@ void mc_app_initialize
                           (const_params, &tmp_params, sizeof tmp_params),
                         "copy to const_params");
 #     if USE_TRANSPOSED_WEIGHTS
-        check_cuda_error(cudaMalloc (&dev_param_trans_block,
-                          params.total_params * sizeof *tmp_params.param_block),
+      { if (any_transposed)
+        { check_cuda_error(cudaMalloc (&dev_param_trans_block,
+                         params.total_params * sizeof *tmp_params.param_block),
                          "alloc of params_trans block for GPU");
-        tmp_params.param_block = dev_param_trans_block;
-        net_setup_param_pointers (&tmp_params, arch, flgs);
-        check_cuda_error(cudaMemcpyToSymbol 
-                          (const_params_trans, &tmp_params, sizeof tmp_params),
-                          "copy to const_params_trans");
+          tmp_params.param_block = dev_param_trans_block;
+          net_setup_param_pointers (&tmp_params, arch, flgs);
+          check_cuda_error(cudaMemcpyToSymbol 
+                         (const_params_trans, &tmp_params, sizeof tmp_params),
+                         "copy to const_params_trans");
+        }
+      }
 #     endif
     }
 #   endif
@@ -2286,8 +2315,7 @@ void net_training_cases
             { deriv->o[k] *= gr_weight;
             }
           }
-          net_back_add_grad (grd, &train_values[i], deriv, arch, &pre,
-                        flgs, &params, sparse);
+          net_back_add_grad (grd, &train_values[i], deriv, arch, flgs, sparse);
         }
     
         if (ot<=t1) break;
@@ -2341,8 +2369,7 @@ void net_training_cases
           { deriv->o[k] *= gr_weight;
           }
         }
-        net_back_add_grad (grd, train_vals_i, deriv, arch, &pre,
-                           flgs, &params, sparse);
+        net_back_add_grad (grd, train_vals_i, deriv, arch, flgs, sparse);
       }
     }
 
@@ -3102,20 +3129,30 @@ static void transpose
   }
 }
 
-static void transpose_hidden_to_hidden (void)
+static void transpose_from_hidden (void)
 { 
   int l, ls;
 
-  for (l = 1; l<arch->N_layers; l++)
-  { if (arch->has_hh[l-1] && !arch->hidden_config[l])
+  for (l = 0; l<arch->N_layers; l++)
+  { if (arch->has_ho[l] && !arch->hidden_config[2*arch->N_layers-1-l]
+                        && TRANS_WEIGHTS(arch->N_hidden[l],arch->N_outputs))
+    { transpose (params_trans.ho[l], params.ho[l],
+                 arch->N_hidden[l], arch->N_outputs);
+      if (0) printf("h%do transposed\n",l);
+    }
+    if (l>0 && arch->has_hh[l-1] && !arch->hidden_config[l]
+            && TRANS_WEIGHTS(arch->N_hidden[l-1],arch->N_hidden[l]))
     { transpose (params_trans.hh[l-1], params.hh[l-1],
                  arch->N_hidden[l-1], arch->N_hidden[l]);
+      if (0) printf("hh%d transposed\n",l);
     }
     for (ls = 0; ls<l-1; ls++)
     { int nsqi = pre.nonseq[ls][l];
-      if (nsqi>0 && !arch->nonseq_config[nsqi])
+      if (nsqi>=0 && !arch->nonseq_config[nsqi]
+                  && TRANS_WEIGHTS(arch->N_hidden[ls],arch->N_hidden[l]))
       { transpose (params_trans.nsq[nsqi], params.nsq[nsqi],
-                   arch->N_hidden[l-1], arch->N_hidden[l]);
+                   arch->N_hidden[ls], arch->N_hidden[l]);
+        if (0) printf("h%dh%d transposed\n",ls,l);
       }
     }
   }
@@ -3146,8 +3183,8 @@ void mc_app_energy
     net_setup_param_pointers (&grad, arch, flgs);
   }
 
-  if (USE_TRANSPOSED_WEIGHTS && gr)
-  { transpose_hidden_to_hidden();
+  if (USE_TRANSPOSED_WEIGHTS && any_transposed && gr)
+  { transpose_from_hidden();
   }
 
   /* Compute part of energy and/or gradient due to the prior. */

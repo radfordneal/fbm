@@ -48,6 +48,11 @@
 #define USE_TRANSPOSED_WEIGHTS 1   /* Should transposed weight matrices be
                                       computed and used in the backward pass? */
 
+/* Should these weights have a transposed form?  Adjustable criterion based on 
+   the numbers of sourse and destination units. */
+
+#define TRANS_WEIGHTS(ns,nd) (USE_TRANSPOSED_WEIGHTS && 1) /* always, for now */
+
 /* Alignment for value structures. */
 
 #define NET_VALUE_ALIGN_BYTES 16   /* Alignment for value arrays, in bytes

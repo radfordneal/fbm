@@ -2951,16 +2951,15 @@ __device__ static void net_store4_grad2_config
    and that the derivative of the energy with respect to the outputs has
    been computed (in d->o).  Uses other parts of d to store derivatives 
    of energy with respect to hidden units, and with respect to input units,
-   if input offsets are present. */
+   if input offsets are present.  Takes parameters or transposed parameters
+   from global 'params' or 'params_trans', and precomputed stuff from 'pre'. */
 
 void STATIC_IF_INCLUDED net_back_add_grad
 ( net_params *restrict g, /* Gradient with respect to parameters to add to */
   net_values const*v,	/* Values for units in network */
   net_values *restrict d,/* Has output derivatives, storage for other derivs */
   net_arch const*a,	/* Network architecture */
-  net_precomputed const* pre,  /* Precomputed aspects of architecture */
   net_flags const*flgs,	/* Network flags, null if none */
-  net_params const*w,	/* Network parameters */
   int sparse            /* Might source unit values often be zero? */
 )
 {
@@ -2981,11 +2980,11 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
   if (a->has_io)
   { if (a->input_config[a->N_layers])
-    { add_grad2_config (g->io, v->i, a->has_ti ? w->ti : 0, d->o,
+    { add_grad2_config (g->io, v->i, a->has_ti ? params.ti : 0, d->o,
                         a->input_config[a->N_layers]);
     }
     else
-    { add_grad2 (g->io, v->i, a->has_ti ? w->ti : 0, a->N_inputs,
+    { add_grad2 (g->io, v->i, a->has_ti ? params.ti : 0, a->N_inputs,
                  d->o, a->N_outputs,
                  flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
                  sparse);
@@ -2997,11 +2996,11 @@ void STATIC_IF_INCLUDED net_back_add_grad
     if (a->has_ho[l])
     { int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
-      { add_grad2_config (g->ho[l], v->h[l], a->has_th[l] ? w->th[l] : 0,
+      { add_grad2_config (g->ho[l], v->h[l], a->has_th[l] ? params.th[l] : 0,
                           d->o, a->hidden_config[k]);
       }
       else
-      { add_grad2 (g->ho[l], v->h[l], a->has_th[l] ? w->th[l] : 0,
+      { add_grad2 (g->ho[l], v->h[l], a->has_th[l] ? params.th[l] : 0,
                 a->N_hidden[l], d->o, a->N_outputs, (unsigned short *) 0, 0, 0);
       }
     }
@@ -3017,11 +3016,11 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
     if (a->has_io)
     { if (a->input_config[a->N_layers])
-      { sum_derivatives_config (d->o, d->i, a->N_inputs, w->io, 
+      { sum_derivatives_config (d->o, d->i, a->N_inputs, params.io, 
                                 a->input_config[a->N_layers]);
       }
       else
-      { sum_derivatives (d->o, a->N_outputs, d->i, a->N_inputs, w->io,
+      { sum_derivatives (d->o, a->N_outputs, d->i, a->N_inputs, params.io,
                     flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1);
       }
     }
@@ -3046,25 +3045,34 @@ void STATIC_IF_INCLUDED net_back_add_grad
     { int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { sum_derivatives_config (d->o, dh, N_hidden, 
-                                w->ho[l], a->hidden_config[k]);
+                                params.ho[l], a->hidden_config[k]);
+      }
+      else if (TRANS_WEIGHTS(N_hidden,a->N_outputs))
+      { add_connections (dh, N_hidden, d->o, a->N_outputs, params_trans.ho[l],
+                         (net_param const*) 0, (unsigned short *) 0, 0, 0);
       }
       else
       { sum_derivatives (d->o, a->N_outputs, dh, N_hidden,
-                         w->ho[l], (unsigned short *) 0, 0);
+                         params.ho[l], (unsigned short *) 0, 0);
       }
     }
 
     for (ld = l+1; ld<a->N_layers; ld++)
-    { int nsqi = pre->nonseq[l][ld];
+    { int nsqi = pre.nonseq[l][ld];
       if (nsqi>=0)
       { if (a->nonseq_config[nsqi])
         { sum_derivatives_config (d->h[ld], dh, N_hidden, 
-                                  w->nsq[nsqi], a->nonseq_config[nsqi]);
+                                  params.nsq[nsqi], a->nonseq_config[nsqi]);
+        }
+        else if (TRANS_WEIGHTS(N_hidden,a->N_hidden[ld]))
+        { add_connections (dh, N_hidden, d->h[ld], a->N_hidden[ld], 
+                           params_trans.nsq[nsqi],
+                           (net_param const*) 0, (unsigned short *) 0, 0, 0);
         }
         else
         { sum_derivatives
             (d->h[ld], a->N_hidden[ld], dh, N_hidden,
-             w->nsq[nsqi], (unsigned short *) 0, 0);
+             params.nsq[nsqi], (unsigned short *) 0, 0);
         }
       }
     }
@@ -3072,11 +3080,16 @@ void STATIC_IF_INCLUDED net_back_add_grad
     if (l<a->N_layers-1 && a->has_hh[l])
     { if (a->hidden_config[l+1])
       { sum_derivatives_config (d->h[l+1], dh, N_hidden, 
-                                w->hh[l], a->hidden_config[l+1]);
+                                params.hh[l], a->hidden_config[l+1]);
+      }
+      else if (TRANS_WEIGHTS(N_hidden,a->N_hidden[l+1]))
+      { add_connections (dh, N_hidden, d->h[l+1], a->N_hidden[l+1], 
+                         params_trans.hh[l],
+                         (net_param const*) 0, (unsigned short *) 0, 0, 0);
       }
       else
       { sum_derivatives (d->h[l+1], a->N_hidden[l+1], dh, N_hidden,
-                         w->hh[l], (unsigned short *) 0, 0);
+                         params.hh[l], (unsigned short *) 0, 0);
       }
     }
 
@@ -3332,11 +3345,11 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
     if (a->has_ih[l])
     { if (a->input_config[l])
-      { add_grad2_config (g->ih[l], v->i, a->has_ti ? w->ti : 0, dh,
+      { add_grad2_config (g->ih[l], v->i, a->has_ti ? params.ti : 0, dh,
                           a->input_config[l]);
       }
       else
-      { add_grad2 (g->ih[l], v->i, a->has_ti ? w->ti : 0, a->N_inputs,
+      { add_grad2 (g->ih[l], v->i, a->has_ti ? params.ti : 0, a->N_inputs,
                    dh, N_hidden,
                    flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
                    sparse);
@@ -3345,15 +3358,15 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
     if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { nsqi = pre->nonseq[ls][l];
+      { nsqi = pre.nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
           { add_grad2_config
-                (g->nsq[nsqi], v->h[ls], a->has_th[ls] ? w->th[ls] : 0,
+                (g->nsq[nsqi], v->h[ls], a->has_th[ls] ? params.th[ls] : 0,
                 dh, a->nonseq_config[nsqi]);
           }
           else
-          { add_grad2 (g->nsq[nsqi], v->h[ls], a->has_th[ls] ? w->th[ls] : 0,
+          { add_grad2 (g->nsq[nsqi], v->h[ls], a->has_th[ls] ? params.th[ls] : 0,
               a->N_hidden[ls], dh, N_hidden, (unsigned short *)0, 0, 0);
           }
         }
@@ -3363,11 +3376,11 @@ void STATIC_IF_INCLUDED net_back_add_grad
     if (l>0 && a->has_hh[l-1])
     { if (a->hidden_config[l])
       { add_grad2_config
-           (g->hh[l-1], v->h[l-1], a->has_th[l-1] ? w->th[l-1] : 0,
+           (g->hh[l-1], v->h[l-1], a->has_th[l-1] ? params.th[l-1] : 0,
             dh, a->hidden_config[l]);
       }
       else
-      { add_grad2 (g->hh[l-1], v->h[l-1], a->has_th[l-1] ? w->th[l-1] : 0,
+      { add_grad2 (g->hh[l-1], v->h[l-1], a->has_th[l-1] ? params.th[l-1] : 0,
           a->N_hidden[l-1], dh, N_hidden, (unsigned short *)0, 0, 0);
       }
     }
@@ -3379,10 +3392,10 @@ void STATIC_IF_INCLUDED net_back_add_grad
     { if (a->has_ih[l])
       { if (a->input_config[l])
         { sum_derivatives_config (dh, d->i, a->N_inputs, 
-                                  w->ih[l], a->input_config[l]);
+                                  params.ih[l], a->input_config[l]);
         }
         else
-        { sum_derivatives (dh, a->N_hidden[l], d->i, a->N_inputs, w->ih[l],
+        { sum_derivatives (dh, a->N_hidden[l], d->i, a->N_inputs, params.ih[l],
                       flgs && flgs->any_omitted[l]? flgs->omit : 0, 1<<(l+1));
         }
       }

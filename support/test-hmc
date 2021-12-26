@@ -1,0 +1,29 @@
+#!/bin/bash
+
+echo " "; echo "--- A"; echo " "
+
+net-spec log 3 4 3 2 / ih=3 hh=4 bo=5
+data-spec log 3 2 / "%echo 100 200 300 17 18" .
+model-spec log real 1
+net-gen log
+net-display log 0
+net-grad-test log 0 0.001
+
+mc-spec log heatbath hybrid 3 0.1
+net-mc log 6
+net-grad-test log 10 0.001
+net-tbl -h tmDKE log 
+
+echo " "; echo "--- B"; echo " "
+
+net-spec log 3 4 3 2 / ih=3 hh=4 bo=5
+data-spec log 3 2 / "%echo 100 200 300 17 18" .
+model-spec log real 1
+net-gen log
+net-display log 0
+net-grad-test log 0 0.001
+
+mc-spec log heatbath hybrid 5:2 0.1
+net-mc log 6
+net-grad-test log 10 0.001
+net-tbl -h tmDKE log 

@@ -1,4 +1,4 @@
-Commit: 772839c89f4410e622848b926771d97d46c182e9
+Commit: ab62b4cade445bfd499db15eb30c773591673004
 
 Running exc with dbl:
 
@@ -14,4 +14,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.465+-0.022
 Fraction of guesses that were wrong:    0.1950+-0.0125
 
-elapsed 3.50s
+elapsed 3.49s

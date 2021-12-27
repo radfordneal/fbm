@@ -508,7 +508,7 @@ int main
       { flgs->omit[i] = 
           (flgs->omit[i] | ((flgs->omit[i]&1)<<(a->N_layers+1))) & ~1;
       }
-      flgs->any_omitted[a->N_layers] = omit;
+      a->any_omitted[a->N_layers] = omit;
 
       if (a->N_layers>0 && hconfig[a->N_layers][a->N_layers-1])
       { flgs->hidden_config[a->N_layers] = hconfig[a->N_layers][a->N_layers-1];
@@ -521,7 +521,7 @@ int main
     { 
       a->N_outputs = size;
       if (type!=-1) usage();
-      flgs->any_omitted[a->N_layers] = omit;
+      a->any_omitted[a->N_layers] = omit;
 
       for (l = 0; l<a->N_layers; l++)
       { if (hconfig[a->N_layers][l])

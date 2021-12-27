@@ -257,6 +257,10 @@ typedef struct
   char layer_type[Max_layers];  /* Type of hidden units in layer */
   int N_outputs;		/* Number of output units */
 
+  char any_omitted[Max_layers+1]; /* Whether any inputs omitted for layer, with
+                                     any_omitted[N_layers] for output layer -
+                                     if so, omit flags are in net_flags struct*/
+
   int has_ti;			/* Does net contain offsets for input units? */
   int has_hh[Max_layers-1];	/* ... hidden to hidden weights? */
   int has_ih[Max_layers];	/* ... input to hidden weights? */
@@ -281,7 +285,6 @@ typedef struct
 
   net_config *nonseq_config[Max_nonseq];  /* Pointers used in program, in 
                                              same order as net_prior nsq */
-
 } net_arch;
 
 
@@ -291,20 +294,16 @@ typedef struct
 
    The omit flags are 1 when an input is omitted for a layer.  The low-order
    bit pertains to the output, with bits above that pertaining to successive
-   hidden layers.  The any_omitted array indicates in element a->N_layers 
-   whether any inputs are omitted for the output, and in element l whether 
-   any inputs are omitted for hidden layer l.
+   hidden layers. 
 
    Also has configuration file information.
 
    Stored in log files under type 'F', but may be omitted if all the
-   flags are zero / no configs.  Changes may invalidate old log
-   files. */
+   flags are zero / no configs.  Changes may invalidate old log files. */
 
 typedef struct
 {
   unsigned short omit[Max_inputs]; /* Whether inputs omitted, for each layer */
-  char any_omitted[Max_layers+1];  /* Whether any inputs omitted for layer */
 
                                    /* Below with +1 for output layer, at end */
   short input_config[Max_layers+1]; /* Index of input config file, 0 if none */

@@ -202,7 +202,6 @@ __constant__ unsigned const_grad_aligned_total;  /* Copy in constant memory */
 __constant__ net_arch const_arch;  /* Copy of dev_arch in constant memory */
 __constant__ net_precomputed const_pre;  /* Copy of pre in constant memory */
 __constant__ net_flags const_flgs; /* Copy of flgs in constant memory */
-__constant__ int const_has_flgs;   /* Are flags present in const_flgs? */
 
 __constant__ int const_sparse;     /* Copy of sparse in constant memory */
 
@@ -394,7 +393,6 @@ net_config *net_config_to_gpu (net_config *cf)
 static void decide_gpu_shared_mem_use 
 ( net_precomputed *pre,	/* Place to store result in fwgpumem & bwgpumem fields*/
   net_arch *arch,	/* Network architecture */
-  net_flags *flgs,	/* Flags for layers (eg, activation function) */
   int allowed_elements	/* # of elements allowed in shared memory, per case */
 )
 {
@@ -678,6 +676,7 @@ void mc_app_initialize
 
     arch   = (net_arch *) logg->data['A'];
     flgs   = (net_flags *) logg->data['F'];
+    if (flgs==0) flgs = &zero_flags;
 
     model  = (model_specification *) logg->data['M'];
     surv   = (model_survival *) logg->data['V'];
@@ -802,7 +801,7 @@ void mc_app_initialize
 #   if __CUDACC__
     {
       decide_gpu_shared_mem_use 
-        (&pre, arch, flgs, allowed_shared_mem / sizeof(net_value));
+        (&pre, arch, allowed_shared_mem / sizeof(net_value));
 
       if (show_info)
       { int l;
@@ -1180,15 +1179,9 @@ void mc_app_initialize
       cudaMemcpyToSymbol (const_sparse, &sparse, sizeof sparse);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_sparse");
-      int has_flgs = flgs != 0;
-      cudaMemcpyToSymbol (const_has_flgs, &has_flgs, sizeof has_flgs);
+      cudaMemcpyToSymbol (const_flgs, flgs, sizeof *flgs);
       check_cuda_error (cudaGetLastError(), 
-                        "After copying to const_has_flgs");
-      if (has_flgs)
-      { cudaMemcpyToSymbol (const_flgs, flgs, sizeof *flgs);
-        check_cuda_error (cudaGetLastError(), 
-                          "After copying to const_flgs");
-      }
+                        "After copying to const_flgs");
       if (model)
       { cudaMemcpyToSymbol (const_model, model, sizeof *model);
         check_cuda_error (cudaGetLastError(), 
@@ -3388,7 +3381,7 @@ void mc_app_stepsizes
             typl[j] += var_adj * (train_sumsq[i]/N_train)*sq(*sigmas.ih_cm[l]);
           }
         }
-        else if (flgs && flgs->any_omitted[l])
+        else if (arch->any_omitted[l])
         { for (j = 0; j<arch->N_hidden[l]; j++)
           { for (i = 0; i<arch->N_inputs; i++)
             { if (flgs->omit[i] & (1<<(l+1)))

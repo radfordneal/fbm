@@ -122,7 +122,7 @@ void STATIC_IF_INCLUDED net_func
       else
       { add_connections (vh, N_hidden, v->i, a->N_inputs, 
           w->ih[l], a->has_ti ? w->ti : 0, 
-          flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), sparse);
+          a->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), sparse);
       }
     }
 
@@ -528,7 +528,7 @@ void STATIC_IF_INCLUDED net_func
     else
     { add_connections (v->o, a->N_outputs, v->i, a->N_inputs,
                     w->io, a->has_ti ? w->ti : 0, 
-                    flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
+                    a->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
                     sparse);
     }
   }
@@ -1548,7 +1548,6 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
 #define PRE const_pre
 #define FLGS const_flgs
 #define W const_params
-#define HAS_FLGS const_has_flgs
 
 __device__ __forceinline__ static void net_func_gpu
 ( int th,		/* Thread index */
@@ -1597,7 +1596,7 @@ __device__ __forceinline__ static void net_func_gpu
       else
       { add_connections_gpu (th, vh, N_hidden, v->i, A.N_inputs, 
           W.ih[l], A.has_ti ? W.ti : 0, 
-          HAS_FLGS && FLGS.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1), 
+          A.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1), 
           sparse, syncmask);
       }
     }
@@ -1693,7 +1692,7 @@ __device__ __forceinline__ static void net_func_gpu
     else
     { add_connections_gpu (th, v->o, A.N_outputs, v->i, A.N_inputs,
                     W.io, A.has_ti ? W.ti : 0, 
-                    HAS_FLGS && FLGS.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
+                    A.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
                     sparse, syncmask);
     }
   }
@@ -2130,6 +2129,5 @@ __device__ static void add_connections_config_gpu
 #undef PRE
 #undef FLGS
 #undef W
-#undef HAS_FLGS
 
 #endif

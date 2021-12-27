@@ -34,3 +34,5 @@ EXTERN net_params params;	/* Pointers to parameters, which are position
 				   coordinates for dynamical Monte Carlo */
 
 EXTERN net_values *deriv;	/* Derivatives for training cases */
+
+EXTERN net_flags zero_flags;	/* Flags structure that's all zeros */

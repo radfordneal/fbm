@@ -2986,7 +2986,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
     else
     { add_grad2 (g->io, v->i, a->has_ti ? params.ti : 0, a->N_inputs,
                  d->o, a->N_outputs,
-                 flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
+                 a->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
                  sparse);
     }
   }
@@ -3021,7 +3021,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
       }
       else
       { sum_derivatives (d->o, a->N_outputs, d->i, a->N_inputs, params.io,
-                    flgs && flgs->any_omitted[a->N_layers] ? flgs->omit : 0, 1);
+                         a->any_omitted[a->N_layers] ? flgs->omit : 0, 1);
       }
     }
   }
@@ -3351,7 +3351,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
       else
       { add_grad2 (g->ih[l], v->i, a->has_ti ? params.ti : 0, a->N_inputs,
                    dh, N_hidden,
-                   flgs && flgs->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
+                   a->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
                    sparse);
       }
     }
@@ -3396,7 +3396,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
         }
         else
         { sum_derivatives (dh, a->N_hidden[l], d->i, a->N_inputs, params.ih[l],
-                      flgs && flgs->any_omitted[l]? flgs->omit : 0, 1<<(l+1));
+                           a->any_omitted[l]? flgs->omit : 0, 1<<(l+1));
         }
       }
     }
@@ -3570,7 +3570,6 @@ __device__ static void store_grad2_config
 #define FLGS const_flgs
 #define W const_params
 #define WT const_params_trans
-#define HAS_FLGS const_has_flgs
 
 __device__ __forceinline__ static void net_back_grad_gpu
 ( int thrg,		/* Which thread, from 0 to GTH-1 */
@@ -3612,7 +3611,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
                    v[0].i, v[1].i, v[2].i, v[3].i, 
                    A.has_ti ? W.ti : 0, A.N_inputs,
                    d[0].o, d[1].o, d[2].o, d[3].o, A.N_outputs,
-                   HAS_FLGS && FLGS.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
+                   A.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
                    sparse);
     }
   }
@@ -3678,7 +3677,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
       else
       { sum_derivatives_gpu 
          (thrb, dth->o, A.N_outputs, dth->i, A.N_inputs, W.io,
-          HAS_FLGS && FLGS.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
+          A.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
           syncmask);
       }
     }
@@ -3826,8 +3825,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
         }
         else
         { sum_derivatives_gpu (thrb, dh, A.N_hidden[l], dth->i, A.N_inputs, 
-            W.ih[l], HAS_FLGS && FLGS.any_omitted[l]? FLGS.omit : 0, 1<<(l+1),
-            syncmask);
+            W.ih[l], A.any_omitted[l]? FLGS.omit : 0, 1<<(l+1), syncmask);
         }
       }
     }
@@ -3864,8 +3862,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
                      v[0].i, v[1].i, v[2].i, v[3].i,
                      A.has_ti ? W.ti : 0, A.N_inputs,
                      c0, c1, c2, c3, N_hidden,
-                     HAS_FLGS && FLGS.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1),
-                     sparse);
+                     A.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1), sparse);
       }
     }
 
@@ -3953,6 +3950,5 @@ __device__ __forceinline__ static void net_back_grad_gpu
 #undef PRE
 #undef FLGS
 #undef W
-#undef HAS_FLGS
 
 #endif

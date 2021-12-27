@@ -854,7 +854,8 @@ void mc_app_initialize
     }
 #   endif    
 
-    /* Set up 'params' structure in GPU memory, plus transposed version. */
+    /* Set up 'params' structure in GPU memory, plus transposed version, if
+       required. */
 
 #   if __CUDACC__
     { net_params tmp_params;
@@ -2850,6 +2851,13 @@ static void net_training_cases_gpu
                       params.total_params * sizeof *params.param_block,
                       cudaMemcpyHostToDevice),
                     "Copying parameters to GPU");
+
+  if (USE_TRANSPOSED_WEIGHTS && any_transposed && gr)
+  { check_cuda_error(cudaMemcpy(dev_param_trans_block, params_trans.param_block,
+                   params_trans.total_params * sizeof *params_trans.param_block,
+                   cudaMemcpyHostToDevice),
+                "Copying transposed parameters to GPU");
+  }
 
   if (sigmas.noise != 0)
   { check_cuda_error (cudaMemcpy (dev_noise, sigmas.noise,

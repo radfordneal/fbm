@@ -3569,6 +3569,7 @@ __device__ static void store_grad2_config
 #define PRE const_pre
 #define FLGS const_flgs
 #define W const_params
+#define WT const_params_trans
 #define HAS_FLGS const_has_flgs
 
 __device__ __forceinline__ static void net_back_grad_gpu
@@ -3712,6 +3713,11 @@ __device__ __forceinline__ static void net_back_grad_gpu
       { sum_derivatives_config_gpu 
          (thrb, dth->o, dh, W.ho[l], A.hidden_config[k], syncmask);
       }
+      else if (TRANS_WEIGHTS(N_hidden,A.N_outputs))
+      { add_connections_gpu (thrb, dh, N_hidden, dth->o, A.N_outputs, WT.ho[l],
+                             (net_param const*) 0, (unsigned short *) 0, 0, 0,
+                             syncmask);
+      }
       else
       { sum_derivatives_gpu 
           (thrb, dth->o, A.N_outputs, dh, N_hidden,
@@ -3727,6 +3733,12 @@ __device__ __forceinline__ static void net_back_grad_gpu
         { sum_derivatives_config_gpu
             (thrb, dhd, dh, W.nsq[nsqi], A.nonseq_config[nsqi], syncmask);
         }
+        else if (TRANS_WEIGHTS(N_hidden,A.N_hidden[ld]))
+        { add_connections_gpu (thrb, dh, N_hidden, dhd, A.N_hidden[ld], 
+                               WT.nsq[nsqi],
+                               (net_param const*) 0, (unsigned short *) 0, 0, 0,
+                               syncmask);
+        }
         else
         { sum_derivatives_gpu
             (thrb, dhd, A.N_hidden[ld], dh, N_hidden,
@@ -3740,6 +3752,11 @@ __device__ __forceinline__ static void net_back_grad_gpu
       if (A.hidden_config[l+1])
       { sum_derivatives_config_gpu 
           (thrb, dhd, dh, W.hh[l], A.hidden_config[l+1], syncmask);
+      }
+      else if (TRANS_WEIGHTS(N_hidden,A.N_hidden[ld]))
+      { add_connections_gpu (thrb, dh, N_hidden, dhd, A.N_hidden[l+1], WT.hh[l],
+                             (net_param const*) 0, (unsigned short *) 0, 0, 0,
+                             syncmask);
       }
       else
       { sum_derivatives_gpu 

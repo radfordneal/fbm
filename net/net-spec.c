@@ -115,10 +115,10 @@ int main
     nsqi = 0;
     for (l = 0; l<a->N_layers; l++) 
     { printf("  Hidden layer %d:  size %d",l,a->N_hidden[l]);
-      if (flgs==0 || flgs->layer_type[l]==Tanh_type) printf("  tanh");
-      else if (flgs->layer_type[l]==Softplus_type)   printf("  softplus");
-      else if (flgs->layer_type[l]==Identity_type)   printf("  identity");
-      else                                           printf("  UNKNOWN TYPE!");
+      if (a->layer_type[l]==Tanh_type)            printf("  tanh");
+      else if (a->layer_type[l]==Softplus_type)   printf("  softplus");
+      else if (a->layer_type[l]==Identity_type)   printf("  identity");
+      else                                        printf("  UNKNOWN TYPE!");
       if (flgs && list_flags (flgs->omit, a->N_inputs, 1<<(l+1), ps) > 0)
       { printf("  omit%s",ps);
       }
@@ -422,6 +422,7 @@ int main
       { if (omit) usage();
         omit = 1;
         parse_flags (*ap+4, flgs->omit, a->N_inputs, 1);
+        any_flags = 1;
       }
       else if (strncmp(*ap,"cfg-i:",6)==0)
       { if (iconfig) usage();
@@ -429,6 +430,7 @@ int main
         strcpy(flgs->config_files+fileix,*ap+6);
         if (a->N_layers<=Max_layers) flgs->input_config[a->N_layers] = fileix;
         fileix += strlen(flgs->config_files+fileix) + 1;
+        any_flags = 1;
       }
       else if (strncmp(*ap,"cfg-h",5)==0)
       { char *q;
@@ -460,6 +462,7 @@ int main
         strcpy(flgs->config_files+fileix,q);
         hconfig[a->N_layers][k] = fileix;
         fileix += strlen(flgs->config_files+fileix) + 1;
+        any_flags = 1;
       }
       else if (strncmp(*ap,"cfg-b:",6)==0)
       { if (bconfig) usage();
@@ -467,6 +470,7 @@ int main
         strcpy(flgs->config_files+fileix,*ap+6);
         if (a->N_layers<=Max_layers) flgs->bias_config[a->N_layers] = fileix;
         fileix += strlen(flgs->config_files+fileix) + 1;
+        any_flags = 1;
       }
       else if (strcmp(*ap,"tanh")==0)
       { if (type>=0) usage();
@@ -483,7 +487,6 @@ int main
       else
       { usage();
       }
-      any_flags = 1;
       ap += 1;
     }
 
@@ -500,7 +503,7 @@ int main
         exit(1);
       }
       a->N_hidden[a->N_layers] = size;
-      flgs->layer_type[a->N_layers] = type==-1 ? Tanh_type : type;
+      a->layer_type[a->N_layers] = type==-1 ? Tanh_type : type;
       for (i = 0; i<a->N_inputs; i++) 
       { flgs->omit[i] = 
           (flgs->omit[i] | ((flgs->omit[i]&1)<<(a->N_layers+1))) & ~1;

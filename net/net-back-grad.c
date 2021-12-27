@@ -3107,7 +3107,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
     net_value const* vh = v->h[l];
 
-    if (flgs==0 || flgs->layer_type[l]==Tanh_type)
+    if (a->layer_type[l]==Tanh_type)
     {
 #     if FP64 && USE_SIMD_INTRINSICS && __AVX__
       { __m256d ONE = _mm256_set1_pd(1.0);
@@ -3220,7 +3220,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
       }
 #     endif
     }
-    else if (flgs->layer_type[l]==Softplus_type)
+    else if (a->layer_type[l]==Softplus_type)
     { 
 #     if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
       { __m256d ZERO = _mm256_setzero_pd();
@@ -3791,12 +3791,12 @@ __device__ __forceinline__ static void net_back_grad_gpu
     {
       const net_value *vh = fw_hidden_loc(&PRE,vth,l);
 
-      if (!HAS_FLGS || FLGS.layer_type[l]==Tanh_type)
+      if (A.layer_type[l]==Tanh_type)
       { for (i = thrb; i<N_hidden; i+=NTH)
         { dh[i] *= (1 - vh[i]*vh[i]);
         }
       }
-      else if (FLGS.layer_type[l]==Softplus_type)
+      else if (A.layer_type[l]==Softplus_type)
       { for (i = thrb; i<N_hidden; i+=NTH)
         { dh[i] *= 1 - prec_exp(-vh[i]);
         }

@@ -157,7 +157,7 @@ void STATIC_IF_INCLUDED net_func
 
     /* Put values through hidden unit activation function. */
 
-    if (flgs==0 || flgs->layer_type[l]==Tanh_type)
+    if (a->layer_type[l]==Tanh_type)
     { 
 #     if USE_QUICK_AND_DIRTY_TANH
 #       if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
@@ -342,7 +342,7 @@ void STATIC_IF_INCLUDED net_func
 #       endif
 #     endif
     }
-    else if (flgs->layer_type[l]==Softplus_type)
+    else if (a->layer_type[l]==Softplus_type)
     {
 #     if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
       { __m256d zero = _mm256_setzero_pd();
@@ -1634,13 +1634,13 @@ __device__ __forceinline__ static void net_func_gpu
 
     /* Put values through hidden unit activation function. */
 
-    if (!HAS_FLGS || FLGS.layer_type[l]==Tanh_type)
+    if (A.layer_type[l]==Tanh_type)
     { for (j = th; j<N_hidden; j+=NTH)
       { vh[j] = TANH (vh[j]);
       }
       if (SYNC_AFTER && N_hidden % NTH != 0) __syncwarp(syncmask);
     }
-    else if (FLGS.layer_type[l]==Softplus_type)
+    else if (A.layer_type[l]==Softplus_type)
     { for (j = th; j<N_hidden; j+=NTH)
       { net_value a = vh[j];
         net_value v = 

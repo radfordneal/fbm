@@ -3454,7 +3454,7 @@ void mc_app_stepsizes
     }
 
     if (!TYPICAL_VALUES_ALL_ONE)
-    { if (flgs==0 || flgs->layer_type[l]==Tanh_type)
+    { if (arch->layer_type[l]==Tanh_type)
       { for (j = 0; j<arch->N_hidden[l]; j++)
         { if (typl[j]>1)
           { typl[j] = 1;
@@ -3578,7 +3578,7 @@ void mc_app_stepsizes
     if (0)
     { for (i = 0; i<arch->N_hidden[l]; i++)
       { net_value s = seconds.h[l][i];
-        switch (flgs==0 ? Tanh_type : flgs->layer_type[l])
+        switch (arch->layer_type[l])
         { case Tanh_type: 
           case Softplus_type:
           case Identity_type:

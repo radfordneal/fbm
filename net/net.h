@@ -152,8 +152,7 @@
    There are also derived arrays of connections for faster computation. 
 
    Note that net_config_to_gpu may need to be updated when net_config 
-   changes.
- */
+   changes. */
 
 #define Max_conn 1000000	/* Maximum number of connections in a group */
 
@@ -233,10 +232,10 @@ typedef struct
 } net_config;
 
 
-/* NETWORK ARCHITECTURE.  Defines the dimensions of the input and output, the
-   number of hidden layers, and the number of units in each hidden layer. 
-   Also indicates which groups of network parameters the network contains,
-   and the data model used (if any). 
+/* NETWORK ARCHITECTURE.  Defines the dimensions of the input and
+   output, the number of hidden layers, the activation functions for
+   hidden layers, and the number of units in each hidden layer.  Also
+   indicates which groups of network parameters the network contains.
 
    Stored in log files under type 'A'.  Changes may invalidate old log files. */
 
@@ -246,11 +245,16 @@ typedef struct
 #define Max_nonseq 16  /* Maximum number of non-sequential connections between
                           hidden layers */
 
+#define Tanh_type 0		/* Tanh units */
+#define Identity_type 1		/* Identity units */
+#define Softplus_type 3		/* Softplus units */
+
 typedef struct
 { 
   int N_inputs;			/* Number of input units */
   int N_layers;			/* Number of layers of hidden units */
   int N_hidden[Max_layers];	/* Number of hidden units in each layer */
+  char layer_type[Max_layers];  /* Type of hidden units in layer */
   int N_outputs;		/* Number of output units */
 
   int has_ti;			/* Does net contain offsets for input units? */
@@ -281,9 +285,9 @@ typedef struct
 } net_arch;
 
 
-/* FLAGS MODIFYING ARCHITECTURE.  This record records extra flags modifying
-   the architecture, which are recorded here to avoid taking up space
-   when the flags aren't used. 
+/* FLAGS MODIFYING ARCHITECTURE.  This record contains extra
+   information regarding the network architecture, which is recorded
+   here to avoid taking up space when it's not used.
 
    The omit flags are 1 when an input is omitted for a layer.  The low-order
    bit pertains to the output, with bits above that pertaining to successive
@@ -291,19 +295,16 @@ typedef struct
    whether any inputs are omitted for the output, and in element l whether 
    any inputs are omitted for hidden layer l.
 
-   Stored in log files under type 'F', but may be omitted if all the flags
-   are zero.  Changes may invalidate old log files. */
+   Also has configuration file information.
 
-#define Tanh_type 0		/* Tanh units */
-#define Identity_type 1		/* Identity units */
-#define Softplus_type 3		/* Softplus units */
+   Stored in log files under type 'F', but may be omitted if all the
+   flags are zero / no configs.  Changes may invalidate old log
+   files. */
 
 typedef struct
 {
   unsigned short omit[Max_inputs]; /* Whether inputs omitted, for each layer */
   char any_omitted[Max_layers+1];  /* Whether any inputs omitted for layer */
-
-  char layer_type[Max_layers];     /* Type of hidden units in layer */
 
                                    /* Below with +1 for output layer, at end */
   short input_config[Max_layers+1]; /* Index of input config file, 0 if none */

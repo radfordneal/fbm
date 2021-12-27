@@ -1,4 +1,4 @@
-Commit: 24635bf3e3326e4687c8ca5826c89d5472a986fa
+Commit: 8852e156584217ef6f02fbfc83dc9beaa30e0a33
 
 Running exi1ms with dbl-gpu on M2000:
 
@@ -18,4 +18,4 @@ Average log probability of targets:    -1.278+-0.022
 Fraction of guesses that were wrong:    0.5500+-0.0500
 Average squared error guessing mean:    0.69480+-0.01233
 
-elapsed 17.02s
+elapsed 17.04s

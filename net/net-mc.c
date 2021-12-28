@@ -3125,9 +3125,28 @@ static void transpose
     printf("\n");
   }
 
-  for (j = 0; j<ns; j++)
-  { for (i = 0; i<nd; i++)
-    { t[j+i*ns] = w[i+j*nd];
+  i = 0;
+
+  if (nd&1)
+  { j = 0;
+    while (i < ns)
+    { t[i] = w[j]; 
+      i += 1; j += nd;
+    }
+  }
+
+  int d = ns*nd;
+  int dm2 = d-2;
+
+  j = nd&1;
+
+  while (i < d)
+  { t[i] = w[j];
+    t[i+ns] = w[j+1];
+    i += 1; j += nd;
+    if (j>=d)
+    { i += ns;
+      j -= dm2;
     }
   }
 

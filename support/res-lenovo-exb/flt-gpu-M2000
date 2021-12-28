@@ -1,4 +1,4 @@
-Commit: 75500d9c2ef49787d69d261e86cdaae729cdc4c7
+Commit: fc169fafbe7d53a6856e1f72536dea7f68977279
 
 Running exb with flt-gpu on M2000:
 
@@ -6,22 +6,22 @@ Number of training cases: 300
 Number of test cases: 1000
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro M2000, Compute Capability 5.2, 6 SM processors, 3.9 GBytes
-Using 64 cases per block, max 500 blocks per launch, threads/case: 8
-Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32 -> 768 bytes/case
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32 -> 1536 bytes/case
 Hid layer shrd mem: 0:15:0,15 T 40
-With 300 cases, need 1 launches, max 5 blocks/launch
+With 300 cases, need 1 launches, max 10 blocks/launch
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro M2000, Compute Capability 5.2, 6 SM processors, 3.9 GBytes
-Using 64 cases per block, max 500 blocks per launch, threads/case: 8
-Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32 -> 768 bytes/case
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32 -> 1536 bytes/case
 Hid layer shrd mem: 0:15:0,15 T 40
-With 300 cases, need 1 launches, max 5 blocks/launch
+With 300 cases, need 1 launches, max 10 blocks/launch
 
 Number of iterations used: 20
 
 Number of test cases: 1000
 
-Average log probability of targets:    -0.244+-0.017
+Average log probability of targets:    -0.243+-0.017
 Fraction of guesses that were wrong:    0.1060+-0.0097
 
-elapsed 1.53s
+elapsed 1.49s

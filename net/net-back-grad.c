@@ -1610,6 +1610,8 @@ __device__ static void net_store1_grad1_config
   { g[k] = 0;
   }
 
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
+
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w_wgpu;
     for (m = 0; m<4; m++)
@@ -1621,6 +1623,7 @@ __device__ static void net_store1_grad1_config
         g[k+ix] += d0[j+ix];
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
     cn = cf->quad_s_4d_4w_2_wgpu;
     for (m = 0; m<4; m++)
     { ix = (thmod4-m+4) & 3;
@@ -1632,6 +1635,7 @@ __device__ static void net_store1_grad1_config
         g[k+ix] += d0[j+ix] + d0[j2+ix];
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
   cn = cf->other_wgpu;
@@ -1641,6 +1645,7 @@ __device__ static void net_store1_grad1_config
     if (k<0) break;
     g[k] += d0[j];
   }
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
   cn = cf->other_2_wgpu;
   c = cf->start_other_2_wgpu[th];
   for (;;)
@@ -1776,6 +1781,8 @@ __device__ static void net_store1_grad2_config
   { g[k] = 0;
   }
 
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
+
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w_wgpu;
     if (off)
@@ -1803,6 +1810,7 @@ __device__ static void net_store1_grad2_config
         }
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
     cn = cf->quad_s_4d_4w_2_wgpu;
     if (off)
     { for (m = 0; m<4; m++)
@@ -1836,6 +1844,7 @@ __device__ static void net_store1_grad2_config
         }
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
   cn = cf->other_wgpu;
@@ -1855,6 +1864,7 @@ __device__ static void net_store1_grad2_config
       g[k] = g[k] + s0[i]*d0[j];
     }
   }
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
   cn = cf->other_2_wgpu;
   c = cf->start_other_2_wgpu[th];
   if (off)
@@ -1922,6 +1932,8 @@ __device__ static void net_store2_grad1_config
   { g[k] = 0;
   }
 
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
+
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w_wgpu;
     for (m = 0; m<4; m++)
@@ -1933,6 +1945,7 @@ __device__ static void net_store2_grad1_config
         g[k+ix] += d0[j+ix] + d1[j+ix];
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
     cn = cf->quad_s_4d_4w_2_wgpu;
     for (m = 0; m<4; m++)
     { ix = (thmod4-m+4) & 3;
@@ -1944,6 +1957,7 @@ __device__ static void net_store2_grad1_config
         g[k+ix] += (d0[j+ix] + d1[j+ix]) + (d0[j2+ix] + d1[j2+ix]);
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
   cn = cf->other_wgpu;
@@ -1953,6 +1967,7 @@ __device__ static void net_store2_grad1_config
     if (k<0) break;
     g[k] += d0[j] + d1[j];
   }
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
   cn = cf->other_2_wgpu;
   c = cf->start_other_2_wgpu[th];
   for (;;)
@@ -2111,6 +2126,8 @@ __device__ static void net_store2_grad2_config
   { g[k] = 0;
   }
 
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
+
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w_wgpu;
     if (off)
@@ -2138,6 +2155,7 @@ __device__ static void net_store2_grad2_config
         }
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
     cn = cf->quad_s_4d_4w_2_wgpu;
     if (off)
     { for (m = 0; m<4; m++)
@@ -2171,6 +2189,7 @@ __device__ static void net_store2_grad2_config
         }
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
   cn = cf->other_wgpu;
@@ -2190,6 +2209,7 @@ __device__ static void net_store2_grad2_config
       g[k] = g[k] + s0[i]*d0[j] + s1[i]*d1[j];
     }
   }
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
   cn = cf->other_2_wgpu;
   c = cf->start_other_2_wgpu[th];
   if (off)
@@ -2257,6 +2277,7 @@ __device__ static void net_store3_grad1_config
   for (k = th; k<cf->N_wts; k+=GTH)
   { g[k] = 0;
   }
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w_wgpu;
@@ -2269,6 +2290,7 @@ __device__ static void net_store3_grad1_config
         g[k+ix] += d0[j+ix] + d1[j+ix] + d2[j+ix];
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
     cn = cf->quad_s_4d_4w_2_wgpu;
     for (m = 0; m<4; m++)
     { ix = (thmod4-m+4) & 3;
@@ -2281,6 +2303,7 @@ __device__ static void net_store3_grad1_config
                  + (d0[j2+ix] + d1[j2+ix] + d2[j2+ix]);
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
   cn = cf->other_wgpu;
@@ -2290,6 +2313,7 @@ __device__ static void net_store3_grad1_config
     if (k<0) break;
     g[k] += d0[j] + d1[j] + d2[j];
   }
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
   cn = cf->other_2_wgpu;
   c = cf->start_other_2_wgpu[th];
   for (;;)
@@ -2460,6 +2484,8 @@ __device__ static void net_store3_grad2_config
   { g[k] = 0;
   }
 
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
+
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w_wgpu;
     if (off)
@@ -2489,6 +2515,7 @@ __device__ static void net_store3_grad2_config
         }
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
     cn = cf->quad_s_4d_4w_2_wgpu;
     if (off)
     { for (m = 0; m<4; m++)
@@ -2524,6 +2551,7 @@ __device__ static void net_store3_grad2_config
         }
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
   cn = cf->other_wgpu;
@@ -2543,6 +2571,7 @@ __device__ static void net_store3_grad2_config
       g[k] = g[k] + s0[i]*d0[j] + s1[i]*d1[j] + s2[i]*d2[j];
     }
   }
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
   cn = cf->other_2_wgpu;
   c = cf->start_other_2_wgpu[th];
   if (off)
@@ -2613,6 +2642,8 @@ __device__ static void net_store4_grad1_config
   { g[k] = 0;
   }
 
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
+
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w_wgpu;
     for (m = 0; m<4; m++)
@@ -2624,6 +2655,7 @@ __device__ static void net_store4_grad1_config
         g[k+ix] += (d0[j+ix] + d1[j+ix]) + (d2[j+ix] + d3[j+ix]);
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
     cn = cf->quad_s_4d_4w_2_wgpu;
     for (m = 0; m<4; m++)
     { ix = (thmod4-m+4) & 3;
@@ -2636,6 +2668,7 @@ __device__ static void net_store4_grad1_config
                  + ((d0[j2+ix] + d1[j2+ix]) + (d2[j2+ix] + d3[j2+ix]));
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
   cn = cf->other_wgpu;
@@ -2645,6 +2678,7 @@ __device__ static void net_store4_grad1_config
     if (k<0) break;
     g[k] += (d0[j] + d1[j]) + (d2[j] + d3[j]);
   }
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
   cn = cf->other_2_wgpu;
   c = cf->start_other_2_wgpu[th];
   for (;;)
@@ -2827,6 +2861,8 @@ __device__ static void net_store4_grad2_config
   for (k = th; k<cf->N_wts; k+=GTH)
   { g[k] = 0;
   }
+
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
  
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w_wgpu;
@@ -2856,6 +2892,7 @@ __device__ static void net_store4_grad2_config
         }
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
     cn = cf->quad_s_4d_4w_2_wgpu;
     if (off)
     { for (m = 0; m<4; m++)
@@ -2891,6 +2928,7 @@ __device__ static void net_store4_grad2_config
         }
       }
     }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
   cn = cf->other_wgpu;
@@ -2912,6 +2950,7 @@ __device__ static void net_store4_grad2_config
                    + s2[i]*d2[j] + s3[i]*d3[j];
     }
   }
+  if (SYNC_AFTER && GTH>=32) __syncwarp();
   cn = cf->other_2_wgpu;
   c = cf->start_other_2_wgpu[th];
   if (off)

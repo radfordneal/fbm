@@ -1,0 +1,19 @@
+Commit: 0f76d42919828c791ca4e2819de72c0317d80be8
+
+Running exr with flt:
+
+Number of training cases: 100
+Number of test cases: 1000
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+ 
+Predictions after running for 1000 iterations:
+
+Number of iterations used: 80
+
+Number of test cases: 1000
+
+Average log probability of targets:     0.824+-0.023
+Average squared error guessing mean:    0.01834+-0.00322
+
+elapsed 1.06s

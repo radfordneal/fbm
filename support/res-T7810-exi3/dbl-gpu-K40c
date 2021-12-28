@@ -1,0 +1,27 @@
+Commit: 0f76d42919828c791ca4e2819de72c0317d80be8
+
+Running exi3 with dbl-gpu on K40c:
+
+Number of training cases: 499
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Tesla K40c, Compute Capability 3.5, 15 SM processors, 11.2 GBytes ECC
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 768 bytes/case
+Hid layer shrd mem: 0:20:-1,50 1:20:-1,0 2:20:0,50 3:20:50,20 4:20:20,-1 5:10:40,70 T 88
+With 499 cases, need 1 launches, max 16 blocks/launch
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Tesla K40c, Compute Capability 3.5, 15 SM processors, 11.2 GBytes ECC
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 768 bytes/case
+Hid layer shrd mem: 0:20:-1,50 1:20:-1,0 2:20:0,50 3:20:50,20 4:20:20,-1 5:10:40,70 T 88
+With 499 cases, need 1 launches, max 16 blocks/launch
+
+Number of iterations used: 6
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.385+-0.003
+Fraction of guesses that were wrong:    0.7700+-0.0423
+Average squared error guessing mean:    0.74945+-0.00141
+
+elapsed 24.62s

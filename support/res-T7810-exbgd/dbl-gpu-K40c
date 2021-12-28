@@ -1,0 +1,21 @@
+Commit: 0f76d42919828c791ca4e2819de72c0317d80be8
+
+Running exbgd with dbl-gpu on K40c:
+
+Number of training cases: 800
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Tesla K40c, Compute Capability 3.5, 15 SM processors, 11.2 GBytes ECC
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 768 bytes/case
+Hid layer shrd mem: 0:15:0,15 T 40
+With 800 cases, need 1 launches, max 25 blocks/launch
+
+Number of iterations used: 1
+
+Number of test cases: 500
+
+Average log probability of targets:    -0.603+-0.017
+Fraction of guesses that were wrong:    0.4300+-0.0222
+Average squared error guessing mean:    0.21272+-0.00773
+
+elapsed 6.74s

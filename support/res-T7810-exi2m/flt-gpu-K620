@@ -1,14 +1,14 @@
-Commit: 2d622fa53ff7120a1e0bdcab4ee21527185ea1ec
+Commit: fc169fafbe7d53a6856e1f72536dea7f68977279
 
 Running exi2m with flt-gpu on K620:
 
 Number of training cases: 4999
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro K620, Compute Capability 5.0, 3 SM processors, 2.0 GBytes
-Using 64 cases per block, max 500 blocks per launch, threads/case: 8
-Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32 -> 768 bytes/case
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32 -> 1024 bytes/case
 Hid layer shrd mem: 0:80:0,80 T 168
-With 4999 cases, need 1 launches, max 79 blocks/launch
+With 4999 cases, need 1 launches, max 157 blocks/launch
 
 Number of iterations used: 11
 
@@ -18,4 +18,4 @@ Average log probability of targets:    -1.287+-0.033
 Fraction of guesses that were wrong:    0.6000+-0.0492
 Average squared error guessing mean:    0.70463+-0.01618
 
-elapsed 13.64s
+elapsed 13.48s

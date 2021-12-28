@@ -1,4 +1,4 @@
-Commit: d97e78d1ad253c21b3ac85a935e0f668b0067ead
+Commit: 2d622fa53ff7120a1e0bdcab4ee21527185ea1ec
 
 Running exr with flt-gpu on K40c:
 
@@ -6,16 +6,16 @@ Number of training cases: 100
 Number of test cases: 1000
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Tesla K40c, Compute Capability 3.5, 15 SM processors, 11.2 GBytes ECC
-Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Using 64 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 768 bytes/case
 Hid layer shrd mem: 0:8:0,8 T 24
-With 100 cases, need 1 launches, max 4 blocks/launch
+With 100 cases, need 1 launches, max 2 blocks/launch
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Tesla K40c, Compute Capability 3.5, 15 SM processors, 11.2 GBytes ECC
-Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Using 64 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 768 bytes/case
 Hid layer shrd mem: 0:8:0,8 T 24
-With 100 cases, need 1 launches, max 4 blocks/launch
+With 100 cases, need 1 launches, max 2 blocks/launch
  
 Predictions after running for 1000 iterations:
 
@@ -23,7 +23,7 @@ Number of iterations used: 80
 
 Number of test cases: 1000
 
-Average log probability of targets:     0.859+-0.019
-Average squared error guessing mean:    0.01178+-0.00089
+Average log probability of targets:     0.844+-0.021
+Average squared error guessing mean:    0.01527+-0.00213
 
-elapsed 5.88s
+elapsed 6.15s

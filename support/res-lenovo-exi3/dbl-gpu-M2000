@@ -1,4 +1,4 @@
-Commit: 8852e156584217ef6f02fbfc83dc9beaa30e0a33
+Commit: d97e78d1ad253c21b3ac85a935e0f668b0067ead
 
 Running exi3 with dbl-gpu on M2000:
 
@@ -24,4 +24,4 @@ Average log probability of targets:    -1.385+-0.003
 Fraction of guesses that were wrong:    0.7700+-0.0423
 Average squared error guessing mean:    0.74945+-0.00141
 
-elapsed 54.19s
+elapsed 54.17s

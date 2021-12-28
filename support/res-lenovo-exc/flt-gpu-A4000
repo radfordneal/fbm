@@ -1,4 +1,4 @@
-Commit: 75500d9c2ef49787d69d261e86cdaae729cdc4c7
+Commit: fc169fafbe7d53a6856e1f72536dea7f68977279
 
 Running exc with flt-gpu on A4000:
 
@@ -6,22 +6,22 @@ Number of training cases: 400
 Number of test cases: 1000
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 NVIDIA RTX A4000, Compute Capability 8.6, 48 SM processors, 14.7 GBytes ECC
-Using 64 cases per block, max 500 blocks per launch, threads/case: 8
-Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16 -> 768 bytes/case
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16 -> 1536 bytes/case
 Hid layer shrd mem: 0:8:0,8 T 24
-With 400 cases, need 1 launches, max 7 blocks/launch
+With 400 cases, need 1 launches, max 13 blocks/launch
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 NVIDIA RTX A4000, Compute Capability 8.6, 48 SM processors, 14.7 GBytes ECC
-Using 64 cases per block, max 500 blocks per launch, threads/case: 8
-Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16 -> 768 bytes/case
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16 -> 1536 bytes/case
 Hid layer shrd mem: 0:8:0,8 T 24
-With 400 cases, need 1 launches, max 7 blocks/launch
+With 400 cases, need 1 launches, max 13 blocks/launch
 
 Number of iterations used: 30
 
 Number of test cases: 1000
 
-Average log probability of targets:    -0.470+-0.023
-Fraction of guesses that were wrong:    0.1980+-0.0126
+Average log probability of targets:    -0.474+-0.024
+Fraction of guesses that were wrong:    0.1960+-0.0126
 
-elapsed 2.13s
+elapsed 1.81s

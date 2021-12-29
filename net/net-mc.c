@@ -662,12 +662,14 @@ void mc_app_initialize
        "Using %d cases per block, max %d blocks per launch, threads/case: %d\n",
           BLKCASES, maxblks, THREADS_PER_CASE);
 
+        printf ("Shared mem/blk: %d, Shared mem/SM: %d, Blks/SM: %d\n",
+                (int) cuda_prop.sharedMemPerBlock, 
+                (int) cuda_prop.sharedMemPerMultiprocessor ,
+                (int) cuda_prop.maxBlocksPerMultiProcessor);
         printf (
-"Shared mem/blk: %d, Shared mem/SM: %d, Blks/SM: %d -> %d bytes/case\n",
-           (int) cuda_prop.sharedMemPerBlock, 
-           (int) cuda_prop.sharedMemPerMultiprocessor ,
-           (int) cuda_prop.maxBlocksPerMultiProcessor,
-           allowed_shared_mem);
+ "Desired # of blocks: %d, allowed shared mem per case: %d bytes, %d values\n",
+          needed_blocks, allowed_shared_mem, 
+          (int) (allowed_shared_mem / sizeof(net_value)));
       }
     }
 #   endif

@@ -1,4 +1,4 @@
-Commit: fc169fafbe7d53a6856e1f72536dea7f68977279
+Commit: c8dfe3c08cf1ab5e9b717390c901d42838892f3e
 
 Running exi3m with flt-gpu on A4000:
 
@@ -6,7 +6,8 @@ Number of training cases: 499
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 NVIDIA RTX A4000, Compute Capability 8.6, 48 SM processors, 14.7 GBytes ECC
 Using 32 cases per block, max 500 blocks per launch, threads/case: 8
-Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16 -> 1536 bytes/case
+Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 384 values
 Hid layer shrd mem: 0:20:0,100 1:20:100,20 2:20:20,80 3:20:80,40 4:20:40,60 5:10:70,120 T 136
 With 499 cases, need 1 launches, max 16 blocks/launch
 
@@ -18,4 +19,4 @@ Average log probability of targets:    -1.382+-0.005
 Fraction of guesses that were wrong:    0.7300+-0.0446
 Average squared error guessing mean:    0.74810+-0.00269
 
-elapsed 1.84s
+elapsed 1.88s

@@ -1,4 +1,4 @@
-Commit: fc169fafbe7d53a6856e1f72536dea7f68977279
+Commit: a7ec7b2bc6c672ccdd907c6f16a0ca49edc1e54c
 
 Running exb with dbl-gpu on K40c:
 
@@ -7,13 +7,15 @@ Number of test cases: 1000
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Tesla K40c, Compute Capability 3.5, 15 SM processors, 11.2 GBytes ECC
 Using 32 cases per block, max 500 blocks per launch, threads/case: 8
-Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 768 bytes/case
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 768 bytes, 96 values
 Hid layer shrd mem: 0:15:0,15 T 40
 With 300 cases, need 1 launches, max 10 blocks/launch
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Tesla K40c, Compute Capability 3.5, 15 SM processors, 11.2 GBytes ECC
 Using 32 cases per block, max 500 blocks per launch, threads/case: 8
-Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 768 bytes/case
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 768 bytes, 96 values
 Hid layer shrd mem: 0:15:0,15 T 40
 With 300 cases, need 1 launches, max 10 blocks/launch
 
@@ -24,4 +26,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.247+-0.017
 Fraction of guesses that were wrong:    0.1130+-0.0100
 
-elapsed 1.94s
+elapsed 1.95s

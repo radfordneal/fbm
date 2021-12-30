@@ -1,4 +1,4 @@
-Commit: c8dfe3c08cf1ab5e9b717390c901d42838892f3e
+Commit: 71b024f021a4a8ee885322827d7e20012899d4f1
 
 Running exb16 with dbl-gpu on P620:
 
@@ -26,4 +26,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.238+-0.017
 Fraction of guesses that were wrong:    0.1090+-0.0099
 
-elapsed 2.64s
+elapsed 2.68s

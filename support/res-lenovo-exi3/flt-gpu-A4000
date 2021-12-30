@@ -1,4 +1,4 @@
-Commit: c8dfe3c08cf1ab5e9b717390c901d42838892f3e
+Commit: 71b024f021a4a8ee885322827d7e20012899d4f1
 
 Running exi3 with flt-gpu on A4000:
 
@@ -26,4 +26,4 @@ Average log probability of targets:    -1.383+-0.002
 Fraction of guesses that were wrong:    0.7000+-0.0461
 Average squared error guessing mean:    0.74813+-0.00108
 
-elapsed 7.84s
+elapsed 7.83s

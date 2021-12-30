@@ -75,6 +75,9 @@
 
 /* CONSTANTS RELATING TO GPU COMPUTATIONS: */
 
+#define WARPSIZE 32          /* Assumed to be 32, as it is for all CUDA
+                                architectures so far (ie, to at least 8.6) */
+
 #define THREADS_PER_CASE 8   /* Number of GPU threads used per training case,
                                 must be a power of two, max 32 (warpsize) */
 
@@ -89,6 +92,7 @@
 
 #define THREADS_PER_BLOCK (THREADS_PER_CASE*BLKCASES)
 #define THREADS_PER_GROUP (THREADS_PER_CASE*GROUP_SIZE)
+#define GROUPS_PER_BLOCK  (BLKCASES/GROUP_SIZE)
 
 #define NTH THREADS_PER_CASE /* abbreviations */
 #define GTH THREADS_PER_GROUP
@@ -101,6 +105,9 @@
                                   - must be a power of two, minimum of 8 */
 
 #define GRAD_ALIGN_ELEMENTS (GRAD_ALIGN_BYTES / 4 / (1+FP64))
+
+#define BLOCK_GRAD_FOR_FIRST 1  /* Use block_grad instead of group_grad for
+                                   first group in block? */
 
 #define PIN_MEMORY 2         /* 0 = no host memory is pinned, 
                                 1 = parameters going to gpu only,
@@ -118,7 +125,7 @@
 #define AVOID_BANK_CONFLICTS 1 /* Increase size of shared memory per case if
                                   necessary to avoid bank conflicts? */
 
-#define GPU_CACHE_PREFERENCE \
+#define GPU_CACHE_PREFERENCE   /* Can edit last bit below as desired... */ \
  (!USE_FAST_SHARED_MEM || SPLIT_KERNELS \
    ? cudaFuncCachePreferL1      /* L1 is better if shared memory isn't used */ \
    : cudaFuncCachePreferShared) /* Might be better as Shared, or Equal, or L1 */

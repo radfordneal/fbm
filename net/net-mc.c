@@ -630,8 +630,7 @@ void mc_app_initialize
       check_cuda_error (cudaGetDeviceProperties(&cuda_prop,0),
                         "Get properties");
 
-      int warps_per_block = (THREADS_PER_BLOCK + cuda_prop.warpSize - 1)
-                              / cuda_prop.warpSize;
+      int warps_per_block = (THREADS_PER_BLOCK + WARPSIZE - 1) / WARPSIZE;
 
       int needed_blocks = MIN_BLOCKS_PER_SM;
       while (needed_blocks*warps_per_block < MIN_WARPS_PER_SM)
@@ -2415,25 +2414,26 @@ void net_training_cases
    GPU memory is also allocated here to store computed gradients. The
    GPU stores the total gradient for a block in const_block_grad,
    which is copied to block_grad on the CPU, and the added by the CPU
-   to the final gradient accumulator.  Memory is also allocated here
-   on the GPU to hold the gradient for groups of GROUP_SIZE cases,
-   accessed only from the GPU, with a pointer to it passed as a kernel
-   argument (group_grad, null if gradient is not required).
+   to the final gradient accumulator.
 
    Gradients are computed for a group of cases of size GROUP_SIZE
    (except at the end, if N_train is not a multiple of GROUP_SIZE).
-   This reduces the amount of space allocate for group_grad by about a
+   This reduces the amount of space allocate for gradients by about a
    factor of GROUP_SIZE compared to allocating space for each case.
-   Computations for a group are done using GROUP_SIZE threads (or
-   perhaps fewer at the end of a block).
-   
-   As an optimization, gradients for the first group of training cases
-   in each block are stored directly in const_block_grad, with results
-   for other cases/pairs then being added to that.  (Space for the
-   first group of cases in a block is nevertheless redundantly
-   allocated, which might actually be good for performance, by
-   providing separation between blocks, if "false sharing" is an
-   issue.)
+   Computations for a group are done using GROUP_SIZE*THREADS_PER_CASE
+   threads (or perhaps fewer at the end of a block).
+
+   If there is only one group (GROUP_SIZE same as BLKCASES), or
+   BLOCK_GRAD_FOR_FIRST is set, gradients for the first (or only)
+   group of training cases in each block are stored directly in
+   const_block_grad.  If there is more than one group, memory is
+   allocated on the GPU to hold the total gradient for groups of
+   GROUP_SIZE cases, accessed only from the GPU, with a pointer to it
+   passed as a kernel argument (group_grad, null if gradient is not
+   required).  The gradients stored there are summed and stored in
+   const_block_grad in a final reduction phase (or added to the part
+   of the gradient directly stored there if BLOCK_GRAD_FOR_FIRST is
+   set).
 
    If more than one kernel launch is done, the per-launch memory
    mentioned above is re-used.  (So the allocations here are all that
@@ -2450,7 +2450,7 @@ void cuda_setup
   mc_value *gr		/* Place to store gradient, null if not required */
 )
 {
-  n_grad_accum = ((BLKCASES+GROUP_MASK)>>GROUP_SHIFT) * max_blocks_per_launch;
+  n_grad_accum = GROUPS_PER_BLOCK * max_blocks_per_launch;
   n_energy_accum = BLKCASES * max_blocks_per_launch;
 
   if (energy && case_energy==0)
@@ -2480,29 +2480,9 @@ void cuda_setup
   { 
     net_params *tmp_grad;
 
-    /* Create group_grad array on GPU. */
-
-    tmp_grad = (net_params *) chk_alloc (n_grad_accum, sizeof *tmp_grad);
-    tmp_grad->total_params = grad.total_params;
-    check_cuda_error (cudaMalloc 
-       (&tmp_grad->param_block, n_grad_accum * grad_aligned_total
-                                 * sizeof *tmp_grad->param_block),
-     "alloc tmp_grad param block for group_grad");
-    net_setup_param_pointers (tmp_grad, arch, flgs);
-    net_replicate_param_pointers (tmp_grad, arch, n_grad_accum,
-                                  grad_aligned_total);
-    check_cuda_error (cudaMalloc (&group_grad,
-                        n_grad_accum * sizeof *group_grad),
-                      "alloc group_grad");
-    check_cuda_error (cudaMemcpy (group_grad, tmp_grad,
-                        n_grad_accum * sizeof *group_grad,
-                        cudaMemcpyHostToDevice),
-                      "cudaMemcpy to group_grad");
-    free(tmp_grad);
-
     /* Create block_grad array on CPU and on GPU. */
 
-      block_grad = (net_params *) 
+    block_grad = (net_params *) 
         chk_alloc (max_blocks_per_launch, sizeof *block_grad);
     block_grad->total_params = grad.total_params;
 
@@ -2516,6 +2496,31 @@ void cuda_setup
         chk_alloc (max_blocks_per_launch * grad_aligned_total, 
                    sizeof *block_grad->param_block);
 #   endif
+
+    /* Create group_grad array on GPU (unless only one group). */
+
+    if (GROUPS_PER_BLOCK>1)
+    { tmp_grad = (net_params *) chk_alloc (n_grad_accum, sizeof *tmp_grad);
+      tmp_grad->total_params = grad.total_params;
+      check_cuda_error (cudaMalloc 
+         (&tmp_grad->param_block, n_grad_accum * grad_aligned_total
+                                   * sizeof *tmp_grad->param_block),
+       "alloc tmp_grad param block for group_grad");
+      net_setup_param_pointers (tmp_grad, arch, flgs);
+      net_replicate_param_pointers (tmp_grad, arch, n_grad_accum,
+                                    grad_aligned_total);
+      check_cuda_error (cudaMalloc (&group_grad,
+                          n_grad_accum * sizeof *group_grad),
+                        "alloc group_grad");
+      check_cuda_error (cudaMemcpy (group_grad, tmp_grad,
+                          n_grad_accum * sizeof *group_grad,
+                          cudaMemcpyHostToDevice),
+                        "cudaMemcpy to group_grad");
+      free(tmp_grad);
+    }
+    else
+    { group_grad = block_grad; /* unused, but must be distinguishable from 0 */
+    }
 
     net_setup_param_pointers (block_grad, arch, flgs);
     net_replicate_param_pointers (block_grad, arch, max_blocks_per_launch,
@@ -2715,9 +2720,6 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
   int thm = m & GROUP_MASK;
   int thrg = threadIdx.x & (GTH - 1);
 
-  int o = blockIdx.x * ((BLKCASES+GROUP_MASK)>>GROUP_SHIFT) 
-            + (m>>GROUP_SHIFT);
-
   int gsz = GROUP_SIZE;
   if (GROUP_SIZE>1)
   { if (gsz > end - (h-thm))
@@ -2730,16 +2732,15 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 
   if (KDEBUG) 
   { printf(
-     "Back_grad %d %d: m %d, h %d, end %d, o %d, gsz %d, thrg %d, thm %d\n",
-      blockIdx.x, threadIdx.x, m, h, end, o, gsz, thrg, thm);
+     "Back_grad %d %d: m %d, h %d, end %d, gsz %d, thrg %d, thm %d\n",
+      blockIdx.x, threadIdx.x, m, h, end, gsz, thrg, thm);
   }
 
-  net_back_grad_gpu (thrg, gsz,
-                     m < GROUP_SIZE ? const_block_grad + blockIdx.x 
-                                    : group_grad + o,
-                     train_vals_h - thm, 
-                     deriv_i - thm, 
-                     const_sparse, syncmask);
+  net_back_grad_gpu (thrg, gsz, 
+    GROUPS_PER_BLOCK==1 || BLOCK_GRAD_FOR_FIRST && m<GROUP_SIZE
+      ? const_block_grad + blockIdx.x 
+      : group_grad + blockIdx.x * GROUPS_PER_BLOCK + (m >> GROUP_SHIFT),
+    train_vals_h - thm, deriv_i - thm, const_sparse, syncmask);
 
 #if SPLIT_KERNELS
 
@@ -2756,7 +2757,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 
 #endif
 
-  if (BLKCASES<=GROUP_SIZE)
+  if (GROUPS_PER_BLOCK==1)
   { return;
   }
 
@@ -2770,27 +2771,32 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 
   unsigned total_params = const_params.total_params;
 
-  int n_blk_res;	/* Max number of energy/grad results in a block */
   int n_results;	/* Number of energy/grad results in this block, less
                            than n_blk_res if that would exceed training cases */
 
-  n_blk_res = (BLKCASES + GROUP_MASK) >> GROUP_SHIFT;
-  n_results = 
-    (end - start - blockIdx.x*BLKCASES + GROUP_MASK) >> GROUP_SHIFT;
-  if (n_results > n_blk_res)
-  { n_results = n_blk_res;
+  n_results = (end - start - blockIdx.x*BLKCASES + GROUP_MASK) >> GROUP_SHIFT;
+  if (n_results > GROUPS_PER_BLOCK)
+  { n_results = GROUPS_PER_BLOCK;
   }
 
   net_params *accum = const_block_grad + blockIdx.x; /* Where to store sum */
   net_param *accum_blk = accum->param_block;
 
   net_params *from = group_grad  /* Base for where to add from */
-                      + blockIdx.x * ((BLKCASES+GROUP_MASK)>>GROUP_SHIFT);
+                      + blockIdx.x * GROUPS_PER_BLOCK;
   size_t stride = const_grad_aligned_total;
-  net_param *from_blk = from->param_block + stride;
+  net_param *from_blk = from->param_block;
   unsigned k;
 
   __syncthreads();
+
+  if (!BLOCK_GRAD_FOR_FIRST)
+  { for (k = threadIdx.x; k < total_params; k += blockDim.x)
+    { accum_blk[k] = from_blk[k];
+    }
+  }
+
+  from_blk += stride;
 
   if (n_results==2)
   { for (k = threadIdx.x; k < total_params; k += blockDim.x)

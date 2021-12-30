@@ -3470,8 +3470,8 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
    The gradient due to the cases in the group is stored in 'g'. */
 
-/* Dispatch functions.  Comparisons with GTH are redundant, but may let
-   the compiler eliminate some comparisons at compile time.  Note that
+/* Dispatch functions.  Comparisons with GROUP_SIZE are redundant, but may 
+   let the compiler eliminate some comparisons at compile time.  Note that
    no function is called when gsz is less than 1 (unused thread). */
 
 __device__ static void store_grad1
@@ -3485,13 +3485,13 @@ __device__ static void store_grad1
   int n                   /* Number of units */
 )
 {
-  if (GTH>=4 && gsz==4)
+  if (GROUP_SIZE>=4 && gsz==4)
   { net_store4_grad1 (th, g, d0, d1, d2, d3, n);
   }
-  else if (GTH>=3 && gsz==3)
+  else if (GROUP_SIZE>=3 && gsz==3)
   { net_store3_grad1 (th, g, d0, d1, d2, n);
   }
-  else if (GTH>=2 && gsz==2)
+  else if (GROUP_SIZE>=2 && gsz==2)
   { net_store2_grad1 (th, g, d0, d1, n);
   }
   else if (gsz==1)
@@ -3512,13 +3512,13 @@ __device__ static void store_grad1_config
   net_config const*restrict cf  /* Configuration for biases */
 )
 {
-  if (GTH>=4 && gsz==4)
+  if (GROUP_SIZE>=4 && gsz==4)
   { net_store4_grad1_config (th, g, d0, d1, d2, d3, cf);
   }
-  else if (GTH>=3 && gsz==3)
+  else if (GROUP_SIZE>=3 && gsz==3)
   { net_store3_grad1_config (th, g, d0, d1, d2, cf);
   }
-  else if (GTH>=2 && gsz==2)
+  else if (GROUP_SIZE>=2 && gsz==2)
   { net_store2_grad1_config (th, g, d0, d1, cf);
   }
   else if (gsz==1)
@@ -3548,15 +3548,15 @@ __device__ static void store_grad2
   int sparse              /* Might source unit values often be zero? */
 )
 {
-  if (GTH>=4 && gsz==4)
+  if (GROUP_SIZE>=4 && gsz==4)
   { net_store4_grad2 
      (th, g, v0, v1, v2, v3, off, nv, d0, d1, d2, d3, nd, omit, ob, sparse);
   }
-  else if (GTH>=3 && gsz==3)
+  else if (GROUP_SIZE>=3 && gsz==3)
   { net_store3_grad2
      (th, g, v0, v1, v2, off, nv, d0, d1, d2, nd, omit, ob, sparse);
   }
-  else if (GTH>=2 && gsz==2)
+  else if (GROUP_SIZE>=2 && gsz==2)
   { net_store2_grad2
      (th, g, v0, v1, off, nv, d0, d1, nd, omit, ob, sparse);
   }
@@ -3584,15 +3584,15 @@ __device__ static void store_grad2_config
   net_config const*restrict cf  /* Configuration for connections and weights */
 )
 {
-  if (GTH>=4 && gsz==4)
+  if (GROUP_SIZE>=4 && gsz==4)
   { net_store4_grad2_config
      (th, g, v0, v1, v2, v3, off, d0, d1, d2, d3, cf);
   }
-  else if (GTH>=3 && gsz==3)
+  else if (GROUP_SIZE>=3 && gsz==3)
   { net_store3_grad2_config
      (th, g, v0, v1, v2, off, d0, d1, d2, cf);
   }
-  else if (GTH>=2 && gsz==2)
+  else if (GROUP_SIZE>=2 && gsz==2)
   { net_store2_grad2_config
      (th, g, v0, v1, off, d0, d1, cf);
   }

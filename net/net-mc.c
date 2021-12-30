@@ -2664,7 +2664,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
     if (threadIdx.x==0)
     { double e = 0;
       int j, l;
-      l = blockDim.x / THREADS_PER_CASE;
+      l = BLKCASES;
       if (h+l > end) l = end-h;
       for (j = 0; j<l; j++)
       { e += case_energy[h-start+j];
@@ -2757,6 +2757,9 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 
 #endif
 
+  /* No need for reduction if there's only one gradient group, since the
+     gradient will have been directly stored in block_grad. */
+
   if (GROUPS_PER_BLOCK==1)
   { return;
   }
@@ -2791,7 +2794,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
   __syncthreads();
 
   if (!BLOCK_GRAD_FOR_FIRST)
-  { for (k = threadIdx.x; k < total_params; k += blockDim.x)
+  { for (k = threadIdx.x; k < total_params; k += BTH)
     { accum_blk[k] = from_blk[k];
     }
   }
@@ -2799,12 +2802,12 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
   from_blk += stride;
 
   if (n_results==2)
-  { for (k = threadIdx.x; k < total_params; k += blockDim.x)
+  { for (k = threadIdx.x; k < total_params; k += BTH)
     { accum_blk[k] += from_blk[k];
     }
   }
   else if (n_results==4)
-  { for (k = threadIdx.x; k < total_params; k += blockDim.x)
+  { for (k = threadIdx.x; k < total_params; k += BTH)
     { net_param sum;
       net_param *fb = from_blk;
       sum = fb[k];  fb += stride;
@@ -2814,7 +2817,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
     }
   }
   else if (n_results==8)
-  { for (k = threadIdx.x; k < total_params; k += blockDim.x)
+  { for (k = threadIdx.x; k < total_params; k += BTH)
     { net_param sum;
       net_param *fb = from_blk;
       sum = fb[k];  fb += stride;
@@ -2828,7 +2831,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
     }
   }
   else
-  { for (k = threadIdx.x; k < total_params; k += blockDim.x)
+  { for (k = threadIdx.x; k < total_params; k += BTH)
     { net_param sum = 0;
       net_param *fb = from_blk;
       for (i = 1; i<n_results; i++)

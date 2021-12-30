@@ -1,12 +1,13 @@
-Commit: ad6bf28c97a9f2cec5369aa26df5eabbb9555d1c
+Commit: c4697c6d91b482db562be949edf5668e862b27d0
 
 Running exbgd with flt-gpu on T400:
 
 Number of training cases: 800
 Precision: FP32, SIMD capability: AVX, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 NVIDIA T400, Compute Capability 7.5, 6 SM processors, 1.8 GBytes
-Specified 32 cases per block, max 500 blocks per launch, threads/case: 8
-Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 16 -> 1024 bytes/case
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 256 values
 Hid layer shrd mem: 0:15:0,15 T 40
 With 800 cases, need 1 launches, max 25 blocks/launch
 
@@ -14,8 +15,8 @@ Number of iterations used: 1
 
 Number of test cases: 500
 
-Average log probability of targets:    -0.238+-0.025
-Fraction of guesses that were wrong:    0.1120+-0.0141
-Average squared error guessing mean:    0.07571+-0.00848
+Average log probability of targets:    -0.603+-0.017
+Fraction of guesses that were wrong:    0.4300+-0.0222
+Average squared error guessing mean:    0.21272+-0.00773
 
-elapsed 9.06s
+elapsed 8.86s

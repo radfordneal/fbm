@@ -1,0 +1,17 @@
+Commit: 8dbc65992c6af7fb58d1472ea6c2b50e427591f1
+
+Running exb with flt:
+
+Number of training cases: 300
+Number of test cases: 1000
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+
+Number of iterations used: 20
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.240+-0.017
+Fraction of guesses that were wrong:    0.1070+-0.0098
+
+elapsed 0.77s

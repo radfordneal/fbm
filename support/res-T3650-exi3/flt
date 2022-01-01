@@ -1,0 +1,17 @@
+Commit: 8dbc65992c6af7fb58d1472ea6c2b50e427591f1
+
+Running exi3 with flt:
+
+Number of training cases: 499
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+
+Number of iterations used: 6
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.295+-0.038
+Fraction of guesses that were wrong:    0.6100+-0.0490
+Average squared error guessing mean:    0.70248+-0.01843
+
+elapsed 28.89s

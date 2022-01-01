@@ -1,0 +1,29 @@
+Commit: 8dbc65992c6af7fb58d1472ea6c2b50e427591f1
+
+Running exi1s with dbl-gpu on M5000:
+
+Number of training cases: 4999
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Quadro M5000, Compute Capability 5.2, 16 SM processors, 7.4 GBytes ECC
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32
+Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:79:0,79 T 168
+With 4999 cases, need 1 launches, max 157 blocks/launch
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Quadro M5000, Compute Capability 5.2, 16 SM processors, 7.4 GBytes ECC
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32
+Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:79:0,79 T 168
+With 4999 cases, need 1 launches, max 157 blocks/launch
+
+Number of iterations used: 2
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.055+-0.090
+Fraction of guesses that were wrong:    0.4500+-0.0500
+Average squared error guessing mean:    0.57465+-0.04356
+
+elapsed 11.11s

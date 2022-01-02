@@ -106,7 +106,7 @@
 
 #define GRAD_ALIGN_ELEMENTS (GRAD_ALIGN_BYTES / 4 / (1+FP64))
 
-#define INTERLEAVE_GRAD_GROUPS 0  /* In GPU, should gradient groups in a block
+#define INTERLEAVE_GRAD_GROUPS 1  /* In GPU, should gradient groups in a block
                                      have their gradients interleaved? */
 #define BLOCK_GRAD_FOR_FIRST \
   (!INTERLEAVE_GRAD_GROUPS && 1)  /* Use block_grad instead of group_grad for

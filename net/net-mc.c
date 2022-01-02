@@ -2407,33 +2407,35 @@ void net_training_cases
    argument (case_energy, null if energy is not required).
 
    Network values and energies for each individual case handled by a
-   block are computed using THREADS_PER_CASE.  The number of
+   block are computed using THREADS_PER_CASE threads.  The number of
    threads in a block used for this computation is therefore
    THREADS_PER_CASE times the number of cases handled by a block.
 
    GPU memory is also allocated here to store computed gradients. The
-   GPU stores the total gradient for a block in const_block_grad,
+   GPU stores the total gradient for each block in const_block_grad,
    which is copied to block_grad on the CPU, and the added by the CPU
    to the final gradient accumulator.
 
    Gradients are computed for a group of cases of size GROUP_SIZE
-   (except at the end, if N_train is not a multiple of GROUP_SIZE).
+   (or fewer at the end, if N_train is not a multiple of GROUP_SIZE).
    This reduces the amount of space allocate for gradients by about a
    factor of GROUP_SIZE compared to allocating space for each case.
    Computations for a group are done using GROUP_SIZE*THREADS_PER_CASE
    threads (or perhaps fewer at the end of a block).
 
    If there is only one group (GROUP_SIZE same as BLKCASES), or
-   BLOCK_GRAD_FOR_FIRST is set, gradients for the first (or only)
-   group of training cases in each block are stored directly in
-   const_block_grad.  If there is more than one group, memory is
-   allocated on the GPU to hold the total gradient for groups of
-   GROUP_SIZE cases, accessed only from the GPU, with a pointer to it
-   passed as a kernel argument (group_grad, null if gradient is not
-   required).  The gradients stored there are summed and stored in
-   const_block_grad in a final reduction phase (or added to the part
-   of the gradient directly stored there if BLOCK_GRAD_FOR_FIRST is
-   set).
+   BLOCK_GRAD_FOR_FIRST is set (and interleaving is not done),
+   gradients for the first (or only) group of training cases in each
+   block are stored directly in const_block_grad.  If there is more
+   than one group, memory is allocated on the GPU to hold the total
+   gradient for groups of GROUP_SIZE cases, accessed only from the
+   GPU, with a pointer to it passed as a kernel argument (group_grad,
+   null if gradient is not required).  The gradients stored there are
+   summed and stored in const_block_grad in a final reduction phase
+   (or added to the part of the gradient directly stored there if
+   BLOCK_GRAD_FOR_FIRST is set).  Optionally, the gradients for each
+   group in a block can be stored in interleaved form, for possible
+   performance improvement.
 
    If more than one kernel launch is done, the per-launch memory
    mentioned above is re-used.  (So the allocations here are all that

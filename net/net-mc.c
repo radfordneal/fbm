@@ -2506,8 +2506,8 @@ void cuda_setup
          (&tmp_grad->param_block, n_grad_accum * grad_aligned_total
                                    * sizeof *tmp_grad->param_block),
        "alloc tmp_grad param block for group_grad");
-      net_setup_gradients (tmp_grad, n_grad_accum, 1, arch, flgs,
-                           grad_aligned_total);
+      net_setup_gradients (tmp_grad, n_grad_accum, ILV,
+                           arch, flgs, grad_aligned_total);
       check_cuda_error (cudaMalloc (&group_grad,
                           n_grad_accum * sizeof *group_grad),
                         "alloc group_grad");
@@ -2763,8 +2763,8 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
   { return;
   }
 
-  /* Reduction of all threads to single energy/gradient.  May be done using all 
-     threads in the block (including ones not used above). */
+  /* Reduction of gradient from all groups to a single summed gradient.  May
+     be done using all threads in the block, including ones not used above. */
 
   if (KDEBUG)
   { printf("Gradient reduction: block %d, thread %d, start %d, end %d\n",
@@ -2773,8 +2773,8 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 
   unsigned total_params = const_params.total_params;
 
-  int n_results;	/* Number of energy/grad results in this block, less
-                           than n_blk_res if that would exceed training cases */
+  int n_results;  /* Number of energy/grad results in this block, less than
+                     GROUPS_PER_BLOCK if that's more than # of training cases */
 
   n_results = (end - start - blockIdx.x*BLKCASES + GROUP_MASK) >> GROUP_SHIFT;
   if (n_results > GROUPS_PER_BLOCK)
@@ -2786,7 +2786,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 
   net_params *from = group_grad  /* Base for where to add from */
                       + blockIdx.x * GROUPS_PER_BLOCK;
-  size_t stride = const_grad_aligned_total;
+  size_t stride = INTERLEAVE_GRAD_GROUPS ? 1 : const_grad_aligned_total;
   net_param *from_blk = from->param_block;
   unsigned k;
 
@@ -2794,7 +2794,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 
   if (!BLOCK_GRAD_FOR_FIRST)
   { for (k = threadIdx.x; k < total_params; k += BTH)
-    { accum_blk[k] = from_blk[k];
+    { accum_blk[k] = from_blk[ILV*k];
     }
   }
 
@@ -2802,16 +2802,16 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 
   if (n_results==2)
   { for (k = threadIdx.x; k < total_params; k += BTH)
-    { accum_blk[k] += from_blk[k];
+    { accum_blk[k] += from_blk[ILV*k];
     }
   }
   else if (n_results==4)
   { for (k = threadIdx.x; k < total_params; k += BTH)
     { net_param sum;
       net_param *fb = from_blk;
-      sum = fb[k];  fb += stride;
-      sum += fb[k]; fb += stride;
-      sum += fb[k];
+      sum = fb[ILV*k];  fb += stride;
+      sum += fb[ILV*k]; fb += stride;
+      sum += fb[ILV*k];
       accum_blk[k] += sum;
     }
   }
@@ -2819,13 +2819,13 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
   { for (k = threadIdx.x; k < total_params; k += BTH)
     { net_param sum;
       net_param *fb = from_blk;
-      sum = fb[k];  fb += stride;
-      sum += fb[k]; fb += stride;
-      sum += fb[k]; fb += stride;
-      sum += fb[k]; fb += stride;
-      sum += fb[k]; fb += stride;
-      sum += fb[k]; fb += stride;
-      sum += fb[k];
+      sum = fb[ILV*k];  fb += stride;
+      sum += fb[ILV*k]; fb += stride;
+      sum += fb[ILV*k]; fb += stride;
+      sum += fb[ILV*k]; fb += stride;
+      sum += fb[ILV*k]; fb += stride;
+      sum += fb[ILV*k]; fb += stride;
+      sum += fb[ILV*k];
       accum_blk[k] += sum;
     }
   }
@@ -2834,7 +2834,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
     { net_param sum = 0;
       net_param *fb = from_blk;
       for (i = 1; i<n_results; i++)
-      { sum += fb[k];
+      { sum += fb[ILV*k];
         fb += stride;
       }
       accum_blk[k] += sum;

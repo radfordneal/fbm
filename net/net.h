@@ -106,8 +106,13 @@
 
 #define GRAD_ALIGN_ELEMENTS (GRAD_ALIGN_BYTES / 4 / (1+FP64))
 
-#define BLOCK_GRAD_FOR_FIRST 1  /* Use block_grad instead of group_grad for
-                                   first group in block? */
+#define INTERLEAVE_GRAD_GROUPS 0  /* In GPU, should gradient groups in a block
+                                     have their gradients interleaved? */
+#define BLOCK_GRAD_FOR_FIRST \
+  (!INTERLEAVE_GRAD_GROUPS && 1)  /* Use block_grad instead of group_grad for
+                                     first group in block? */
+
+#define ILV (INTERLEAVE_GRAD_GROUPS ? GROUPS_PER_BLOCK : 1)  /* Interleaving */
 
 #define PIN_MEMORY 2         /* 0 = no host memory is pinned, 
                                 1 = parameters going to gpu only,

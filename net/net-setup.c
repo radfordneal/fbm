@@ -465,6 +465,134 @@ void net_setup_param_pointers
 }
 
 
+/* SET UP POINTERS TO NETWORK PARAMETER STRUCTURES FOR GRADIENTS.
+
+   The 'w' argument points to 'n' structures to be set up.  The first
+   must have the total_params fields set to the number of parameters,
+   and the param_block field set to the storage for all 'n' sets of
+   parameters.  The aligned_total argument gives the number of
+   parameters after any increase for desired alignment.
+
+   If 'v' is 1, 'n' structures in the space pointed to by 'w' are set
+   up to point into separate parameter blocks.  If 'v' is greater than
+   1, 'n' structures are set up that point to parameters with v-way
+   interleaving, with each parameter group being associated with 'v'
+   times as many net_param values.
+ */
+
+void net_setup_gradients
+( net_params *w,	/* Array of structures to set up pointers in */
+  int n,		/* Number of param structures to set up */
+  int v,		/* Interleaving group size, 1 for no interleaving */
+  net_arch *a,		/* Network architecture */
+  net_flags *flgs,	/* Network flags, null if none */
+  unsigned aligned_total  /* Number of parameters with increase for alignment */
+)
+{
+  unsigned total_params = w->total_params;
+  net_param *param_block = w->param_block;
+
+  unsigned bits;
+  net_param *b;
+  int l, ls;
+  int nsqi;
+  int i, j;
+
+  /* Set up each structure. */
+
+  for (i = 0; i<n; i++)
+  { 
+    /* Find start of parameters for this structure.  There are i/v previous
+       interleave groups, each with v*aligned_total parameters.  This 
+       structure within the group is offset by i%v. */
+
+    b = param_block + (i/v)*v*aligned_total + i%v;
+    w[i].total_params = total_params;
+    w[i].param_block = b;
+
+    /* Look for what is present in the architecture.  Space for parameters
+       is multipled by v, to account for interleaving. */
+
+    nsqi = 0;
+
+    w[i].ti = 0;
+    if (a->has_ti)
+    { w[i].ti = b;
+      b += v * a->N_inputs;
+    }
+
+    for (l = 0; l<a->N_layers; l++)
+    {
+      for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
+      { if (bits&1)
+        { if (ls>=l-1) abort();
+          w[i].nsq[nsqi] = b;
+          b += v * (a->nonseq_config[nsqi] ? a->nonseq_config[nsqi]->N_wts
+                     : a->N_hidden[ls]*a->N_hidden[l]);
+          nsqi += 1;
+        }
+      }
+
+      if (l>0)
+      { w[i].hh[l-1] = 0;
+        if (a->has_hh[l-1]) 
+        { w[i].hh[l-1] = b;
+          b += v * (a->hidden_config[l] ? a->hidden_config[l]->N_wts
+                     : a->N_hidden[l-1]*a->N_hidden[l]);
+        }
+      }
+
+      w[i].ih[l] = 0;
+      if (a->has_ih[l]) 
+      { w[i].ih[l] = b;
+        b += v * (a->input_config[l] ? a->input_config[l]->N_wts
+                   : not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1)) 
+                      * a->N_hidden[l]);
+      }
+    
+      w[i].bh[l] = 0;
+      if (a->has_bh[l])
+      { w[i].bh[l] = b;
+        b += v * (a->bias_config[l] ? a->bias_config[l]->N_wts 
+                                    : a->N_hidden[l]);
+      }
+    
+      w[i].th[l] = 0;
+      if (a->has_th[l])
+      { w[i].th[l] = b;
+        b += v * a->N_hidden[l];
+      }
+    }
+
+    for (l = a->N_layers-1; l>=0; l--)
+    { w[i].ho[l] = 0;
+      if (a->has_ho[l]) 
+      { int k = 2*a->N_layers-1-l;
+        w[i].ho[l] = b;
+        b += v * (a->hidden_config[k] ? a->hidden_config[k]->N_wts
+                                      : a->N_hidden[l]*a->N_outputs);
+      }
+    }
+
+    w[i].io = 0;
+    if (a->has_io) 
+    { w[i].io = b;
+      b += v * (a->input_config[a->N_layers] 
+                 ? a->input_config[a->N_layers]->N_wts
+                 : not_omitted(flgs?flgs->omit:0,a->N_inputs,1) * a->N_outputs);
+    }
+
+    w[i].bo = 0;
+    if (a->has_bo)
+    { w[i].bo = b;
+      b += v * (a->bias_config[a->N_layers] 
+                 ? a->bias_config[a->N_layers]->N_wts 
+                 : a->N_outputs);
+    }
+  }
+}
+
+
 /* REPLICATE POINTERS TO NETWORK PARAMETERS.  Given a pointer to a
    net_params structure, this procedure replicates that structure n-1
    times in structures that follow, offsetting the param_block pointer

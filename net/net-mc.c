@@ -2506,9 +2506,8 @@ void cuda_setup
          (&tmp_grad->param_block, n_grad_accum * grad_aligned_total
                                    * sizeof *tmp_grad->param_block),
        "alloc tmp_grad param block for group_grad");
-      net_setup_param_pointers (tmp_grad, arch, flgs);
-      net_replicate_param_pointers (tmp_grad, arch, n_grad_accum,
-                                    grad_aligned_total);
+      net_setup_gradients (tmp_grad, n_grad_accum, 1, arch, flgs,
+                           grad_aligned_total);
       check_cuda_error (cudaMalloc (&group_grad,
                           n_grad_accum * sizeof *group_grad),
                         "alloc group_grad");

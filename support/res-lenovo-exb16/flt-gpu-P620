@@ -1,4 +1,4 @@
-Commit: 60bb71ebc83ff48ec8caf7daeda6d9bbf5e5954f
+Commit: df9388dbdc0f8865591ddb7548a0775ffbf180b5
 
 Running exb16 with flt-gpu on P620:
 
@@ -23,7 +23,7 @@ Number of iterations used: 20
 
 Number of test cases: 1000
 
-Average log probability of targets:    -0.244+-0.017
-Fraction of guesses that were wrong:    0.1150+-0.0101
+Average log probability of targets:    -0.238+-0.015
+Fraction of guesses that were wrong:    0.1010+-0.0095
 
 elapsed 2.13s

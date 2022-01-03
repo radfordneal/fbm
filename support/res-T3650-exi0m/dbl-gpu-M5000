@@ -1,4 +1,4 @@
-Commit: b150c28d22d68e35c8c49d4351f9f2e1dccf5819
+Commit: b3a38d3c99ac24690e3adb90e4ceeb50b03a66d3
 
 Running exi0m with dbl-gpu on M5000:
 
@@ -8,15 +8,15 @@ Quadro M5000, Compute Capability 5.2, 16 SM processors, 7.4 GBytes ECC
 Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32
 Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 192 values
-Hid layer shrd mem: 0:128:0,-1 T 136
+Hid layer shrd mem: 0:64:0,64 T 136
 With 4999 cases, need 1 launches, max 157 blocks/launch
 
 Number of iterations used: 1
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.367+-0.011
-Fraction of guesses that were wrong:    0.6800+-0.0469
-Average squared error guessing mean:    0.74062+-0.00552
+Average log probability of targets:    -1.371+-0.014
+Fraction of guesses that were wrong:    0.7500+-0.0435
+Average squared error guessing mean:    0.74180+-0.00683
 
-elapsed 7.07s
+elapsed 3.34s

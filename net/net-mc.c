@@ -2800,50 +2800,44 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 
   __syncthreads();
 
-  if (!BLOCK_GRAD_FOR_FIRST)
+  if (GROUPS_PER_BLOCK>=8 && n_results==8)
   { for (k = threadIdx.x; k < total_params; k += BTH)
-    { accum_blk[k] = from_blk[ILV*k];
-    }
-  }
-
-  from_blk += stride;
-
-  if (n_results==2)
-  { for (k = threadIdx.x; k < total_params; k += BTH)
-    { accum_blk[k] += from_blk[ILV*k];
-    }
-  }
-  else if (n_results==4)
-  { for (k = threadIdx.x; k < total_params; k += BTH)
-    { net_param sum;
-      net_param *fb = from_blk;
-      sum = fb[ILV*k];  fb += stride;
-      sum += fb[ILV*k]; fb += stride;
-      sum += fb[ILV*k];
+    { net_param *fb = from_blk;
+      net_param sum = BLOCK_GRAD_FOR_FIRST ? accum_blk[k] : fb[ILV*k];
+      fb += stride; sum += fb[ILV*k]; 
+      fb += stride; sum += fb[ILV*k]; 
+      fb += stride; sum += fb[ILV*k]; 
+      fb += stride; sum += fb[ILV*k]; 
+      fb += stride; sum += fb[ILV*k]; 
+      fb += stride; sum += fb[ILV*k]; 
+      fb += stride; sum += fb[ILV*k];
       accum_blk[k] += sum;
     }
   }
-  else if (n_results==8)
+  else if (GROUPS_PER_BLOCK>=4 && n_results==4)
   { for (k = threadIdx.x; k < total_params; k += BTH)
-    { net_param sum;
-      net_param *fb = from_blk;
-      sum = fb[ILV*k];  fb += stride;
-      sum += fb[ILV*k]; fb += stride;
-      sum += fb[ILV*k]; fb += stride;
-      sum += fb[ILV*k]; fb += stride;
-      sum += fb[ILV*k]; fb += stride;
-      sum += fb[ILV*k]; fb += stride;
-      sum += fb[ILV*k];
+    { net_param *fb = from_blk;
+      net_param sum = BLOCK_GRAD_FOR_FIRST ? accum_blk[k] : fb[ILV*k];
+      fb += stride; sum += fb[ILV*k]; 
+      fb += stride; sum += fb[ILV*k]; 
+      fb += stride; sum += fb[ILV*k];
       accum_blk[k] += sum;
+    }
+  }
+  else if (GROUPS_PER_BLOCK>=2 && n_results==2)
+  { for (k = threadIdx.x; k < total_params; k += BTH)
+    { net_param *fb = from_blk;
+      net_param sum = BLOCK_GRAD_FOR_FIRST ? accum_blk[k] : fb[ILV*k];
+      fb += stride; sum += fb[ILV*k];
+      accum_blk[k] = sum;
     }
   }
   else
   { for (k = threadIdx.x; k < total_params; k += BTH)
-    { net_param sum = 0;
-      net_param *fb = from_blk;
+    { net_param *fb = from_blk;
+      net_param sum = BLOCK_GRAD_FOR_FIRST ? accum_blk[k] : fb[ILV*k];
       for (i = 1; i<n_results; i++)
-      { sum += fb[ILV*k];
-        fb += stride;
+      { fb += stride; sum += fb[ILV*k];
       }
       accum_blk[k] += sum;
     }

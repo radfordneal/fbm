@@ -1,13 +1,13 @@
 #!/bin/bash
 
-net-spec log 36 128 identity 4 / ih=2 bh=2 ho=2 bo=2
+net-spec log 36 64 identity 4 / ih=2 bh=2 ho=2 bo=2
 model-spec log class
 
 data-spec log 36 1 4 / idata@1:4999 .
 
 net-gen log fix 0.1
 
-mc-spec log repeat 10 heatbath hybrid 80:4 0.04
+mc-spec log repeat 10 heatbath hybrid 100:4 0.04
 net-mc log 4
 
 net-pred nmpa log 3: / idata@5001:5100 .

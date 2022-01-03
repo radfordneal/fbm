@@ -1,6 +1,6 @@
 #!/bin/bash
 
-net-spec log 36 128 identity 4 / ih=2 bh=2 ho=2 bo=2
+net-spec log 36 64 identity 4 / ih=2 bh=2 ho=2 bo=2
 model-spec log class
 
 data-spec log 36 1 4 / idata@1:4999 .
@@ -8,6 +8,6 @@ data-spec log 36 1 4 / idata@1:4999 .
 net-gen log fix 0.1
 
 mc-spec log met-1 7.5
-net-mc log 2
+net-mc log 3
 
-net-pred nmpa log 2: / idata@5001:5100 .
+net-pred nmpa log 3: / idata@5001:5100 .

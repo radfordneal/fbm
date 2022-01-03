@@ -93,14 +93,7 @@ __global__ void backward_gradient_kernel
   int end		/* End of cases to look at (index after last case) */
 );
 
-__global__ void gradient_reduction_kernel
-(
-  net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
-  int start,		/* Start of cases to look at */
-  int end		/* End of cases to look at (index after last case) */
-);
-
-#else  /* all combined in one kernel */
+#else  /* all combined in one kernel (or all except gradient reduction) */
 
 __global__ void training_kernel
 (
@@ -110,6 +103,17 @@ __global__ void training_kernel
   int end, 		/* End of cases to look at (index after last case) */
   double en_weight,	/* Weight for these cases for energy */
   double gr_weight	/* Weight for these cases for gradient */
+);
+
+#endif
+
+#if SPLIT_KERNELS || SPLIT_REDUCTION
+
+__global__ void gradient_reduction_kernel
+(
+  net_params *restrict group_grad, /* Places to store gradient, 0 if unneeded */
+  int start,		/* Start of cases to look at */
+  int end		/* End of cases to look at (index after last case) */
 );
 
 #endif
@@ -1230,10 +1234,6 @@ void mc_app_initialize
           cudaFuncSetCacheConfig (backward_gradient_kernel,
                                   GPU_CACHE_PREFERENCE),
           "Set cache config for backward_gradient_kernel");
-        check_cuda_error (
-          cudaFuncSetCacheConfig (gradient_reduction_kernel, 
-                                  GPU_CACHE_PREFERENCE),
-          "Set cache config for gradient_reduction_kernel");
       }
 #     else  /* !SPLIT_KERNELS */
       { check_cuda_error (
@@ -1241,7 +1241,13 @@ void mc_app_initialize
           "Set cache config for training_kernel");
       }
 #     endif
-
+#     if SPLIT_KERNELS || SPLIT_REDUCTION
+      { check_cuda_error (
+          cudaFuncSetCacheConfig (gradient_reduction_kernel, 
+                                  GPU_CACHE_PREFERENCE),
+          "Set cache config for gradient_reduction_kernel");
+      }
+#     endif
 #   endif
 
     /* Set shared memory config for good performance with 64-bit versus
@@ -2561,8 +2567,8 @@ void cuda_setup
 
 /* GPU CODE FOR FORWARD, MODEL/ENERGY, BACKWARD, AND GRADIENT COMPUTATION.
 
-   Done as one CUDA kernel, or split into four or five kernels, according 
-   to the setting of SPLIT_KERNELS.
+   Done as one CUDA kernel, or split into four kernels, according to the
+   setting of SPLIT_KERNELS.  (Or maybe two kernels, if SPLIT_REDUCTION.)
 
    References the const_... variables in GPU constant memory with things  
    such as the network architecture. */
@@ -2743,7 +2749,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
       : group_grad + blockIdx.x * GROUPS_PER_BLOCK + (m >> GROUP_SHIFT),
     train_vals_h - thm, deriv_i - thm, const_sparse, syncmask);
 
-#if SPLIT_KERNELS
+#if SPLIT_KERNELS || SPLIT_REDUCTION
 
 }
 __global__ void gradient_reduction_kernel
@@ -2910,20 +2916,24 @@ static void net_training_cases_gpu
             (group_grad, i, i+cases);
           if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching backward_gradient_kernel");
-          gradient_reduction_kernel 
-            <<<blks, THREADS_PER_BLOCK, shared_mem>>>
-            (group_grad, i, i+cases);
-          if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
-                   "Synchronizing after launching gradient_reduction_kernel");
         }
       }
 #     else /* !SPLIT_KERNELS */
       { training_kernel <<<blks, THREADS_PER_BLOCK, shared_mem>>>
           (energy ? case_energy : 0, gr ? group_grad : 0,
            i, i+cases, en_weight, gr_weight);
-
         if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                  "Synchronizing after launching training_kernel");
+      }
+#     endif
+#     if SPLIT_KERNELS || SPLIT_REDUCTION
+      { if (gr && GROUPS_PER_BLOCK>1)
+        { gradient_reduction_kernel 
+            <<<blks, THREADS_PER_BLOCK, shared_mem>>>
+            (group_grad, i, i+cases);
+          if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
+                   "Synchronizing after launching gradient_reduction_kernel");
+        }
       }
 #     endif
     }

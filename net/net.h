@@ -67,10 +67,15 @@
    reduction (last two not needed if gradient not needed).  The
    setting of SPLIT_KERNELS controls whether they are all done as
    separate kernels (useful for profiling how long they take), or all
-   done as one kernel (minimizing launch overhead). */
+   done as one kernel (minimizing launch overhead).  If SPLIT_KERNELS
+   is 0 but SPLIT_REDUCTION is 1, only the gradient reduction is
+   done in a separate kernel. */
 
-#define SPLIT_KERNELS 0   /* 0 = one kernel for all four parts
+#define SPLIT_KERNELS 0   /* 0 = one kernel for all 4 parts (except maybe red.)
                              1 = four kernels for the four parts */
+
+#define SPLIT_REDUCTION 0 /* If 1, gradient reduction is split out as a 
+                             separate kernel even if SPLIT_KERNELS is 0 */
 
 
 /* CONSTANTS RELATING TO GPU COMPUTATIONS: */
@@ -106,7 +111,7 @@
 
 #define GRAD_ALIGN_ELEMENTS (GRAD_ALIGN_BYTES / 4 / (1+FP64))
 
-#define INTERLEAVE_GRAD_GROUPS 1  /* In GPU, should gradient groups in a block
+#define INTERLEAVE_GRAD_GROUPS 0  /* In GPU, should gradient groups in a block
                                      have their gradients interleaved? */
 #define BLOCK_GRAD_FOR_FIRST \
   (!INTERLEAVE_GRAD_GROUPS && 1)  /* Use block_grad instead of group_grad for

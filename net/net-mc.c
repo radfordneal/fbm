@@ -2923,8 +2923,8 @@ static void net_training_cases_gpu
 #     if SPLIT_KERNELS || SPLIT_REDUCTION
       { if (gr && GROUPS_PER_BLOCK>1)
         { gradient_reduction_kernel 
-            <<<blks, THREADS_PER_BLOCK, shared_mem>>>
-            (group_grad, i, i+cases);
+            <<<blks, THREADS_PER_BLOCK>>> /* doesn't need shared memory */
+              (group_grad, i, i+cases);
           if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), 
                    "Synchronizing after launching gradient_reduction_kernel");
         }

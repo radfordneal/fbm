@@ -1,4 +1,4 @@
-Commit: 2e18fc53f645ffdb1b8eaee44f600e6b0d9762c8
+Commit: 6b21aa65af4d389ee63c04473baa944e8ca8e41a
 
 Running exi3 with flt-gpu on K620:
 
@@ -22,8 +22,8 @@ Number of iterations used: 6
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.383+-0.002
-Fraction of guesses that were wrong:    0.7000+-0.0461
-Average squared error guessing mean:    0.74813+-0.00108
+Average log probability of targets:    -1.383+-0.004
+Fraction of guesses that were wrong:    0.7300+-0.0446
+Average squared error guessing mean:    0.74820+-0.00186
 
-elapsed 34.15s
+elapsed 34.27s

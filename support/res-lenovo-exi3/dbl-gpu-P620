@@ -1,4 +1,4 @@
-Commit: 5b483996760341411ef8640ecd48a196a30e1ed8
+Commit: 2d2d524826ba4ac833190df3786bd50b1e40828c
 
 Running exi3 with dbl-gpu on P620:
 
@@ -26,4 +26,4 @@ Average log probability of targets:    -1.321+-0.041
 Fraction of guesses that were wrong:    0.6400+-0.0482
 Average squared error guessing mean:    0.71716+-0.01995
 
-elapsed 52.90s
+elapsed 52.77s

@@ -22,6 +22,7 @@
   static void check_cuda_error (cudaError_t err, const char *where)
   { if (err != cudaSuccess)
     { printf ("%s: CUDA error: %s\n", where, cudaGetErrorString(err));
+      fflush(stdout);
       abort();
     }
   }

@@ -61,21 +61,24 @@
 #define NET_VALUE_ALIGN_ELEMENTS (NET_VALUE_ALIGN_BYTES / 4 / (1+FP64))
 
 
-/* HOW GPU COMPUTATIONS ARE SPLIT INTO KERNELS.  The computation
-   consists of four parts: forward pass, model/energy evaluation,
-   combined backward pass & gradient computation, and gradient
-   reduction (last two not needed if gradient not needed).  The
-   setting of SPLIT_KERNELS controls whether they are all done as
-   separate kernels (useful for profiling how long they take), or all
-   done as one kernel (minimizing launch overhead).  If SPLIT_KERNELS
-   is 0 but SPLIT_REDUCTION is 1, only the gradient reduction is
-   done in a separate kernel. */
+/* HOW GPU COMPUTATIONS ARE SPLIT INTO KERNELS.  
 
-#define SPLIT_KERNELS 0   /* 0 = one kernel for all 4 parts (except maybe red.)
-                             1 = four kernels for the four parts */
+   The computation consists of four parts: forward pass, model/energy
+   evaluation, combined backward pass & gradient computation, and
+   gradient reduction (last two not needed if gradient not needed).
+   The SPLIT_MODEL, SPLIT_BACK_GRAD, and SPLIT_REDUCTION settings
+   control whether each of the parts (after the first) is done in a
+   new kernel launch.  So, for example, if all are 0, all four parts
+   are done in one kernel, or if SPLIT_MODEL is 0 but SPLIT_BACK_GRAD
+   is 1 and SPLIT REDUCTION is 0, there are two kernels, the first
+   doing the forward pass and energy evaluation, the second the
+   gradient computation and reduction.  Note that use of shared memory
+   for hidden unit values is possible only if SPLIT_MODEL and
+   SPLIT_BACK_GRAD are both 0. */
 
-#define SPLIT_REDUCTION 0 /* If 1, gradient reduction is split out as a 
-                             separate kernel even if SPLIT_KERNELS is 0 */
+#define SPLIT_MODEL 0        /* If 1, start new kernel for model/energy eval */
+#define SPLIT_BACK_GRAD 0    /* If 1, start new kernel for backprop/gradient */
+#define SPLIT_REDUCTION 0    /* If 1, start new kernel for gradient reduction */
 
 
 /* CONSTANTS RELATING TO GPU COMPUTATIONS: */
@@ -129,14 +132,16 @@
 
 #define DEFAULT_MAXBLKS	500  /* Default, if not set by MAXBLKS env var */
 
-#define USE_FAST_SHARED_MEM 1  /* Use fast shared GPU memory for unit values
-                                  and derivatives? */
+#define USE_FAST_SHARED_MEM 1  /* Use fast shared GPU memory for unit values and
+                                  derivatives (if not ruled out by split)? */
+#define USING_SHARED_MEMORY \
+          (USE_FAST_SHARED_MEM && !SPLIT_MODEL && !SPLIT_BACK_GRAD)
 
 #define AVOID_BANK_CONFLICTS 1 /* Increase size of shared memory per case if
                                   necessary to avoid bank conflicts? */
 
 #define GPU_CACHE_PREFERENCE   /* Can edit last bit below as desired... */ \
- (!USE_FAST_SHARED_MEM || SPLIT_KERNELS \
+ (!USING_SHARED_MEMORY \
    ? cudaFuncCachePreferL1      /* L1 is better if shared memory isn't used */ \
    : cudaFuncCachePreferShared) /* Might be better as Shared, or Equal, or L1 */
 
@@ -504,7 +509,7 @@ extern __shared__ net_value sharedvalues[];
 __device__ static inline net_value *fw_hidden_loc 
   (net_precomputed const*pre, net_values const*v, int l)
 { int t;
-  return !USE_FAST_SHARED_MEM || SPLIT_KERNELS || (t = pre->fwgpumem[l]) < 0 
+  return !USING_SHARED_MEMORY || (t = pre->fwgpumem[l]) < 0 
            ? v->h[l]
            : sharedvalues + (threadIdx.x/NTH) * pre->memused + t;
 }
@@ -512,7 +517,7 @@ __device__ static inline net_value *fw_hidden_loc
 __device__ static inline net_value *bw_hidden_loc 
   (net_precomputed const*pre, net_values const*v, int l)
 { int t;
-  return !USE_FAST_SHARED_MEM || SPLIT_KERNELS || (t = pre->bwgpumem[l]) < 0
+  return !USING_SHARED_MEMORY || (t = pre->bwgpumem[l]) < 0
            ? v->h[l]
            : sharedvalues + (threadIdx.x/NTH) * pre->memused + t;
 }
@@ -520,7 +525,7 @@ __device__ static inline net_value *bw_hidden_loc
 __device__ static inline net_value *fw_hidden_loc_grad 
   (net_precomputed const*pre, net_values const*v, int l, int w)
 { int t;
-  return !USE_FAST_SHARED_MEM || SPLIT_KERNELS || (t = pre->fwgpumem[l]) < 0 
+  return !USING_SHARED_MEMORY || (t = pre->fwgpumem[l]) < 0 
            ? (v+w)->h[l] 
            : sharedvalues + (w+(threadIdx.x/GTH)*GROUP_SIZE)*pre->memused + t;
 }
@@ -528,7 +533,7 @@ __device__ static inline net_value *fw_hidden_loc_grad
 __device__ static inline net_value *bw_hidden_loc_grad 
   (net_precomputed const*pre, net_values const*v, int l, int w)
 { int t;
-  return !USE_FAST_SHARED_MEM || SPLIT_KERNELS || (t = pre->bwgpumem[l]) < 0 
+  return !USING_SHARED_MEMORY || (t = pre->bwgpumem[l]) < 0 
            ? (v+w)->h[l] 
            : sharedvalues + (w+(threadIdx.x/GTH)*GROUP_SIZE)*pre->memused + t;
 }

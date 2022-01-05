@@ -1,4 +1,4 @@
-Commit: 3733db26b1bff1d216119ee04deb0743e2ecd6e7
+Commit: 5b483996760341411ef8640ecd48a196a30e1ed8
 
 Running exi3 with dbl-gpu on M2000:
 
@@ -7,15 +7,15 @@ Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro M2000, Compute Capability 5.2, 6 SM processors, 3.9 GBytes
 Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32
-Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 192 values
-Hid layer shrd mem: 0:20:0,100 1:20:100,20 2:20:20,80 3:20:80,40 4:20:40,60 5:10:70,120 T 136
+Desired # of blocks: 2, allowed shared mem per case: 0 bytes, 0 values
+Hid layer shrd mem: 0:20:-1,-1 1:20:-1,-1 2:20:-1,-1 3:20:-1,-1 4:20:-1,-1 5:10:-1,-1 T 0
 With 499 cases, need 1 launches, max 16 blocks/launch
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro M2000, Compute Capability 5.2, 6 SM processors, 3.9 GBytes
 Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32
-Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 192 values
-Hid layer shrd mem: 0:20:0,100 1:20:100,20 2:20:20,80 3:20:80,40 4:20:40,60 5:10:70,120 T 136
+Desired # of blocks: 2, allowed shared mem per case: 0 bytes, 0 values
+Hid layer shrd mem: 0:20:-1,-1 1:20:-1,-1 2:20:-1,-1 3:20:-1,-1 4:20:-1,-1 5:10:-1,-1 T 0
 With 499 cases, need 1 launches, max 16 blocks/launch
 
 Number of iterations used: 6
@@ -26,4 +26,4 @@ Average log probability of targets:    -1.321+-0.041
 Fraction of guesses that were wrong:    0.6400+-0.0482
 Average squared error guessing mean:    0.71716+-0.01995
 
-elapsed 53.55s
+elapsed 53.28s

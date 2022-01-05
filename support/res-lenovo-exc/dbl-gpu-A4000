@@ -1,4 +1,4 @@
-Commit: df9388dbdc0f8865591ddb7548a0775ffbf180b5
+Commit: f0c8ac7e0616486214ff1bbeccf1d75dc68d6788
 
 Running exc with dbl-gpu on A4000:
 
@@ -23,7 +23,7 @@ Number of iterations used: 30
 
 Number of test cases: 1000
 
-Average log probability of targets:    -0.519+-0.016
-Fraction of guesses that were wrong:    0.2000+-0.0127
+Average log probability of targets:    -0.468+-0.023
+Fraction of guesses that were wrong:    0.1930+-0.0125
 
-elapsed 2.39s
+elapsed 2.38s

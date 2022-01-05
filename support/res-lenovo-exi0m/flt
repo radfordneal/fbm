@@ -1,4 +1,4 @@
-Commit: df9388dbdc0f8865591ddb7548a0775ffbf180b5
+Commit: f0c8ac7e0616486214ff1bbeccf1d75dc68d6788
 
 Running exi0m with flt:
 
@@ -13,4 +13,4 @@ Average log probability of targets:    -1.371+-0.014
 Fraction of guesses that were wrong:    0.7500+-0.0435
 Average squared error guessing mean:    0.74180+-0.00683
 
-elapsed 11.17s
+elapsed 10.92s

@@ -1,6 +1,6 @@
 /* NET-MC.C - Interface between neural network and Markov chain modules. */
 
-/* Copyright (c) 1995-2021 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -563,8 +563,10 @@ static void decide_gpu_shared_mem_use
      cases, make the total number of shared memory elements per
      case mod 32 be an odd multiple of THREADS_PER_CASE. */
 
-  while ((pre->memused & (2*THREADS_PER_CASE-1)) != THREADS_PER_CASE)
-  { pre->memused += 1;
+  if (pre->memused>0)
+  { while ((pre->memused & (2*THREADS_PER_CASE-1)) != THREADS_PER_CASE)
+    { pre->memused += 1;
+    }
   }
 }
 
@@ -2818,6 +2820,10 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
         ? const_block_grad + blockIdx.x 
         : group_grad + blockIdx.x * GROUPS_PER_BLOCK + (m >> GROUP_SHIFT),
       train_vals_h - thm, deriv_i - thm, const_sparse, syncmask);
+
+    if (KDEBUG) 
+    { printf("Done back_grad %d %d\n", blockIdx.x, threadIdx.x);
+    }
   }
 
 #if SPLIT_REDUCTION
@@ -2881,7 +2887,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
         fb += stride; sum += fb[ILV*k]; 
         fb += stride; sum += fb[ILV*k]; 
         fb += stride; sum += fb[ILV*k];
-        accum_blk[k] += sum;
+        accum_blk[k] = sum;
       }
     }
     else if (GROUPS_PER_BLOCK>=4 && n_results==4)
@@ -2891,7 +2897,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
         fb += stride; sum += fb[ILV*k]; 
         fb += stride; sum += fb[ILV*k]; 
         fb += stride; sum += fb[ILV*k];
-        accum_blk[k] += sum;
+        accum_blk[k] = sum;
       }
     }
     else if (GROUPS_PER_BLOCK>=2 && n_results==2)
@@ -2902,15 +2908,23 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
         accum_blk[k] = sum;
       }
     }
-    else
+    else if (!BLOCK_GRAD_FOR_FIRST || n_results>1)
     { for (k = threadIdx.x; k < total_params; k += BTH)
       { net_param *fb = from_blk;
         net_param sum = BLOCK_GRAD_FOR_FIRST ? accum_blk[k] : fb[ILV*k];
         for (i = 1; i<n_results; i++)
         { fb += stride; sum += fb[ILV*k];
         }
-        accum_blk[k] += sum;
+printf("About to store (%d, %d): k %d, sum %f\n",blockIdx.x,threadIdx.x,k,sum);
+        accum_blk[k] = sum;
+printf("Done store (%d, %d)\n",blockIdx.x,threadIdx.x);
       }
+    }
+
+    if (KDEBUG)
+    { printf(
+       "Done reduction: block %d, thread %d, start %d, end %d, n_results %d\n",
+        blockIdx.x,threadIdx.x,start,end,n_results);
     }
   }
 }
@@ -2966,12 +2980,20 @@ static void net_training_cases_gpu
       check_cuda_error (cudaGetLastError(), "Before launching kernel(s)");
 
       int shared_mem = BLKCASES * pre.memused * sizeof(net_value);
+      double *en = energy ? case_energy : 0;
 
 #     define LAUNCH(kernel,mem,params) do { \
+        if (KDEBUG) check_cuda_error (cudaGetLastError(), "Before launch"); \
         kernel <<<blks, THREADS_PER_BLOCK, mem>>> params; \
         if (KDEBUG) check_cuda_error (cudaDeviceSynchronize(), \
                                       "Synchronizing after launch"); \
       } while (0)
+
+      if (KDEBUG) 
+      { printf(
+       "\nABOUT TO LAUNCH KERNELS: i %d, cases %d, blks %d, thrds %d, mem %d\n",
+          i, cases, blks, THREADS_PER_BLOCK, shared_mem);
+      }
           
 #     if SPLIT_MODEL
         LAUNCH (forward_kernel, shared_mem, 
@@ -2980,32 +3002,32 @@ static void net_training_cases_gpu
 
 #     if !SPLIT_MODEL && SPLIT_BACK_GRAD
         LAUNCH (forward_model_kernel, shared_mem, 
-          (i, i+cases, energy ? case_energy : 0, en_weight, gr!=0, gr_weight));
+          (i, i+cases, en, en_weight, gr!=0, gr_weight));
 #     endif
 
 #     if !SPLIT_MODEL && !SPLIT_BACK_GRAD
         LAUNCH (forward_model_back_grad_kernel, shared_mem, 
-          (i, i+cases, energy ? case_energy : 0, en_weight, gr, gr_weight));
+          (i, i+cases, en, en_weight, group_grad, gr_weight));
 #     endif
 
 #     if SPLIT_MODEL && SPLIT_BACK_GRAD
         LAUNCH (model_kernel, shared_mem, 
-          (i, i+cases, energy ? case_energy : 0, en_weight, gr!=0, gr_weight));
+          (i, i+cases, en, en_weight, gr!=0, gr_weight));
 #     endif
 
 #     if SPLIT_MODEL && !SPLIT_BACK_GRAD
         LAUNCH (model_back_grad_kernel, shared_mem, 
-          (i, i+cases, energy ? case_energy : 0, en_weight, gr, gr_weight));
+          (i, i+cases, en, en_weight, group_grad, gr_weight));
 #     endif
 
 #     if SPLIT_BACK_GRAD
         if (gr) LAUNCH (back_grad_kernel, shared_mem, 
-          (i, i+cases, gr));
+          (i, i+cases, group_grad));
 #     endif
 
 #     if SPLIT_REDUCTION
         if (gr && GROUPS_PER_BLOCK>1) LAUNCH (reduction_kernel, 0, 
-          (i, i+cases, gr));
+          (i, i+cases, group_grad));
 #     endif
     }
 

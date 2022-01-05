@@ -2915,9 +2915,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
         for (i = 1; i<n_results; i++)
         { fb += stride; sum += fb[ILV*k];
         }
-printf("About to store (%d, %d): k %d, sum %f\n",blockIdx.x,threadIdx.x,k,sum);
         accum_blk[k] = sum;
-printf("Done store (%d, %d)\n",blockIdx.x,threadIdx.x);
       }
     }
 

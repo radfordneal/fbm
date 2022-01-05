@@ -8,23 +8,22 @@ processes, finite and countably infinite mixtures, and Dirichlet
 diffusion trees, as well as facilities for inferring sources of
 atmospheric contamination and for molecular simulation.  These are
 implemented using Markov chain Monte Carlo methods.  Facilities for
-Markov chain sampling from distributions specified by simple
-formulas for the density or for the prior and likelihood are also
-included.
+Markov chain sampling from distributions specified by simple formulas
+for the density or for the prior and likelihood are also included.
 
-For more information, see the files in the 'doc' directory.   The
-file 'index.html' in 'doc' has links to all the documentation, which
-is easily perused with a web browser.  Note: You must access 'index.html' 
-in the 'doc' directory, not copy it somewhere else, since the links are 
-relative.  (Or, you can copy the entire directory elsewhere.)
+For more information, see the files in the 'doc' directory.  The file
+'index.html' in 'doc' has links to all the documentation, which is
+easily perused with a web browser.  Note: You must access 'index.html'
+in the 'doc' directory, not copy it somewhere else, since the links
+are relative.  (Or, you can copy the entire directory elsewhere.)
 
-This software can be found on Radford Neal's web page and in the 
+This software can be found on Radford Neal's web page and in the
 repository at https://gitlab.com/radfordneal/fbm
 
 ----------------------------------------------------------------------------
 
 The contents of this directory and its sub-directories are 
-Copyright (c) 1995-2021 by Radford M. Neal
+Copyright (c) 1995-2022 by Radford M. Neal
 
 Permission is granted for anyone to copy, use, modify, or distribute these
 programs and accompanying documents for any purpose, provided this copyright

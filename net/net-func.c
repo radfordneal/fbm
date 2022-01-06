@@ -1716,19 +1716,25 @@ __device__ __forceinline__ static void net_func_gpu
 }
 
 
+#define PB(w) (dev_param_block+(w))
+
+
 /* SET UNIT VALUES TO BIASES. */
 
 __device__ static void bias_values_gpu
 ( int th,			/* Thread index */
   net_value *restrict v,	/* Array of unit values to set */
   int n,			/* Number of units */
-  net_param const* b,		/* Biases */
+  net_param const* b0,		/* Biases */
   unsigned syncmask     	/* Mask of active threads */
 )
 { 
+  int b = b0 - dev_param_block;
+
   int j;
+
   for (j = th; j<n; j+=NTH)
-  { v[j] = b[j];
+  { v[j] = PB(b)[j];
   }
 
   if (SYNC_AFTER && n % NTH != 0) __syncwarp(syncmask);
@@ -1741,11 +1747,13 @@ __device__ static void bias_values_config_gpu
 ( int th,			/* Thread index */
   net_value *restrict v,	/* Array of unit values to set */
   int n,			/* Number of units */
-  net_param const* b,		/* Biases */
+  net_param const* b0,		/* Biases */
   net_config const* cf,		/* Configuration for biases */
   unsigned syncmask     	/* Mask of active threads */
 )
 { 
+  int b = b0 - dev_param_block;
+
   net_connection *cn;
   int c, j, k, m, ix;
 
@@ -1764,30 +1772,30 @@ __device__ static void bias_values_config_gpu
       { j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
         if (NTH==1)
-        { v[j] += b[k];
-          v[j+1] += b[k+1];
-          v[j+2] += b[k+2];
-          v[j+3] += b[k+3];
-          v[j+4] += b[k+4];
-          v[j+5] += b[k+5];
-          v[j+6] += b[k+6];
-          v[j+7] += b[k+7];
+        { v[j] += PB(b)[k];
+          v[j+1] += PB(b)[k+1];
+          v[j+2] += PB(b)[k+2];
+          v[j+3] += PB(b)[k+3];
+          v[j+4] += PB(b)[k+4];
+          v[j+5] += PB(b)[k+5];
+          v[j+6] += PB(b)[k+6];
+          v[j+7] += PB(b)[k+7];
         }
         else if (NTH==2)
-        { v[j+ix] += b[k+ix];
-          v[j+ix+2] += b[k+ix+2];
-          v[j+ix+4] += b[k+ix+4];
-          v[j+ix+6] += b[k+ix+6];
+        { v[j+ix] += PB(b)[k+ix];
+          v[j+ix+2] += PB(b)[k+ix+2];
+          v[j+ix+4] += PB(b)[k+ix+4];
+          v[j+ix+6] += PB(b)[k+ix+6];
         }
         else if (NTH==4)
-        { v[j+ix] += b[k+ix];
-          v[j+ix+4] += b[k+ix+4];
+        { v[j+ix] += PB(b)[k+ix];
+          v[j+ix+4] += PB(b)[k+ix+4];
         }
         else if (NTH==8)
-        { v[j+ix] += b[k+ix];
+        { v[j+ix] += PB(b)[k+ix];
         }
         else if (ix<8)
-        { v[j+ix] += b[k+ix];
+        { v[j+ix] += PB(b)[k+ix];
         }
       }
     }
@@ -1803,20 +1811,20 @@ __device__ static void bias_values_config_gpu
       { j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
         if (NTH==1)
-        { v[j+0] += b[k+0];
-          v[j+1] += b[k+1];
-          v[j+2] += b[k+2];
-          v[j+3] += b[k+3];
+        { v[j+0] += PB(b)[k+0];
+          v[j+1] += PB(b)[k+1];
+          v[j+2] += PB(b)[k+2];
+          v[j+3] += PB(b)[k+3];
         }
         else if (NTH==2)
-        { v[j+ix] += b[k+ix];
-          v[j+ix+2] += b[k+ix+2];
+        { v[j+ix] += PB(b)[k+ix];
+          v[j+ix+2] += PB(b)[k+ix+2];
         }
         else if (NTH==4)
-        { v[j+ix] += b[k+ix];
+        { v[j+ix] += PB(b)[k+ix];
         }
         else if (ix<4)
-        { v[j+ix] += b[k+ix];
+        { v[j+ix] += PB(b)[k+ix];
         }
       }
     }
@@ -1828,7 +1836,7 @@ __device__ static void bias_values_config_gpu
   for (;;)
   { j = cn[c].d; k = cn[c].w; c += 1;
     if (k<0) break;
-    v[j] += b[k];
+    v[j] += PB(b)[k];
   }
   if (SYNC_AFTER) __syncwarp(syncmask);
 }
@@ -1847,12 +1855,12 @@ do \
     { net_value sv = 0; \
       if (off) \
       { for (i = 0; i<ns; i++) \
-        { sv += (v[i] + off[i]) * w[i]; \
+        { sv += (v[i] + off[i]) * PB(w)[i]; \
         } \
       } \
       else \
       { for (i = 0; i<ns; i++) \
-        { sv += v[i] * w[i]; \
+        { sv += v[i] * PB(w)[i]; \
         } \
       } \
       s[0] += sv; \
@@ -1865,7 +1873,7 @@ do \
       { net_value tv = off ? v[i] + off[i] : v[i]; \
         if (tv!=0) \
         { for (j = th; j<nd; j+=NTH) \
-          { s[j] += w[j] * tv; \
+          { s[j] += PB(w)[j] * tv; \
           } \
         } \
         if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
@@ -1879,11 +1887,12 @@ do \
         net_value tv1 = off ? v[i-2] + off[i-2] : v[i-2]; \
         net_value tv2 = off ? v[i-1] + off[i-1] : v[i-1]; \
         net_value tv3 = off ? v[i] + off[i] : v[i]; \
-        net_param const* w1 = w+nd; \
-        net_param const* w2 = w1+nd; \
-        net_param const* w3 = w2+nd; \
+        int w1 = w+nd; \
+        int w2 = w1+nd; \
+        int w3 = w2+nd; \
         for (j = th; j<nd; j+=NTH) \
-        { s[j] = s[j] + w[j] * tv0 + w1[j] * tv1 + w2[j] * tv2 + w3[j] * tv3; \
+        { s[j] = s[j] + PB(w)[j] * tv0 + PB(w1)[j] * tv1 \
+                      + PB(w2)[j] * tv2 + PB(w3)[j] * tv3; \
         } \
         if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
         w = w3 + nd; \
@@ -1893,9 +1902,9 @@ do \
       if (i<ns) \
       { net_value tv0 = off ? v[i-1] + off[i-1] : v[i-1]; \
         net_value tv1 = off ? v[i] + off[i] : v[i]; \
-        net_param const* w1 = w+nd; \
+        int w1 = w+nd; \
         for (j = th; j<nd; j+=NTH) \
-        { s[j] = s[j] + w[j] * tv0 + w1[j] * tv1; \
+        { s[j] = s[j] + PB(w)[j] * tv0 + PB(w1)[j] * tv1; \
         } \
         if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
         w = w1 + nd; \
@@ -1904,7 +1913,7 @@ do \
       if (i<=ns) \
       { net_value tv = off ? v[i-1] + off[i-1] : v[i-1]; \
         for (j = th; j<nd; j+=NTH) \
-        { s[j] = s[j] + w[j] * tv; \
+        { s[j] = s[j] + PB(w)[j] * tv; \
         } \
         if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
       } \
@@ -1913,16 +1922,16 @@ do \
   else \
   { for (j = th; j<nd; j+=NTH) \
     { net_value sv = s[j]; \
-      const net_param *wj = w+j; \
+      int wj = w+j; \
       if (off) \
       { for (i = 0; i<ns; i++) \
-        { sv += (v[i] + off[i]) * *wj; \
+        { sv += (v[i] + off[i]) * *PB(wj); \
           wj += nd; \
         } \
       } \
       else \
       { for (i = 0; i<ns; i++) \
-        { sv += v[i] * *wj; \
+        { sv += v[i] * *PB(wj); \
           wj += nd; \
         } \
       } \
@@ -1940,7 +1949,7 @@ do \
     { net_value sv = 0; \
       for (i = 0; i<ns; i++) \
       { if (omit[i]&ob) continue; \
-        sv += off ? (v[i] + off[i]) * *w : v[i] * *w; \
+        sv += off ? (v[i] + off[i]) * *PB(w) : v[i] * *PB(w); \
         w += 1; \
       } \
       s[0] += sv; \
@@ -1953,7 +1962,7 @@ do \
       net_value tv = off ? v[i] + off[i] : v[i]; \
       if (tv!=0)  \
       { for (j = th; j<nd; j+=NTH) \
-        { s[j] += w[j] * tv; \
+        { s[j] += PB(w)[j] * tv; \
         } \
       } \
       if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
@@ -1963,7 +1972,7 @@ do \
   else \
   { for (j = th; j<nd; j+=NTH) \
     { net_value sv = s[j]; \
-      const net_param *wj = w+j; \
+      int wj = w+j; \
       int k = 0; \
       for (i = 0; i<ns; i++) \
       { while (k < i) \
@@ -1971,7 +1980,7 @@ do \
           k += 1; \
         } \
         if (!(omit[i]&ob)) \
-        { sv += off ? (v[i] + off[i]) * *wj : v[i] * *wj; \
+        { sv += off ? (v[i] + off[i]) * *PB(wj) : v[i] * *PB(wj); \
         } \
       } \
       s[j] = sv; \
@@ -1986,7 +1995,7 @@ __device__ static void add_connections_gpu
   int nd,		  /* Number of destination units */
   net_value const* v,     /* Values for source units */
   int ns,		  /* Number of source units */
-  net_param const* w,     /* Connection weights */
+  net_param const* w0,    /* Connection weights */
   net_param const* off,   /* Offsets to add to source unit values */
   unsigned short const* omit, /* Omit flags, null if not present/relevant */
   int ob,		  /* Bit to look at in omit flags */
@@ -1994,6 +2003,8 @@ __device__ static void add_connections_gpu
   unsigned syncmask       /* Mask of active threads */
 )
 {
+  int w = w0 - dev_param_block;
+
   if (sparse && off==0)
   { if (omit==0)
     { ADD_CONNECTIONS_GPU(((char*)0),1);
@@ -2031,12 +2042,14 @@ __device__ static void add_connections_config_gpu
 ( int th,		  /* Thread index */
   net_value *restrict s,  /* Summed input for destination units to add to */
   net_value const* v,     /* Values for source units */
-  net_param const* w,     /* Connection weights */
+  net_param const* w0,    /* Connection weights */
   net_param const* off,   /* Offsets to add to source unit values */
-  net_config const* cf,    /* Configuration for connections and weights */
+  net_config const* cf,   /* Configuration for connections and weights */
   unsigned syncmask       /* Mask of active threads */
 )
 {
+  int w = w0 - dev_param_block;
+
   net_connection *cn;
   int c, i, j, k, m, ix;
   net_value vi;
@@ -2052,30 +2065,30 @@ __device__ static void add_connections_config_gpu
         vi = v[i];
         if (off) vi += off[i];
         if (NTH==1)
-        { s[j] += vi * w[k];
-          s[j+1] += vi * w[k+1];
-          s[j+2] += vi * w[k+2];
-          s[j+3] += vi * w[k+3];
-          s[j+4] += vi * w[k+4];
-          s[j+5] += vi * w[k+5];
-          s[j+6] += vi * w[k+6];
-          s[j+7] += vi * w[k+7];
+        { s[j] += vi * PB(w)[k];
+          s[j+1] += vi * PB(w)[k+1];
+          s[j+2] += vi * PB(w)[k+2];
+          s[j+3] += vi * PB(w)[k+3];
+          s[j+4] += vi * PB(w)[k+4];
+          s[j+5] += vi * PB(w)[k+5];
+          s[j+6] += vi * PB(w)[k+6];
+          s[j+7] += vi * PB(w)[k+7];
         }
         else if (NTH==2)
-        { s[j+ix] += vi * w[k+ix];
-          s[j+ix+2] += vi * w[k+ix+2];
-          s[j+ix+4] += vi * w[k+ix+4];
-          s[j+ix+6] += vi * w[k+ix+6];
+        { s[j+ix] += vi * PB(w)[k+ix];
+          s[j+ix+2] += vi * PB(w)[k+ix+2];
+          s[j+ix+4] += vi * PB(w)[k+ix+4];
+          s[j+ix+6] += vi * PB(w)[k+ix+6];
         }
         else if (NTH==4)
-        { s[j+ix] += vi * w[k+ix];
-          s[j+ix+4] += vi * w[k+ix+4];
+        { s[j+ix] += vi * PB(w)[k+ix];
+          s[j+ix+4] += vi * PB(w)[k+ix+4];
         }
         else if (NTH==8)
-        { s[j+ix] += vi * w[k+ix];
+        { s[j+ix] += vi * PB(w)[k+ix];
         }
         else if (ix<8)
-        { s[j+ix] += vi * w[k+ix];
+        { s[j+ix] += vi * PB(w)[k+ix];
         }
       }
     }
@@ -2093,20 +2106,20 @@ __device__ static void add_connections_config_gpu
         vi = v[i];
         if (off) vi += off[i];
         if (NTH==1)
-        { s[j+0] += vi * w[k+0];
-          s[j+1] += vi * w[k+1];
-          s[j+2] += vi * w[k+2];
-          s[j+3] += vi * w[k+3];
+        { s[j+0] += vi * PB(w)[k+0];
+          s[j+1] += vi * PB(w)[k+1];
+          s[j+2] += vi * PB(w)[k+2];
+          s[j+3] += vi * PB(w)[k+3];
         }
         else if (NTH==2)
-        { s[j+ix] += vi * w[k+ix];
-          s[j+ix+2] += vi * w[k+ix+2];
+        { s[j+ix] += vi * PB(w)[k+ix];
+          s[j+ix+2] += vi * PB(w)[k+ix+2];
         }
         else if (NTH==4)
-        { s[j+ix] += vi * w[k+ix];
+        { s[j+ix] += vi * PB(w)[k+ix];
         }
         else if (ix<4)
-        { s[j+ix] += vi * w[k+ix];
+        { s[j+ix] += vi * PB(w)[k+ix];
         }
       }
     }
@@ -2120,7 +2133,7 @@ __device__ static void add_connections_config_gpu
     if (k<0) break;
     vi = v[i];
     if (off) vi += off[i];
-    s[j] += vi * w[k];
+    s[j] += vi * PB(w)[k];
   }
   if (SYNC_AFTER) __syncwarp(syncmask);
 }

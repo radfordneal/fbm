@@ -1,4 +1,4 @@
-Commit: 2d2d524826ba4ac833190df3786bd50b1e40828c
+Commit: 847e209691cefa06adda2ae78442e631411fc840
 
 Running exi2 with dbl-gpu on P620:
 
@@ -7,15 +7,15 @@ Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro P620, Compute Capability 6.1, 4 SM processors, 2.0 GBytes
 Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32
-Desired # of blocks: 2, allowed shared mem per case: 0 bytes, 0 values
-Hid layer shrd mem: 0:80:-1,-1 T 0
+Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:80:0,80 T 168
 With 4999 cases, need 1 launches, max 157 blocks/launch
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro P620, Compute Capability 6.1, 4 SM processors, 2.0 GBytes
 Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32
-Desired # of blocks: 2, allowed shared mem per case: 0 bytes, 0 values
-Hid layer shrd mem: 0:80:-1,-1 T 0
+Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:80:0,80 T 168
 With 4999 cases, need 1 launches, max 157 blocks/launch
 
 Number of iterations used: 2
@@ -26,4 +26,4 @@ Average log probability of targets:    -0.756+-0.107
 Fraction of guesses that were wrong:    0.2700+-0.0446
 Average squared error guessing mean:    0.38772+-0.04793
 
-elapsed 30.89s
+elapsed 32.34s

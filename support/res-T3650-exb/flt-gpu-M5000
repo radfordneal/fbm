@@ -1,4 +1,4 @@
-Commit: ae3ca59688a9fb0f54ef80c703594cedc6d22576
+Commit: 320338ebfa108251581a811a599dd9fb884575b1
 
 Running exb with flt-gpu on M5000:
 
@@ -26,4 +26,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.242+-0.017
 Fraction of guesses that were wrong:    0.1090+-0.0099
 
-elapsed 1.65s
+elapsed 1.64s

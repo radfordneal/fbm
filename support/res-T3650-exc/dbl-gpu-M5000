@@ -1,4 +1,4 @@
-Commit: 320338ebfa108251581a811a599dd9fb884575b1
+Commit: 1ee1cf27549d40e757b57581d50cb09e99602ff7
 
 Running exc with dbl-gpu on M5000:
 
@@ -26,4 +26,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.468+-0.023
 Fraction of guesses that were wrong:    0.1930+-0.0125
 
-elapsed 3.25s
+elapsed 3.41s

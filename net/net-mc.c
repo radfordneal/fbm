@@ -235,6 +235,14 @@ static net_values *dev_deriv;	/* GPU space for derivs of cases in launch */
 
 static double *dev_scratch;	/* GPU scratch memory, for each case in launch*/
 
+static __device__ net_param dev_param_block  /* Space for parameters in GPU. */
+#if USE_TRANSPOSED_WEIGHTS
+  [2*MAX_PARAMETERS];  /* Transposed versions may follow regular versions */
+#else
+  [MAX_PARAMETERS];
+#endif
+static net_param *dev_param_block_addr;  /* GPU address of dev_param_block */
+
 __constant__ int const_N_train;    /* Copy of N_train in constant memory */
 __constant__ int const_N_inputs;   /* Copy of N_inputs in constant memory */
 __constant__ int const_N_targets;  /* Copy of N_targets in constant memory */
@@ -254,12 +262,9 @@ static net_sigma *dev_noise;          /* GPU copy of noise sigmas */
 __constant__ net_sigma *const_noise;  /* Pointer to GPU copy of noise sigmas */
 
 __constant__ net_params const_params; /* version of params in GPU */
-static net_param *dev_param_block;    /* parameter block in const_params */
 
 #if USE_TRANSPOSED_WEIGHTS
-
 __constant__ net_params const_params_trans; /* Transposed parameters in GPU */
-
 #endif
 
 __constant__ net_values *const_deriv;  /* Copy of deriv ptr in constant memory*/
@@ -921,21 +926,22 @@ void mc_app_initialize
 #   if __CUDACC__
     { net_params tmp_params;
       tmp_params.total_params = params.total_params;
-      check_cuda_error (cudaMalloc (&dev_param_block,
-       (1+any_transposed)*params.total_params * sizeof *tmp_params.param_block),
-       "alloc of params block for GPU");
-      tmp_params.param_block = dev_param_block;
+      void *p;
+      check_cuda_error (cudaGetSymbolAddress (&p, dev_param_block),
+                        "get symbol address");
+      dev_param_block_addr = (net_param *)p;
+      tmp_params.param_block = dev_param_block_addr;
       net_setup_param_pointers (&tmp_params, arch, flgs);
       check_cuda_error (cudaMemcpyToSymbol 
-                          (const_params, &tmp_params, sizeof tmp_params),
+                         (const_params, &tmp_params, sizeof tmp_params),
                         "copy to const_params");
 #     if USE_TRANSPOSED_WEIGHTS
       { if (any_transposed)
         { tmp_params.param_block += params.total_params;
           net_setup_param_pointers (&tmp_params, arch, flgs);
           check_cuda_error(cudaMemcpyToSymbol 
-                         (const_params_trans, &tmp_params, sizeof tmp_params),
-                         "copy to const_params_trans");
+                           (const_params_trans, &tmp_params, sizeof tmp_params),
+                          "copy to const_params_trans");
         }
       }
 #     endif
@@ -2949,8 +2955,8 @@ static void net_training_cases_gpu
   cuda_setup (energy, gr ? gr->param_block : 0);
 
   /* Copy current parameters to GPU, including transposed versions, if any. */
-     
-  check_cuda_error (cudaMemcpy (dev_param_block, params.param_block,
+
+  check_cuda_error (cudaMemcpy (dev_param_block_addr, params.param_block,
          (1+any_transposed) * params.total_params * sizeof *params.param_block,
          cudaMemcpyHostToDevice),
       "Copying parameters to GPU");

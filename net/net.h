@@ -83,6 +83,9 @@
 
 /* CONSTANTS RELATING TO GPU COMPUTATIONS: */
 
+#define MAX_PARAMETERS 1000000 /* Maximum number of parameters allowed, due to
+                                  their being statically allocated GPU space */
+
 #define WARPSIZE 32          /* Assumed to be 32, as it is for all CUDA
                                 architectures so far (ie, to at least 8.6) */
 

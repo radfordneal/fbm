@@ -563,12 +563,14 @@ __device__ static void sum_derivatives_gpu
   int nd,		  /* Number of destination units */
   net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
   int ns,		  /* Number of source units */
-  net_param const* w,     /* Connection weights */
+  net_param const* w0,    /* Connection weights */
   unsigned short const* omit,  /* Omit flags, null if not present */
   int bit,		  /* Bit to look at in omit flags */
   unsigned syncmask       /* Mask of active threads for backprop */
 )
 {
+  net_param const* w = &dev_param_block [w0 - dev_param_block];
+
   net_value tv;
   int i, j, k;
 
@@ -635,11 +637,13 @@ __device__ static void sum_derivatives_config_gpu
 ( int th,		  /* Which thread */
   net_value const* dd,    /* Derivatives with respect to destination units */
   net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
-  net_param const* w,     /* Connection weights */
+  net_param const* w0,    /* Connection weights */
   net_config const* cf,   /* Configuration for connections and weights */
   unsigned syncmask       /* Mask of active threads for backprop */
 )
 {
+  net_param const* w = &dev_param_block [w0 - dev_param_block];
+
   net_connection *cn;
   int c, i, j, k;
 

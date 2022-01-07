@@ -49,7 +49,7 @@
                                       computed and used in the backward pass? */
 
 /* Should these weights have a transposed form?  Adjustable criterion based on 
-   the numbers of sourse and destination units. */
+   the numbers of source and destination units. */
 
 #define TRANS_WEIGHTS(ns,nd) (USE_TRANSPOSED_WEIGHTS && 1) /* always, for now */
 

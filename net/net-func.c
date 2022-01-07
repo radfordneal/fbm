@@ -1846,7 +1846,7 @@ __device__ static void bias_values_config_gpu
 
 #define ADD_CONNECTIONS_GPU(off,sprs) \
 do \
-{ int i, j; \
+{ int i; \
   if (nd==1) \
   { if (th==0) \
     { net_value sv = 0; \
@@ -1869,7 +1869,8 @@ do \
     { for (i = 0; i<ns; i++) \
       { net_value tv = off ? v[i] + off[i] : v[i]; \
         if (tv!=0) \
-        { for (j = th; j<nd; j+=NTH) \
+        { int j; \
+          for (j = th; j<nd; j+=NTH) \
           { s[j] += w[j] * tv; \
           } \
         } \
@@ -1884,39 +1885,42 @@ do \
         net_value tv1 = off ? v[i-2] + off[i-2] : v[i-2]; \
         net_value tv2 = off ? v[i-1] + off[i-1] : v[i-1]; \
         net_value tv3 = off ? v[i] + off[i] : v[i]; \
-        net_param const* w1 = w+nd; \
-        net_param const* w2 = w1+nd; \
-        net_param const* w3 = w2+nd; \
-        for (j = th; j<nd; j+=NTH) \
-        { s[j] = s[j] + w[j] * tv0 + w1[j] * tv1 + w2[j] * tv2 + w3[j] * tv3; \
+        int j = th; int j1 = j+nd; int j2 = j1+nd; int j3 = j2+nd; \
+        while (j<nd) \
+        { s[j] = s[j] + w[j] * tv0 + w[j1] * tv1 + w[j2] * tv2 + w[j3] * tv3; \
+          j += NTH; j1 += NTH; j2 += NTH; j3 += NTH; \
         } \
         if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
-        w = w3 + nd; \
+        w += 4*nd; \
         i += 4; \
       } \
       i -= 2; \
       if (i<ns) \
       { net_value tv0 = off ? v[i-1] + off[i-1] : v[i-1]; \
         net_value tv1 = off ? v[i] + off[i] : v[i]; \
-        net_param const* w1 = w+nd; \
-        for (j = th; j<nd; j+=NTH) \
-        { s[j] = s[j] + w[j] * tv0 + w1[j] * tv1; \
+        int j = th; int j1 = j+nd; \
+        while (j<nd) \
+        { s[j] = s[j] + w[j] * tv0 + w[j1] * tv1; \
+          j += NTH; j1 += NTH; \
         } \
         if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
-        w = w1 + nd; \
+        w += 2*nd; \
         i += 2; \
       } \
       if (i<=ns) \
       { net_value tv = off ? v[i-1] + off[i-1] : v[i-1]; \
-        for (j = th; j<nd; j+=NTH) \
+        int j = th; \
+        while (j<nd) \
         { s[j] = s[j] + w[j] * tv; \
+          j += NTH; \
         } \
         if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
       } \
     } \
   } \
   else \
-  { for (j = th; j<nd; j+=NTH) \
+  { int j; \
+    for (j = th; j<nd; j+=NTH) \
     { net_value sv = s[j]; \
       net_param const* wj = w+j; \
       if (off) \

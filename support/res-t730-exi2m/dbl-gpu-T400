@@ -1,4 +1,4 @@
-Commit: 2081bf1f9333a088b466018c2aede2de4f32864c
+Commit: 390ca3f83b5b57e7cae0980b142ea6ad0f90c220
 
 Running exi2m with dbl-gpu on T400:
 
@@ -19,4 +19,4 @@ Average log probability of targets:    -1.287+-0.033
 Fraction of guesses that were wrong:    0.6000+-0.0492
 Average squared error guessing mean:    0.70463+-0.01618
 
-elapsed 8.70s
+elapsed 8.74s

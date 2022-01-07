@@ -1885,10 +1885,16 @@ do \
         net_value tv1 = off ? v[i-2] + off[i-2] : v[i-2]; \
         net_value tv2 = off ? v[i-1] + off[i-1] : v[i-1]; \
         net_value tv3 = off ? v[i] + off[i] : v[i]; \
-        int j = th; int j1 = j+nd; int j2 = j1+nd; int j3 = j2+nd; \
+        int j = th; \
         while (j<nd) \
-        { s[j] = s[j] + w[j] * tv0 + w[j1] * tv1 + w[j2] * tv2 + w[j3] * tv3; \
-          j += NTH; j1 += NTH; j2 += NTH; j3 += NTH; \
+        { net_value r = s[j]; \
+          net_value const* u = w+j; \
+          r += *u * tv0; u += nd; \
+          r += *u * tv1; u += nd; \
+          r += *u * tv2; u += nd; \
+          r += *u * tv3; \
+          s[j] = r; \
+          j += NTH; \
         } \
         if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
         w += 4*nd; \
@@ -1898,10 +1904,14 @@ do \
       if (i<ns) \
       { net_value tv0 = off ? v[i-1] + off[i-1] : v[i-1]; \
         net_value tv1 = off ? v[i] + off[i] : v[i]; \
-        int j = th; int j1 = j+nd; \
+        int j = th; \
         while (j<nd) \
-        { s[j] = s[j] + w[j] * tv0 + w[j1] * tv1; \
-          j += NTH; j1 += NTH; \
+        { net_value r = s[j]; \
+          net_value const* u = w+j; \
+          r += *u * tv0; u += nd; \
+          r += *u * tv1; \
+          s[j] = r; \
+          j += NTH; \
         } \
         if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \
         w += 2*nd; \
@@ -1911,7 +1921,7 @@ do \
       { net_value tv = off ? v[i-1] + off[i-1] : v[i-1]; \
         int j = th; \
         while (j<nd) \
-        { s[j] = s[j] + w[j] * tv; \
+        { s[j] += w[j] * tv; \
           j += NTH; \
         } \
         if (SYNC_AFTER && nd % NTH != 0) __syncwarp(syncmask); \

@@ -1,4 +1,4 @@
-Commit: 960462ef97a19b5f1b187e2a36a88580d327e676
+Commit: e2d0f3702fbabc322a3e4386fc22cd78a2eee367
 
 Running exb16 with flt:
 
@@ -14,4 +14,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.251+-0.018
 Fraction of guesses that were wrong:    0.1130+-0.0100
 
-elapsed 0.86s
+elapsed 0.83s

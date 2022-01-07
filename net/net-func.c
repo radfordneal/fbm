@@ -1716,7 +1716,7 @@ __device__ __forceinline__ static void net_func_gpu
 }
 
 
-#define PB(w) (dev_param_block+(w))
+#define PB(w) (w)
 
 
 /* SET UNIT VALUES TO BIASES. */
@@ -1729,7 +1729,7 @@ __device__ static void bias_values_gpu
   unsigned syncmask     	/* Mask of active threads */
 )
 { 
-  int b = b0 - dev_param_block;
+  net_param const* b = &dev_param_block [b0 - dev_param_block];
 
   int j;
 
@@ -1752,7 +1752,7 @@ __device__ static void bias_values_config_gpu
   unsigned syncmask     	/* Mask of active threads */
 )
 { 
-  int b = b0 - dev_param_block;
+  net_param const* b = &dev_param_block [b0 - dev_param_block];
 
   net_connection *cn;
   int c, j, k, m, ix;
@@ -1887,9 +1887,9 @@ do \
         net_value tv1 = off ? v[i-2] + off[i-2] : v[i-2]; \
         net_value tv2 = off ? v[i-1] + off[i-1] : v[i-1]; \
         net_value tv3 = off ? v[i] + off[i] : v[i]; \
-        int w1 = w+nd; \
-        int w2 = w1+nd; \
-        int w3 = w2+nd; \
+        net_param const* w1 = w+nd; \
+        net_param const* w2 = w1+nd; \
+        net_param const* w3 = w2+nd; \
         for (j = th; j<nd; j+=NTH) \
         { s[j] = s[j] + PB(w)[j] * tv0 + PB(w1)[j] * tv1 \
                       + PB(w2)[j] * tv2 + PB(w3)[j] * tv3; \
@@ -1902,7 +1902,7 @@ do \
       if (i<ns) \
       { net_value tv0 = off ? v[i-1] + off[i-1] : v[i-1]; \
         net_value tv1 = off ? v[i] + off[i] : v[i]; \
-        int w1 = w+nd; \
+        net_param const* w1 = w+nd; \
         for (j = th; j<nd; j+=NTH) \
         { s[j] = s[j] + PB(w)[j] * tv0 + PB(w1)[j] * tv1; \
         } \
@@ -1922,7 +1922,7 @@ do \
   else \
   { for (j = th; j<nd; j+=NTH) \
     { net_value sv = s[j]; \
-      int wj = w+j; \
+      net_param const* wj = w+j; \
       if (off) \
       { for (i = 0; i<ns; i++) \
         { sv += (v[i] + off[i]) * *PB(wj); \
@@ -1972,7 +1972,7 @@ do \
   else \
   { for (j = th; j<nd; j+=NTH) \
     { net_value sv = s[j]; \
-      int wj = w+j; \
+      net_param const* wj = w+j; \
       int k = 0; \
       for (i = 0; i<ns; i++) \
       { while (k < i) \
@@ -2003,7 +2003,7 @@ __device__ static void add_connections_gpu
   unsigned syncmask       /* Mask of active threads */
 )
 {
-  int w = w0 - dev_param_block;
+  net_param const* w = &dev_param_block [w0 - dev_param_block];
 
   if (sparse && off==0)
   { if (omit==0)
@@ -2048,7 +2048,7 @@ __device__ static void add_connections_config_gpu
   unsigned syncmask       /* Mask of active threads */
 )
 {
-  int w = w0 - dev_param_block;
+  net_param const* w = &dev_param_block [w0 - dev_param_block];
 
   net_connection *cn;
   int c, i, j, k, m, ix;

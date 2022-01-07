@@ -3485,20 +3485,18 @@ __device__ static void store_grad1
   int gsz,                /* Number of cases in this group (<= GROUP_SIZE) */
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const*restrict d0,  /* Derivs with respect to unit values, case 0 */
-  net_value const*restrict d1,  /* Derivs with respect to unit values, case 1 */
-  net_value const*restrict d2,  /* Derivs with respect to unit values, case 2 */
-  net_value const*restrict d3,  /* Derivs with respect to unit values, case 3 */
+  int ds,                 /* Stride to get to derivs for following cases */
   int n                   /* Number of units */
 )
 {
   if (GROUP_SIZE>=4 && gsz==4)
-  { net_store4_grad1 (th, g, d0, d1, d2, d3, n);
+  { net_store4_grad1 (th, g, d0, d0+ds, d0+ds+ds, d0+ds+ds+ds, n);
   }
   else if (GROUP_SIZE>=3 && gsz==3)
-  { net_store3_grad1 (th, g, d0, d1, d2, n);
+  { net_store3_grad1 (th, g, d0, d0+ds, d0+ds+ds, n);
   }
   else if (GROUP_SIZE>=2 && gsz==2)
-  { net_store2_grad1 (th, g, d0, d1, n);
+  { net_store2_grad1 (th, g, d0, d0+ds, n);
   }
   else if (gsz==1)
   { net_store1_grad1 (th, g, d0, n);
@@ -3512,20 +3510,18 @@ __device__ static void store_grad1_config
   int gsz,                /* Number of cases in this group (<= GROUP_SIZE) */
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const*restrict d0,  /* Derivs with respect to unit values, case 0 */
-  net_value const*restrict d1,  /* Derivs with respect to unit values, case 1 */
-  net_value const*restrict d2,  /* Derivs with respect to unit values, case 2 */
-  net_value const*restrict d3,  /* Derivs with respect to unit values, case 3 */
+  int ds,                 /* Stride to get to derivs for following cases */
   net_config const*restrict cf  /* Configuration for biases */
 )
 {
   if (GROUP_SIZE>=4 && gsz==4)
-  { net_store4_grad1_config (th, g, d0, d1, d2, d3, cf);
+  { net_store4_grad1_config (th, g, d0, d0+ds, d0+ds+ds, d0+ds+ds+ds, cf);
   }
   else if (GROUP_SIZE>=3 && gsz==3)
-  { net_store3_grad1_config (th, g, d0, d1, d2, cf);
+  { net_store3_grad1_config (th, g, d0, d0+ds, d0+ds+ds, cf);
   }
   else if (GROUP_SIZE>=2 && gsz==2)
-  { net_store2_grad1_config (th, g, d0, d1, cf);
+  { net_store2_grad1_config (th, g, d0, d0+ds, cf);
   }
   else if (gsz==1)
   { net_store1_grad1_config (th, g, d0, cf);
@@ -3539,15 +3535,11 @@ __device__ static void store_grad2
   int gsz,                /* Number of cases in this group (<= GROUP_SIZE) */
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const*restrict v0,  /* Source unit values, case 0 */
-  net_value const*restrict v1,  /* Source unit values, case 1 */
-  net_value const*restrict v2,  /* Source unit values, case 2 */
-  net_value const*restrict v3,  /* Source unit values, case 3 */
+  int vs,                 /* Stride to get to values for following cases */
   net_param const*restrict off, /* Offsets for source units, 0 if no offsets */
   int nv,                       /* Number of source units */
-  net_value const*restrict d0,  /* Derivatives with respect to dest units, 0 */
-  net_value const*restrict d1,  /* Derivatives with respect to dest units, 1 */
-  net_value const*restrict d2,  /* Derivatives with respect to dest units, 2 */
-  net_value const*restrict d3,  /* Derivatives with respect to dest units, 3 */
+  net_value const*restrict d0,  /* Derivs with respect to dest units, case 0 */
+  int ds,                 /* Stride to get to derivatives for following cases */
   int nd,                 /* Number of destination units */
   unsigned short const*restrict omit, /* Omit flags, null if not present */
   int ob,                 /* Bit to look at in omit flags (mask, not number) */
@@ -3556,15 +3548,17 @@ __device__ static void store_grad2
 {
   if (GROUP_SIZE>=4 && gsz==4)
   { net_store4_grad2 
-     (th, g, v0, v1, v2, v3, off, nv, d0, d1, d2, d3, nd, omit, ob, sparse);
+     (th, g, v0, v0+vs, v0+vs+vs, v0+vs+vs+vs, off, nv, 
+             d0, d0+ds, d0+ds+ds, d0+ds+ds+ds, nd, omit, ob, sparse);
   }
   else if (GROUP_SIZE>=3 && gsz==3)
   { net_store3_grad2
-     (th, g, v0, v1, v2, off, nv, d0, d1, d2, nd, omit, ob, sparse);
+     (th, g, v0, v0+vs, v0+vs+vs, off, nv, 
+             d0, d0+ds, d0+ds+ds, nd, omit, ob, sparse);
   }
   else if (GROUP_SIZE>=2 && gsz==2)
   { net_store2_grad2
-     (th, g, v0, v1, off, nv, d0, d1, nd, omit, ob, sparse);
+     (th, g, v0, v0+vs, off, nv, d0, d0+ds, nd, omit, ob, sparse);
   }
   else if (gsz==1)
   { net_store1_grad2
@@ -3579,28 +3573,25 @@ __device__ static void store_grad2_config
   int gsz,                /* Number of cases in this group (<= GROUP_SIZE) */
   net_param *restrict g,  /* Array of derivatives to add to */
   net_value const*restrict v0,  /* Source unit values, case 0 */
-  net_value const*restrict v1,  /* Source unit values, case 1 */
-  net_value const*restrict v2,  /* Source unit values, case 2 */
-  net_value const*restrict v3,  /* Source unit values, case 3 */
+  int vs,                 /* Stride to get to values for following cases */
   net_param const*restrict off, /* Offsets for source units, 0 if no offsets */
-  net_value const*restrict d0,  /* Derivatives with respect to dest units, 0 */
-  net_value const*restrict d1,  /* Derivatives with respect to dest units, 1 */
-  net_value const*restrict d2,  /* Derivatives with respect to dest units, 2 */
-  net_value const*restrict d3,  /* Derivatives with respect to dest units, 3 */
+  net_value const*restrict d0,  /* Derivs with respect to dest units, case 0 */
+  int ds,                 /* Stride to get to derivatives for following cases */
   net_config const*restrict cf  /* Configuration for connections and weights */
 )
 {
   if (GROUP_SIZE>=4 && gsz==4)
   { net_store4_grad2_config
-     (th, g, v0, v1, v2, v3, off, d0, d1, d2, d3, cf);
+     (th, g, v0, v0+vs, v0+vs+vs, v0+vs+vs+vs, off, 
+             d0, d0+ds, d0+ds+ds, d0+ds+ds+ds, cf);
   }
   else if (GROUP_SIZE>=3 && gsz==3)
   { net_store3_grad2_config
-     (th, g, v0, v1, v2, off, d0, d1, d2, cf);
+     (th, g, v0, v0+vs, v0+vs+vs, off, d0, d0+ds, d0+ds+ds, cf);
   }
   else if (GROUP_SIZE>=2 && gsz==2)
   { net_store2_grad2_config
-     (th, g, v0, v1, off, d0, d1, cf);
+     (th, g, v0, v0+vs, off, d0, d0+ds, cf);
   }
   else if (gsz==1)
   { net_store1_grad2_config
@@ -3634,28 +3625,27 @@ __device__ __forceinline__ static void net_back_grad_gpu
 
   if (A.has_bo)
   { if (A.bias_config[A.N_layers])
-    { store_grad1_config (thrg, gsz, g->bo, d[0].o, d[1].o, d[2].o, d[3].o,
+    { store_grad1_config (thrg, gsz, g->bo, d[0].o, d[1].o-d[0].o,
                           A.bias_config[A.N_layers]);
     }
     else
-    { store_grad1 (thrg, gsz, g->bo, d[0].o, d[1].o, d[2].o, d[3].o, 
-                   A.N_outputs);
+    { store_grad1 (thrg, gsz, g->bo, d[0].o, d[1].o-d[0].o, A.N_outputs);
     }
   }
 
   if (A.has_io)
   { if (A.input_config[A.N_layers])
     { store_grad2_config (thrg, gsz, g->io, 
-                          v[0].i, v[1].i, v[2].i, v[3].i, 
+                          v[0].i, v[1].i-v[0].i,
                           A.has_ti ? W.ti : 0, 
-                          d[0].o, d[1].o, d[2].o, d[3].o,
+                          d[0].o, d[1].o-d[0].o,
                           A.input_config[A.N_layers]);
     }
     else
     { store_grad2 (thrg, gsz, g->io, 
-                   v[0].i, v[1].i, v[2].i, v[3].i, 
+                   v[0].i, v[1].i-v[0].i,
                    A.has_ti ? W.ti : 0, A.N_inputs,
-                   d[0].o, d[1].o, d[2].o, d[3].o, A.N_outputs,
+                   d[0].o, d[1].o-d[0].o, A.N_outputs,
                    A.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
                    sparse);
     }
@@ -3667,22 +3657,20 @@ __device__ __forceinline__ static void net_back_grad_gpu
     { 
       const net_value *u0 = fw_hidden_loc_grad(&PRE,v,l,0);
       const net_value *u1 = fw_hidden_loc_grad(&PRE,v,l,1);
-      const net_value *u2 = fw_hidden_loc_grad(&PRE,v,l,2);
-      const net_value *u3 = fw_hidden_loc_grad(&PRE,v,l,3);
 
       int k = 2*A.N_layers-1-l;
       if (A.hidden_config[k])
       { store_grad2_config (thrg, gsz, g->ho[l], 
-                            u0, u1, u2, u3,
+                            u0, u1-u0,
                             A.has_th[l] ? W.th[l] : 0,
-                            d[0].o, d[1].o, d[2].o, d[3].o, 
+                            d[0].o, d[1].o-d[0].o,
                             A.hidden_config[k]);
       }
       else
       { store_grad2 (thrg, gsz, g->ho[l], 
-                     u0, u1, u2, u3,
+                     u0, u1-u0,
                      A.has_th[l] ? W.th[l] : 0, A.N_hidden[l], 
-                     d[0].o, d[1].o, d[2].o, d[3].o, A.N_outputs, 
+                     d[0].o, d[1].o-d[0].o, A.N_outputs, 
                      (unsigned short *) 0, 0, 0);
       }
     }
@@ -3822,10 +3810,8 @@ __device__ __forceinline__ static void net_back_grad_gpu
 
       const net_value *c0 = bw_hidden_loc_grad(&PRE,d,l,0);
       const net_value *c1 = bw_hidden_loc_grad(&PRE,d,l,1);
-      const net_value *c2 = bw_hidden_loc_grad(&PRE,d,l,2);
-      const net_value *c3 = bw_hidden_loc_grad(&PRE,d,l,3);
 
-      store_grad1 (thrg, gsz, g->th[l], c0, c1, c2, c3, N_hidden);
+      store_grad1 (thrg, gsz, g->th[l], c0, c1-c0, N_hidden);
     }
 
     /* Pass backwards through activation function to get derivatives with 
@@ -3880,33 +3866,29 @@ __device__ __forceinline__ static void net_back_grad_gpu
 
     const net_value *c0 = bw_hidden_loc_grad(&PRE,d,l,0);
     const net_value *c1 = bw_hidden_loc_grad(&PRE,d,l,1);
-    const net_value *c2 = bw_hidden_loc_grad(&PRE,d,l,2);
-    const net_value *c3 = bw_hidden_loc_grad(&PRE,d,l,3);
 
     if (A.has_bh[l])
     { if (A.bias_config[l])
-      { store_grad1_config (thrg, gsz, g->bh[l], 
-                            c0, c1, c2, c3, A.bias_config[l]);
+      { store_grad1_config (thrg, gsz, g->bh[l], c0, c1-c0, A.bias_config[l]);
       }
       else
-      { store_grad1 (thrg, gsz, g->bh[l], 
-                     c0, c1, c2, c3, N_hidden);
+      { store_grad1 (thrg, gsz, g->bh[l], c0, c1-c0, N_hidden);
       }
     }
 
     if (A.has_ih[l])
     { if (A.input_config[l])
       { store_grad2_config (thrg, gsz, g->ih[l], 
-                            v[0].i, v[1].i, v[2].i, v[3].i, 
+                            v[0].i, v[1].i-v[0].i,
                             A.has_ti ? W.ti : 0, 
-                            c0, c1, c2, c3,
+                            c0, c1-c0,
                             A.input_config[l]);
       }
       else
       { store_grad2 (thrg, gsz, g->ih[l], 
-                     v[0].i, v[1].i, v[2].i, v[3].i,
+                     v[0].i, v[1].i-v[0].i,
                      A.has_ti ? W.ti : 0, A.N_inputs,
-                     c0, c1, c2, c3, N_hidden,
+                     c0, c1-c0, N_hidden,
                      A.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1), sparse);
       }
     }
@@ -3918,20 +3900,18 @@ __device__ __forceinline__ static void net_back_grad_gpu
         { 
           net_value *u0 = fw_hidden_loc_grad(&PRE,v,ls,0);
           net_value *u1 = fw_hidden_loc_grad(&PRE,v,ls,1);
-          net_value *u2 = fw_hidden_loc_grad(&PRE,v,ls,2);
-          net_value *u3 = fw_hidden_loc_grad(&PRE,v,ls,3);
 
           if (A.nonseq_config[nsqi])
           { store_grad2_config (thrg, gsz, g->nsq[nsqi], 
-                                u0, u1, u2, u3,
+                                u0, u1-u0,
                                 A.has_th[ls] ? W.th[ls] : 0,
-                                c0, c1, c2, c3, A.nonseq_config[nsqi]);
+                                c0, c1-c0, A.nonseq_config[nsqi]);
           }
           else
           { store_grad2 (thrg, gsz, g->nsq[nsqi], 
-                         u0, u1, u2, u3,
+                         u0, u1-u0,
                          A.has_th[ls] ? W.th[ls] : 0, A.N_hidden[ls], 
-                         c0, c1, c2, c3, N_hidden, 
+                         c0, c1-c0, N_hidden, 
                          (unsigned short *)0, 0, 0);
           }
         }
@@ -3942,21 +3922,19 @@ __device__ __forceinline__ static void net_back_grad_gpu
     { 
       net_value *u0 = fw_hidden_loc_grad(&PRE,v,l-1,0);
       net_value *u1 = fw_hidden_loc_grad(&PRE,v,l-1,1);
-      net_value *u2 = fw_hidden_loc_grad(&PRE,v,l-1,2);
-      net_value *u3 = fw_hidden_loc_grad(&PRE,v,l-1,3);
 
       if (A.hidden_config[l])
       { store_grad2_config (thrg, gsz, g->hh[l-1], 
-                            u0, u1, u2, u3,
+                            u0, u1-u0,
                             A.has_th[l-1] ? W.th[l-1] : 0,
-                            c0, c1, c2, c3,
+                            c0, c1-c0,
                             A.hidden_config[l]);
       }
       else
       { store_grad2 (thrg, gsz, g->hh[l-1], 
-                     u0, u1, u2, u3,
+                     u0, u1-u0,
                      A.has_th[l-1] ? W.th[l-1] : 0, A.N_hidden[l-1], 
-                     c0, c1, c2, c3, N_hidden, 
+                     c0, c1-c0, N_hidden, 
                      (unsigned short *)0, 0, 0);
       }
     }
@@ -3971,7 +3949,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
     {__syncthreads();
     }
 
-    store_grad1 (thrg, gsz, g->ti, d[0].i, d[1].i, d[2].i, d[3].i, A.N_inputs);
+    store_grad1 (thrg, gsz, g->ti, d[0].i, d[1].i-d[0].i, A.N_inputs);
   }
 
   if (CHECK_NAN)

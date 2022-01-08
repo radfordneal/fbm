@@ -1,4 +1,4 @@
-Commit: 8fb031797b4b671fa3c102f15482c9433d7130bd
+Commit: 28944ccff9322bf2eea5e24d2ea0a1fa623b92d3
 
 Running exbgd with dbl-gpu on A4000:
 
@@ -19,4 +19,4 @@ Average log probability of targets:    -0.603+-0.017
 Fraction of guesses that were wrong:    0.4300+-0.0222
 Average squared error guessing mean:    0.21272+-0.00773
 
-elapsed 4.42s
+elapsed 4.40s

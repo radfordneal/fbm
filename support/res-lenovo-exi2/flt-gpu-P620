@@ -1,4 +1,4 @@
-Commit: 1e54414ad13456cab17ef498d01307d1dffd92c5
+Commit: 8fb031797b4b671fa3c102f15482c9433d7130bd
 
 Running exi2 with flt-gpu on P620:
 
@@ -22,8 +22,8 @@ Number of iterations used: 2
 
 Number of test cases: 100
 
-Average log probability of targets:    -0.756+-0.107
-Fraction of guesses that were wrong:    0.2700+-0.0446
-Average squared error guessing mean:    0.38772+-0.04793
+Average log probability of targets:    -0.745+-0.100
+Fraction of guesses that were wrong:    0.2400+-0.0429
+Average squared error guessing mean:    0.38567+-0.04880
 
-elapsed 24.14s
+elapsed 24.59s

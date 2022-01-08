@@ -489,7 +489,7 @@ typedef struct
   short bwgpumem[Max_layers];       /* Offset to backward hidden layer in fast
                                        GPU shared mem, or -1 if in global mem */
 
-  int fw_stride, bw_stride;         /* GPU case-to-case strides for values and
+  int stride, grad_stride;          /* GPU case-to-case strides for values and
                                        derivatives not in shared memory */
 
   signed char nonseq [Max_layers]   /* nonseq[from][to] indexes non-sequential*/
@@ -507,11 +507,21 @@ typedef struct
    The fw_hidden_loc_grad and bw_hidden_loc_grad functions give
    locations of hidden unit values or derivatives in layer 'l' for
    case 'w' in the group handled by this thread, given a pointer to
-   the value structure for the first case in this group. */
+   the value structure for the first case in this group.
+
+   The corresponding 'stride' functions give the stride from values 
+   for one case/group to the next.
+ */
 
 #if __CUDACC__
 
 extern __shared__ net_value sharedvalues[];
+
+__device__ static inline int fw_hidden_stride
+  (net_precomputed const*pre, int l)
+{ return !USING_SHARED_MEMORY || pre->fwgpumem[l] < 0 
+    ? pre->stride : pre->memused;
+}
 
 __device__ static inline net_value *fw_hidden_loc 
   (net_precomputed const*pre, net_values const*v, int l)
@@ -519,6 +529,12 @@ __device__ static inline net_value *fw_hidden_loc
   return !USING_SHARED_MEMORY || (t = pre->fwgpumem[l]) < 0 
            ? v->h[l]
            : sharedvalues + (threadIdx.x/NTH) * pre->memused + t;
+}
+
+__device__ static inline int bw_hidden_stride
+  (net_precomputed const*pre, int l)
+{ return !USING_SHARED_MEMORY || pre->bwgpumem[l] < 0 
+    ? pre->stride : pre->memused;
 }
 
 __device__ static inline net_value *bw_hidden_loc 
@@ -529,12 +545,24 @@ __device__ static inline net_value *bw_hidden_loc
            : sharedvalues + (threadIdx.x/NTH) * pre->memused + t;
 }
 
+__device__ static inline int fw_hidden_stride_grad
+  (net_precomputed const*pre, int l)
+{ return !USING_SHARED_MEMORY || pre->fwgpumem[l] < 0 
+    ? pre->grad_stride : pre->memused;
+}
+
 __device__ static inline net_value *fw_hidden_loc_grad 
   (net_precomputed const*pre, net_values const*v, int l, int w)
 { int t;
   return !USING_SHARED_MEMORY || (t = pre->fwgpumem[l]) < 0 
            ? (v+w)->h[l] 
            : sharedvalues + (w+(threadIdx.x/GTH)*GROUP_SIZE)*pre->memused + t;
+}
+
+__device__ static inline int bw_hidden_stride_grad
+  (net_precomputed const*pre, int l)
+{ return !USING_SHARED_MEMORY || pre->bwgpumem[l] < 0 
+    ? pre->grad_stride : pre->memused;
 }
 
 __device__ static inline net_value *bw_hidden_loc_grad 

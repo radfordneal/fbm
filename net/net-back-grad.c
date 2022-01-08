@@ -3771,22 +3771,20 @@ __device__ __forceinline__ static void net_back_grad_gpu
   {
     if (A.has_ho[l])
     { 
-      const net_value *u0 = fw_hidden_loc_grad(&PRE,v,l,0);
-      const net_value *u1 = fw_hidden_loc_grad(&PRE,v,l,1);
+      net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,l,0);
+      int us = fw_hidden_stride_grad(&PRE,l);
 
       int k = 2*A.N_layers-1-l;
       if (A.hidden_config[k])
-      { store_grad2_config (thrg, gsz, g->ho[l], 
-                            u0, u1-u0,
+      { store_grad2_config (thrg, gsz, g->ho[l], u0, us, 
                             A.has_th[l] ? W.th[l] : 0,
-                            d[0].o, d[1].o-d[0].o,
+                            d[0].o, A.N_outputs,
                             A.hidden_config[k]);
       }
       else
-      { store_grad2 (thrg, gsz, g->ho[l], 
-                     u0, u1-u0,
+      { store_grad2 (thrg, gsz, g->ho[l], u0, us,
                      A.has_th[l] ? W.th[l] : 0, A.N_hidden[l], 
-                     d[0].o, d[1].o-d[0].o, A.N_outputs, 
+                     d[0].o, A.N_outputs, A.N_outputs, 
                      (unsigned short *) 0, 0, 0);
       }
     }
@@ -3924,10 +3922,10 @@ __device__ __forceinline__ static void net_back_grad_gpu
     { 
       __syncthreads();
 
-      const net_value *c0 = bw_hidden_loc_grad(&PRE,d,l,0);
-      const net_value *c1 = bw_hidden_loc_grad(&PRE,d,l,1);
+      net_value *restrict c0 = bw_hidden_loc_grad(&PRE,d,l,0);
+      int cs = bw_hidden_stride_grad(&PRE,l);
 
-      store_grad1 (thrg, gsz, g->th[l], c0, c1-c0, N_hidden);
+      store_grad1 (thrg, gsz, g->th[l], c0, cs, N_hidden);
     }
 
     /* Pass backwards through activation function to get derivatives with 
@@ -3935,7 +3933,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
 
     if (thrb>=0)
     {
-      const net_value *vh = fw_hidden_loc(&PRE,vth,l);
+      net_value const*restrict vh = fw_hidden_loc(&PRE,vth,l);
 
       if (A.layer_type[l]==Tanh_type)
       { for (i = thrb; i<N_hidden; i+=NTH)
@@ -3980,31 +3978,30 @@ __device__ __forceinline__ static void net_back_grad_gpu
     /* Add to gradients that depend on the derivatives of energy with respect 
        to the inputs of units in this hidden layer. */
 
-    const net_value *c0 = bw_hidden_loc_grad(&PRE,d,l,0);
-    const net_value *c1 = bw_hidden_loc_grad(&PRE,d,l,1);
+    net_value *restrict c0 = bw_hidden_loc_grad(&PRE,d,l,0);
+    int cs = bw_hidden_stride_grad(&PRE,l);
 
     if (A.has_bh[l])
     { if (A.bias_config[l])
-      { store_grad1_config (thrg, gsz, g->bh[l], c0, c1-c0, A.bias_config[l]);
+      { store_grad1_config (thrg, gsz, g->bh[l], c0, cs, A.bias_config[l]);
       }
       else
-      { store_grad1 (thrg, gsz, g->bh[l], c0, c1-c0, N_hidden);
+      { store_grad1 (thrg, gsz, g->bh[l], c0, cs, N_hidden);
       }
     }
 
     if (A.has_ih[l])
     { if (A.input_config[l])
       { store_grad2_config (thrg, gsz, g->ih[l], 
-                            v[0].i, v[1].i-v[0].i,
+                            v[0].i, A.N_inputs,
                             A.has_ti ? W.ti : 0, 
-                            c0, c1-c0,
-                            A.input_config[l]);
+                            c0, cs, A.input_config[l]);
       }
       else
       { store_grad2 (thrg, gsz, g->ih[l], 
                      v[0].i, v[1].i-v[0].i,
                      A.has_ti ? W.ti : 0, A.N_inputs,
-                     c0, c1-c0, N_hidden,
+                     c0, cs, N_hidden,
                      A.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1), sparse);
       }
     }
@@ -4014,21 +4011,18 @@ __device__ __forceinline__ static void net_back_grad_gpu
       { nsqi = PRE.nonseq[ls][l];
         if (nsqi>=0)
         { 
-          net_value *u0 = fw_hidden_loc_grad(&PRE,v,ls,0);
-          net_value *u1 = fw_hidden_loc_grad(&PRE,v,ls,1);
+          net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,ls,0);
+          int us = fw_hidden_stride_grad(&PRE,ls);
 
           if (A.nonseq_config[nsqi])
-          { store_grad2_config (thrg, gsz, g->nsq[nsqi], 
-                                u0, u1-u0,
+          { store_grad2_config (thrg, gsz, g->nsq[nsqi], u0, us,
                                 A.has_th[ls] ? W.th[ls] : 0,
-                                c0, c1-c0, A.nonseq_config[nsqi]);
+                                c0, cs, A.nonseq_config[nsqi]);
           }
           else
-          { store_grad2 (thrg, gsz, g->nsq[nsqi], 
-                         u0, u1-u0,
+          { store_grad2 (thrg, gsz, g->nsq[nsqi], u0, us,
                          A.has_th[ls] ? W.th[ls] : 0, A.N_hidden[ls], 
-                         c0, c1-c0, N_hidden, 
-                         (unsigned short *)0, 0, 0);
+                         c0, cs, N_hidden, (unsigned short *)0, 0, 0);
           }
         }
       }
@@ -4036,22 +4030,18 @@ __device__ __forceinline__ static void net_back_grad_gpu
 
     if (l>0 && A.has_hh[l-1])
     { 
-      net_value *u0 = fw_hidden_loc_grad(&PRE,v,l-1,0);
-      net_value *u1 = fw_hidden_loc_grad(&PRE,v,l-1,1);
+      net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,l-1,0);
+      int us = fw_hidden_stride_grad(&PRE,l-1);
 
       if (A.hidden_config[l])
-      { store_grad2_config (thrg, gsz, g->hh[l-1], 
-                            u0, u1-u0,
+      { store_grad2_config (thrg, gsz, g->hh[l-1], u0, us,
                             A.has_th[l-1] ? W.th[l-1] : 0,
-                            c0, c1-c0,
-                            A.hidden_config[l]);
+                            c0, cs, A.hidden_config[l]);
       }
       else
-      { store_grad2 (thrg, gsz, g->hh[l-1], 
-                     u0, u1-u0,
+      { store_grad2 (thrg, gsz, g->hh[l-1], u0, us,
                      A.has_th[l-1] ? W.th[l-1] : 0, A.N_hidden[l-1], 
-                     c0, c1-c0, N_hidden, 
-                     (unsigned short *)0, 0, 0);
+                     c0, cs, N_hidden, (unsigned short *)0, 0, 0);
       }
     }
   }

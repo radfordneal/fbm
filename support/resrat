@@ -1,0 +1,7 @@
+#!/bin/bash
+
+n=1
+for i in `rescmp $1 $2 /`; do
+  echo -n $n\ ; calc $i
+  n=`calc 1+$n`
+done

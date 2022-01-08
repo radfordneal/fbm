@@ -1,11 +1,15 @@
 #!/bin/bash
 
-if [ x$commit == x ]; then commit=HEAD; fi
 if [ x$system == x ]; then system=$SYSTEM; fi
 if [ x$precision == x ]; then precision=flt; fi
 if [ x$gpu == x ]; then gpu=$GPUNAME; fi
 
 for i in res-$system-*/$precision-gpu-$gpu; do
   echo -n `echo $i | sed "s,/.*,," | sed "s,.*-,,"`; echo -n "	"
-  git show $commit:support/$i | fgrep elapsed | sed "s/.*elapsed //"
+  ( if [ x$commit == x ]; then
+      cat $i | fgrep elapsed
+    else
+      git show $commit:support/$i
+    fi
+  ) | fgrep elapsed | sed "s/.*elapsed //"
 done

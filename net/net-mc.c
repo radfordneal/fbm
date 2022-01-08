@@ -1127,7 +1127,7 @@ void mc_app_initialize
 
       net_value *iblk, *oblk, *vblk;
 
-      check_cuda_error (cudaGetLastError(), "Before copying to data to GPU");
+      check_cuda_error (cudaGetLastError(), "Before copying of data to GPU");
 
       sz = N_inputs * N_train * sizeof *iblk;
       check_cuda_error (cudaMalloc (&iblk, sz), "cudaMalloc of iblk");
@@ -1140,9 +1140,10 @@ void mc_app_initialize
       sz = value_count_noinout * N_train * sizeof *vblk;
       check_cuda_error (cudaMalloc (&vblk, sz), "cudaMalloc of vblk for train");
 
+      pre.fw_stride = value_count_noinout;
       for (i = 0; i<N_train; i++) 
       { net_setup_value_pointers_aligned 
-            (&tmp_values[i], vblk+value_count_noinout*i, arch,
+            (&tmp_values[i], vblk+i*pre.fw_stride, arch,
              NET_VALUE_ALIGN_ELEMENTS, iblk+N_inputs*i, oblk+arch->N_outputs*i);
       }
 
@@ -1164,7 +1165,8 @@ void mc_app_initialize
       check_cuda_error (cudaMalloc (&oblk, sz), "cudaMalloc of oblk for deriv");
 
       if (arch->has_ti)  /* Must allow for derivatives w.r.t. inputs */
-      { sz = value_count_noout * N_train * sizeof *vblk;
+      { pre.bw_stride = value_count_noout;
+        sz = pre.bw_stride * N_train * sizeof *vblk;
         check_cuda_error (cudaMalloc(&vblk, sz),"cudaMalloc of vblk for deriv");
         for (i = 0; i<N_train; i++) 
         { net_setup_value_pointers_aligned 
@@ -1173,7 +1175,8 @@ void mc_app_initialize
         }
       }
       else  /* Derivatives w.r.t. inputs will not be taken */
-      { sz = value_count_noinout * N_train * sizeof *vblk;
+      { pre.bw_stride = value_count_noinout;
+        sz = pre.bw_stride * N_train * sizeof *vblk;
         check_cuda_error (cudaMalloc(&vblk, sz),"cudaMalloc of vblk for deriv");
         for (i = 0; i<N_train; i++) 
         { net_setup_value_pointers_aligned 

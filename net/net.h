@@ -482,11 +482,15 @@ typedef struct
 typedef struct
 { 
   short memused;                    /* Amount of fast GPU shared memory used
-                                       (in net_value units) */
+                                       per case (in net_value units); also the
+                                       shared memory stride for case to case */
   short fwgpumem[Max_layers];       /* Offset to forward hidden layer in fast
                                        GPU shared mem, or -1 if in global mem */
   short bwgpumem[Max_layers];       /* Offset to backward hidden layer in fast
                                        GPU shared mem, or -1 if in global mem */
+
+  int fw_stride, bw_stride;         /* GPU case-to-case strides for values and
+                                       derivatives not in shared memory */
 
   signed char nonseq [Max_layers]   /* nonseq[from][to] indexes non-sequential*/
                      [Max_layers+1];/*  connection in nsq, or is -1 if none.  */
@@ -500,10 +504,10 @@ typedef struct
    hidden unit values or derivatives in layer 'l' for the case handled
    by this thread, given a pointer to the value structure for this case.
 
-   The fw_hidden_loc_grad and bs_hidden_loc functions give locations
-   of hidden unit values or derivatives in layer 'l' for case 'w' in
-   the group handled by this thread, given a pointer to the value
-   structure for the first case in this group. */
+   The fw_hidden_loc_grad and bw_hidden_loc_grad functions give
+   locations of hidden unit values or derivatives in layer 'l' for
+   case 'w' in the group handled by this thread, given a pointer to
+   the value structure for the first case in this group. */
 
 #if __CUDACC__
 

@@ -2608,11 +2608,11 @@ __device__ static void net_store3_grad2_config
    based on indexes for the biases/destination units. */
 
 __device__ static void net_store4_grad1
-( int th,		  /* Which thread (0 to GTH-1) */
+( int th,                 /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const*restrict d0,  /* Derivs with respect to unit values, case 0 */
   int ds,                 /* Stride to get to derivs for following cases */
-  int n			  /* Number of units */
+  int n	                  /* Number of units */ 
 )
 { 
   int i;
@@ -2749,21 +2749,21 @@ do \
       for (i = th; i<nv; i+=GTH) \
       { o = off[i]; \
         net_value const*restrict v = v0 + i; \
-        net_value s = (*v+o)*d00; \
-        v += vs; s += (*v+o)*d10; \
-        v += vs; s += (*v+o)*d20; \
-        v += vs; s += (*v+o)*d30; \
-        g[ILV*i] = s; \
+        net_value tv0 = *v; v += vs; \
+        net_value tv1 = *v; v += vs; \
+        net_value tv2 = *v; v += vs; \
+        net_value tv3 = *v; \
+        g[ILV*i] = (tv0+o)*d00 + (tv1+o)*d10 + (tv2+o)*d20 + (tv3+o)*d30; \
       } \
     } \
     else \
     { for (i = th; i<nv; i+=GTH) \
       { net_value const*restrict v = v0 + i; \
-        net_value s = *v*d00; \
-        v += vs; s += *v*d10; \
-        v += vs; s += *v*d20; \
-        v += vs; s += *v*d30; \
-        g[ILV*i] = s; \
+        net_value tv0 = *v; v += vs; \
+        net_value tv1 = *v; v += vs; \
+        net_value tv2 = *v; v += vs; \
+        net_value tv3 = *v; \
+        g[ILV*i] = tv0*d00 + tv1*d10 + tv2*d20 + tv3*d30; \
       } \
     } \
   } \
@@ -2813,11 +2813,11 @@ do \
     alllab: \
       for (j = th; j<nd; j+=GTH) \
       { net_value const*restrict d = d0 + j; \
-        net_value s = *d*tv0; \
-        d += ds; s += *d*tv1; \
-        d += ds; s += *d*tv2; \
-        d += ds; s += *d*tv3; \
-        g[ILV*j] = s; \
+        net_value td0 = *d; d += ds; \
+        net_value td1 = *d; d += ds; \
+        net_value td2 = *d; d += ds; \
+        net_value td3 = *d; \
+        g[ILV*j] = td0*tv0 + td1*tv1 + td2*tv2 + td3*tv3; \
       } \
       if (SYNC_AFTER && GTH>=32 && nd % GTH != 0) __syncwarp(); \
       g += ILV*nd; \
@@ -2837,11 +2837,11 @@ do \
       tv3 = *v + o; \
       for (j = th; j<nd; j+=GTH) \
       { net_value const*restrict d = d0s + j; \
-        net_value s = *d*tv0; \
-        d += ds; s += *d*tv1; \
-        d += ds; s += *d*tv2; \
-        d += ds; s += *d*tv3; \
-        g[ILV*j] = s; \
+        net_value td0 = *d; d += ds; \
+        net_value td1 = *d; d += ds; \
+        net_value td2 = *d; d += ds; \
+        net_value td3 = *d; \
+        g[ILV*j] = td0*tv0 + td1*tv1 + td2*tv2 + td3*tv3; \
       } \
       if (SYNC_AFTER && GTH>=32 && nd % GTH != 0) __syncwarp(); \
       g += ILV*nd; \
@@ -2860,11 +2860,11 @@ do \
       tv3 = *v + o; \
       for (j = th; j<nd; j+=GTH) \
       { net_value const*restrict d = d0 + j; \
-        net_value s = *d*tv0; \
-        d += ds; s += *d*tv1; \
-        d += ds; s += *d*tv2; \
-        d += ds; s += *d*tv3; \
-        g[ILV*j] = s; \
+        net_value td0 = *d; d += ds; \
+        net_value td1 = *d; d += ds; \
+        net_value td2 = *d; d += ds; \
+        net_value td3 = *d; \
+        g[ILV*j] = td0*tv0 + td1*tv1 + td2*tv2 + td3*tv3; \
       } \
       if (SYNC_AFTER && GTH>=32 && nd % GTH != 0) __syncwarp(); \
       g += ILV*nd; \
@@ -2956,11 +2956,12 @@ __device__ static void net_store4_grad2_config
           net_value const*restrict v = v0+i;
           net_value const*restrict d = d0+j+ix;
           net_value s = g[ILV*(k+ix)];
-          s += (*v+o) * *d; v += vs; d += ds;
-          s += (*v+o) * *d; v += vs; d += ds;
-          s += (*v+o) * *d; v += vs; d += ds;
-          s += (*v+o) * *d;
-          g[ILV*(k+ix)] = s;
+          net_value tv, td;
+          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+          tv = *v; td = *d; 
+          g[ILV*(k+ix)] = s + (tv+o)*td;
           c += 1;
         }
       }
@@ -2975,11 +2976,12 @@ __device__ static void net_store4_grad2_config
           net_value const*restrict v = v0+cn[c].s;
           net_value const*restrict d = d0+ix+cn[c].d;
           net_value s = g[ILV*(k+ix)];
-          s += *v * *d; v += vs; d += ds;
-          s += *v * *d; v += vs; d += ds;
-          s += *v * *d; v += vs; d += ds;
-          s += *v * *d;
-          g[ILV*(k+ix)] = s;
+          net_value tv, td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; 
+          g[ILV*(k+ix)] = s + tv*td;
           c += 1;
         }
       }
@@ -2997,19 +2999,20 @@ __device__ static void net_store4_grad2_config
           net_value s = g[ILV*(k+ix)];
           net_value const*restrict v = v0+i;
           net_value const*restrict d = d0+ix+j;
-          s += (*v+o) * *d; v += vs; d += ds;
-          s += (*v+o) * *d; v += vs; d += ds;
-          s += (*v+o) * *d; v += vs; d += ds;
-          s += (*v+o) * *d;
+          net_value tv, td;
+          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+          tv = *v; td = *d; s += (tv+o)*td;
           c += 1;
           i = cn[c].s; j = cn[c].d;
           o = off[i];
           v = v0+i;
           d = d0+ix+j;
-          s += (*v+o) * *d; v += vs; d += ds;
-          s += (*v+o) * *d; v += vs; d += ds;
-          s += (*v+o) * *d; v += vs; d += ds;
-          s += (*v+o) * *d;
+          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+          tv = *v; td = *d; s += (tv+o)*td;
           g[ILV*(k+ix)] = s;
           c += 1;
         }
@@ -3025,17 +3028,19 @@ __device__ static void net_store4_grad2_config
           net_value s = g[ILV*(k+ix)];
           net_value const*restrict v = v0+cn[c].s;
           net_value const*restrict d = d0+ix+cn[c].d;
-          s += *v * *d; v += vs; d += ds;
-          s += *v * *d; v += vs; d += ds;
-          s += *v * *d; v += vs; d += ds;
-          s += *v * *d;
+          net_value tv, td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; s += tv*td;
           c += 1;
+          i = cn[c].s; j = cn[c].d;
           v = v0+cn[c].s;
           d = d0+ix+cn[c].d;
-          s += *v * *d; v += vs; d += ds;
-          s += *v * *d; v += vs; d += ds;
-          s += *v * *d; v += vs; d += ds;
-          s += *v * *d;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; s += tv*td;
           g[ILV*(k+ix)] = s;
           c += 1;
         }
@@ -3054,10 +3059,11 @@ __device__ static void net_store4_grad2_config
       net_value const*restrict v = v0+i;
       net_value const*restrict d = d0+j;
       net_value s = g[ILV*k];
-      s += (*v+o) * *d; v += vs; d += ds;
-      s += (*v+o) * *d; v += vs; d += ds;
-      s += (*v+o) * *d; v += vs; d += ds;
-      s += (*v+o) * *d;
+      net_value tv, td;
+      tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+      tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+      tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+      tv = *v; td = *d; s += (tv+o)*td;
       g[ILV*k] = s;
       c += 1;
     }
@@ -3069,10 +3075,11 @@ __device__ static void net_store4_grad2_config
       net_value const*restrict v = v0+cn[c].s;
       net_value const*restrict d = d0+cn[c].d;
       net_value s = g[ILV*k];
-      s += *v * *d; v += vs; d += ds;
-      s += *v * *d; v += vs; d += ds;
-      s += *v * *d; v += vs; d += ds;
-      s += *v * *d;
+      net_value tv, td;
+      tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+      tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+      tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+      tv = *v; td = *d; s += tv*td;
       g[ILV*k] = s;
       c += 1;
     }
@@ -3088,19 +3095,20 @@ __device__ static void net_store4_grad2_config
       net_value const*restrict v = v0+i;
       net_value const*restrict d = d0+j;
       net_value s = g[ILV*k];
-      s += (*v+o) * *d; v += vs; d += ds;
-      s += (*v+o) * *d; v += vs; d += ds;
-      s += (*v+o) * *d; v += vs; d += ds;
-      s += (*v+o) * *d;
+      net_value tv, td;
+      tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+      tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+      tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+      tv = *v; td = *d; s += (tv+o)*td;
       c += 1;
       i = cn[c].s; j = cn[c].d;
       o = off[i];
       v = v0+i;
       d = d0+j;
-      s += (*v+o) * *d; v += vs; d += ds;
-      s += (*v+o) * *d; v += vs; d += ds;
-      s += (*v+o) * *d; v += vs; d += ds;
-      s += (*v+o) * *d;
+      tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+      tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+      tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+      tv = *v; td = *d; s += (tv+o)*td;
       g[ILV*k] = s;
       c += 1;
     }
@@ -3112,17 +3120,18 @@ __device__ static void net_store4_grad2_config
       net_value const*restrict v = v0+cn[c].s;
       net_value const*restrict d = d0+cn[c].d;
       net_value s = g[ILV*k];
-      s += *v * *d; v += vs; d += ds;
-      s += *v * *d; v += vs; d += ds;
-      s += *v * *d; v += vs; d += ds;
-      s += *v * *d;
+      net_value tv, td;
+      tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+      tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+      tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+      tv = *v; td = *d; s += tv*td;
       c += 1;
       v = v0+cn[c].s;
       d = d0+cn[c].d;
-      s += *v * *d; v += vs; d += ds;
-      s += *v * *d; v += vs; d += ds;
-      s += *v * *d; v += vs; d += ds;
-      s += *v * *d;
+      tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+      tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+      tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+      tv = *v; td = *d; s += tv*td;
       g[ILV*k] = s;
       c += 1;
     }

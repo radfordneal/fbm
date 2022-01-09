@@ -2823,6 +2823,30 @@ do \
       g += ILV*nd; \
     } \
   } \
+  else if (0 && __isShared(d0)) \
+  { net_value tv0, tv1, tv2, tv3, o; \
+    net_value *restrict d0s = &sharedvalues[d0-sharedvalues]; \
+    int j; \
+    for (i = 0; i<nv; i++) \
+    { if (has_omit && (omit[i]&ob)) continue; \
+      o = has_off ? off[i] : 0; \
+      net_value const*restrict v = v0 + i; \
+      tv0 = *v + o; v += vs; \
+      tv1 = *v + o; v += vs; \
+      tv2 = *v + o; v += vs; \
+      tv3 = *v + o; \
+      for (j = th; j<nd; j+=GTH) \
+      { net_value const*restrict d = d0s + j; \
+        net_value s = *d*tv0; \
+        d += ds; s += *d*tv1; \
+        d += ds; s += *d*tv2; \
+        d += ds; s += *d*tv3; \
+        g[ILV*j] = s; \
+      } \
+      if (SYNC_AFTER && GTH>=32 && nd % GTH != 0) __syncwarp(); \
+      g += ILV*nd; \
+    } \
+  } \
   else \
   { net_value tv0, tv1, tv2, tv3, o; \
     int j; \

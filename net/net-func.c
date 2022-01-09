@@ -1726,6 +1726,7 @@ __device__ static void bias_values_gpu
   unsigned syncmask     	/* Mask of active threads */
 )
 { 
+  /* Try to inform the compiler that parameters are in global memory */
   net_param const* b = &dev_param_block [b0 - dev_param_block];
 
   int j;
@@ -1749,6 +1750,7 @@ __device__ static void bias_values_config_gpu
   unsigned syncmask     	/* Mask of active threads */
 )
 { 
+  /* Try to inform the compiler that parameters are in global memory */
   net_param const* b = &dev_param_block [b0 - dev_param_block];
 
   net_connection *cn;
@@ -2013,6 +2015,7 @@ __device__ static void add_connections_gpu
   unsigned syncmask       /* Mask of active threads */
 )
 {
+  /* Try to inform the compiler that parameters are in global memory */
   net_param const* w = &dev_param_block [w0 - dev_param_block];
 
   if (sparse && off==0)
@@ -2058,6 +2061,7 @@ __device__ static void add_connections_config_gpu
   unsigned syncmask       /* Mask of active threads */
 )
 {
+  /* Try to inform the compiler that parameters are in global memory */
   net_param const* w = &dev_param_block [w0 - dev_param_block];
 
   net_connection *cn;

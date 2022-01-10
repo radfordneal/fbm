@@ -1,4 +1,4 @@
-Commit: 3761b7c28077d26564d9d9ffb4b9aa02055ae328
+Commit: e94fcf5c74484ce88ae33f15e3b4d59c3c993534
 
 Running exc with dbl-gpu on P620:
 
@@ -6,24 +6,24 @@ Number of training cases: 400
 Number of test cases: 1000
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro P620, Compute Capability 6.1, 4 SM processors, 2.0 GBytes
-Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Using 28 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32
-Desired # of blocks: 3, allowed shared mem per case: 1024 bytes, 128 values
+Desired # of blocks: 3, allowed shared mem per case: 1170 bytes, 146 values
 Hid layer shrd mem: 0:8:0,8 T 24
-With 400 cases, need 1 launches, max 13 blocks/launch
+With 400 cases, need 1 launches, max 15 blocks/launch
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro P620, Compute Capability 6.1, 4 SM processors, 2.0 GBytes
-Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Using 28 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32
-Desired # of blocks: 3, allowed shared mem per case: 1024 bytes, 128 values
+Desired # of blocks: 3, allowed shared mem per case: 1170 bytes, 146 values
 Hid layer shrd mem: 0:8:0,8 T 24
-With 400 cases, need 1 launches, max 13 blocks/launch
+With 400 cases, need 1 launches, max 15 blocks/launch
 
 Number of iterations used: 30
 
 Number of test cases: 1000
 
-Average log probability of targets:    -0.468+-0.023
-Fraction of guesses that were wrong:    0.1930+-0.0125
+Average log probability of targets:    -0.466+-0.023
+Fraction of guesses that were wrong:    0.1940+-0.0125
 
-elapsed 7.36s
+elapsed 7.55s

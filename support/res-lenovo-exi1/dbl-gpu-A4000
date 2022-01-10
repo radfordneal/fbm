@@ -1,22 +1,22 @@
-Commit: e94fcf5c74484ce88ae33f15e3b4d59c3c993534
+Commit: 8251da0e1644573d531d5b4e4cdb74a57da222a2
 
 Running exi1 with dbl-gpu on A4000:
 
 Number of training cases: 4999
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 NVIDIA RTX A4000, Compute Capability 8.6, 48 SM processors, 14.7 GBytes ECC
-Using 28 cases per block, max 500 blocks per launch, threads/case: 8
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16
-Desired # of blocks: 3, allowed shared mem per case: 1219 bytes, 152 values
-Hid layer shrd mem: 0:80:0,-1 T 88
-With 4999 cases, need 1 launches, max 179 blocks/launch
+Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:80:0,80 T 168
+With 4999 cases, need 1 launches, max 157 blocks/launch
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 NVIDIA RTX A4000, Compute Capability 8.6, 48 SM processors, 14.7 GBytes ECC
-Using 28 cases per block, max 500 blocks per launch, threads/case: 8
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16
-Desired # of blocks: 3, allowed shared mem per case: 1219 bytes, 152 values
-Hid layer shrd mem: 0:80:0,-1 T 88
-With 4999 cases, need 1 launches, max 179 blocks/launch
+Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:80:0,80 T 168
+With 4999 cases, need 1 launches, max 157 blocks/launch
 
 Number of iterations used: 2
 
@@ -26,4 +26,4 @@ Average log probability of targets:    -1.050+-0.081
 Fraction of guesses that were wrong:    0.4900+-0.0502
 Average squared error guessing mean:    0.57732+-0.04266
 
-elapsed 5.29s
+elapsed 5.41s

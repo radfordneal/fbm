@@ -1,15 +1,15 @@
-Commit: e94fcf5c74484ce88ae33f15e3b4d59c3c993534
+Commit: 8251da0e1644573d531d5b4e4cdb74a57da222a2
 
 Running exi0 with dbl-gpu on M2000:
 
 Number of training cases: 4999
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro M2000, Compute Capability 5.2, 6 SM processors, 3.9 GBytes
-Using 28 cases per block, max 500 blocks per launch, threads/case: 8
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32
-Desired # of blocks: 3, allowed shared mem per case: 1170 bytes, 146 values
+Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 192 values
 Hid layer shrd mem: 0:64:0,64 T 136
-With 4999 cases, need 1 launches, max 179 blocks/launch
+With 4999 cases, need 1 launches, max 157 blocks/launch
 
 Number of iterations used: 2
 
@@ -19,4 +19,4 @@ Average log probability of targets:    -1.344+-0.059
 Fraction of guesses that were wrong:    0.6500+-0.0479
 Average squared error guessing mean:    0.72575+-0.02640
 
-elapsed 14.90s
+elapsed 15.85s

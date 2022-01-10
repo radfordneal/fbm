@@ -1,4 +1,4 @@
-Commit: 8251da0e1644573d531d5b4e4cdb74a57da222a2
+Commit: 9f97d56d039d898a5b7d1bfcab0dbf4df4a99efc
 
 Running exi2 with dbl-gpu on M2000:
 
@@ -22,8 +22,8 @@ Number of iterations used: 2
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.386+-0.003
-Fraction of guesses that were wrong:    0.7500+-0.0435
-Average squared error guessing mean:    0.74974+-0.00138
+Average log probability of targets:    -1.385+-0.003
+Fraction of guesses that were wrong:    0.7400+-0.0441
+Average squared error guessing mean:    0.74948+-0.00136
 
-elapsed 24.71s
+elapsed 24.70s

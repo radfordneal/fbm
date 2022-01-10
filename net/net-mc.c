@@ -929,8 +929,8 @@ void mc_app_initialize
 #   if __CUDACC__
     { net_params tmp_params;
       tmp_params.total_params = params.total_params;
-      void *p;
 #     if STATIC_GPU_PARAMETERS
+        void *p;
         check_cuda_error (cudaGetSymbolAddress (&p, dev_param_block),
                           "get symbol address");
         dev_param_block_addr = (net_param *)p;
@@ -938,7 +938,6 @@ void mc_app_initialize
         check_cuda_error (cudaMalloc (&dev_param_block_addr,
          (1+any_transposed)*params.total_params*sizeof *tmp_params.param_block),
          "alloc of params block for GPU");
-
 #     endif
       tmp_params.param_block = dev_param_block_addr;
       net_setup_param_pointers (&tmp_params, arch, flgs);

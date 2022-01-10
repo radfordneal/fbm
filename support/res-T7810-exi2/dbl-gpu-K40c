@@ -1,4 +1,4 @@
-Commit: 46e08c070e388e02b8be5d0c3e5fdd126ead6bc8
+Commit: c66738f756c7c54498c2bbb78625c8e64fadedfa
 
 Running exi2 with dbl-gpu on K40c:
 
@@ -26,4 +26,4 @@ Average log probability of targets:    -0.805+-0.092
 Fraction of guesses that were wrong:    0.2600+-0.0441
 Average squared error guessing mean:    0.42544+-0.04951
 
-elapsed 12.97s
+elapsed 13.15s

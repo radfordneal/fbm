@@ -83,8 +83,13 @@
 
 /* CONSTANTS RELATING TO GPU COMPUTATIONS: */
 
+#define STATIC_GPU_PARAMETERS 1  /* Statically alloc space for params in GPU? 
+                                    Let's us trick compiler to know where are */
+           
+#if STATIC_GPU_PARAMETERS
 #define MAX_PARAMETERS 1000000 /* Maximum number of parameters allowed, due to
-                                  their being statically allocated GPU space */
+                                  being in statically allocated GPU space */
+#endif
 
 #define WARPSIZE 32          /* Assumed to be 32, as it is for all CUDA
                                 architectures so far (ie, to at least 8.6) */

@@ -1722,12 +1722,18 @@ __device__ static void bias_values_gpu
 ( int th,			/* Thread index */
   net_value *restrict v,	/* Array of unit values to set */
   int n,			/* Number of units */
+# if STATIC_GPU_PARAMETERS
   net_param const* b0,		/* Biases */
+# else
+  net_param const* b,		/* Biases */
+# endif
   unsigned syncmask     	/* Mask of active threads */
 )
 { 
+# if STATIC_GPU_PARAMETERS
   /* Try to inform the compiler that parameters are in global memory */
   net_param const* b = &dev_param_block [b0 - dev_param_block];
+# endif
 
   int j;
 
@@ -1745,13 +1751,19 @@ __device__ static void bias_values_config_gpu
 ( int th,			/* Thread index */
   net_value *restrict v,	/* Array of unit values to set */
   int n,			/* Number of units */
+# if STATIC_GPU_PARAMETERS
   net_param const* b0,		/* Biases */
+# else
+  net_param const* b,		/* Biases */
+# endif
   net_config const* cf,		/* Configuration for biases */
   unsigned syncmask     	/* Mask of active threads */
 )
 { 
+# if STATIC_GPU_PARAMETERS
   /* Try to inform the compiler that parameters are in global memory */
   net_param const* b = &dev_param_block [b0 - dev_param_block];
+# endif
 
   net_connection *cn;
   int c, j, k, m, ix;
@@ -2007,7 +2019,11 @@ __device__ static void add_connections_gpu
   int nd,		  /* Number of destination units */
   net_value const* v,     /* Values for source units */
   int ns,		  /* Number of source units */
+# if STATIC_GPU_PARAMETERS
   net_param const* w0,    /* Connection weights */
+# else
+  net_param const* w,     /* Connection weights */
+# endif
   net_param const* off,   /* Offsets to add to source unit values */
   unsigned short const* omit, /* Omit flags, null if not present/relevant */
   int ob,		  /* Bit to look at in omit flags */
@@ -2015,8 +2031,10 @@ __device__ static void add_connections_gpu
   unsigned syncmask       /* Mask of active threads */
 )
 {
+# if STATIC_GPU_PARAMETERS
   /* Try to inform the compiler that parameters are in global memory */
   net_param const* w = &dev_param_block [w0 - dev_param_block];
+# endif
 
   if (sparse && off==0)
   { if (omit==0)
@@ -2055,14 +2073,20 @@ __device__ static void add_connections_config_gpu
 ( int th,		  /* Thread index */
   net_value *restrict s,  /* Summed input for destination units to add to */
   net_value const* v,     /* Values for source units */
+# if STATIC_GPU_PARAMETERS
   net_param const* w0,    /* Connection weights */
+# else
+  net_param const* w,     /* Connection weights */
+# endif
   net_param const* off,   /* Offsets to add to source unit values */
   net_config const* cf,   /* Configuration for connections and weights */
   unsigned syncmask       /* Mask of active threads */
 )
 {
+# if STATIC_GPU_PARAMETERS
   /* Try to inform the compiler that parameters are in global memory */
   net_param const* w = &dev_param_block [w0 - dev_param_block];
+# endif
 
   net_connection *cn;
   int c, i, j, k, m, ix;

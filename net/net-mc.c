@@ -235,12 +235,15 @@ static net_values *dev_deriv;	/* GPU space for derivs of cases in launch */
 
 static double *dev_scratch;	/* GPU scratch memory, for each case in launch*/
 
+#if STATIC_GPU_PARAMETERS
 static __device__ net_param dev_param_block  /* Space for parameters in GPU. */
 #if USE_TRANSPOSED_WEIGHTS
   [2*MAX_PARAMETERS];  /* Transposed versions may follow regular versions */
 #else
   [MAX_PARAMETERS];
 #endif
+#endif
+
 static net_param *dev_param_block_addr;  /* GPU address of dev_param_block */
 
 __constant__ int const_N_train;    /* Copy of N_train in constant memory */
@@ -927,9 +930,16 @@ void mc_app_initialize
     { net_params tmp_params;
       tmp_params.total_params = params.total_params;
       void *p;
-      check_cuda_error (cudaGetSymbolAddress (&p, dev_param_block),
-                        "get symbol address");
-      dev_param_block_addr = (net_param *)p;
+#     if STATIC_GPU_PARAMETERS
+        check_cuda_error (cudaGetSymbolAddress (&p, dev_param_block),
+                          "get symbol address");
+        dev_param_block_addr = (net_param *)p;
+#     else
+        check_cuda_error (cudaMalloc (&dev_param_block_addr,
+         (1+any_transposed)*params.total_params*sizeof *tmp_params.param_block),
+         "alloc of params block for GPU");
+
+#     endif
       tmp_params.param_block = dev_param_block_addr;
       net_setup_param_pointers (&tmp_params, arch, flgs);
       check_cuda_error (cudaMemcpyToSymbol 

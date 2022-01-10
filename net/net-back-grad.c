@@ -563,13 +563,20 @@ __device__ static void sum_derivatives_gpu
   int nd,		  /* Number of destination units */
   net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
   int ns,		  /* Number of source units */
+# if STATIC_GPU_PARAMETERS
   net_param const* w0,    /* Connection weights */
+# else
+  net_param const* w,     /* Connection weights */
+# endif
   unsigned short const* omit,  /* Omit flags, null if not present */
   int bit,		  /* Bit to look at in omit flags */
   unsigned syncmask       /* Mask of active threads for backprop */
 )
 {
+# if STATIC_GPU_PARAMETERS
+  /* Try to inform the compiler that parameters are in global memory */
   net_param const* w = &dev_param_block [w0 - dev_param_block];
+# endif
 
   net_value tv;
   int i, j, k;
@@ -637,12 +644,19 @@ __device__ static void sum_derivatives_config_gpu
 ( int th,		  /* Which thread */
   net_value const* dd,    /* Derivatives with respect to destination units */
   net_value *restrict ds, /* Derivatives w.r.t. source units to add to */
+# if STATIC_GPU_PARAMETERS
   net_param const* w0,    /* Connection weights */
+# else
+  net_param const* w,     /* Connection weights */
+# endif
   net_config const* cf,   /* Configuration for connections and weights */
   unsigned syncmask       /* Mask of active threads for backprop */
 )
 {
+# if STATIC_GPU_PARAMETERS
+  /* Try to inform the compiler that parameters are in global memory */
   net_param const* w = &dev_param_block [w0 - dev_param_block];
+# endif
 
   net_connection *cn;
   int c, i, j, k;

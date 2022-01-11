@@ -1,4 +1,4 @@
-Commit: fbaadf42face7c65de2ebc1204c8779ff46a8161
+Commit: b838ae67856ae9d14f473ba40730d33d80ab2500
 
 Running exc with flt-gpu on P620:
 
@@ -8,14 +8,14 @@ Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro P620, Compute Capability 6.1, 4 SM processors, 2.0 GBytes
 Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32
-Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 384 values
+Desired # of blocks: 1, allowed shared mem per case: 1536 bytes, 384 values
 Hid layer shrd mem: 0:8:0,8 T 24
 With 400 cases, need 1 launches, max 13 blocks/launch
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro P620, Compute Capability 6.1, 4 SM processors, 2.0 GBytes
 Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32
-Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 384 values
+Desired # of blocks: 1, allowed shared mem per case: 1536 bytes, 384 values
 Hid layer shrd mem: 0:8:0,8 T 24
 With 400 cases, need 1 launches, max 13 blocks/launch
 
@@ -26,4 +26,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.470+-0.022
 Fraction of guesses that were wrong:    0.1990+-0.0126
 
-elapsed 4.20s
+elapsed 7.20s

@@ -83,8 +83,8 @@
 
 /* CONSTANTS RELATING TO GPU COMPUTATIONS: */
 
-#define STATIC_GPU_PARAMETERS 1  /* Statically alloc space for params in GPU? 
-                                    Let's us trick compiler to know where are */
+#define STATIC_GPU_PARAMETERS 0  /* Statically alloc space for params in GPU? 
+                                    Maybe tricks compiler to know where are */
            
 #if STATIC_GPU_PARAMETERS
 #define MAX_PARAMETERS 1000000 /* Maximum number of parameters allowed, due to

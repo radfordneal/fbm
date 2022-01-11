@@ -1,15 +1,15 @@
-Commit: b838ae67856ae9d14f473ba40730d33d80ab2500
+Commit: 10a446a637a43b93e76f7ab205ae7f1021143d6f
 
 Running exbgd with flt-gpu on M2000:
 
 Number of training cases: 800
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
 Quadro M2000, Compute Capability 5.2, 6 SM processors, 3.9 GBytes
-Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Using 36 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32
-Desired # of blocks: 1, allowed shared mem per case: 1536 bytes, 384 values
+Desired # of blocks: 2, allowed shared mem per case: 1365 bytes, 341 values
 Hid layer shrd mem: 0:15:0,15 T 40
-With 800 cases, need 1 launches, max 25 blocks/launch
+With 800 cases, need 1 launches, max 23 blocks/launch
 
 Number of iterations used: 1
 
@@ -19,4 +19,4 @@ Average log probability of targets:    -0.603+-0.017
 Fraction of guesses that were wrong:    0.4300+-0.0222
 Average squared error guessing mean:    0.21272+-0.00773
 
-elapsed 15.35s
+elapsed 10.52s

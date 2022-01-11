@@ -1,4 +1,4 @@
-Commit: c66738f756c7c54498c2bbb78625c8e64fadedfa
+Commit: fbaadf42face7c65de2ebc1204c8779ff46a8161
 
 Running exi1ms with dbl-gpu on K40c:
 
@@ -19,4 +19,4 @@ Average log probability of targets:    -1.278+-0.022
 Fraction of guesses that were wrong:    0.5500+-0.0500
 Average squared error guessing mean:    0.69480+-0.01233
 
-elapsed 4.98s
+elapsed 5.01s

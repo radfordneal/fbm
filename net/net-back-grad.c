@@ -413,9 +413,45 @@ static void sum_derivatives_config
 
   if (CONFIG_OCT_S_8D_8W)
   { cn = cf->oct_s_8d_8w;
-#   if 1
+#   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { i = cn[c].s; j = cn[c].d;
+      { __m256d P;
+        j = cn[c].d;
+        i = cn[c].s;
+        P = _mm256_mul_pd (_mm256_loadu_pd(dd+j), _mm256_loadu_pd(w+k));
+        P = FMA256_pd (_mm256_loadu_pd(dd+j+4), _mm256_loadu_pd(w+k+4), P);
+        __m128d S = _mm_add_pd (_mm256_extractf128_pd(P,1), cast128d(P));
+        _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
+      }
+    }
+#   elif FP64 && USE_SIMD_INTRINSICS && __SSE3__
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { __m128d S;
+        j = cn[c].d;
+        i = cn[c].s;
+        S = _mm_add_pd (_mm_mul_pd (_mm_loadu_pd(dd+j), _mm_loadu_pd(w+k)),
+                        _mm_mul_pd (_mm_loadu_pd(dd+j+2), _mm_loadu_pd(w+k+2)));
+        S = _mm_add_pd (S,
+             _mm_add_pd(_mm_mul_pd (_mm_loadu_pd(dd+j+4), _mm_loadu_pd(w+k+4)),
+                        _mm_mul_pd (_mm_loadu_pd(dd+j+6), _mm_loadu_pd(w+k+6)));
+        _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
+      }
+    }
+#   elif FP32 && USE_SIMD_INTRINSICS && __SSE3__
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { __m128 P;
+        j = cn[c].d;
+        i = cn[c].s;
+        P = _mm_mul_ps (_mm_loadu_ps(dd+j), _mm_loadu_ps(w+k));
+        P = FMA_ps (_mm_loadu_ps(dd+j+4), _mm_loadu_ps(w+k+4), P);
+        __m128 S = _mm_add_ps (_mm_movehl_ps(P,P), P);
+        _mm_store_ss (ds+i, _mm_add_ss (_mm_load_ss(ds+i), _mm_hadd_ps(S,S)));
+      }
+    }
+#   else
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { j = cn[c].d;
+        i = cn[c].s;
         ds[i] = ds[i] + dd[j+0]*w[k+0] + dd[j+1]*w[k+1]
                       + dd[j+2]*w[k+2] + dd[j+3]*w[k+3]
                       + dd[j+4]*w[k+4] + dd[j+5]*w[k+5]
@@ -429,7 +465,8 @@ static void sum_derivatives_config
   { cn = cf->quad_s_4d_4w;
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { i = cn[c].s; j = cn[c].d;
+      { j = cn[c].d;
+        i = cn[c].s;
         __m256d P = _mm256_mul_pd (_mm256_loadu_pd(dd+j), _mm256_loadu_pd(w+k));
         __m128d S = _mm_add_pd (_mm256_extractf128_pd(P,1), cast128d(P));
         _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
@@ -437,7 +474,8 @@ static void sum_derivatives_config
     }
 #   elif FP64 && USE_SIMD_INTRINSICS && __SSE3__
     { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { i = cn[c].s; j = cn[c].d;
+      { j = cn[c].d;
+        i = cn[c].s;
         __m128d S = _mm_add_pd (
                      _mm_mul_pd (_mm_loadu_pd(dd+j), _mm_loadu_pd(w+k)),
                      _mm_mul_pd (_mm_loadu_pd(dd+j+2), _mm_loadu_pd(w+k+2)));
@@ -446,7 +484,8 @@ static void sum_derivatives_config
     }
 #   elif FP32 && USE_SIMD_INTRINSICS && __SSE3__
     { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { i = cn[c].s; j = cn[c].d;
+      { j = cn[c].d;
+        i = cn[c].s;
         __m128 P = _mm_mul_ps (_mm_loadu_ps(dd+j), _mm_loadu_ps(w+k));
         __m128 S = _mm_add_ps (_mm_movehl_ps(P,P), P);
         _mm_store_ss (ds+i, _mm_add_ss (_mm_load_ss(ds+i), _mm_hadd_ps(S,S)));
@@ -454,7 +493,8 @@ static void sum_derivatives_config
     }
 #   else
     { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { i = cn[c].s; j = cn[c].d;
+      { j = cn[c].d;
+        i = cn[c].s;
         ds[i] += (dd[j+0]*w[k+0] + dd[j+2]*w[k+2])      /* same order as SIMD */
                    + (dd[j+1]*w[k+1] + dd[j+3]*w[k+3]); /* instructions above */
       }
@@ -466,7 +506,8 @@ static void sum_derivatives_config
       { __m256d WK = _mm256_loadu_pd(w+k);
         __m256d P;
         __m128d S;
-        i = cn[c].s; j = cn[c].d;
+        j = cn[c].d;
+        i = cn[c].s;
         P = _mm256_mul_pd (_mm256_loadu_pd(dd+j), WK);
         S = _mm_add_pd (_mm256_extractf128_pd(P,1), cast128d(P));
         _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
@@ -480,7 +521,8 @@ static void sum_derivatives_config
     { for (c = 0; (k = cn[c].w) >= 0; c+=2)
       { __m128d WK = _mm_loadu_pd(w+k), WK2 = _mm_loadu_pd(w+k+2);
         __m128d S;
-        i = cn[c].s; j = cn[c].d;
+        j = cn[c].d;
+        i = cn[c].s;
         S = _mm_add_pd (
                      _mm_mul_pd (_mm_loadu_pd(dd+j), WK),
                      _mm_mul_pd (_mm_loadu_pd(dd+j+2), WK2));
@@ -496,11 +538,13 @@ static void sum_derivatives_config
     { for (c = 0; (k = cn[c].w) >= 0; c+=2)
       { __m128 WK = _mm_loadu_ps(w+k);
         __m128 P, S;
-        i = cn[c].s; j = cn[c].d;
+        j = cn[c].d;
+        i = cn[c].s;
         P = _mm_mul_ps (_mm_loadu_ps(dd+j), WK);
         S = _mm_add_ps (_mm_movehl_ps(P,P), P);
         _mm_store_ss (ds+i, _mm_add_ss (_mm_load_ss(ds+i), _mm_hadd_ps(S,S)));
-        i = cn[c+1].s; j = cn[c+1].d;
+        j = cn[c+1].d;
+        i = cn[c+1].s;
         P = _mm_mul_ps (_mm_loadu_ps(dd+j), WK);
         S = _mm_add_ps (_mm_movehl_ps(P,P), P);
         _mm_store_ss (ds+i, _mm_add_ss (_mm_load_ss(ds+i), _mm_hadd_ps(S,S)));
@@ -512,10 +556,12 @@ static void sum_derivatives_config
         net_value w1 = w[k+1];
         net_value w2 = w[k+2];
         net_value w3 = w[k+3];
-        i = cn[c].s; j = cn[c].d;
+        j = cn[c].d;
+        i = cn[c].s;
         ds[i] += (dd[j+0]*w0 + dd[j+2]*w2)      /* same order as SIMD */
                    + (dd[j+1]*w1 + dd[j+3]*w3); /* instructions above */
-        i = cn[c+1].s; j = cn[c+1].d;
+        j = cn[c+1].d;
+        i = cn[c+1].s;
         ds[i] += (dd[j+0]*w0 + dd[j+2]*w2)      /* same order as SIMD */
                    + (dd[j+1]*w1 + dd[j+3]*w3); /* instructions above */
       }

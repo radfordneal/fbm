@@ -200,13 +200,13 @@ typedef struct
 #define CONFIG_ORIGINAL 0	/* Use original weight configuration array  */
 				/*  --- meant only for testing, not for GPU */
 
-#define CONFIG_OCT_S_8D_8W   (!CONFIG_ORIGINAL && 0)  /* make oct_s_8d_8w */
+#define CONFIG_OCT_S_8D_8W   (!CONFIG_ORIGINAL && 1)  /* make oct_s_8d_8w */
 #define CONFIG_QUAD_S_4D_4W  (!CONFIG_ORIGINAL && 1)  /* make quad_s_4d_4w... */
 #define CONFIG_SINGLE4       (!CONFIG_ORIGINAL && 1)  /* make singlel4_... */
 
 #define MAKE_QUAD_PAIRS 1	/* Make quad_s_4d_4w_2 versions with pairs? */
 
-#define CONFIG_OCT_GPU_S_8D_8W 0   /* Make oct_s_8d_8w_dgpu groups? */
+#define CONFIG_OCT_GPU_S_8D_8W 0   /* Make oct_s_8d_8w_?gpu groups? */
 #define CONFIG_QUAD_GPU_S_4D_4W	1  /* Make quad_s_4d_4w_?gpu groups? */
 #define MAKE_QUAD_GPU_PAIRS 1	/* Make quad_s_4d_4w_2_?gpu ver with pairs? */
 #define MAKE_OTHER_GPU_PAIRS 1	/* Make other_2_?gpu versions with pairs? */
@@ -233,16 +233,18 @@ typedef struct
   /* For GPU forward computations: */
 
   net_connection *oct_s_8d_8w_dgpu;  /* Eight connections, same s, sequential
-                                        d & w, sorted by d, grouped d mod NTH*/
-  net_connection *quad_s_4d_4w_dgpu;  /* Four connections, same s, sequential
-                                         d & w, sorted by d, grouped d mod NTH*/
+                                        d & w, sorted by d, grouped d mod NTH */
+  net_connection *quad_s_4d_4w_dgpu; /* Four connections, same s, sequential
+                                        d & w, sorted by d, grouped d mod NTH */
   net_connection *other_dgpu;	/* Other connections for dest, has NTH -1s */
   int start_other_dgpu[NTH];	/* Start indexes for sections in other_dgpu */
 
   /* For GPU backward computations: */
 
-  net_connection *quad_s_4d_4w_sgpu;  /* Four connections, same s, sequential
-                                         d & w, sorted by s, grouped s mod NTH*/
+  net_connection *oct_s_8d_8w_sgpu;  /* Eight connections, same s, sequential
+                                        d & w, sorted by s, grouped s mod NTH */
+  net_connection *quad_s_4d_4w_sgpu; /* Four connections, same s, sequential
+                                        d & w, sorted by s, grouped s mod NTH */
   int start_quad_sgpu[NTH];	/* Start indexes for sections in quad...sgpu */
   net_connection *other_sgpu;	/* Other connections for dource, has NTH -1s */
   int start_other_sgpu[NTH];	/* Start indexes for sections in other_sgpu */

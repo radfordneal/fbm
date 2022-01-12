@@ -601,159 +601,170 @@ static void copy_pairs
   if (bn) *bn = k;
 }
 
+/* Find groups of four connections in 'src' with same value for s,
+   and sequential values for d and w.  Condense these to single
+   entries, stored in 'quad', with number in *quadn.  Put remaining
+   connections in 'rem8', with number in *remn.  Both are terminated
+   with -1 (not counted in number). */
+
+static void find_quad
+( net_connection *src,	/* Original set of connections */
+  int n,		/* Number of connections in src */
+  net_connection *quad,	/* Place to store condensed sets of four connections */
+  int *quadn,		/* Number of sets in quad */
+  net_connection *rem,	/* Place to store remaining connections */
+  int *remn		/* Number of connections in remn */
+)
+{
+  memcpy (rem, src, (n+1) * sizeof *rem);
+  qsort (rem, n, sizeof *rem, cmp_s_wmd_d);
+
+  int i = 0;
+  *remn = 0;
+  *quadn = 0;
+  while (i < n)
+  { int s = rem[i].s;
+    int wmd = rem[i].w-rem[i].d;
+    if (n-i >= 4 
+      && rem[i+1].s==s  && rem[i+2].s==s && rem[i+3].s==s
+      && rem[i+1].w-rem[i+1].d==wmd && rem[i+2].w-rem[i+2].d==wmd 
+      && rem[i+3].w-rem[i+3].d==wmd)
+    { quad[*quadn] = rem[i];
+      *quadn += 1;
+      i += 4;
+    }
+    else
+    { rem[*remn] = rem[i];
+      *remn += 1;
+      i += 1;
+    }
+  }
+
+  rem[*remn].w = -1;
+  quad[*quadn].w = -1;
+}
+
+/* Find groups of eight connections in 'src' with same value for s,
+   and sequential values for d and w.  Condense these to single
+   entries, stored in 'oct', with number in *octn.  Put remaining
+   connections in 'rem8', with number in *remn.  Both are terminated
+   with -1 (not counted in number). */
+
+static void find_oct
+( net_connection *src,	/* Original set of connections */
+  int n,		/* Number of connections in src */
+  net_connection *oct,	/* Place to store condensed sets of eight connections */
+  int *octn,		/* Number of sets in oct */
+  net_connection *rem,	/* Place to store remaining connections */
+  int *remn		/* Number of connections in remn */
+)
+{
+  memcpy (rem, src, (n+1) * sizeof *rem);
+  qsort (rem, n, sizeof *rem, cmp_s_wmd_d);
+
+  int i = 0;
+  *remn = 0;
+  *octn = 0;
+  while (i < n)
+  { int s = rem[i].s;
+    int wmd = rem[i].w-rem[i].d;
+    if (n-i >= 8 
+      && rem[i+1].s==s  && rem[i+2].s==s && rem[i+3].s==s
+      && rem[i+4].s==s  && rem[i+5].s==s && rem[i+6].s==s && rem[i+7].s==s
+      && rem[i+1].w-rem[i+1].d==wmd && rem[i+2].w-rem[i+2].d==wmd 
+      && rem[i+3].w-rem[i+3].d==wmd && rem[i+4].w-rem[i+4].d==wmd
+      && rem[i+5].w-rem[i+5].d==wmd && rem[i+6].w-rem[i+6].d==wmd
+      && rem[i+7].w-rem[i+7].d==wmd)
+    { oct[*octn] = rem[i];
+      *octn += 1;
+      i += 8;
+    }
+    else
+    { rem[*remn] = rem[i];
+      *remn += 1;
+      i += 1;
+    }
+  }
+
+  rem[*remn].w = -1;
+  oct[*octn].w = -1;
+}
+
 /* The actual net_config_sort function, called from elsewhere. */
 
 static void net_config_sort (net_config *cf, int biases)
 { 
-  int minus_ones = 5*GTH + 8 + 3;  /* should be more than enough for each set,
-                                      with +3 to ensure AVX loads are OK */
-  int n = cf->N_conn;
-  int i;
-
   non_adjacency (cf->conn,  "original");  /* For information, if enabled */
 
-  /* Temporary storage. */
+  int n = cf->N_conn;
+
+  int minus_ones = 10*GTH + 10 + 3;  /* should be more than enough for all sets,
+                                        with +3 to ensure AVX loads are OK */
+  int i, c;
+
+  /* Use 'left' to hold connections not yet put in other sets, with
+     the number in 'leftn'. */
+
+  net_connection *left = (net_connection *) chk_alloc(n+1, sizeof *left);
+  int leftn;
+
+  /* Temporary storage.  Enough space for all connections plus one -1. */
 
   net_connection *tmp = 
     (net_connection *) chk_alloc (n+1, sizeof *tmp);  /* one -1 at end */
   net_connection *tmp2 = 
     (net_connection *) chk_alloc (n+1, sizeof *tmp2); /* one -1 at end */
 
-  /* Storage / count for connections not yet put in other sets. */
+  /* ----------  Start work on connections for use in CPU  ----------
 
-  net_connection *left = (net_connection *) chk_alloc(n+1, sizeof *left);
-  int l;  /* number of items in 'left' */
-
-  /* Find groups of eight connections with same value for s, and
-     sequential values for d and w.  Condense these to single entries,
-     stored in 'oct', with number in 'q8'.  Put remaining connections
-     in 'rem8', with number in 'r8'. */
-
-  int q8;  /* number of items in oct, not including -1 at end */
-  int r8;  /* number of items not in oct, not including -1 at end */
-
-  net_connection *oct = 
-    (net_connection *) chk_alloc (n+1, sizeof *oct); /* one -1 at end */
-  net_connection *rem8 = 
-    (net_connection *) chk_alloc (n+1, sizeof *rem8);  /* one -1 at end */
-
-  memcpy (rem8, cf->conn, (n+1) * sizeof *rem8);
-  qsort (rem8, n, sizeof *rem8, cmp_s_wmd_d);
-
-  i = 0;
-  r8 = 0;
-  q8 = 0;
-  while (i < n)
-  { int s = rem8[i].s;
-    int wmd = rem8[i].w-rem8[i].d;
-    if (n-i >= 8 
-      && rem8[i+1].s==s  && rem8[i+2].s==s && rem8[i+3].s==s
-      && rem8[i+4].s==s  && rem8[i+5].s==s && rem8[i+6].s==s && rem8[i+7].s==s
-      && rem8[i+1].w-rem8[i+1].d==wmd && rem8[i+2].w-rem8[i+2].d==wmd 
-      && rem8[i+3].w-rem8[i+3].d==wmd && rem8[i+4].w-rem8[i+4].d==wmd
-      && rem8[i+5].w-rem8[i+5].d==wmd && rem8[i+6].w-rem8[i+6].d==wmd
-      && rem8[i+7].w-rem8[i+7].d==wmd)
-    { oct[q8] = rem8[i];
-      q8 += 1;
-      i += 4;
-    }
-    else
-    { rem8[r8] = rem8[i];
-      r8 += 1;
-      i += 1;
-    }
-  }
-
-  rem8[r8].w = -1;
-  oct[q8].w = -1;
-
-  /* Find groups of four connections with same value for s, and
-     sequential values for d and w.  Condense these to single entries,
-     stored in 'quad', with number in 'q'.  Put remaining connections
-     in 'rem', with number in 'r'. */
-
-  int q;  /* number of items in quad, not including -1 at end */
-  int r;  /* number of items not in quad, not including -1 at end */
-
-  net_connection *quad = 
-    (net_connection *) chk_alloc (n+1, sizeof *quad); /* one -1 at end */
-  net_connection *rem = 
-    (net_connection *) chk_alloc (n+1, sizeof *rem);  /* one -1 at end */
-
-  memcpy (rem, cf->conn, (n+1) * sizeof *rem);
-  qsort (rem, n, sizeof *rem, cmp_s_wmd_d);
-
-  i = 0;
-  r = 0;
-  q = 0;
-  while (i < n)
-  { int s = rem[i].s;
-    int wmd = rem[i].w-rem[i].d;
-    if (n-i >= 4 && rem[i+1].s==s  && rem[i+2].s==s && rem[i+3].s==s
-         && rem[i+1].w-rem[i+1].d==wmd  && rem[i+2].w-rem[i+2].d==wmd 
-         && rem[i+3].w-rem[i+3].d==wmd)
-    { quad[q] = rem[i];
-      q += 1;
-      i += 4;
-    }
-    else
-    { rem[r] = rem[i];
-      r += 1;
-      i += 1;
-    }
-  }
-
-  rem[r].w = -1;
-  quad[q].w = -1;
-
-  /* --- Start work on connections for use in CPU --- */
-
-  /*  We will put all connections used on CPU, as sorted and grouped,
+     We will put all connections used on CPU, as sorted and grouped,
      in successive parts of 'all', setting pointers to parts of it in
      cf.  The next unused entry in 'all' is stored in 'a'. */
 
   net_connection *all = (net_connection *) chk_alloc(n+minus_ones, sizeof *all);
   int a = 0;
 
-  /* If CONFIG_QUAD_S_4D_4W enabled, create quad entries for use in CPU. 
-     Otherwise, create null entries for this.  Put whatever isn't used
-     for quads in 'left', with number 'l'. */
+  memcpy (left, cf->conn, (n+1) * sizeof *left);
+  leftn = n;
+
+  /* Find groups of eight, if enabled. */
+
+  if (!CONFIG_OCT_S_8D_8W)
+  { cf->oct_s_8d_8w = all+a;
+    all[a++].w = -1;
+  }
+  else
+  { memcpy (tmp, left, leftn * sizeof *tmp);
+    find_oct (tmp, leftn, all+a, &c, left, &leftn);
+    cf->oct_s_8d_8w = all+a;
+    a += c+1;
+  }
+
+  /* Find groups of four, if enabled. */
 
   if (!CONFIG_QUAD_S_4D_4W)
   { cf->quad_s_4d_4w = all+a;
     all[a++].w = -1;
     cf->quad_s_4d_4w_2 = all+a;
     all[a++].w = -1;
-    memcpy (left, cf->conn, (n+1) * sizeof *left);
-    l = n;
   }
   else
-  {
-    memcpy (tmp, quad, (q+1) * sizeof *tmp);
-    qsort (tmp, q, sizeof *quad, cmp_w_d_s);
-
-    non_adjacency (tmp, "quads4d4w");  /* only useful for info, if enabled */
-
-    int jj = q;
-
+  { memcpy (tmp, left, leftn * sizeof *tmp);
+    find_quad (tmp, leftn, all+a, &c, left, &leftn);
+    cf->quad_s_4d_4w = all+a;
     if (!MAKE_QUAD_PAIRS)
-    { cf->quad_s_4d_4w_2 = all+a;
+    { a += c+1;
+      cf->quad_s_4d_4w_2 = all+a;
       all[a++].w = -1;
     }
     else
     { int m;
-      copy_pairs (tmp, all+a, &jj, &m);
+      copy_pairs (all+a, tmp, &c, &m);
+      a += c+1;
       cf->quad_s_4d_4w_2 = all+a;
+      memcpy (all+a, tmp, (m+1) * sizeof *tmp);
       a += m+1;
     }
-
-    cf->quad_s_4d_4w = all+a;
-    memcpy (all+a, tmp, jj * sizeof *all);
-    all[a+jj].w = -1;
-    a += jj+1;
-
-    memcpy (left, rem, (r+1) * sizeof *left);
-    l = r;
   }
 
   /* Find groups of four single connections with the same value for d, if
@@ -765,13 +776,13 @@ static void net_config_sort (net_config *cf, int biases)
   }
   else
   { 
-    qsort (left, l, sizeof *left, cmp_d_s_w);
+    qsort (left, leftn, sizeof *left, cmp_d_s_w);
 
     int i, j, k;
     i = j = k = 0;
-    while (i < l)
+    while (i < leftn)
     { int d = left[i].d;
-      if (l-i >= 4 && left[i+1].d==d  && left[i+2].d==d && left[i+3].d==d)
+      if (leftn-i >= 4 && left[i+1].d==d  && left[i+2].d==d && left[i+3].d==d)
       { tmp[j+0] = left[i+0];
         tmp[j+1] = left[i+1];
         tmp[j+2] = left[i+2];
@@ -787,9 +798,8 @@ static void net_config_sort (net_config *cf, int biases)
     }
 
     tmp[j].w = -1;
-    non_adjacency (tmp, "single4d");  /* only useful for info, if enabled */
 
-    l = k;
+    leftn = k;
     left[k].w = -1;
 
     cf->single4_d = all+a;
@@ -807,13 +817,13 @@ static void net_config_sort (net_config *cf, int biases)
   }
   else
   { 
-    qsort (left, l, sizeof *left, cmp_s_d_w);
+    qsort (left, leftn, sizeof *left, cmp_s_d_w);
 
     int i, j, k;
     i = j = k = 0;
-    while (i < l)
+    while (i < leftn)
     { int s = left[i].s;
-      if (l-i >= 4 && left[i+1].s==s  && left[i+2].s==s && left[i+3].s==s)
+      if (leftn-i >= 4 && left[i+1].s==s  && left[i+2].s==s && left[i+3].s==s)
       { tmp[j+0] = left[i+0];
         tmp[j+1] = left[i+1];
         tmp[j+2] = left[i+2];
@@ -829,9 +839,8 @@ static void net_config_sort (net_config *cf, int biases)
     }
 
     tmp[j].w = -1;
-    non_adjacency (tmp, "single4s");  /* only useful for info, if enabled */
 
-    l = k;
+    leftn = k;
     left[k].w = -1;
 
     cf->single4_s = all+a;
@@ -843,16 +852,16 @@ static void net_config_sort (net_config *cf, int biases)
   /* Copy remaining connections from 'left' to end of 'all', sorting them
      by s or d, whichever seems better. */
 
-  qsort (left, l, sizeof *left, cmp_s_d_w);
+  qsort (left, leftn, sizeof *left, cmp_s_d_w);
   int nadj_s = non_adjacency (left, "left-by-s");
-  memcpy (all+a, left, l * sizeof *all);
-  qsort (left, l, sizeof *left, cmp_d_s_w);
+  memcpy (all+a, left, leftn * sizeof *all);
+  qsort (left, leftn, sizeof *left, cmp_d_s_w);
   int nadj_d = non_adjacency (left, "left-by-d");
   if (nadj_d < nadj_s)
-  { memcpy (all+a, left, l * sizeof *all);
+  { memcpy (all+a, left, leftn * sizeof *all);
   }
   cf->single = all+a;
-  a += l;
+  a += leftn;
   all[a++].w = -1;
 
   /* Record the block all the CPU versions came from, in config structure. */
@@ -860,16 +869,19 @@ static void net_config_sort (net_config *cf, int biases)
   cf->all = all;
   cf->all_length = a;
 
-  /* --- Start work on connections for use in GPU computations --- */
+  /* --------  Start work on connections for use in GPU computations  -------- 
 
-  /* There are three sets, sorted by weight, destination, and source,
+     There are three sets, sorted by weight, destination, and source,
      used for gradient, forward, and backwards computations,
      respectively.  They come in multiple sections according to mod
-     values. */
-
+     values.  All are stored in all_gpu. */
+#if 0
   net_connection *all_gpu = (net_connection *) 
                                chk_alloc(3*(n+minus_ones), sizeof *all_gpu);
   int a_gpu = 0;
+
+  memcpy (left, cf->conn, n, sizeof *left);
+  leftn = n;
 
   /* If enabled, set up quad_s_4d_4w_wgpu connections for use in GPU
      gradient computations, sections marked by extra -1 indicators for
@@ -890,8 +902,6 @@ static void net_config_sort (net_config *cf, int biases)
     { all_gpu[a_gpu++].w = -1;
       cf->start_quad_2_wgpu[e] = e;
     }
-    memcpy (left, cf->conn, (n+1) * sizeof *left);
-    l = n;
   }
   else
   { int jj = q;
@@ -1022,8 +1032,11 @@ static void net_config_sort (net_config *cf, int biases)
   cf->all_gpu = all_gpu;
   cf->all_gpu_length = a_gpu;
 
-  free(tmp);
-  free(tmp2);
   free(rem);
   free(quad);
+#endif
+
+  free(tmp2);
+  free(tmp);
+  free(left);
 }

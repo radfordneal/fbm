@@ -788,19 +788,14 @@ static void print_config (net_config *cf, int biases)
   { 
     int i, r;
 
-    if (CONFIG_OCT_GPU_S_8D_8W)
-    { printf("oct_s_8d_8w_dgpu:\n");
-      i = 0;
-      for (r = 0; r<NTH; r++)
-      { printf("First destination unit %d mod %d:\n",r,NTH);
-        while (cf->oct_s_8d_8w_dgpu[i].w >= 0)
-        { printf("%3d %3d-%-3d %3d-%-3d\n", cf->oct_s_8d_8w_dgpu[i].s, 
-                      cf->oct_s_8d_8w_dgpu[i].d, cf->oct_s_8d_8w_dgpu[i].d+3,
-                      cf->oct_s_8d_8w_dgpu[i].w, cf->oct_s_8d_8w_dgpu[i].w+3);
-          i += 1;
-        }
-        i += 1;
-        printf("\n");
+    /* For CPU: */
+
+    if (CONFIG_OCT_S_8D_8W)
+    { printf("oct_s_8d_8w:\n");
+      for (i = 0; cf->oct_s_8d_8w[i].w >= 0; i++)
+      { printf("%3d %3d-%-3d %3d-%-3d\n", cf->oct_s_8d_8w[i].s, 
+                               cf->oct_s_8d_8w[i].d, cf->oct_s_8d_8w[i].d+7,
+                               cf->oct_s_8d_8w[i].w, cf->oct_s_8d_8w[i].w+7);
       }
       printf("\n");
     }
@@ -818,6 +813,46 @@ static void print_config (net_config *cf, int biases)
       { printf("%3d %3d-%-3d %3d-%-3d\n", cf->quad_s_4d_4w_2[i].s, 
                             cf->quad_s_4d_4w_2[i].d, cf->quad_s_4d_4w_2[i].d+3,
                             cf->quad_s_4d_4w_2[i].w, cf->quad_s_4d_4w_2[i].w+3);
+      }
+      printf("\n");
+    }
+
+    if (CONFIG_SINGLE4)
+    { printf("single4_s:\n");
+      for (i = 0; cf->single4_s[i].w >= 0; i++)
+      { printf("%3d %3d %3d\n",
+                cf->single4_s[i].s, cf->single4_s[i].d, cf->single4_s[i].w);
+      }
+      printf("single4_d:\n");
+      for (i = 0; cf->single4_d[i].w >= 0; i++)
+      { printf("%3d %3d %3d\n",
+                cf->single4_d[i].s, cf->single4_d[i].d, cf->single4_d[i].w);
+      }
+      printf("\n");
+    }
+
+    printf("single:\n");
+    for (i = 0; cf->single[i].w >= 0; i++)
+    { printf("%3d %3d %3d\n",
+              cf->single[i].s, cf->single[i].d, cf->single[i].w);
+    }
+    printf("\n");
+
+    /* For GPU: */
+
+    if (CONFIG_OCT_GPU_S_8D_8W)
+    { printf("oct_s_8d_8w_dgpu:\n");
+      i = 0;
+      for (r = 0; r<NTH; r++)
+      { printf("First destination unit %d mod %d:\n",r,NTH);
+        while (cf->oct_s_8d_8w_dgpu[i].w >= 0)
+        { printf("%3d %3d-%-3d %3d-%-3d\n", cf->oct_s_8d_8w_dgpu[i].s, 
+                      cf->oct_s_8d_8w_dgpu[i].d, cf->oct_s_8d_8w_dgpu[i].d+7,
+                      cf->oct_s_8d_8w_dgpu[i].w, cf->oct_s_8d_8w_dgpu[i].w+7);
+          i += 1;
+        }
+        i += 1;
+        printf("\n");
       }
       printf("\n");
     }
@@ -889,27 +924,6 @@ static void print_config (net_config *cf, int biases)
         printf("\n");
       }
     }
-
-    if (CONFIG_SINGLE4)
-    { printf("single4_s:\n");
-      for (i = 0; cf->single4_s[i].w >= 0; i++)
-      { printf("%3d %3d %3d\n",
-                cf->single4_s[i].s, cf->single4_s[i].d, cf->single4_s[i].w);
-      }
-      printf("single4_d:\n");
-      for (i = 0; cf->single4_d[i].w >= 0; i++)
-      { printf("%3d %3d %3d\n",
-                cf->single4_d[i].s, cf->single4_d[i].d, cf->single4_d[i].w);
-      }
-      printf("\n");
-    }
-
-    printf("single:\n");
-    for (i = 0; cf->single[i].w >= 0; i++)
-    { printf("%3d %3d %3d\n",
-              cf->single[i].s, cf->single[i].d, cf->single[i].w);
-    }
-    printf("\n");
 
     printf("other for wgpu:\n");
     printf("start indexes:");

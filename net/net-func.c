@@ -1,6 +1,6 @@
 /* NET-FUNC.C - Routine for calculating the function defined by a network. */
 
-/* Copyright (c) 1995-2021 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -584,6 +584,21 @@ static void bias_values_config
   int c, j, k;
 
   memset (v, 0, n * sizeof *v);
+
+  if (CONFIG_OCT_S_8D_8W)
+  { cn = cf->oct_s_8d_8w;
+    for (c = 0; (k = cn[c].w) >= 0; c++)
+    { j = cn[c].d;
+      v[j+0] += b[k+0];
+      v[j+1] += b[k+1];
+      v[j+2] += b[k+2];
+      v[j+3] += b[k+3];
+      v[j+4] += b[k+4];
+      v[j+5] += b[k+5];
+      v[j+6] += b[k+6];
+      v[j+7] += b[k+7];
+    }
+  }
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w;
@@ -1171,6 +1186,41 @@ static void add_connections_config
 {
   net_connection *cn;
   int i, j, k, c;
+
+  if (CONFIG_OCT_S_8D_8W)
+  { cn = cf->oct_s_8d_8w;
+#   if 1
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { net_value voi = v[cn[c].s] + off[cn[c].s];
+          j = cn[c].d;
+          s[j+0] += voi * w[k+0];
+          s[j+1] += voi * w[k+1];
+          s[j+2] += voi * w[k+2];
+          s[j+3] += voi * w[k+3];
+          s[j+4] += voi * w[k+4];
+          s[j+5] += voi * w[k+5];
+          s[j+6] += voi * w[k+6];
+          s[j+7] += voi * w[k+7];
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { net_value vi = v[cn[c].s];
+          j = cn[c].d; 
+          s[j+0] += vi * w[k+0];
+          s[j+1] += vi * w[k+1];
+          s[j+2] += vi * w[k+2];
+          s[j+3] += vi * w[k+3];
+          s[j+4] += vi * w[k+4];
+          s[j+5] += vi * w[k+5];
+          s[j+6] += vi * w[k+6];
+          s[j+7] += vi * w[k+7];
+        }
+      }
+    }
+#   endif
+  }
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w;
@@ -1813,7 +1863,7 @@ __device__ static void bias_values_config_gpu
     if (SYNC_AFTER) __syncwarp(syncmask);
   }
 
-  if (CONFIG_QUAD_S_4D_4W)
+  if (CONFIG_QUAD_GPU_S_4D_4W)
   { cn = cf->quad_s_4d_4w_dgpu;
     c = 0;
     for (m = 0; m<NTH; m++)
@@ -2133,7 +2183,7 @@ __device__ static void add_connections_config_gpu
     if (SYNC_AFTER) __syncwarp(syncmask);
   }
 
-  if (CONFIG_QUAD_S_4D_4W)
+  if (CONFIG_QUAD_GPU_S_4D_4W)
   { cn = cf->quad_s_4d_4w_dgpu;
     c = 0;
     for (m = 0; m<NTH; m++)

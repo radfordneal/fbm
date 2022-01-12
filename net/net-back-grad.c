@@ -1,6 +1,6 @@
 /* NET-BACK-GRAD.C - Combined backpropagation and gradient computation. */
 
-/* Copyright (c) 1995-2021 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -411,6 +411,20 @@ static void sum_derivatives_config
   net_connection *cn;
   int i, j, k, c;
 
+  if (CONFIG_OCT_S_8D_8W)
+  { cn = cf->oct_s_8d_8w;
+#   if 1
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { i = cn[c].s; j = cn[c].d;
+        ds[i] = ds[i] + dd[j+0]*w[k+0] + dd[j+1]*w[k+1]
+                      + dd[j+2]*w[k+2] + dd[j+3]*w[k+3]
+                      + dd[j+4]*w[k+4] + dd[j+5]*w[k+5]
+                      + dd[j+6]*w[k+6] + dd[j+7]*w[k+7];
+      }
+    }
+#   endif
+  }
+
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w;
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
@@ -661,7 +675,7 @@ __device__ static void sum_derivatives_config_gpu
   net_connection *cn;
   int c, i, j, k;
 
-  if (CONFIG_QUAD_S_4D_4W)
+  if (CONFIG_QUAD_GPU_S_4D_4W)
   { cn = cf->quad_s_4d_4w_sgpu;
     c = cf->start_quad_sgpu[th];
     for (;;)
@@ -716,6 +730,21 @@ static void add_grad1_config
 )
 { net_connection *cn;
   int c, j, j2, k;
+
+  if (CONFIG_OCT_S_8D_8W)
+  { cn = cf->oct_s_8d_8w;
+    for (c = 0; (k = cn[c].w) >= 0; c++)
+    { j = cn[c].d;
+      g[k+0] += d[j+0];
+      g[k+1] += d[j+1];
+      g[k+2] += d[j+2];
+      g[k+3] += d[j+3];
+      g[k+4] += d[j+4];
+      g[k+5] += d[j+5];
+      g[k+6] += d[j+6];
+      g[k+7] += d[j+7];
+    }
+  }
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w;
@@ -1307,6 +1336,41 @@ static void add_grad2_config
 {
   net_connection *cn;
   int i, j, k, c;
+
+  if (CONFIG_OCT_S_8D_8W)
+  { cn = cf->oct_s_8d_8w;
+#   if 1
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { net_value soi = s[cn[c].s] + off[cn[c].s];
+          j = cn[c].d;
+          g[k+0] += soi * d[j+0];
+          g[k+1] += soi * d[j+1];
+          g[k+2] += soi * d[j+2];
+          g[k+3] += soi * d[j+3];
+          g[k+4] += soi * d[j+4];
+          g[k+5] += soi * d[j+5];
+          g[k+6] += soi * d[j+6];
+          g[k+7] += soi * d[j+7];
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { net_value si = s[cn[c].s];
+          j = cn[c].d;
+          g[k+0] += si * d[j+0];
+          g[k+1] += si * d[j+1];
+          g[k+2] += si * d[j+2];
+          g[k+3] += si * d[j+3];
+          g[k+4] += si * d[j+4];
+          g[k+5] += si * d[j+5];
+          g[k+6] += si * d[j+6];
+          g[k+7] += si * d[j+7];
+        }
+      }
+    }
+#   endif
+  }
 
   if (CONFIG_QUAD_S_4D_4W)
   { cn = cf->quad_s_4d_4w;

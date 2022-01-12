@@ -200,8 +200,9 @@ typedef struct
 #define CONFIG_ORIGINAL 0	/* Use original weight configuration array  */
 				/*  --- meant only for testing, not for GPU */
 
-#define CONFIG_QUAD_S_4D_4W	(!CONFIG_ORIGINAL && 1)
-#define CONFIG_SINGLE4		(!CONFIG_ORIGINAL && 1)
+#define CONFIG_OCT_S_8D_8W   (!CONFIG_ORIGINAL && 0)  /* make oct_s_8d_8w */
+#define CONFIG_QUAD_S_4D_4W  (!CONFIG_ORIGINAL && 1)  /* make quad_s_4d_4w... */
+#define CONFIG_SINGLE4       (!CONFIG_ORIGINAL && 1)  /* make singlel4_... */
 
 #define MAKE_QUAD_PAIRS 1	/* Make quad_s_4d_4w_2 versions with pairs? */
 
@@ -218,13 +219,14 @@ typedef struct
 
   net_connection *conn;		/* Array of connections, in original order */
 
-  /* For CPU computions */
+  /* For CPU computations */
   net_connection *single;	/* Single connections, taken one-at-a-time */
   net_connection *single4_s;	/* Single connections, in groups of 4, same s */
   net_connection *single4_d;	/* Single connections, in groups of 4, same d */
   net_connection *quad_s_4d_4w;	/* Four connections, same s, sequential d & w */
-  net_connection *quad_s_4d_4w_2; /* Pairs of connections, with same s, 
-                                     sequential d & w, w same for pair */
+  net_connection *quad_s_4d_4w_2; /* Pairs of four-connection sets (with same s,
+                                     sequential d & w), w same for pair */
+  net_connection *oct_s_8d_8w;	/* Eight connections, same s, sequential d&w */
   net_connection *all;		/* Pointer to block with items above */
   int all_length;		/* Length of 'all' block in use */
 

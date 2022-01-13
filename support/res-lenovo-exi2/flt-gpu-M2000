@@ -1,4 +1,4 @@
-Commit: 68aa61cf695c872edd38404800899570dec04dc1
+Commit: e0b67e3c3f45a3a7468afeb63e3a7699dfe56951
 
 Running exi2 with flt-gpu on M2000:
 
@@ -22,8 +22,8 @@ Number of iterations used: 2
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.385+-0.001
+Average log probability of targets:    -1.384+-0.002
 Fraction of guesses that were wrong:    0.7600+-0.0429
-Average squared error guessing mean:    0.74919+-0.00072
+Average squared error guessing mean:    0.74906+-0.00087
 
-elapsed 17.49s
+elapsed 17.52s

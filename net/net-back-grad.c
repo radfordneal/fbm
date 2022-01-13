@@ -1398,7 +1398,96 @@ static void add_grad2_config
 
   if (CONFIG_OCT_S_8D_8W)
   { cn = cf->oct_s_8d_8w;
-#   if 1
+#   if FP64 && USE_SIMD_INTRINSICS && __AVX__
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m256d SI = _mm256_set1_pd (s[cn[c].s] + off[cn[c].s]);
+          j = cn[c].d;
+          _mm256_storeu_pd (g+k, FMA256_pd (SI, _mm256_loadu_pd(d+j),
+                                                _mm256_loadu_pd(g+k)));
+          _mm256_storeu_pd (g+k+4, FMA256_pd (SI, _mm256_loadu_pd(d+j+4),
+                                                  _mm256_loadu_pd(g+k+4)));
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m256d SI = _mm256_set1_pd (s[cn[c].s]);
+          j = cn[c].d;
+          _mm256_storeu_pd (g+k, FMA256_pd (SI, _mm256_loadu_pd(d+j),
+                                                _mm256_loadu_pd(g+k)));
+          _mm256_storeu_pd (g+k+4, FMA256_pd (SI, _mm256_loadu_pd(d+j+4),
+                                                  _mm256_loadu_pd(g+k+4)));
+        }
+      }
+    }
+#   elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m128d SI = _mm_set1_pd (s[cn[c].s] + off[cn[c].s]);
+          j = cn[c].d;
+          _mm_storeu_pd (g+k, FMA_pd (SI, _mm_loadu_pd(d+j),
+                                          _mm_loadu_pd(g+k)));
+          _mm_storeu_pd (g+k+2, FMA_pd (SI, _mm_loadu_pd(d+j+2),
+                                            _mm_loadu_pd(g+k+2)));
+          _mm_storeu_pd (g+k+4, FMA_pd (SI, _mm_loadu_pd(d+j+4),
+                                            _mm_loadu_pd(g+k+4)));
+          _mm_storeu_pd (g+k+6, FMA_pd (SI, _mm_loadu_pd(d+j+6),
+                                            _mm_loadu_pd(g+k+6)));
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m128d SI = _mm_set1_pd (s[cn[c].s]);
+          j = cn[c].d;
+          _mm_storeu_pd (g+k, FMA_pd (SI, _mm_loadu_pd(d+j),
+                                          _mm_loadu_pd(g+k)));
+          _mm_storeu_pd (g+k+2, FMA_pd (SI, _mm_loadu_pd(d+j+2),
+                                            _mm_loadu_pd(g+k+2)));
+          _mm_storeu_pd (g+k+4, FMA_pd (SI, _mm_loadu_pd(d+j+4),
+                                            _mm_loadu_pd(g+k+4)));
+          _mm_storeu_pd (g+k+6, FMA_pd (SI, _mm_loadu_pd(d+j+6),
+                                            _mm_loadu_pd(g+k+6)));
+        }
+      }
+    }
+#   elif FP32 && USE_SIMD_INTRINSICS && __AVX__
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m256 SI = _mm256_set1_ps (s[cn[c].s] + off[cn[c].s]);
+          j = cn[c].d;
+          _mm256_storeu_ps (g+k, FMA256_ps(SI, _mm256_loadu_ps(d+j), 
+                                               _mm256_loadu_ps(g+k)));
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m256 SI = _mm256_set1_ps (s[cn[c].s]);
+          j = cn[c].d;
+          _mm256_storeu_ps (g+k, FMA256_ps(SI, _mm256_loadu_ps(d+j), 
+                                               _mm256_loadu_ps(g+k)));
+        }
+      }
+    }
+#   elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
+    { if (off)
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m128 SI = _mm_set1_ps (s[cn[c].s] + off[cn[c].s]);
+          j = cn[c].d;
+          _mm_storeu_ps (g+k, FMA_ps(SI, _mm_loadu_ps(d+j), _mm_loadu_ps(g+k)));
+          _mm_storeu_ps (g+k+4, FMA_ps(SI, _mm_loadu_ps(d+j+4), 
+                                           _mm_loadu_ps(g+k+4)));
+        }
+      }
+      else
+      { for (c = 0; (k = cn[c].w) >= 0; c++)
+        { __m128 SI = _mm_set1_ps (s[cn[c].s]);
+          j = cn[c].d;
+          _mm_storeu_ps (g+k+4, FMA_ps(SI, _mm_loadu_ps(d+j+4), 
+                                           _mm_loadu_ps(g+k+4)));
+        }
+      }
+    }
+#   else
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
         { net_value soi = s[cn[c].s] + off[cn[c].s];

@@ -721,6 +721,20 @@ __device__ static void sum_derivatives_config_gpu
   net_connection *cn;
   int c, i, j, k;
 
+  if (CONFIG_OCT_GPU_S_8D_8W)
+  { cn = cf->oct_s_8d_8w_sgpu;
+    c = cf->start_oct_sgpu[th];
+    for (;;)
+    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      ds[i] = ds[i] + dd[j+0]*w[k+0] + dd[j+1]*w[k+1]  /* written so it can */
+                    + dd[j+2]*w[k+2] + dd[j+3]*w[k+3]  /*  use multiply-add */
+                    + dd[j+4]*w[k+4] + dd[j+5]*w[k+5]
+                    + dd[j+6]*w[k+6] + dd[j+7]*w[k+7];
+    }
+    if (SYNC_AFTER) __syncwarp(syncmask);
+  }
+
   if (CONFIG_QUAD_GPU_S_4D_4W)
   { cn = cf->quad_s_4d_4w_sgpu;
     c = cf->start_quad_sgpu[th];
@@ -730,9 +744,8 @@ __device__ static void sum_derivatives_config_gpu
       ds[i] = ds[i] + dd[j+0]*w[k+0] + dd[j+1]*w[k+1]  /* written so it can */
                     + dd[j+2]*w[k+2] + dd[j+3]*w[k+3]; /*  use multiply-add */
     }
+    if (SYNC_AFTER) __syncwarp(syncmask);
   }
-
-  if (SYNC_AFTER) __syncwarp(syncmask);
 
   cn = cf->other_sgpu;
   c = cf->start_other_sgpu[th];

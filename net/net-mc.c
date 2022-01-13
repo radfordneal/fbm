@@ -391,6 +391,7 @@ net_config *net_config_to_gpu (net_config *cf)
   dcf.quad_s_4d_4w_dgpu = dcf.all_gpu + (cf->quad_s_4d_4w_dgpu - cf->all_gpu);
   dcf.other_dgpu = dcf.all_gpu + (cf->other_dgpu - cf->all_gpu);
 
+  dcf.oct_s_8d_8w_sgpu = dcf.all_gpu + (cf->oct_s_8d_8w_sgpu - cf->all_gpu);
   dcf.quad_s_4d_4w_sgpu = dcf.all_gpu + (cf->quad_s_4d_4w_sgpu - cf->all_gpu);
   dcf.other_sgpu = dcf.all_gpu + (cf->other_sgpu - cf->all_gpu);
   

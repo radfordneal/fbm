@@ -879,7 +879,7 @@ static void net_config_sort (net_config *cf, int biases)
                                chk_alloc(3*(n+minus_ones), sizeof *all_gpu);
   int a_gpu = 0;
 
-  /* Connections for gradient computation (..._wgpu). */
+  /* -- Connections for gradient computation (..._wgpu) -- */
 
   memcpy (left, cf->conn, (n+1) * sizeof *left);
   leftn = n;
@@ -949,7 +949,7 @@ static void net_config_sort (net_config *cf, int biases)
   cf->other_wgpu = all_gpu+a_gpu;
   a_gpu += copy_wmod (cf->other_wgpu, tmp, cf->start_other_wgpu, GTH);
 
-  /* Connections for forward computation (..._dgpu). */
+  /* -- Connections for forward computation (..._dgpu) -- */
 
   memcpy (left, cf->conn, (n+1) * sizeof *left);
   leftn = n;
@@ -968,72 +968,74 @@ static void net_config_sort (net_config *cf, int biases)
     find_oct (tmp, leftn, tmp2, &c, left, &leftn);
     qsort (tmp2, c, sizeof *tmp2, cmp_dmodNTH_d_w_s);
     cf->oct_s_8d_8w_dgpu = all_gpu+a_gpu;
-    a_gpu += copy_dmod (cf->oct_s_8d_8w_dgpu, tmp2, 0, NTH);
+    a_gpu += copy_dmod (cf->oct_s_8d_8w_dgpu, tmp2, cf->start_oct_dgpu, NTH);
   }
 
-#if 0
-
-  /* Similarly for quad_s_4d_4w_dgpu connections... */
-
-/* NEEDS CHANGE IF OCT ARE ENABLED */
+  /* Similarly for quad_s_4d_4w_dgpu connections. */
 
   if (!CONFIG_QUAD_GPU_S_4D_4W)
   { int e;
     cf->quad_s_4d_4w_dgpu = all_gpu+a_gpu;
     for (e = 0; e<4; e++) all_gpu[a_gpu++].w = -1;
-    memcpy (left, cf->conn, (n+1) * sizeof *left);
-    l = n;
   }
   else
-  { memcpy (tmp, quad, (q+1) * sizeof *tmp);
-    qsort (tmp, q, sizeof *tmp, cmp_dmodNTH_d_w_s);
+  { memcpy (tmp, left, (leftn+1) * sizeof *tmp);
+    find_quad (tmp, leftn, tmp2, &c, left, &leftn);
+    qsort (tmp2, c, sizeof *tmp2, cmp_dmodNTH_d_w_s);
     cf->quad_s_4d_4w_dgpu = all_gpu+a_gpu;
-    a_gpu += copy_dmod (cf->quad_s_4d_4w_dgpu, tmp, 0, NTH);
-    memcpy (left, rem, (r+1) * sizeof *left);
-    l = r;
+    a_gpu += copy_dmod (cf->quad_s_4d_4w_dgpu, tmp2, cf->start_quad_dgpu, NTH);
   }
 
   /* Set up other connections (not in oct_s_8d_8w_dgpu and quad_s_4d_4w_dgpu)
      for use in gpu forward pass computations. */
 
-  memcpy (tmp, left, (l+1) * sizeof *tmp);  
-  qsort (tmp, l, sizeof *tmp, cmp_dmodNTH_d_w_s);
+  qsort (left, leftn, sizeof *left, cmp_dmodNTH_d_w_s);
   cf->other_dgpu = all_gpu+a_gpu;
-  a_gpu += copy_dmod (cf->other_dgpu, tmp, cf->start_other_dgpu, NTH);
+  a_gpu += copy_dmod (cf->other_dgpu, left, cf->start_other_dgpu, NTH);
 
-  /* Connections for backward computation (..._dgpu). */
+  /* -- Connections for backward computation (..._dgpu) -- */
 
   memcpy (left, cf->conn, (n+1) * sizeof *left);
   leftn = n;
 
-  /* And, the quad_s_4d_4w_sgpu connections are used for gpu backward pass
-     computations, sorted by s. In sections by s mod NTH. */
+  /* The oct_s_8d_8w_sgpu connections are used for gpu backward pass
+     computations, sorted by s.  A paired version is not set up.  In
+     sections by s mod NTH. */
+
+  if (!CONFIG_OCT_GPU_S_8D_8W)
+  { int e;
+    cf->oct_s_8d_8w_sgpu = all_gpu+a_gpu;
+    for (e = 0; e<8; e++) all_gpu[a_gpu++].w = -1;
+  }
+  else
+  { memcpy (tmp, left, (leftn+1) * sizeof *tmp);
+    find_oct (tmp, leftn, tmp2, &c, left, &leftn);
+    qsort (tmp2, c, sizeof *tmp2, cmp_smodNTH_s_w_d);
+    cf->oct_s_8d_8w_sgpu = all_gpu+a_gpu;
+    a_gpu += copy_smod (cf->oct_s_8d_8w_sgpu, tmp2, cf->start_oct_sgpu, NTH);
+  }
+
+  /* Similarly for quad_s_4d_4w_sgpu connections. */
 
   if (!CONFIG_QUAD_GPU_S_4D_4W)
   { int e;
     cf->quad_s_4d_4w_sgpu = all_gpu+a_gpu;
     for (e = 0; e<4; e++) all_gpu[a_gpu++].w = -1;
-    memcpy (left, cf->conn, (n+1) * sizeof *left);
-    l = n;
   }
   else
-  { memcpy (tmp, quad, (q+1) * sizeof *tmp);
-    qsort (tmp, q, sizeof *tmp, cmp_smodNTH_s_w_d);
+  { memcpy (tmp, left, (leftn+1) * sizeof *tmp);
+    find_quad (tmp, leftn, tmp2, &c, left, &leftn);
+    qsort (tmp2, c, sizeof *tmp2, cmp_smodNTH_s_w_d);
     cf->quad_s_4d_4w_sgpu = all_gpu+a_gpu;
-    a_gpu += copy_smod (cf->quad_s_4d_4w_sgpu, tmp, cf->start_quad_sgpu, NTH);
-    memcpy (left, rem, (r+1) * sizeof *left);
-    l = r;
+    a_gpu += copy_smod (cf->quad_s_4d_4w_sgpu, tmp2, cf->start_quad_sgpu, NTH);
   }
 
-  /* Set up other connections (not in quad_s_4d_4w_sgpu) for use in gpu
-     backward pass computations. */
+  /* Set up other connections (not in oct_s_8d_8w_sgpu and quad_s_4d_4w_sgpu)
+     for use in gpu backward pass computations. */
 
-  memcpy (tmp, left, (l+1) * sizeof *tmp);  
-  qsort (tmp, l, sizeof *tmp, cmp_smodNTH_s_w_d);
+  qsort (left, leftn, sizeof *left, cmp_smodNTH_s_w_d);
   cf->other_sgpu = all_gpu+a_gpu;
-  a_gpu += copy_smod (cf->other_sgpu, tmp, cf->start_other_sgpu, NTH);
-
-#endif
+  a_gpu += copy_smod (cf->other_sgpu, left, cf->start_other_sgpu, NTH);
 
   /* Record the block all the GPU versions came from, in config structure. */
 

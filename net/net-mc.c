@@ -2305,6 +2305,89 @@ static void gibbs_adjustments
 }
 
 
+/* FIND TRANSPOSED WEIGHT MATRICES FOR HIDDEN-TO-HIDDEN WEIGHTS. */
+
+#if USE_TRANSPOSED_WEIGHTS
+
+static void transpose 
+( net_param *t,       /* Where to store transposed weights (src varies faster)*/
+  net_param const*w,  /* Weights, with destination varying faster */
+  int ns,             /* Number of source units */
+  int nd              /* Number of destination units */
+)
+{
+  int i, j;
+
+  if (0)
+  { printf("Before transpose (%d %d):\n",ns,nd);
+    for (i = 0; i<ns*nd; i++) printf(" %.3f",w[i]);
+    printf("\n");
+  }
+
+  i = 0;
+
+  if (nd&1)
+  { j = 0;
+    while (i < ns)
+    { t[i] = w[j]; 
+      i += 1; j += nd;
+    }
+  }
+
+  int d = ns*nd;
+  int dm2 = d-2;
+
+  j = nd&1;
+
+  while (i < d)
+  { t[i] = w[j];
+    t[i+ns] = w[j+1];
+    i += 1; j += nd;
+    if (j>=d)
+    { i += ns;
+      j -= dm2;
+    }
+  }
+
+  if (0)
+  { printf("After transpose:\n");
+    for (i = 0; i<ns*nd; i++) printf(" %.3f",t[i]);
+    printf("\n");
+  }
+}
+
+static void transpose_from_hidden (void)
+{ 
+  int l, ls;
+
+  for (l = 0; l<arch->N_layers; l++)
+  { if (arch->has_ho[l] && !arch->hidden_config[2*arch->N_layers-1-l]
+                        && TRANS_WEIGHTS(arch->N_hidden[l],arch->N_outputs))
+    { transpose (params_trans.ho[l], params.ho[l],
+                 arch->N_hidden[l], arch->N_outputs);
+      if (0) printf("h%do transposed\n",l);
+    }
+    if (l>0 && arch->has_hh[l-1] && !arch->hidden_config[l]
+            && TRANS_WEIGHTS(arch->N_hidden[l-1],arch->N_hidden[l]))
+    { transpose (params_trans.hh[l-1], params.hh[l-1],
+                 arch->N_hidden[l-1], arch->N_hidden[l]);
+      if (0) printf("hh%d transposed\n",l);
+    }
+    for (ls = 0; ls<l-1; ls++)
+    { int nsqi = pre.nonseq[ls][l];
+      if (nsqi>=0 && !arch->nonseq_config[nsqi]
+                  && TRANS_WEIGHTS(arch->N_hidden[ls],arch->N_hidden[l]))
+      { transpose (params_trans.nsq[nsqi], params.nsq[nsqi],
+                   arch->N_hidden[ls], arch->N_hidden[l]);
+        if (0) printf("h%dh%d transposed\n",ls,l);
+      }
+    }
+  }
+}
+
+#endif
+
+
 /* EVALUATE POTENTIAL ENERGY AND ITS GRADIENT DUE TO A SET OF TRAINING CASES. 
    Adds results to the accumulators pointed to, unless the pointer is null. 
 
@@ -2327,6 +2410,13 @@ void net_training_cases
 )
 {
   int k;
+
+# if USE_TRANSPOSED_WEIGHTS
+  { if (any_transposed && grd)
+    { transpose_from_hidden();
+    }
+  }
+# endif
 
 # if __CUDACC__
   { if (n > 0 && model->type!='V')
@@ -3231,88 +3321,6 @@ static void net_training_cases_gpu
     }
   }
 }
-#endif
-
-
-/* FIND TRANSPOSED WEIGHT MATRICES FOR HIDDEN-TO-HIDDEN WEIGHTS. */
-
-#if USE_TRANSPOSED_WEIGHTS
-
-static void transpose 
-( net_param *t,       /* Where to store transposed weights (src varies faster)*/
-  net_param const*w,  /* Weights, with destination varying faster */
-  int ns,             /* Number of source units */
-  int nd              /* Number of destination units */
-)
-{
-  int i, j;
-
-  if (0)
-  { printf("Before transpose (%d %d):\n",ns,nd);
-    for (i = 0; i<ns*nd; i++) printf(" %.3f",w[i]);
-    printf("\n");
-  }
-
-  i = 0;
-
-  if (nd&1)
-  { j = 0;
-    while (i < ns)
-    { t[i] = w[j]; 
-      i += 1; j += nd;
-    }
-  }
-
-  int d = ns*nd;
-  int dm2 = d-2;
-
-  j = nd&1;
-
-  while (i < d)
-  { t[i] = w[j];
-    t[i+ns] = w[j+1];
-    i += 1; j += nd;
-    if (j>=d)
-    { i += ns;
-      j -= dm2;
-    }
-  }
-
-  if (0)
-  { printf("After transpose:\n");
-    for (i = 0; i<ns*nd; i++) printf(" %.3f",t[i]);
-    printf("\n");
-  }
-}
-
-static void transpose_from_hidden (void)
-{ 
-  int l, ls;
-
-  for (l = 0; l<arch->N_layers; l++)
-  { if (arch->has_ho[l] && !arch->hidden_config[2*arch->N_layers-1-l]
-                        && TRANS_WEIGHTS(arch->N_hidden[l],arch->N_outputs))
-    { transpose (params_trans.ho[l], params.ho[l],
-                 arch->N_hidden[l], arch->N_outputs);
-      if (0) printf("h%do transposed\n",l);
-    }
-    if (l>0 && arch->has_hh[l-1] && !arch->hidden_config[l]
-            && TRANS_WEIGHTS(arch->N_hidden[l-1],arch->N_hidden[l]))
-    { transpose (params_trans.hh[l-1], params.hh[l-1],
-                 arch->N_hidden[l-1], arch->N_hidden[l]);
-      if (0) printf("hh%d transposed\n",l);
-    }
-    for (ls = 0; ls<l-1; ls++)
-    { int nsqi = pre.nonseq[ls][l];
-      if (nsqi>=0 && !arch->nonseq_config[nsqi]
-                  && TRANS_WEIGHTS(arch->N_hidden[ls],arch->N_hidden[l]))
-      { transpose (params_trans.nsq[nsqi], params.nsq[nsqi],
-                   arch->N_hidden[ls], arch->N_hidden[l]);
-        if (0) printf("h%dh%d transposed\n",ls,l);
-      }
-    }
-  }
-}
 
 #endif
 
@@ -3338,12 +3346,6 @@ void mc_app_energy
   { grad.param_block = gr;
     net_setup_param_pointers (&grad, arch, flgs);
   }
-
-# if USE_TRANSPOSED_WEIGHTS
-    if (any_transposed && gr)
-    { transpose_from_hidden();
-    }
-# endif
 
   /* Compute part of energy and/or gradient due to the prior. */
 

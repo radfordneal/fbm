@@ -437,6 +437,16 @@ static void sum_derivatives_config
         _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
       }
     }
+#   elif FP32 && USE_SIMD_INTRINSICS && __AVX__
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { j = cn[c].d;
+        i = cn[c].s;
+        __m256 B = _mm256_mul_ps (_mm256_loadu_ps(dd+j), _mm256_loadu_ps(w+k));
+        __m128 P = _mm_add_ps (cast128f(B), _mm256_extractf128_ps(B,1));
+        __m128 S = _mm_add_ps (_mm_movehl_ps(P,P), P);
+        _mm_store_ss (ds+i, _mm_add_ss (_mm_load_ss(ds+i), _mm_hadd_ps(S,S)));
+      }
+    }
 #   elif FP32 && USE_SIMD_INTRINSICS && __SSE3__
     { for (c = 0; (k = cn[c].w) >= 0; c++)
       { __m128 P;

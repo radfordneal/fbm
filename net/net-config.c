@@ -884,9 +884,9 @@ static void net_config_sort (net_config *cf, int biases)
   memcpy (left, cf->conn, (n+1) * sizeof *left);
   leftn = n;
 
-  /* The oct_s_8d_8w_dgpu connections are used for gpu gradient computations. */
+  /* The oct_s_8d_8w_wgpu connections are used for gpu gradient computations. */
 
-  if (!CONFIG_OCT_GPU_S_8D_8W)
+  if (!CONFIG_OCT_GPU_S_8D_8W_GRAD)
   { int e;
     cf->oct_s_8d_8w_wgpu = all_gpu+a_gpu;
     for (e = 0; e<8; e++) all_gpu[a_gpu++].w = -1;

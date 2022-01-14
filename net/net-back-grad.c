@@ -1841,7 +1841,7 @@ __device__ static void net_store1_grad1_config
 
   if (SYNC_AFTER && GTH>=32) __syncwarp();
 
-  if (CONFIG_OCT_GPU_S_8D_8W)
+  if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
   { int thmod8 = th&7;
     cn = cf->oct_s_8d_8w_wgpu;
     for (m = 0; m<8; m++)
@@ -2027,7 +2027,7 @@ __device__ static void net_store1_grad2_config
 
   if (SYNC_AFTER && GTH>=32) __syncwarp();
 
-  if (CONFIG_OCT_GPU_S_8D_8W)
+  if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
   { int thmod8 = th&7;
     cn = cf->oct_s_8d_8w_wgpu;
     if (off)
@@ -2212,7 +2212,7 @@ __device__ static void net_store2_grad1_config
 
   if (SYNC_AFTER && GTH>=32) __syncwarp();
 
-  if (CONFIG_OCT_GPU_S_8D_8W)
+  if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
   { int thmod8 = th&7;
     cn = cf->oct_s_8d_8w_wgpu;
     for (m = 0; m<8; m++)
@@ -2467,7 +2467,7 @@ __device__ static void net_store2_grad2_config
 
   if (SYNC_AFTER && GTH>=32) __syncwarp();
  
-  if (CONFIG_OCT_GPU_S_8D_8W)
+  if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
   { int thmod8 = th&7;
     cn = cf->oct_s_8d_8w_wgpu;
     int m, ix;
@@ -2731,7 +2731,7 @@ __device__ static void net_store3_grad1_config
 
   if (SYNC_AFTER && GTH>=32) __syncwarp();
 
-  if (CONFIG_OCT_GPU_S_8D_8W)
+  if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
   { int thmod8 = th&7;
     cn = cf->oct_s_8d_8w_wgpu;
     for (m = 0; m<8; m++)
@@ -3005,7 +3005,7 @@ __device__ static void net_store3_grad2_config
 
   if (SYNC_AFTER && GTH>=32) __syncwarp();
  
-  if (CONFIG_OCT_GPU_S_8D_8W)
+  if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
   { int thmod8 = th&7;
     cn = cf->oct_s_8d_8w_wgpu;
     int m, ix;
@@ -3283,7 +3283,7 @@ __device__ static void net_store4_grad1_config
 
   if (SYNC_AFTER && GTH>=32) __syncwarp();
 
-  if (CONFIG_OCT_GPU_S_8D_8W)
+  if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
   { cn = cf->oct_s_8d_8w_wgpu;
     ix = th&7;
     ix2 = th-ix;
@@ -3583,7 +3583,7 @@ __device__ static void net_store4_grad2_config
 
   if (SYNC_AFTER && GTH>=32) __syncwarp();
  
-  if (CONFIG_OCT_GPU_S_8D_8W)
+  if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
   { int m, ix, ix2;
     cn = cf->oct_s_8d_8w_wgpu;
     ix = th&7;

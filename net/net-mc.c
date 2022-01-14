@@ -192,12 +192,9 @@ static net_values seconds;	/* Second derivatives */
 static net_value *train_sumsq;	/* Sums of squared training input values */
 static net_values typical;	/* Typical squared values for hidden units */
 
-#if USE_TRANSPOSED_WEIGHTS
-
 static int any_transposed;	/* Are any weights stored in transposed form? */
-static net_params params_trans; /* Transposed weights (only from layers) */
 
-#endif
+static net_params params_trans; /* Transposed weights (only from hid layers) */
 
 static net_params grad;		/* Pointers to gradient for network parameters*/
 
@@ -266,9 +263,7 @@ __constant__ net_sigma *const_noise;  /* Pointer to GPU copy of noise sigmas */
 
 __constant__ net_params const_params; /* version of params in GPU */
 
-#if USE_TRANSPOSED_WEIGHTS
 __constant__ net_params const_params_trans; /* Transposed parameters in GPU */
-#endif
 
 __constant__ net_values *const_deriv;  /* Copy of deriv ptr in constant memory*/
 __constant__ net_values *const_train_values; /* Const copy of train_values ptr*/
@@ -3344,9 +3339,11 @@ void mc_app_energy
     net_setup_param_pointers (&grad, arch, flgs);
   }
 
-  if (USE_TRANSPOSED_WEIGHTS && any_transposed && gr)
-  { transpose_from_hidden();
-  }
+# if USE_TRANSPOSED_WEIGHTS
+    if (any_transposed && gr)
+    { transpose_from_hidden();
+    }
+# endif
 
   /* Compute part of energy and/or gradient due to the prior. */
 

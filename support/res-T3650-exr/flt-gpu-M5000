@@ -1,4 +1,4 @@
-Commit: 59d7a0e7af967f4d47f7a0059413559a5e282bfd
+Commit: 3aae4123e3a89befd948549f3b6352cdfa3961f6
 
 Running exr with flt-gpu on M5000:
 
@@ -28,4 +28,4 @@ Number of test cases: 1000
 Average log probability of targets:     0.824+-0.025
 Average squared error guessing mean:    0.01854+-0.00341
 
-elapsed 5.24s
+elapsed 5.35s

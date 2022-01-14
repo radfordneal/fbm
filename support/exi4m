@@ -1,0 +1,16 @@
+#!/bin/bash
+
+log=log
+
+  net-spec $log 36 64 softplus 16 softplus 4 \
+                / ih=0.2:2 bh=0.3:2 hh=0.2:2 bh1=0.3:2 ho=0.1:2 bo=0.1:2
+  model-spec $log class
+  
+  data-spec $log 36 1 4 / idata@1:1500 .
+  
+  net-gen $log fix 0.1
+
+  mc-spec $log met-1 2.8
+  net-mc $log 7
+
+net-pred nmpa $log 7 / idata@5001:5100 .

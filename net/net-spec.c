@@ -840,6 +840,28 @@ static void print_config (net_config *cf, int biases)
 
     /* For GPU: */
 
+    if (CONFIG_OCT_GPU_S_8D_8W)
+    { printf("oct_s_8d_8w_wgpu:\n");
+      printf("start indexes:");
+      for (r = 0; r<NTH; r++)
+      { printf(" %d",cf->start_oct_wgpu[r]);
+      }
+      printf("\n");
+      i = 0;
+      for (r = 0; r<NTH; r++)
+      { printf("First weight %d mod %d:\n",r,NTH);
+        while (cf->oct_s_8d_8w_wgpu[i].w >= 0)
+        { printf("%3d %3d-%-3d %3d-%-3d\n", cf->oct_s_8d_8w_wgpu[i].s, 
+                      cf->oct_s_8d_8w_wgpu[i].d, cf->oct_s_8d_8w_wgpu[i].d+7,
+                      cf->oct_s_8d_8w_wgpu[i].w, cf->oct_s_8d_8w_wgpu[i].w+7);
+          i += 1;
+        }
+        i += 1;
+        printf("\n");
+      }
+      printf("\n");
+    }
+
     if (CONFIG_QUAD_GPU_S_4D_4W)
     { printf("quad_s_4d_4w_wgpu:\n");
       printf("start indexes:");

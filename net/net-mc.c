@@ -381,6 +381,7 @@ net_config *net_config_to_gpu (net_config *cf)
                                 cudaMemcpyHostToDevice),
                     "copy to dev config all_gpu");
 
+  dcf.oct_s_8d_8w_wgpu = dcf.all_gpu + (cf->oct_s_8d_8w_wgpu - cf->all_gpu);
   dcf.quad_s_4d_4w_wgpu = dcf.all_gpu + (cf->quad_s_4d_4w_wgpu - cf->all_gpu);
   dcf.quad_s_4d_4w_2_wgpu = dcf.all_gpu 
                              + (cf->quad_s_4d_4w_2_wgpu - cf->all_gpu);

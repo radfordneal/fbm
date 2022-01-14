@@ -254,6 +254,8 @@ typedef struct
 
   /* For GPU gradient computations: */
 
+  net_connection *oct_s_8d_8w_wgpu;  /* GPU grad version, GTH -1 terminators*/
+  int start_oct_wgpu[GTH];	/* Starts for sections in oct_s_8d_8w_wgpu */
   net_connection *quad_s_4d_4w_wgpu;  /* GPU grad version, GTH -1 terminators*/
   int start_quad_wgpu[GTH];	/* Starts for sections in quad_s_4d_4w_wgpu */
   net_connection *quad_s_4d_4w_2_wgpu;/* GPU grad version, GTH -1 terminators*/

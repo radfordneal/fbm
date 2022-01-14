@@ -1,4 +1,4 @@
-Commit: c8d7f47b228dad5d8381a3219b3eff9a4ac46471
+Commit: a37411acb8b5dbdd8f8c6985d9562ee85d4eab59
 
 Running exi2 with dbl-gpu on P620:
 
@@ -22,8 +22,8 @@ Number of iterations used: 2
 
 Number of test cases: 100
 
-Average log probability of targets:    -0.794+-0.093
+Average log probability of targets:    -0.789+-0.092
 Fraction of guesses that were wrong:    0.2800+-0.0451
-Average squared error guessing mean:    0.42058+-0.04977
+Average squared error guessing mean:    0.41893+-0.04977
 
-elapsed 34.32s
+elapsed 36.14s

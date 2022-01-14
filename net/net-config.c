@@ -884,6 +884,21 @@ static void net_config_sort (net_config *cf, int biases)
   memcpy (left, cf->conn, (n+1) * sizeof *left);
   leftn = n;
 
+  /* The oct_s_8d_8w_dgpu connections are used for gpu gradient computations. */
+
+  if (!CONFIG_OCT_GPU_S_8D_8W)
+  { int e;
+    cf->oct_s_8d_8w_wgpu = all_gpu+a_gpu;
+    for (e = 0; e<8; e++) all_gpu[a_gpu++].w = -1;
+  }
+  else
+  { memcpy (tmp, left, (leftn+1) * sizeof *tmp);
+    find_oct (tmp, leftn, tmp2, &c, left, &leftn);
+    qsort (tmp2, c, sizeof *tmp2, cmp_wmodGTH_w_d_s);
+    cf->oct_s_8d_8w_wgpu = all_gpu+a_gpu;
+    a_gpu += copy_wmod (cf->oct_s_8d_8w_wgpu, tmp2, cf->start_oct_wgpu, GTH);
+  }
+
   /* If enabled, set up quad_s_4d_4w_wgpu connections for use in GPU
      gradient computations, sections marked by extra -1 indicators for
      when the first weight mod GTH changes.  Optionally, sets are taken

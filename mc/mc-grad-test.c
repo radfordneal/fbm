@@ -204,7 +204,7 @@ int main
     }
   }
 
-  if (!single_param)
+  if (!single_param && !comp_grad_only)
   { if (negr) printf("\nLargest absolute log ratio: ********\n\n");
     else      printf("\nLargest absolute log ratio: %.4f\n\n",maxlr);
   }

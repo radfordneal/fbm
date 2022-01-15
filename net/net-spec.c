@@ -267,7 +267,7 @@ int main
       char t[100];
         
       if (a->has_ti) 
-      { printf("  %-27s:%6d\n","Input Offsets:", a->N_inputs);
+      { printf("  %-27s%6d\n","Input Offsets:", a->N_inputs);
       }
     
       nsqi = 0;

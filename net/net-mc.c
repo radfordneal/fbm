@@ -3111,7 +3111,7 @@ static void net_training_cases_gpu
 
 #     if !SPLIT_MODEL && !SPLIT_BACK_GRAD
         LAUNCH (forward_model_back_grad_kernel, shared_mem, 
-          (i, i+cases, en, en_weight, group_grad, gr_weight));
+          (i, i+cases, en, en_weight, gr ? group_grad : 0, gr_weight));
 #     endif
 
 #     if SPLIT_MODEL && SPLIT_BACK_GRAD
@@ -3121,17 +3121,17 @@ static void net_training_cases_gpu
 
 #     if SPLIT_MODEL && !SPLIT_BACK_GRAD
         LAUNCH (model_back_grad_kernel, shared_mem, 
-          (i, i+cases, en, en_weight, group_grad, gr_weight));
+          (i, i+cases, en, en_weight, gr ? group_grad : 0, gr_weight));
 #     endif
 
 #     if SPLIT_BACK_GRAD
         if (gr) LAUNCH (back_grad_kernel, shared_mem, 
-          (i, i+cases, group_grad));
+          (i, i+cases, gr ? group_grad : 0));
 #     endif
 
 #     if SPLIT_REDUCTION
         if (gr && GROUPS_PER_BLOCK>1) LAUNCH (reduction_kernel, 0, 
-          (i, i+cases, group_grad));
+          (i, i+cases, gr ? group_grad : 0));
 #     endif
     }
 

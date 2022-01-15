@@ -970,7 +970,7 @@ void mc_app_initialize
     value_count_noout = 
       net_setup_value_count_aligned (arch, NET_VALUE_ALIGN_ELEMENTS, 1, 0);
     value_count_noinout = 
-      net_setup_value_count_aligned (arch, NET_VALUE_ALIGN_ELEMENTS, 1, 1);
+      net_setup_value_count_aligned (arch, NET_VALUE_ALIGN_ELEMENTS, 0, 0);
 
     /* Set up second derivative and typical value structures. */
 

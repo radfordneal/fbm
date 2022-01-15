@@ -3053,12 +3053,13 @@ static void net_training_cases_gpu
 
   cuda_setup (energy, gr ? gr->param_block : 0);
 
-  /* Copy current parameters to GPU, including transposed versions, if any. */
+  /* Copy current parameters to GPU, including transposed versions (if any)
+     when gradient is needed. */
 
   check_cuda_error (cudaMemcpy (dev_param_block_addr, params.param_block,
-         (1+any_transposed) * params.total_params * sizeof *params.param_block,
-         cudaMemcpyHostToDevice),
-      "Copying parameters to GPU");
+   (1+(any_transposed&&gr!=0)) * params.total_params * sizeof *params.param_block,
+   cudaMemcpyHostToDevice),
+  "Copying parameters to GPU");
 
   if (sigmas.noise != 0)
   { check_cuda_error (cudaMemcpy (dev_noise, sigmas.noise,

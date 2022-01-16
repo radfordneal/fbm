@@ -1,4 +1,4 @@
-Commit: 1fb64d954280a905d8a4ee2b7f6867e8649516ef
+Commit: 60ce1ffd49e8a88446332fb38d60498423c7c86a
 
 Running exc with flt-gpu on P620:
 
@@ -26,4 +26,4 @@ Number of test cases: 1000
 Average log probability of targets:    -0.470+-0.022
 Fraction of guesses that were wrong:    0.1990+-0.0126
 
-elapsed 4.39s
+elapsed 4.54s

@@ -1,19 +1,19 @@
 #!/bin/bash
 
-log=log
 
-  net-spec $log 36 80 softplus cfg-b:bconfig cfg-i:iconfig 4 cfg-h:hconfig \
+
+  net-spec log 36 80 softplus cfg-b:bconfig cfg-i:iconfig 4 cfg-h:hconfig \
                 / ih=0.2:2 bh=0.3:2 ho=0.1:2 bo=0.1:2
-  model-spec $log class
+  model-spec log class
   
-  data-spec $log 36 1 4 / idata@1:4999 .
+  data-spec log 36 1 4 / idata@1:4999 .
   
-  net-gen $log fix 0.1
+  net-gen log fix 0.1
 
-  mc-spec $log repeat 10 heatbath hybrid 100:20 0.04
-  net-mc $log 1
+  mc-spec log repeat 10 heatbath hybrid 100:20 0.04
+  net-mc log 1
 
-  mc-spec $log repeat 2 sample-sigmas heatbath hybrid 500:40 0.05
-  net-mc $log 4
+  mc-spec log repeat 2 sample-sigmas heatbath hybrid 500:40 0.05
+  net-mc log 4
 
-net-pred nmpa $log 3: / idata@5001:5100 .
+net-pred nmpa log 3: / idata@5001:5100 .

@@ -2,16 +2,16 @@
 
 # Commands to apply Bayesian neural network to a 3-way classification problem.
 
-net-spec clog.net 4 8 3 / ih=x0.2:0.5:1 bh=0.05:0.5 ho=x0.05:0.5 bo=0.05:0.5 
-model-spec clog.net class
+net-spec log 4 8 3 / ih=x0.2:0.5:1 bh=0.05:0.5 ho=x0.05:0.5 bo=0.05:0.5 
+model-spec log class
 
-data-spec clog.net 4 1 3 / cdata@1:400 . cdata@401: .
+data-spec log 4 1 3 / cdata@1:400 . cdata@401: .
 
-net-gen clog.net fix 0.5
-mc-spec clog.net repeat 10 sample-noise heatbath hybrid 100:10 0.2
-net-mc clog.net 1
+net-gen log fix 0.5
+mc-spec log repeat 10 sample-noise heatbath hybrid 100:10 0.2
+net-mc log 1
 
-mc-spec clog.net repeat 10 sample-sigmas heatbath 0.95 hybrid 100:10 0.3 negate
-net-mc clog.net 50
+mc-spec log repeat 10 sample-sigmas heatbath 0.95 hybrid 100:10 0.3 negate
+net-mc log 50
 
-net-pred mpa clog.net 21:
+net-pred mpa log 21:

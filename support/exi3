@@ -1,24 +1,24 @@
 #!/bin/bash
 
-log=log
 
-  net-spec $log 36 \
+
+  net-spec log 36 \
                 20 softplus 20 softplus 20 softplus 20 softplus 20 softplus \
                 10 4 \
                 / ih0=0.2:2 ih1=0.2:2 ih2=0.2:2 ih3=0.2:2 ih4=0.2:2 \
                   bh0=0.3:2 bh1=0.3:2 bh2=0.3:2 bh3=0.3:2 bh4=0.3:2 \
                   h0h5=0.1:2 h1h5=0.1:2 h2h5=0.1:2 h3h5=0.1:2 h4h5=0.1:2 \
                   bh5=0.1:2 h5o=0.1:2 bo=0.1:2 
-  model-spec $log class
+  model-spec log class
   
-  data-spec $log 36 1 4 / idata@1:499 .
+  data-spec log 36 1 4 / idata@1:499 .
   
-  net-gen $log fix 0.1
+  net-gen log fix 0.1
 
-  mc-spec $log repeat 10 heatbath hybrid 50:4 0.05
-  net-mc $log 1
+  mc-spec log repeat 10 heatbath hybrid 50:4 0.05
+  net-mc log 1
 
-  mc-spec $log sample-sigmas heatbath hybrid 2000:50 0.06
-  net-mc $log 20
+  mc-spec log sample-sigmas heatbath hybrid 2000:50 0.06
+  net-mc log 20
 
-net-pred nmpa $log 15: / idata@5001:5100 .
+net-pred nmpa log 15: / idata@5001:5100 .

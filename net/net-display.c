@@ -1,6 +1,6 @@
 /* NET-DISPLAY.C - Program to print network parameters and other such info. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -45,15 +45,22 @@ int main
 
   int sigmas_only;
   int params_only;
+  int dump_params;
   int index;
 
   /* Look at arguments. */
 
   sigmas_only = 0;
   params_only = 0;
+  dump_params = 0;
 
   if (argc>1 && (strcmp(argv[1],"-p")==0 || strcmp(argv[1],"-w")==0))
   { params_only = 1;
+    argv += 1;
+    argc -= 1;
+  }
+  else if (argc>1 && strcmp(argv[1],"-P")==0)
+  { dump_params = 1;
     argv += 1;
     argc -= 1;
   }
@@ -67,7 +74,7 @@ int main
 
   if (argc!=2 && argc!=3 
    || argc>2 && (index = atoi(argv[2]))<=0 && strcmp(argv[2],"0")!=0) 
-  { fprintf(stderr,"Usage: net-display [ -p | -h ] log-file [ index ]\n");
+  { fprintf(stderr,"Usage: net-display [ -p | -h | -P ] log-file [ index ]\n");
     exit(1);
   }
 
@@ -143,6 +150,14 @@ int main
   net_setup_param_pointers (w, a, flgs);
 
   /* Print values of the parameters and hyperparameters, or whatever. */
+
+  if (dump_params)
+  { int i;
+    for (i = 0; i<w->total_params; i++)
+    { printf("%.16g\n",w->param_block[i]);
+    }
+    exit(0);
+  }
 
   printf("\nNetwork in file \"%s\" with index %d%s\n", logf.file_name, index,
     sigmas_only ? " (sigmas only)" : params_only ? " (parameters only)" : "");

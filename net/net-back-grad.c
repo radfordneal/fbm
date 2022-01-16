@@ -4508,7 +4508,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
     if (A.has_ho[l])
     { 
       net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,l,0);
-      int us = fw_hidden_stride_grad(&PRE,l);
+      int us = fw_hidden_stride(&PRE,l);
 
       int k = 2*A.N_layers-1-l;
       if (A.hidden_config[k])
@@ -4659,7 +4659,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
       __syncthreads();
 
       net_value *restrict c0 = bw_hidden_loc_grad(&PRE,d,l,0);
-      int cs = bw_hidden_stride_grad(&PRE,l);
+      int cs = bw_hidden_stride(&PRE,l);
 
       store_grad1 (thrg, gsz, g->th[l], c0, cs, N_hidden);
     }
@@ -4706,7 +4706,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
         }
         else
         { sum_derivatives_gpu (thrb, dh, A.N_hidden[l], dth->i, A.N_inputs, 
-            W.ih[l], A.any_omitted[l]? FLGS.omit : 0, 1<<(l+1), syncmask);
+            W.ih[l], A.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1), syncmask);
         }
       }
     }
@@ -4715,7 +4715,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
        to the inputs of units in this hidden layer. */
 
     net_value *restrict c0 = bw_hidden_loc_grad(&PRE,d,l,0);
-    int cs = bw_hidden_stride_grad(&PRE,l);
+    int cs = bw_hidden_stride(&PRE,l);
 
     if (A.has_bh[l])
     { if (A.bias_config[l])
@@ -4748,7 +4748,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
         if (nsqi>=0)
         { 
           net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,ls,0);
-          int us = fw_hidden_stride_grad(&PRE,ls);
+          int us = fw_hidden_stride(&PRE,ls);
 
           if (A.nonseq_config[nsqi])
           { store_grad2_config (thrg, gsz, g->nsq[nsqi], u0, us,
@@ -4767,7 +4767,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
     if (l>0 && A.has_hh[l-1])
     { 
       net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,l-1,0);
-      int us = fw_hidden_stride_grad(&PRE,l-1);
+      int us = fw_hidden_stride(&PRE,l-1);
 
       if (A.hidden_config[l])
       { store_grad2_config (thrg, gsz, g->hh[l-1], u0, us,

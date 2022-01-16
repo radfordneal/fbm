@@ -1146,10 +1146,10 @@ void mc_app_initialize
       sz = value_count_noinout * N_train * sizeof *vblk;
       check_cuda_error (cudaMalloc (&vblk, sz), "cudaMalloc of vblk for train");
 
-      pre.stride = value_count_noinout;
+      pre.fw_stride = value_count_noinout;
       for (i = 0; i<N_train; i++) 
       { net_setup_value_pointers_aligned 
-            (&tmp_values[i], vblk+i*pre.stride, arch,
+            (&tmp_values[i], vblk+i*pre.fw_stride, arch,
              NET_VALUE_ALIGN_ELEMENTS, iblk+N_inputs*i, oblk+arch->N_outputs*i);
       }
 
@@ -1171,8 +1171,8 @@ void mc_app_initialize
       check_cuda_error (cudaMalloc (&oblk, sz), "cudaMalloc of oblk for deriv");
 
       if (arch->has_ti)  /* Must allow for derivatives w.r.t. inputs */
-      { pre.grad_stride = value_count_noout;
-        sz = pre.grad_stride * N_train * sizeof *vblk;
+      { pre.bw_stride = value_count_noout;
+        sz = pre.bw_stride * N_train * sizeof *vblk;
         check_cuda_error (cudaMalloc(&vblk, sz),"cudaMalloc of vblk for deriv");
         for (i = 0; i<N_train; i++) 
         { net_setup_value_pointers_aligned 
@@ -1181,8 +1181,8 @@ void mc_app_initialize
         }
       }
       else  /* Derivatives w.r.t. inputs will not be taken */
-      { pre.grad_stride = value_count_noinout;
-        sz = pre.grad_stride * N_train * sizeof *vblk;
+      { pre.bw_stride = value_count_noinout;
+        sz = pre.bw_stride * N_train * sizeof *vblk;
         check_cuda_error (cudaMalloc(&vblk, sz),"cudaMalloc of vblk for deriv");
         for (i = 0; i<N_train; i++) 
         { net_setup_value_pointers_aligned 

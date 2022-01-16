@@ -1,4 +1,4 @@
-Commit: 60ce1ffd49e8a88446332fb38d60498423c7c86a
+Commit: 2d9c9322d8342cc9220a17537bfa270ac62f585a
 
 Running exi2 with flt-gpu on A4000:
 
@@ -24,6 +24,7 @@ Number of test cases: 100
 
 Average log probability of targets:    -1.019+-0.077
 Fraction of guesses that were wrong:    0.3600+-0.0482
-Average squared error guessing mean:    0.55145+-0.03842
+Average squared error guessing mean:    0.55142+-0.03842
 
 elapsed 1.24s
+4597efee8ed7e85f64aadb5c1e38631d6e499c45  -

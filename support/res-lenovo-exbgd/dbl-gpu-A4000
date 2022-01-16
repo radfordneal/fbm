@@ -1,4 +1,4 @@
-Commit: 60ce1ffd49e8a88446332fb38d60498423c7c86a
+Commit: 2d9c9322d8342cc9220a17537bfa270ac62f585a
 
 Running exbgd with dbl-gpu on A4000:
 
@@ -19,4 +19,6 @@ Average log probability of targets:    -0.238+-0.025
 Fraction of guesses that were wrong:    0.1120+-0.0141
 Average squared error guessing mean:    0.07571+-0.00848
 
-elapsed 4.39s
+elapsed 4.38s
+Record has wrong size: Type S, Actual size 88, Required size 176
+da39a3ee5e6b4b0d3255bfef95601890afd80709  -

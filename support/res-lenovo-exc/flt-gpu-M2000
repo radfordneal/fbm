@@ -1,4 +1,4 @@
-Commit: 60ce1ffd49e8a88446332fb38d60498423c7c86a
+Commit: 2d9c9322d8342cc9220a17537bfa270ac62f585a
 
 Running exc with flt-gpu on M2000:
 
@@ -26,4 +26,5 @@ Number of test cases: 1000
 Average log probability of targets:    -0.470+-0.022
 Fraction of guesses that were wrong:    0.1990+-0.0126
 
-elapsed 4.49s
+elapsed 4.36s
+9c3c0ef0a7a83b60de7c6c43381f3739e4202c9d  -

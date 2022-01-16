@@ -1,4 +1,4 @@
-Commit: 60ce1ffd49e8a88446332fb38d60498423c7c86a
+Commit: 2d9c9322d8342cc9220a17537bfa270ac62f585a
 
 Running exr with flt-gpu on M2000:
 
@@ -29,3 +29,4 @@ Average log probability of targets:     0.824+-0.025
 Average squared error guessing mean:    0.01854+-0.00341
 
 elapsed 4.81s
+50201225bdef9ae87a33de363ab16bba26196f98  -

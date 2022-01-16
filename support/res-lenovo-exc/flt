@@ -1,4 +1,4 @@
-Commit: 60ce1ffd49e8a88446332fb38d60498423c7c86a
+Commit: 2d9c9322d8342cc9220a17537bfa270ac62f585a
 
 Running exc with flt:
 
@@ -14,4 +14,5 @@ Number of test cases: 1000
 Average log probability of targets:    -0.467+-0.023
 Fraction of guesses that were wrong:    0.1910+-0.0124
 
-elapsed 2.73s
+elapsed 2.72s
+ef6776ef08a301fa45e9614de9aa7102280d42e2  -

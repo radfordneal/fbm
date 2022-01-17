@@ -206,8 +206,9 @@ typedef struct
 #define MAKE_QUAD_PAIRS 1	/* Make quad_s_4d_4w_2 versions with pairs? */
 
 #define CONFIG_OCT_GPU_S_8D_8W 1   /* Make oct_s_8d_8w_?gpu groups, -grad? */
-#define CONFIG_OCT_GPU_S_8D_8W_GRAD 0   /* Make oct_s_8d_8w_?gpu grs for grad?*/
-#define CONFIG_QUAD_GPU_S_4D_4W	1  /* Make quad_s_4d_4w_?gpu groups? */
+#define CONFIG_OCT_GPU_S_8D_8W_GRAD (GTH>=8 && 0) /* Make oct grps for grad? */
+#define CONFIG_QUAD_GPU_S_4D_4W	1  /* Make quad_s_4d_4w_?gpu groups, -grad? */
+#define CONFIG_QUAD_GPU_S_4D_4W_GRAD (GTH>=4 && 1) /* Make quad grps for grad?*/
 #define MAKE_QUAD_GPU_PAIRS 1	/* Make quad_s_4d_4w_2_?gpu ver with pairs? */
 #define MAKE_OTHER_GPU_PAIRS 1	/* Make other_2_?gpu versions with pairs? */
 

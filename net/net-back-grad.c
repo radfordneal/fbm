@@ -1866,7 +1866,7 @@ __device__ static void net_store1_grad1_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W)
+  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { int thmod4 = (th&3) + 4;
     cn = cf->quad_s_4d_4w_wgpu;
     for (m = 0; m<4; m++)
@@ -2068,7 +2068,7 @@ __device__ static void net_store1_grad2_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W)
+  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { int thmod4 = (th&3) + 4;
     cn = cf->quad_s_4d_4w_wgpu;
     if (off)
@@ -2242,7 +2242,7 @@ __device__ static void net_store2_grad1_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W)
+  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { int thmod4 = (th&3) + 4;
     cn = cf->quad_s_4d_4w_wgpu;
     for (m = 0; m<4; m++)
@@ -2521,7 +2521,7 @@ __device__ static void net_store2_grad2_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
  
-  if (CONFIG_QUAD_GPU_S_4D_4W)
+  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { int thmod4 = (th&3) + 4;
     cn = cf->quad_s_4d_4w_wgpu;
     int m, ix;
@@ -2762,7 +2762,7 @@ __device__ static void net_store3_grad1_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W)
+  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { int thmod4 = (th&3) + 4;
     cn = cf->quad_s_4d_4w_wgpu;
     for (m = 0; m<4; m++)
@@ -3061,7 +3061,7 @@ __device__ static void net_store3_grad2_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
  
-  if (CONFIG_QUAD_GPU_S_4D_4W)
+  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { int thmod4 = (th&3) + 4;
     cn = cf->quad_s_4d_4w_wgpu;
     int m, ix;
@@ -3317,7 +3317,7 @@ __device__ static void net_store4_grad1_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W)
+  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { cn = cf->quad_s_4d_4w_wgpu;
     ix = th&3;
     ix2 = th-ix;
@@ -3641,7 +3641,7 @@ __device__ static void net_store4_grad2_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
  
-  if (CONFIG_QUAD_GPU_S_4D_4W)
+  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { int thmod4 = (th&3) + 4;
     int m, ix;
     cn = cf->quad_s_4d_4w_wgpu;

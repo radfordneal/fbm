@@ -1,4 +1,4 @@
-Commit: 2d9c9322d8342cc9220a17537bfa270ac62f585a
+Commit: 75ff5b3c25a80fd5cc7541b97cd323c0f222c198
 
 Running exi2m with flt-gpu on P620:
 
@@ -20,4 +20,4 @@ Fraction of guesses that were wrong:    0.6000+-0.0492
 Average squared error guessing mean:    0.70463+-0.01618
 
 elapsed 11.07s
-ed060e5b58e2853e2cba8c52a2a9fe71b549336e  -
+7c6e974a7756c8926978d3cb2f9df7f001e23349  -

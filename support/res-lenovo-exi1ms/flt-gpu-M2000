@@ -1,4 +1,4 @@
-Commit: 2d9c9322d8342cc9220a17537bfa270ac62f585a
+Commit: 75ff5b3c25a80fd5cc7541b97cd323c0f222c198
 
 Running exi1ms with flt-gpu on M2000:
 
@@ -20,4 +20,4 @@ Fraction of guesses that were wrong:    0.5500+-0.0500
 Average squared error guessing mean:    0.69480+-0.01233
 
 elapsed 6.21s
-b15b1af72d7529d80d67f12e32e55d060256e27f  -
+1999081c52e8c0303ca6a8b29f9a9dcb152b316d  -

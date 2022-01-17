@@ -1,4 +1,4 @@
-Commit: 2d9c9322d8342cc9220a17537bfa270ac62f585a
+Commit: 75ff5b3c25a80fd5cc7541b97cd323c0f222c198
 
 Running exi2 with dbl-gpu on M2000:
 
@@ -27,4 +27,4 @@ Fraction of guesses that were wrong:    0.3700+-0.0485
 Average squared error guessing mean:    0.55825+-0.03750
 
 elapsed 26.03s
-b103ac38db35baef895641cb150c817d0ac8b38a  -
+fe289b484bd1716e5f4080f242ea298e70cf10b8  -

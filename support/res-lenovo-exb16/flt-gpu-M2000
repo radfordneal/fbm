@@ -1,4 +1,4 @@
-Commit: 2d9c9322d8342cc9220a17537bfa270ac62f585a
+Commit: 75ff5b3c25a80fd5cc7541b97cd323c0f222c198
 
 Running exb16 with flt-gpu on M2000:
 
@@ -26,5 +26,5 @@ Number of test cases: 1000
 Average log probability of targets:    -0.244+-0.016
 Fraction of guesses that were wrong:    0.1100+-0.0099
 
-elapsed 1.50s
-761e3c78f41f33ab60119241ab733bc4482c7f54  -
+elapsed 1.51s
+147534f6ff845678540d98f90e3d27932b83c955  -

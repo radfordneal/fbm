@@ -1,4 +1,4 @@
-Commit: 2d9c9322d8342cc9220a17537bfa270ac62f585a
+Commit: 75ff5b3c25a80fd5cc7541b97cd323c0f222c198
 
 Running exi4m with dbl-gpu on P620:
 
@@ -20,4 +20,4 @@ Fraction of guesses that were wrong:    0.7000+-0.0461
 Average squared error guessing mean:    0.74808+-0.00596
 
 elapsed 17.84s
-7d3f02de46d874b6bfa3f592e4e054b3a1d0abd3  -
+c5d37caac0277231ceb75b8cc9c21a9deddc1ec5  -

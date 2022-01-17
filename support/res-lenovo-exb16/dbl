@@ -1,4 +1,4 @@
-Commit: 2d9c9322d8342cc9220a17537bfa270ac62f585a
+Commit: 75ff5b3c25a80fd5cc7541b97cd323c0f222c198
 
 Running exb16 with dbl:
 
@@ -15,4 +15,4 @@ Average log probability of targets:    -0.241+-0.017
 Fraction of guesses that were wrong:    0.1050+-0.0097
 
 elapsed 1.22s
-8bc4220281f19476b0bec127ca5e6ad8a8ac5313  -
+f8b3f04980cb0e21b097aeef923c08e72339178c  -

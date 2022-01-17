@@ -1,4 +1,4 @@
-Commit: 75ff5b3c25a80fd5cc7541b97cd323c0f222c198
+Commit: 0c96db904e89456c65f68c67f2a32c040e42a2a3
 
 Running exi4m with dbl:
 
@@ -13,5 +13,5 @@ Average log probability of targets:    -1.383+-0.012
 Fraction of guesses that were wrong:    0.7000+-0.0461
 Average squared error guessing mean:    0.74808+-0.00596
 
-elapsed 36.72s
+elapsed 36.87s
 c5d37caac0277231ceb75b8cc9c21a9deddc1ec5  -

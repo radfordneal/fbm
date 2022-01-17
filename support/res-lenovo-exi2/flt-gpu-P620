@@ -1,4 +1,4 @@
-Commit: 75ff5b3c25a80fd5cc7541b97cd323c0f222c198
+Commit: 0c96db904e89456c65f68c67f2a32c040e42a2a3
 
 Running exi2 with flt-gpu on P620:
 
@@ -27,4 +27,4 @@ Fraction of guesses that were wrong:    0.3700+-0.0485
 Average squared error guessing mean:    0.55822+-0.03750
 
 elapsed 25.43s
-75908e2aeec3aee91a032af5a43b065f045539ef  -
+43a3860d659d76356f15ca189177c463789e1460  -

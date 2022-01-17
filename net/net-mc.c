@@ -614,7 +614,7 @@ void mc_app_initialize
 
     if (show_info)
     { fprintf (stderr, 
-               "Precision: %s%s%s%s%s%s, Cfg: %s%s%s-%s%s\n",
+               "Precision: %s%s%s%s%s%s\n",
                FP32 ? "FP32" : "FP64",
 #              if __AVX2__ && __FMA__
                  ", SIMD capability: AVX2 FMA",
@@ -647,16 +647,11 @@ void mc_app_initialize
                  "",
 #              endif
 #              if USE_SLEEF
-                 " SLEEF",
+                 " SLEEF"
 #              else
-                 "",
+                 ""
 #              endif
-               CONFIG_ORIGINAL ? "O" : "",
-               CONFIG_SINGLE4 ? "S" : "",
-               CONFIG_QUAD_S_4D_4W ? (MAKE_QUAD_PAIRS ? "Q2" : "Q") : "",
-               CONFIG_QUAD_GPU_S_4D_4W 
-                 ? (MAKE_QUAD_GPU_PAIRS ?  "Q2" : "Q") : "",
-               MAKE_OTHER_GPU_PAIRS ? "O2" : "O");
+              );
     }
 
 #   if __CUDACC__

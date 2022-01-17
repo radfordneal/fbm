@@ -205,9 +205,11 @@ typedef struct
 #define CONFIG_SINGLE4       (!CONFIG_ORIGINAL && 1)  /* make singlel4_... */
 #define MAKE_QUAD_PAIRS 1	/* Make quad_s_4d_4w_2 versions with pairs? */
 
-#define CONFIG_OCT_GPU_S_8D_8W 1   /* Make oct_s_8d_8w_?gpu groups, -grad? */
-#define CONFIG_OCT_GPU_S_8D_8W_GRAD (GTH>=8 && 0) /* Make oct grps for grad? */
-#define CONFIG_QUAD_GPU_S_4D_4W	1  /* Make quad_s_4d_4w_?gpu groups, -grad? */
+#define CONFIG_OCT_GPU_S_8D_8W_FW 1 /* Make oct_s_8d_8w_dgpu groups for forw? */
+#define CONFIG_OCT_GPU_S_8D_8W_BW 1 /* Make oct_s_8d_8w_sgpu groups for back? */
+#define CONFIG_OCT_GPU_S_8D_8W_GRAD (GTH>=8 && 1) /* Make oct grps for grad? */
+#define CONFIG_QUAD_GPU_S_4D_4W_FW 1 /* Make quad_s_4d_4w_dgpu grps for forw? */
+#define CONFIG_QUAD_GPU_S_4D_4W_BW 1 /* Make quad_s_4d_4w_sgpu grps for back? */
 #define CONFIG_QUAD_GPU_S_4D_4W_GRAD (GTH>=4 && 1) /* Make quad grps for grad?*/
 #define MAKE_QUAD_GPU_PAIRS 1	/* Make quad_s_4d_4w_2_?gpu ver with pairs? */
 #define MAKE_OTHER_GPU_PAIRS 1	/* Make other_2_?gpu versions with pairs? */

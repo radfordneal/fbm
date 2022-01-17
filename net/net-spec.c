@@ -840,7 +840,7 @@ static void print_config (net_config *cf, int biases)
 
     /* For GPU: */
 
-    if (CONFIG_OCT_GPU_S_8D_8W)
+    if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
     { printf("oct_s_8d_8w_wgpu:\n");
       printf("start indexes:");
       for (r = 0; r<NTH; r++)
@@ -862,7 +862,7 @@ static void print_config (net_config *cf, int biases)
       printf("\n");
     }
 
-    if (CONFIG_QUAD_GPU_S_4D_4W)
+    if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
     { printf("quad_s_4d_4w_wgpu:\n");
       printf("start indexes:");
       for (r = 0; r<GTH; r++)
@@ -940,7 +940,7 @@ static void print_config (net_config *cf, int biases)
     }
     printf("\n");
 
-    if (CONFIG_OCT_GPU_S_8D_8W)
+    if (CONFIG_OCT_GPU_S_8D_8W_FW)
     { printf("oct_s_8d_8w_dgpu:\n");
       printf("start indexes:");
       for (r = 0; r<NTH; r++)
@@ -962,7 +962,7 @@ static void print_config (net_config *cf, int biases)
       printf("\n");
     }
 
-    if (CONFIG_QUAD_GPU_S_4D_4W)
+    if (CONFIG_QUAD_GPU_S_4D_4W_FW)
     { printf("quad_s_4d_4w_dgpu:\n");
       printf("start indexes:");
       for (r = 0; r<NTH; r++)
@@ -1003,7 +1003,7 @@ static void print_config (net_config *cf, int biases)
     }
     printf("\n");
 
-    if (CONFIG_OCT_GPU_S_8D_8W)
+    if (CONFIG_OCT_GPU_S_8D_8W_BW)
     { printf("oct_s_8d_8w_sgpu:\n");
       printf("start indexes:");
       for (r = 0; r<NTH; r++)
@@ -1025,7 +1025,7 @@ static void print_config (net_config *cf, int biases)
       printf("\n");
     }
 
-    if (CONFIG_QUAD_GPU_S_4D_4W)
+    if (CONFIG_QUAD_GPU_S_4D_4W_BW)
     { printf("quad_s_4d_4w_sgpu:\n");
       printf("start indexes:");
       for (r = 0; r<NTH; r++)

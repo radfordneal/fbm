@@ -906,7 +906,7 @@ static void net_config_sort (net_config *cf, int biases)
 
   int e;
     
-  if (!CONFIG_QUAD_GPU_S_4D_4W)
+  if (!CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { cf->quad_s_4d_4w_wgpu = all_gpu+a_gpu;
     for (e = 0; e<GTH; e++)
     { all_gpu[a_gpu++].w = -1;
@@ -973,7 +973,7 @@ static void net_config_sort (net_config *cf, int biases)
      function computations, sorted by d, but a paired version is not
      set up. In sections by d mod NTH. */
 
-  if (!CONFIG_OCT_GPU_S_8D_8W)
+  if (!CONFIG_OCT_GPU_S_8D_8W_FW)
   { int e;
     cf->oct_s_8d_8w_dgpu = all_gpu+a_gpu;
     for (e = 0; e<8; e++) all_gpu[a_gpu++].w = -1;
@@ -988,7 +988,7 @@ static void net_config_sort (net_config *cf, int biases)
 
   /* Similarly for quad_s_4d_4w_dgpu connections. */
 
-  if (!CONFIG_QUAD_GPU_S_4D_4W)
+  if (!CONFIG_QUAD_GPU_S_4D_4W_FW)
   { int e;
     cf->quad_s_4d_4w_dgpu = all_gpu+a_gpu;
     for (e = 0; e<4; e++) all_gpu[a_gpu++].w = -1;
@@ -1017,7 +1017,7 @@ static void net_config_sort (net_config *cf, int biases)
      computations, sorted by s.  A paired version is not set up.  In
      sections by s mod NTH. */
 
-  if (!CONFIG_OCT_GPU_S_8D_8W)
+  if (!CONFIG_OCT_GPU_S_8D_8W_BW)
   { int e;
     cf->oct_s_8d_8w_sgpu = all_gpu+a_gpu;
     for (e = 0; e<8; e++) all_gpu[a_gpu++].w = -1;
@@ -1032,7 +1032,7 @@ static void net_config_sort (net_config *cf, int biases)
 
   /* Similarly for quad_s_4d_4w_sgpu connections. */
 
-  if (!CONFIG_QUAD_GPU_S_4D_4W)
+  if (!CONFIG_QUAD_GPU_S_4D_4W_BW)
   { int e;
     cf->quad_s_4d_4w_sgpu = all_gpu+a_gpu;
     for (e = 0; e<4; e++) all_gpu[a_gpu++].w = -1;

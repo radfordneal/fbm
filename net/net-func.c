@@ -1920,7 +1920,7 @@ __device__ static void bias_values_config_gpu
 
   if (SYNC_AFTER && n % NTH != 0) __syncwarp(syncmask);
 
-  if (CONFIG_OCT_GPU_S_8D_8W)
+  if (CONFIG_OCT_GPU_S_8D_8W_FW)
   { cn = cf->oct_s_8d_8w_dgpu;
     c = 0;
     for (m = 0; m<NTH; m++)
@@ -1959,7 +1959,7 @@ __device__ static void bias_values_config_gpu
     if (SYNC_AFTER) __syncwarp(syncmask);
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W)
+  if (CONFIG_QUAD_GPU_S_4D_4W_FW)
   { cn = cf->quad_s_4d_4w_dgpu;
     c = 0;
     for (m = 0; m<NTH; m++)
@@ -2238,7 +2238,7 @@ __device__ static void add_connections_config_gpu
   int c, i, j, k, m, ix;
   net_value vi;
 
-  if (CONFIG_OCT_GPU_S_8D_8W)
+  if (CONFIG_OCT_GPU_S_8D_8W_FW)
   { cn = cf->oct_s_8d_8w_dgpu;
     c = 0;
     for (m = 0; m<NTH; m++)
@@ -2279,7 +2279,7 @@ __device__ static void add_connections_config_gpu
     if (SYNC_AFTER) __syncwarp(syncmask);
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W)
+  if (CONFIG_QUAD_GPU_S_4D_4W_FW)
   { cn = cf->quad_s_4d_4w_dgpu;
     c = 0;
     for (m = 0; m<NTH; m++)

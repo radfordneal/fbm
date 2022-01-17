@@ -731,7 +731,7 @@ __device__ static void sum_derivatives_config_gpu
   net_connection *cn;
   int c, i, j, k;
 
-  if (CONFIG_OCT_GPU_S_8D_8W)
+  if (CONFIG_OCT_GPU_S_8D_8W_BW)
   { cn = cf->oct_s_8d_8w_sgpu;
     c = cf->start_oct_sgpu[th];
     for (;;)
@@ -745,7 +745,7 @@ __device__ static void sum_derivatives_config_gpu
     if (SYNC_AFTER) __syncwarp(syncmask);
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W)
+  if (CONFIG_QUAD_GPU_S_4D_4W_BW)
   { cn = cf->quad_s_4d_4w_sgpu;
     c = cf->start_quad_sgpu[th];
     for (;;)

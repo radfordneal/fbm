@@ -79,7 +79,7 @@
 
 # define abort abort_in_GPU
 
-  HOSTDEV static void abort(void)
+  __device__ static void abort(void)
   { printf("Call of abort() in GPU code - but continuing anyway\n");
   }
 

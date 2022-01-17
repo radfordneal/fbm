@@ -2892,7 +2892,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 
 #else 
 
-  if (THREADS_PER_CASE>1) __syncthreads();
+  __syncthreads();
 
 #endif
 

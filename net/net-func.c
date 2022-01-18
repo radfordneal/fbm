@@ -585,9 +585,8 @@ static void bias_values_config
 
   memset (v, 0, n * sizeof *v);
 
-  if (CONFIG_OCT_S_8D_8W)
-  { cn = cf->oct_s_8d_8w;
-    for (c = 0; (k = cn[c].w) >= 0; c++)
+  if (CONFIG_OCT_S_8D_8W && (cn = cf->oct_s_8d_8w))
+  { for (c = 0; (k = cn[c].w) >= 0; c++)
     { j = cn[c].d;
       v[j+0] += b[k+0];
       v[j+1] += b[k+1];
@@ -600,17 +599,18 @@ static void bias_values_config
     }
   }
 
-  if (CONFIG_QUAD_S_4D_4W)
-  { cn = cf->quad_s_4d_4w;
-    for (c = 0; (k = cn[c].w) >= 0; c++)
+  if (CONFIG_QUAD_S_4D_4W && (cn = cf->quad_s_4d_4w))
+  { for (c = 0; (k = cn[c].w) >= 0; c++)
     { j = cn[c].d;
       v[j+0] += b[k+0];
       v[j+1] += b[k+1];
       v[j+2] += b[k+2];
       v[j+3] += b[k+3];
     }
-    cn = cf->quad_s_4d_4w_2;
-    for (c = 0; (k = cn[c].w) >= 0; c+=2)
+  }
+
+  if (CONFIG_QUAD_S_4D_4W && MAKE_QUAD_PAIRS && (cn = cf->quad_s_4d_4w_2))
+  { for (c = 0; (k = cn[c].w) >= 0; c+=2)
     { net_value b0 = b[k+0];
       net_value b1 = b[k+1];
       net_value b2 = b[k+2];
@@ -628,10 +628,11 @@ static void bias_values_config
     }
   }
 
-  cn = CONFIG_ORIGINAL ? cf->conn : cf->single;
-  for (c = 0; (k = cn[c].w) >= 0; c++)
-  { j = cn[c].d;
-    v[j] += b[k];
+  if (cn = CONFIG_ORIGINAL ? cf->conn : cf->single)
+  { for (c = 0; (k = cn[c].w) >= 0; c++)
+    { j = cn[c].d;
+      v[j] += b[k];
+    }
   }
 
   if (CHECK_NAN)  /* check for NaN */
@@ -1187,8 +1188,8 @@ static void add_connections_config
   net_connection *cn;
   int i, j, k, c;
 
-  if (CONFIG_OCT_S_8D_8W)
-  { cn = cf->oct_s_8d_8w;
+  if (CONFIG_OCT_S_8D_8W && (cn = cf->oct_s_8d_8w))
+  {
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
@@ -1318,8 +1319,8 @@ static void add_connections_config
 #   endif
   }
 
-  if (CONFIG_QUAD_S_4D_4W)
-  { cn = cf->quad_s_4d_4w;
+  if (CONFIG_QUAD_S_4D_4W && (cn = cf->quad_s_4d_4w))
+  {
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
@@ -1401,7 +1402,10 @@ static void add_connections_config
       }
     }
 #   endif
-    cn = cf->quad_s_4d_4w_2;
+  }
+
+  if (CONFIG_QUAD_S_4D_4W && MAKE_QUAD_PAIRS && (cn = cf->quad_s_4d_4w_2))
+  {
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c+=2)
@@ -1529,9 +1533,8 @@ static void add_connections_config
 #   endif
   }
 
-  if (CONFIG_SINGLE4)
+  if (CONFIG_SINGLE4 && (cn = cf->single4_s))
   { 
-    cn = cf->single4_s;
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
       { net_value voi = v[cn[c].s] + off[cn[c].s];
@@ -1558,8 +1561,10 @@ static void add_connections_config
         s[j] += vi * w[k];
       }
     }
+  }
 
-    cn = cf->single4_d;
+  if (CONFIG_SINGLE4 && (cn = cf->single4_d))
+  {
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
       { j = cn[c].d;
@@ -1616,17 +1621,18 @@ static void add_connections_config
     }
   }
 
-  cn = CONFIG_ORIGINAL ? cf->conn : cf->single;
-  if (off)
-  { for (c = 0; (k = cn[c].w) >= 0; c++)
-    { i = cn[c].s; j = cn[c].d;
-      s[j] += (v[i]+off[i]) * w[k];
+  if (cn = CONFIG_ORIGINAL ? cf->conn : cf->single)
+  { if (off)
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { i = cn[c].s; j = cn[c].d;
+        s[j] += (v[i]+off[i]) * w[k];
+      }
     }
-  }
-  else
-  { for (c = 0; (k = cn[c].w) >= 0; c++)
-    { i = cn[c].s; j = cn[c].d;
-      s[j] += v[i] * w[k];
+    else
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { i = cn[c].s; j = cn[c].d;
+        s[j] += v[i] * w[k];
+      }
     }
   }
 

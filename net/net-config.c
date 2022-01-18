@@ -1,6 +1,6 @@
 /* NET-CONFIG.C - Procedures relating to weight configuration files. */
 
-/* Copyright (c) 2021 by Radford M. Neal 
+/* Copyright (c) 2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -729,40 +729,33 @@ static void net_config_sort (net_config *cf, int biases)
   /* Find groups of eight, if enabled. */
 
   if (!CONFIG_OCT_S_8D_8W)
-  { cf->oct_s_8d_8w = all+a;
-    all[a++].w = -1;
+  { cf->oct_s_8d_8w = 0;
   }
   else
   { memcpy (tmp, left, (leftn+1) * sizeof *tmp);
     find_oct (tmp, leftn, all+a, &c, left, &leftn);
-    cf->oct_s_8d_8w = all+a;
-    a += c+1;
+    if (cf->oct_s_8d_8w = c==0 ? 0 : all+a) a += c+1;
   }
 
   /* Find groups of four, if enabled. */
 
   if (!CONFIG_QUAD_S_4D_4W)
-  { cf->quad_s_4d_4w = all+a;
-    all[a++].w = -1;
-    cf->quad_s_4d_4w_2 = all+a;
-    all[a++].w = -1;
+  { cf->quad_s_4d_4w = 0;
+    cf->quad_s_4d_4w_2 = 0;
   }
   else
   { memcpy (tmp, left, (leftn+1) * sizeof *tmp);
     find_quad (tmp, leftn, all+a, &c, left, &leftn);
-    cf->quad_s_4d_4w = all+a;
     if (!MAKE_QUAD_PAIRS)
-    { a += c+1;
-      cf->quad_s_4d_4w_2 = all+a;
-      all[a++].w = -1;
+    { if (cf->quad_s_4d_4w = c==0 ? 0 : all+a) a += c+1;
+      cf->quad_s_4d_4w_2 = 0;
     }
     else
     { int m;
       copy_pairs (all+a, tmp, &c, &m);
-      a += c+1;
-      cf->quad_s_4d_4w_2 = all+a;
+      if (cf->quad_s_4d_4w = c==0 ? 0 : all+a) a += c+1;
       memcpy (all+a, tmp, (m+1) * sizeof *tmp);
-      a += m+1;
+      if (cf->quad_s_4d_4w_2 = m==0 ? 0 : all+a) a += m+1;
     }
   }
 
@@ -770,8 +763,7 @@ static void net_config_sort (net_config *cf, int biases)
      this is enabled, for use in CPU computations.  Not done for biases. */
 
   if (!CONFIG_SINGLE4 || biases)
-  { cf->single4_d = all+a;
-    all[a++].w = -1;
+  { cf->single4_d = 0;
   }
   else
   { 
@@ -801,18 +793,15 @@ static void net_config_sort (net_config *cf, int biases)
     leftn = k;
     left[k].w = -1;
 
-    cf->single4_d = all+a;
-    memcpy (all+a, tmp, j * sizeof *all);
-    all[a+j].w = -1;
-    a += j+1;
+    memcpy (all+a, tmp, (j+1) * sizeof *all);
+    if (cf->single4_d = j==0 ? 0 : all+a) a += j+1;
   }
 
   /* Find groups of four single connections with the same value for s, if
      this is enabled, for use in CPU computations.  Not done for biases. */
 
   if (!CONFIG_SINGLE4 || biases)
-  { cf->single4_s = all+a;
-    all[a++].w = -1;
+  { cf->single4_s = 0;
   }
   else
   { 
@@ -842,10 +831,8 @@ static void net_config_sort (net_config *cf, int biases)
     leftn = k;
     left[k].w = -1;
 
-    cf->single4_s = all+a;
-    memcpy (all+a, tmp, j * sizeof *all);
-    all[a+j].w = -1;
-    a += j+1;
+    memcpy (all+a, tmp, (j+1) * sizeof *all);
+    if (cf->single4_s = j==0 ? 0 : all+a) a += j+1;
   }
 
   /* Copy remaining connections from 'left' to end of 'all', sorting them
@@ -859,9 +846,8 @@ static void net_config_sort (net_config *cf, int biases)
   if (nadj_d < nadj_s)
   { memcpy (all+a, left, (leftn+1) * sizeof *all);
   }
-  cf->single = all+a;
-  a += leftn;
-  all[a++].w = -1;
+  all[a+leftn].w = -1;
+  if (cf->single = leftn==0 ? 0 : all+a) a += leftn+1;
 
   /* Record the block all the CPU versions came from, in config structure. */
 

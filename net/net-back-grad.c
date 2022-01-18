@@ -411,8 +411,8 @@ static void sum_derivatives_config
   net_connection *cn;
   int i, j, k, c;
 
-  if (CONFIG_OCT_S_8D_8W)
-  { cn = cf->oct_s_8d_8w;
+  if (CONFIG_OCT_S_8D_8W && (cn = cf->oct_s_8d_8w))
+  {
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { for (c = 0; (k = cn[c].w) >= 0; c++)
       { __m256d P;
@@ -471,8 +471,8 @@ static void sum_derivatives_config
 #   endif
   }
 
-  if (CONFIG_QUAD_S_4D_4W)
-  { cn = cf->quad_s_4d_4w;
+  if (CONFIG_QUAD_S_4D_4W && (cn = cf->quad_s_4d_4w))
+  {
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { for (c = 0; (k = cn[c].w) >= 0; c++)
       { j = cn[c].d;
@@ -510,7 +510,10 @@ static void sum_derivatives_config
       }
     }
 #   endif
-    cn = cf->quad_s_4d_4w_2;
+  }
+
+  if (CONFIG_QUAD_S_4D_4W && MAKE_QUAD_PAIRS && (cn = cf->quad_s_4d_4w_2))
+  {
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { for (c = 0; (k = cn[c].w) >= 0; c+=2)
       { __m256d WK = _mm256_loadu_pd(w+k);
@@ -579,9 +582,8 @@ static void sum_derivatives_config
 #   endif
   }
 
-  if (CONFIG_SINGLE4)
+  if (CONFIG_SINGLE4 && (cn = cf->single4_s))
   { 
-    cn = cf->single4_s;
     for (c = 0; (k = cn[c].w) >= 0; c+=4)
     { i = cn[c].s;
       net_value dsi = ds[i];
@@ -595,8 +597,10 @@ static void sum_derivatives_config
       dsi += dd[j] * w[k];
       ds[i] = dsi;
     }
+  }
 
-    cn = cf->single4_d;
+  if (CONFIG_SINGLE4 && (cn = cf->single4_d))
+  {
     for (c = 0; (k = cn[c].w) >= 0; c+=4)
     { net_value ddj = dd[cn[c].d];
       i = cn[c].s;
@@ -610,10 +614,11 @@ static void sum_derivatives_config
     }
   }
 
-  cn = CONFIG_ORIGINAL ? cf->conn : cf->single;
-  for (c = 0; (k = cn[c].w) >= 0; c++)
-  { i = cn[c].s; j = cn[c].d;
-    ds[i] += dd[j] * w[k];
+  if (cn = CONFIG_ORIGINAL ? cf->conn : cf->single)
+  { for (c = 0; (k = cn[c].w) >= 0; c++)
+    { i = cn[c].s; j = cn[c].d;
+      ds[i] += dd[j] * w[k];
+    }
   }
 
   if (CHECK_NAN)
@@ -800,9 +805,8 @@ static void add_grad1_config
 { net_connection *cn;
   int c, j, j2, k;
 
-  if (CONFIG_OCT_S_8D_8W)
-  { cn = cf->oct_s_8d_8w;
-    for (c = 0; (k = cn[c].w) >= 0; c++)
+  if (CONFIG_OCT_S_8D_8W && (cn = cf->oct_s_8d_8w))
+  { for (c = 0; (k = cn[c].w) >= 0; c++)
     { j = cn[c].d;
       g[k+0] += d[j+0];
       g[k+1] += d[j+1];
@@ -815,17 +819,18 @@ static void add_grad1_config
     }
   }
 
-  if (CONFIG_QUAD_S_4D_4W)
-  { cn = cf->quad_s_4d_4w;
-    for (c = 0; (k = cn[c].w) >= 0; c++)
+  if (CONFIG_QUAD_S_4D_4W && (cn = cf->quad_s_4d_4w))
+  { for (c = 0; (k = cn[c].w) >= 0; c++)
     { j = cn[c].d;
       g[k+0] += d[j+0];
       g[k+1] += d[j+1];
       g[k+2] += d[j+2];
       g[k+3] += d[j+3];
     }
-    cn = cf->quad_s_4d_4w_2;
-    for (c = 0; (k = cn[c].w) >= 0; c+=2)
+  }
+
+  if (CONFIG_QUAD_S_4D_4W && MAKE_QUAD_PAIRS && (cn = cf->quad_s_4d_4w_2))
+  { for (c = 0; (k = cn[c].w) >= 0; c+=2)
     { j = cn[c].d; j2 = cn[c+1].d;
       g[k+0] += d[j+0] + d[j2+0];
       g[k+1] += d[j+1] + d[j2+1];
@@ -834,10 +839,11 @@ static void add_grad1_config
     }
   }
 
-  cn = CONFIG_ORIGINAL ? cf->conn : cf->single;
-  for (c = 0; (k = cn[c].w) >= 0; c++)
-  { j = cn[c].d;
-    g[k] += d[j];
+  if (cn = CONFIG_ORIGINAL ? cf->conn : cf->single)
+  { for (c = 0; (k = cn[c].w) >= 0; c++)
+   { j = cn[c].d;
+      g[k] += d[j];
+   }
   }
 
   if (CHECK_NAN)
@@ -1406,8 +1412,8 @@ static void add_grad2_config
   net_connection *cn;
   int i, j, k, c;
 
-  if (CONFIG_OCT_S_8D_8W)
-  { cn = cf->oct_s_8d_8w;
+  if (CONFIG_OCT_S_8D_8W && (cn = cf->oct_s_8d_8w))
+  {
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
@@ -1530,8 +1536,8 @@ static void add_grad2_config
 #   endif
   }
 
-  if (CONFIG_QUAD_S_4D_4W)
-  { cn = cf->quad_s_4d_4w;
+  if (CONFIG_QUAD_S_4D_4W && (cn = cf->quad_s_4d_4w))
+  {
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c++)
@@ -1611,7 +1617,10 @@ static void add_grad2_config
       }
     }
 #   endif
-    cn = cf->quad_s_4d_4w_2;
+  }
+
+  if (CONFIG_QUAD_S_4D_4W && MAKE_QUAD_PAIRS && (cn = cf->quad_s_4d_4w_2))
+  {
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
     { if (off)
       { for (c = 0; (k = cn[c].w) >= 0; c+=2)
@@ -1732,9 +1741,8 @@ static void add_grad2_config
 #   endif
   }
 
-  if (CONFIG_SINGLE4)
-  { 
-    cn = cf->single4_s;
+  if (CONFIG_SINGLE4 && (cn = cf->single4_s))
+  {
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
       { net_value soi = s[cn[c].s] + off[cn[c].s];
@@ -1761,7 +1769,10 @@ static void add_grad2_config
         g[k] += si * d[j];
       }
     }
-    cn = cf->single4_d;
+  }
+
+  if (CONFIG_SINGLE4 && (cn = cf->single4_d))
+  {
     if (off)
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
       { net_value dj = d[cn[c].d];
@@ -1790,17 +1801,18 @@ static void add_grad2_config
     }
   }
 
-  cn = CONFIG_ORIGINAL ? cf->conn : cf->single;
-  if (off)
-  { for (c = 0; (k = cn[c].w) >= 0; c++)
-    { i = cn[c].s; j = cn[c].d;
-      g[k] += (s[i]+off[i]) * d[j];
+  if (cn = CONFIG_ORIGINAL ? cf->conn : cf->single)
+  { if (off)
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { i = cn[c].s; j = cn[c].d;
+        g[k] += (s[i]+off[i]) * d[j];
+      }
     }
-  }
-  else
-  { for (c = 0; (k = cn[c].w) >= 0; c++)
-    { i = cn[c].s; j = cn[c].d;
-      g[k] += s[i] * d[j];
+    else
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { i = cn[c].s; j = cn[c].d;
+        g[k] += s[i] * d[j];
+      }
     }
   }
 

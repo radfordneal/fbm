@@ -1,6 +1,6 @@
 /* NET-SPEC.C - Program to specify a new network (and create log file). */
 
-/* Copyright (c) 1995-2021 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -790,7 +790,7 @@ static void print_config (net_config *cf, int biases)
 
     /* For CPU: */
 
-    if (CONFIG_OCT_S_8D_8W)
+    if (CONFIG_OCT_S_8D_8W && cf->oct_s_8d_8w)
     { printf("oct_s_8d_8w:\n");
       for (i = 0; cf->oct_s_8d_8w[i].w >= 0; i++)
       { printf("%3d %3d-%-3d %3d-%-3d\n", cf->oct_s_8d_8w[i].s, 
@@ -800,7 +800,7 @@ static void print_config (net_config *cf, int biases)
       printf("\n");
     }
 
-    if (CONFIG_QUAD_S_4D_4W)
+    if (CONFIG_QUAD_S_4D_4W && cf->quad_s_4d_4w)
     { printf("quad_s_4d_4w:\n");
       for (i = 0; cf->quad_s_4d_4w[i].w >= 0; i++)
       { printf("%3d %3d-%-3d %3d-%-3d\n", cf->quad_s_4d_4w[i].s, 
@@ -808,7 +808,10 @@ static void print_config (net_config *cf, int biases)
                                cf->quad_s_4d_4w[i].w, cf->quad_s_4d_4w[i].w+3);
       }
       printf("\n");
-      printf("quad_s_4d_4w_2 (pairs with same w):\n");
+    }
+
+    if (CONFIG_QUAD_S_4D_4W && cf->quad_s_4d_4w_2)
+    { printf("quad_s_4d_4w_2 (pairs with same w):\n");
       for (i = 0; cf->quad_s_4d_4w_2[i].w >= 0; i++)
       { printf("%3d %3d-%-3d %3d-%-3d\n", cf->quad_s_4d_4w_2[i].s, 
                             cf->quad_s_4d_4w_2[i].d, cf->quad_s_4d_4w_2[i].d+3,
@@ -817,13 +820,17 @@ static void print_config (net_config *cf, int biases)
       printf("\n");
     }
 
-    if (CONFIG_SINGLE4)
+    if (CONFIG_SINGLE4 && cf->single4_s)
     { printf("single4_s:\n");
       for (i = 0; cf->single4_s[i].w >= 0; i++)
       { printf("%3d %3d %3d\n",
                 cf->single4_s[i].s, cf->single4_s[i].d, cf->single4_s[i].w);
       }
-      printf("single4_d:\n");
+      printf("\n");
+    }
+
+    if (CONFIG_SINGLE4 && cf->single4_d)
+    { printf("single4_d:\n");
       for (i = 0; cf->single4_d[i].w >= 0; i++)
       { printf("%3d %3d %3d\n",
                 cf->single4_d[i].s, cf->single4_d[i].d, cf->single4_d[i].w);
@@ -831,12 +838,14 @@ static void print_config (net_config *cf, int biases)
       printf("\n");
     }
 
-    printf("single:\n");
-    for (i = 0; cf->single[i].w >= 0; i++)
-    { printf("%3d %3d %3d\n",
-              cf->single[i].s, cf->single[i].d, cf->single[i].w);
+    if (cf->single)
+    { printf("single:\n");
+      for (i = 0; cf->single[i].w >= 0; i++)
+      { printf("%3d %3d %3d\n",
+                cf->single[i].s, cf->single[i].d, cf->single[i].w);
+      }
+      printf("\n");
     }
-    printf("\n");
 
     /* For GPU: */
 

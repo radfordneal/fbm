@@ -849,7 +849,7 @@ static void print_config (net_config *cf, int biases)
 
     /* For GPU: */
 
-    if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
+    if (CONFIG_OCT_GPU_S_8D_8W_GRAD && cf->oct_s_8d_8w_wgpu)
     { printf("oct_s_8d_8w_wgpu:\n");
       printf("start indexes:");
       for (r = 0; r<NTH; r++)
@@ -871,7 +871,7 @@ static void print_config (net_config *cf, int biases)
       printf("\n");
     }
 
-    if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
+    if (CONFIG_QUAD_GPU_S_4D_4W_GRAD && cf->quad_s_4d_4w_wgpu)
     { printf("quad_s_4d_4w_wgpu:\n");
       printf("start indexes:");
       for (r = 0; r<GTH; r++)
@@ -891,7 +891,10 @@ static void print_config (net_config *cf, int biases)
         printf("\n");
       }
       printf("\n");
-      printf("quad_s_4d_4w_2_wgpu:\n");
+    }
+
+    if (CONFIG_QUAD_GPU_S_4D_4W_GRAD && cf->quad_s_4d_4w_2_wgpu)
+    { printf("quad_s_4d_4w_2_wgpu:\n");
       printf("start indexes:");
       for (r = 0; r<GTH; r++)
       { printf(" %d",cf->start_quad_2_wgpu[r]);
@@ -912,44 +915,49 @@ static void print_config (net_config *cf, int biases)
       printf("\n");
     }
 
-    printf("other for wgpu:\n");
-    printf("start indexes:");
-    for (r = 0; r<GTH; r++)
-    { printf(" %d",cf->start_other_wgpu[r]);
-    }
-    printf("\n");
-    i = 0;
-    for (r = 0; r<GTH; r++)
-    { printf("Weight %d mod %d:\n",r,GTH);
-      while (cf->other_wgpu[i].w >= 0)
-      { printf("%3d %3d %3d\n", 
-                cf->other_wgpu[i].s, cf->other_wgpu[i].d, cf->other_wgpu[i].w);
-        i += 1;
+    if (cf->other_wgpu)
+    { printf("other for wgpu:\n");
+      printf("start indexes:");
+      for (r = 0; r<GTH; r++)
+      { printf(" %d",cf->start_other_wgpu[r]);
       }
-      i += 1;
+      printf("\n");
+      i = 0;
+      for (r = 0; r<GTH; r++)
+      { printf("Weight %d mod %d:\n",r,GTH);
+        while (cf->other_wgpu[i].w >= 0)
+        { printf("%3d %3d %3d\n", 
+           cf->other_wgpu[i].s, cf->other_wgpu[i].d, cf->other_wgpu[i].w);
+          i += 1;
+        }
+        i += 1;
+        printf("\n");
+      }
       printf("\n");
     }
-    printf("\n");
-    printf("other_2 for wgpu (pairs with same w):\n");
-    printf("start indexes:");
-    for (r = 0; r<GTH; r++)
-    { printf(" %d",cf->start_other_2_wgpu[r]);
-    }
-    printf("\n");
-    i = 0;
-    for (r = 0; r<GTH; r++)
-    { printf("Weight %d mod %d:\n",r,GTH);
-      while (cf->other_2_wgpu[i].w >= 0)
-      { printf("%3d %3d %3d\n", 
-           cf->other_2_wgpu[i].s, cf->other_2_wgpu[i].d, cf->other_2_wgpu[i].w);
-        i += 1;
-      }
-      i += 1;
-      printf("\n");
-    }
-    printf("\n");
 
-    if (CONFIG_OCT_GPU_S_8D_8W_FW)
+    if (cf->other_2_wgpu)
+    { printf("other_2 for wgpu (pairs with same w):\n");
+      printf("start indexes:");
+      for (r = 0; r<GTH; r++)
+      { printf(" %d",cf->start_other_2_wgpu[r]);
+      }
+      printf("\n");
+      i = 0;
+      for (r = 0; r<GTH; r++)
+      { printf("Weight %d mod %d:\n",r,GTH);
+        while (cf->other_2_wgpu[i].w >= 0)
+        { printf("%3d %3d %3d\n", 
+           cf->other_2_wgpu[i].s, cf->other_2_wgpu[i].d, cf->other_2_wgpu[i].w);
+          i += 1;
+        }
+        i += 1;
+        printf("\n");
+      }
+      printf("\n");
+    }
+
+    if (CONFIG_OCT_GPU_S_8D_8W_FW && cf->oct_s_8d_8w_dgpu)
     { printf("oct_s_8d_8w_dgpu:\n");
       printf("start indexes:");
       for (r = 0; r<NTH; r++)
@@ -971,7 +979,7 @@ static void print_config (net_config *cf, int biases)
       printf("\n");
     }
 
-    if (CONFIG_QUAD_GPU_S_4D_4W_FW)
+    if (CONFIG_QUAD_GPU_S_4D_4W_FW && cf->quad_s_4d_4w_dgpu)
     { printf("quad_s_4d_4w_dgpu:\n");
       printf("start indexes:");
       for (r = 0; r<NTH; r++)
@@ -993,26 +1001,28 @@ static void print_config (net_config *cf, int biases)
       printf("\n");
     }
 
-    printf("other for dgpu:\n");
-    printf("start indexes:");
-    for (r = 0; r<NTH; r++)
-    { printf(" %d",cf->start_other_dgpu[r]);
-    }
-    printf("\n");
-    i = 0;
-    for (r = 0; r<NTH; r++)
-    { printf("Destination unit %d mod %d:\n",r,NTH);
-      while (cf->other_dgpu[i].w >= 0)
-      { printf("%3d %3d %3d\n", 
-                cf->other_dgpu[i].s, cf->other_dgpu[i].d, cf->other_dgpu[i].w);
-        i += 1;
+    if (cf->other_dgpu)
+    { printf("other for dgpu:\n");
+      printf("start indexes:");
+      for (r = 0; r<NTH; r++)
+      { printf(" %d",cf->start_other_dgpu[r]);
       }
-      i += 1;
+      printf("\n");
+      i = 0;
+      for (r = 0; r<NTH; r++)
+      { printf("Destination unit %d mod %d:\n",r,NTH);
+        while (cf->other_dgpu[i].w >= 0)
+        { printf("%3d %3d %3d\n", 
+           cf->other_dgpu[i].s, cf->other_dgpu[i].d, cf->other_dgpu[i].w);
+          i += 1;
+        }
+        i += 1;
+        printf("\n");
+      }
       printf("\n");
     }
-    printf("\n");
 
-    if (CONFIG_OCT_GPU_S_8D_8W_BW)
+    if (CONFIG_OCT_GPU_S_8D_8W_BW && cf->oct_s_8d_8w_sgpu)
     { printf("oct_s_8d_8w_sgpu:\n");
       printf("start indexes:");
       for (r = 0; r<NTH; r++)
@@ -1034,7 +1044,7 @@ static void print_config (net_config *cf, int biases)
       printf("\n");
     }
 
-    if (CONFIG_QUAD_GPU_S_4D_4W_BW)
+    if (CONFIG_QUAD_GPU_S_4D_4W_BW && cf->quad_s_4d_4w_sgpu)
     { printf("quad_s_4d_4w_sgpu:\n");
       printf("start indexes:");
       for (r = 0; r<NTH; r++)
@@ -1055,22 +1065,24 @@ static void print_config (net_config *cf, int biases)
       }
     }
 
-    printf("other for sgpu:\n");
-    printf("start indexes:");
-    for (r = 0; r<NTH; r++)
-    { printf(" %d",cf->start_other_sgpu[r]);
-    }
-    printf("\n");
-    i = 0;
-    for (r = 0; r<NTH; r++)
-    { printf("Source unit %d mod %d:\n",r,NTH);
-      while (cf->other_sgpu[i].w >= 0)
-      { printf("%3d %3d %3d\n", 
-                cf->other_sgpu[i].s, cf->other_sgpu[i].d, cf->other_sgpu[i].w);
-        i += 1;
+    if (cf->other_sgpu)
+    { printf("other for sgpu:\n");
+      printf("start indexes:");
+      for (r = 0; r<NTH; r++)
+      { printf(" %d",cf->start_other_sgpu[r]);
       }
-      i += 1;
       printf("\n");
+      i = 0;
+      for (r = 0; r<NTH; r++)
+      { printf("Source unit %d mod %d:\n",r,NTH);
+        while (cf->other_sgpu[i].w >= 0)
+        { printf("%3d %3d %3d\n", 
+           cf->other_sgpu[i].s, cf->other_sgpu[i].d, cf->other_sgpu[i].w);
+          i += 1;
+        }
+        i += 1;
+        printf("\n");
+      }
     }
   }
 }

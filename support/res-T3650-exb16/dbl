@@ -1,11 +1,11 @@
-Commit: 5c2863bd5671d310ac67feaf7c83fb8376af0d56
+Commit: 0ce7f7ab60ef0c8c3cb6c1dc05f41d025f7b441a
 
 Running exb16 with dbl:
 
 Number of training cases: 300
 Number of test cases: 1000
-Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
-Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 
 Number of iterations used: 20
 
@@ -14,4 +14,5 @@ Number of test cases: 1000
 Average log probability of targets:    -0.241+-0.017
 Fraction of guesses that were wrong:    0.1050+-0.0097
 
-elapsed 0.93s
+elapsed 0.91s
+f8b3f04980cb0e21b097aeef923c08e72339178c  -

@@ -1,10 +1,10 @@
-Commit: 5c2863bd5671d310ac67feaf7c83fb8376af0d56
+Commit: 0ce7f7ab60ef0c8c3cb6c1dc05f41d025f7b441a
 
 Running exi4 with flt:
 
 Number of training cases: 2500
-Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
-Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 
 Number of iterations used: 2
 
@@ -15,3 +15,4 @@ Fraction of guesses that were wrong:    0.4900+-0.0502
 Average squared error guessing mean:    0.62322+-0.04026
 
 elapsed 10.63s
+899a37edd42798f9de1754bcc3bc555698c8d32d  -

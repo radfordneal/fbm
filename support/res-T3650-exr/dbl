@@ -1,11 +1,11 @@
-Commit: 5c2863bd5671d310ac67feaf7c83fb8376af0d56
+Commit: 0ce7f7ab60ef0c8c3cb6c1dc05f41d025f7b441a
 
 Running exr with dbl:
 
 Number of training cases: 100
 Number of test cases: 1000
-Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
-Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
  
 Predictions after running for 1000 iterations:
 
@@ -16,4 +16,5 @@ Number of test cases: 1000
 Average log probability of targets:     0.858+-0.019
 Average squared error guessing mean:    0.01093+-0.00062
 
-elapsed 0.66s
+elapsed 0.64s
+c8ada18fd5b2f34f4e999d254af99e439abe26c1  -

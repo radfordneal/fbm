@@ -1,9 +1,9 @@
-Commit: 5c2863bd5671d310ac67feaf7c83fb8376af0d56
+Commit: 0ce7f7ab60ef0c8c3cb6c1dc05f41d025f7b441a
 
 Running exi1ms with flt-gpu on M5000:
 
 Number of training cases: 4999
-Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Quadro M5000, Compute Capability 5.2, 16 SM processors, 7.4 GBytes ECC
 Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32
@@ -20,3 +20,4 @@ Fraction of guesses that were wrong:    0.5500+-0.0500
 Average squared error guessing mean:    0.69480+-0.01233
 
 elapsed 3.24s
+1999081c52e8c0303ca6a8b29f9a9dcb152b316d  -

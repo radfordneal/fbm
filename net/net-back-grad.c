@@ -2305,7 +2305,7 @@ __device__ static void net_store2_grad1_config
     s += *d; d += ds;
     s += *d;
     c += 1;
-    d = d0+ix+cn[c].d;
+    d = d0+cn[c].d;
     s += *d; d += ds;
     s += *d;
     g[ILV*k] = s;
@@ -2830,7 +2830,7 @@ __device__ static void net_store3_grad1_config
     s += *d; d += ds;
     s += *d;
     c += 1;
-    d = d0+ix+cn[c].d;
+    d = d0+cn[c].d;
     s += *d; d += ds;
     s += *d; d += ds;
     s += *d;
@@ -3395,7 +3395,7 @@ __device__ static void net_store4_grad1_config
     s += *d; d += ds;
     s += *d;
     c += 1;
-    d = d0+ix+cn[c].d;
+    d = d0+cn[c].d;
     s += *d; d += ds;
     s += *d; d += ds;
     s += *d; d += ds;

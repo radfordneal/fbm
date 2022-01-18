@@ -1,11 +1,11 @@
-Commit: 0c96db904e89456c65f68c67f2a32c040e42a2a3
+Commit: 0ce7f7ab60ef0c8c3cb6c1dc05f41d025f7b441a
 
 Running exr with dbl:
 
 Number of training cases: 100
 Number of test cases: 1000
-Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
-Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
  
 Predictions after running for 1000 iterations:
 

@@ -1,9 +1,9 @@
-Commit: 0c96db904e89456c65f68c67f2a32c040e42a2a3
+Commit: 0ce7f7ab60ef0c8c3cb6c1dc05f41d025f7b441a
 
 Running exi0m with dbl:
 
 Number of training cases: 4999
-Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 
 Number of iterations used: 1
 
@@ -13,5 +13,5 @@ Average log probability of targets:    -1.371+-0.014
 Fraction of guesses that were wrong:    0.7500+-0.0435
 Average squared error guessing mean:    0.74180+-0.00683
 
-elapsed 15.20s
+elapsed 15.22s
 0064c6d65e70c1bf7a8aca04896eebf8fc4d8357  -

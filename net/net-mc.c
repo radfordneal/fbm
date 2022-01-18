@@ -348,26 +348,6 @@ net_config *net_config_to_gpu (net_config *cf)
 
   dcf = *cf;
 
-  check_cuda_error (cudaMalloc (&dcf.conn, (dcf.N_conn+1) * sizeof *dcf.conn),
-                    "alloc of dev config conn");
-  check_cuda_error (cudaMemcpy (dcf.conn, cf->conn, 
-                               (dcf.N_conn+1) * sizeof *dcf.conn,
-                               cudaMemcpyHostToDevice),
-                    "copy to dev config conn");
-
-  check_cuda_error (cudaMalloc (&dcf.all, dcf.all_length * sizeof *dcf.all),
-                    "alloc of dev config all");
-  check_cuda_error (cudaMemcpy (dcf.all, cf->all, 
-                                dcf.all_length * sizeof *dcf.all,
-                                cudaMemcpyHostToDevice),
-                    "copy to dev config all");
-
-  dcf.single = dcf.all + (cf->single - cf->all);
-  dcf.single4_s = dcf.all + (cf->single4_s - cf->all);
-  dcf.single4_d = dcf.all + (cf->single4_d - cf->all);
-  dcf.quad_s_4d_4w = dcf.all + (cf->quad_s_4d_4w - cf->all);
-  dcf.quad_s_4d_4w_2 = dcf.all + (cf->quad_s_4d_4w_2 - cf->all);
-
   check_cuda_error (cudaMalloc (&dcf.all_gpu, 
                                 dcf.all_gpu_length * sizeof *dcf.all_gpu),
                     "alloc of dev config all_gpu");

@@ -1843,7 +1843,7 @@ __device__ static void net_store1_grad1_config
   net_config const* cf    /* Configuration for biases */
 )
 { net_connection *cn;
-  int c, j, j2, k, m, ix;
+  int c, j, j2, k;
 
   for (k = th; k<cf->N_wts; k+=GTH)
   { g[ILV*k] = 0;
@@ -1853,6 +1853,7 @@ __device__ static void net_store1_grad1_config
 
   if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
   { int thmod8 = (th&7) + 8;
+    int m, ix;
     cn = cf->oct_s_8d_8w_wgpu;
     for (m = 0; m<8; m++)
     { ix = (thmod8-m) & 7;
@@ -1868,6 +1869,7 @@ __device__ static void net_store1_grad1_config
 
   if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { int thmod4 = (th&3) + 4;
+    int m, ix;
     cn = cf->quad_s_4d_4w_wgpu;
     for (m = 0; m<4; m++)
     { ix = (thmod4-m) & 3;
@@ -2029,7 +2031,7 @@ __device__ static void net_store1_grad2_config
 )
 {
   net_connection *cn;
-  int i, i2, j, j2, k, c, m, ix;
+  int i, i2, j, j2, k, c;
 
   for (k = th; k<cf->N_wts; k+=GTH)
   { g[ILV*k] = 0;
@@ -2039,6 +2041,7 @@ __device__ static void net_store1_grad2_config
 
   if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
   { int thmod8 = (th&7) + 8;
+    int m, ix;
     cn = cf->oct_s_8d_8w_wgpu;
     if (off)
     { for (m = 0; m<8; m++)
@@ -2070,6 +2073,7 @@ __device__ static void net_store1_grad2_config
 
   if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { int thmod4 = (th&3) + 4;
+    int m, ix;
     cn = cf->quad_s_4d_4w_wgpu;
     if (off)
     { for (m = 0; m<4; m++)
@@ -2214,7 +2218,7 @@ __device__ static void net_store2_grad1_config
   net_config const*restrict cf  /* Configuration for biases */
 )
 { net_connection *cn;
-  int c, k, m, ix;
+  int c, k;
 
   for (k = th; k<cf->N_wts; k+=GTH)
   { g[ILV*k] = 0;
@@ -2224,6 +2228,7 @@ __device__ static void net_store2_grad1_config
 
   if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
   { int thmod8 = (th&7) + 8;
+    int m, ix;
     cn = cf->oct_s_8d_8w_wgpu;
     for (m = 0; m<8; m++)
     { ix = (thmod8-m) & 7;
@@ -2244,6 +2249,7 @@ __device__ static void net_store2_grad1_config
 
   if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { int thmod4 = (th&3) + 4;
+    int m, ix;
     cn = cf->quad_s_4d_4w_wgpu;
     for (m = 0; m<4; m++)
     { ix = (thmod4-m) & 3;
@@ -2479,8 +2485,8 @@ __device__ static void net_store2_grad2_config
  
   if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
   { int thmod8 = (th&7) + 8;
-    cn = cf->oct_s_8d_8w_wgpu;
     int m, ix;
+    cn = cf->oct_s_8d_8w_wgpu;
     if (off)
     { for (m = 0; m<8; m++)
       { ix = (thmod8-m) & 7;
@@ -2523,8 +2529,8 @@ __device__ static void net_store2_grad2_config
  
   if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { int thmod4 = (th&3) + 4;
-    cn = cf->quad_s_4d_4w_wgpu;
     int m, ix;
+    cn = cf->quad_s_4d_4w_wgpu;
     if (off)
     { for (m = 0; m<4; m++)
       { ix = (thmod4-m) & 3;
@@ -2733,7 +2739,7 @@ __device__ static void net_store3_grad1_config
   net_config const*restrict cf  /* Configuration for biases */
 )
 { net_connection *cn;
-  int c, k, m, ix;
+  int c, k;
 
   for (k = th; k<cf->N_wts; k+=GTH)
   { g[ILV*k] = 0;
@@ -2743,6 +2749,7 @@ __device__ static void net_store3_grad1_config
 
   if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
   { int thmod8 = (th&7) + 8;
+    int m, ix;
     cn = cf->oct_s_8d_8w_wgpu;
     for (m = 0; m<8; m++)
     { ix = (thmod8-m) & 7;
@@ -2764,6 +2771,7 @@ __device__ static void net_store3_grad1_config
 
   if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { int thmod4 = (th&3) + 4;
+    int m, ix;
     cn = cf->quad_s_4d_4w_wgpu;
     for (m = 0; m<4; m++)
     { ix = (thmod4-m) & 3;
@@ -3017,8 +3025,8 @@ __device__ static void net_store3_grad2_config
  
   if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
   { int thmod8 = (th&7) + 8;
-    cn = cf->oct_s_8d_8w_wgpu;
     int m, ix;
+    cn = cf->oct_s_8d_8w_wgpu;
     if (off)
     { for (m = 0; m<8; m++)
       { ix = (thmod8-m) & 7;
@@ -3063,8 +3071,8 @@ __device__ static void net_store3_grad2_config
  
   if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { int thmod4 = (th&3) + 4;
-    cn = cf->quad_s_4d_4w_wgpu;
     int m, ix;
+    cn = cf->quad_s_4d_4w_wgpu;
     if (off)
     { for (m = 0; m<4; m++)
       { ix = (thmod4-m) & 3;
@@ -3285,7 +3293,7 @@ __device__ static void net_store4_grad1_config
   net_config const*restrict cf  /* Configuration for biases */
 )
 { net_connection *cn;
-  int c, k, m, ix, ix2;
+  int c, k;
 
   for (k = th; k<cf->N_wts; k+=GTH)
   { g[ILV*k] = 0;
@@ -3294,11 +3302,12 @@ __device__ static void net_store4_grad1_config
   if (SYNC_AFTER && GTH>=32) __syncwarp();
 
   if (CONFIG_OCT_GPU_S_8D_8W_GRAD)
-  { cn = cf->oct_s_8d_8w_wgpu;
-    ix = th&7;
-    ix2 = th-ix;
+  { int thmod8 = (th&7) + 8;
+    int m, ix;
+    cn = cf->oct_s_8d_8w_wgpu;
     for (m = 0; m<8; m++)
-    { c = cf->start_oct_wgpu[ix2];
+    { ix = (thmod8-m) & 7;
+      c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
       for (;;)
       { k = cn[c].w;
         if (k<0) break;
@@ -3311,18 +3320,17 @@ __device__ static void net_store4_grad1_config
         g[ILV*(k+ix)] = s;
         c += 1;
       }
-      ix = (ix+7) & 7;
-      ix2 = (ix2+1) & (GTH-1);
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
   if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
-  { cn = cf->quad_s_4d_4w_wgpu;
-    ix = th&3;
-    ix2 = th-ix;
+  { int thmod4 = (th&3) + 4;
+    int m, ix;
+    cn = cf->quad_s_4d_4w_wgpu;
     for (m = 0; m<4; m++)
-    { c = cf->start_quad_wgpu[ix2];
+    { ix = (thmod4-m) & 3;
+      c = cf->start_quad_wgpu [(th-ix+GTH) & (GTH-1)];
       for (;;)
       { k = cn[c].w;
         if (k<0) break;
@@ -3335,15 +3343,12 @@ __device__ static void net_store4_grad1_config
         g[ILV*(k+ix)] = s;
         c += 1;
       }
-      ix = (ix+3) & 3;
-      ix2 = (ix2+1) & (GTH-1);
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
     cn = cf->quad_s_4d_4w_2_wgpu;
-    ix = th&3;
-    ix2 = th-ix;
     for (m = 0; m<4; m++)
-    { c = cf->start_quad_2_wgpu[ix2];
+    { ix = (thmod4-m) & 3;
+      c = cf->start_quad_2_wgpu [(th-ix+GTH) & (GTH-1)];
       for (;;)
       { k = cn[c].w;
         if (k<0) break;
@@ -3362,8 +3367,6 @@ __device__ static void net_store4_grad1_config
         g[ILV*(k+ix)] = s;
         c += 1;
       }
-      ix = (ix+3) & 3;
-      ix2 = (ix2+1) & (GTH-1);
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }

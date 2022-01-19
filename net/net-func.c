@@ -1927,10 +1927,9 @@ __device__ static void bias_values_config_gpu
   if (SYNC_AFTER && n % NTH != 0) __syncwarp(syncmask);
 
   if (CONFIG_OCT_GPU_S_8D_8W_FW && (cn = cf->oct_s_8d_8w_dgpu))
-  { c = 0;
-    for (m = 0; m<NTH; m++)
-    { if (NTH>1) ix = (th+NTH-m)&(NTH-1);
-      for (;;)
+  { m = NTH; c = 0; ix = th;
+    for (;;)
+    { for (;;)
       { j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
         if (NTH==1)
@@ -1960,16 +1959,16 @@ __device__ static void bias_values_config_gpu
         { v[j+ix] += b[k+ix];
         }
       }
+      if (--m == 0) break;
+      if (NTH>1) ix = (ix+(NTH-1)) & (NTH-1);
     }
     if (SYNC_AFTER) __syncwarp(syncmask);
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W_FW)
-  { cn = cf->quad_s_4d_4w_dgpu;
-    c = 0;
-    for (m = 0; m<NTH; m++)
-    { if (NTH>1) ix = (th+NTH-m)&(NTH-1);
-      for (;;)
+  if (CONFIG_QUAD_GPU_S_4D_4W_FW && (cn = cf->quad_s_4d_4w_dgpu))
+  { m = NTH; c = 0; ix = th;
+    for (;;)
+    { for (;;)
       { j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
         if (NTH==1)
@@ -1989,18 +1988,21 @@ __device__ static void bias_values_config_gpu
         { v[j+ix] += b[k+ix];
         }
       }
+      if (--m == 0) break;
+      if (NTH>1) ix = (ix+(NTH-1)) & (NTH-1);
     }
     if (SYNC_AFTER) __syncwarp(syncmask);
   }
 
-  cn = cf->other_dgpu;
-  c = cf->start_other_dgpu[th];
-  for (;;)
-  { j = cn[c].d; k = cn[c].w; c += 1;
-    if (k<0) break;
-    v[j] += b[k];
+  if (cn = cf->other_dgpu)
+  { c = cf->start_other_dgpu[th];
+    for (;;)
+    { j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      v[j] += b[k];
+    }
+    if (SYNC_AFTER) __syncwarp(syncmask);
   }
-  if (SYNC_AFTER) __syncwarp(syncmask);
 }
 
 
@@ -2244,10 +2246,9 @@ __device__ static void add_connections_config_gpu
   net_value vi;
 
   if (CONFIG_OCT_GPU_S_8D_8W_FW && (cn = cf->oct_s_8d_8w_dgpu))
-  { c = 0;
-    for (m = 0; m<NTH; m++)
-    { if (NTH>1) ix = (th+NTH-m)&(NTH-1);
-      for (;;)
+  { m = NTH; c = 0; ix = th;
+    for (;;)
+    { for (;;)
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
         vi = v[i];
@@ -2279,16 +2280,16 @@ __device__ static void add_connections_config_gpu
         { s[j+ix] += vi * w[k+ix];
         }
       }
+      if (--m == 0) break;
+      if (NTH>1) ix = (ix+(NTH-1)) & (NTH-1);
     }
     if (SYNC_AFTER) __syncwarp(syncmask);
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W_FW)
-  { cn = cf->quad_s_4d_4w_dgpu;
-    c = 0;
-    for (m = 0; m<NTH; m++)
-    { if (NTH>1) ix = (th+NTH-m)&(NTH-1);
-      for (;;)
+  if (CONFIG_QUAD_GPU_S_4D_4W_FW && (cn = cf->quad_s_4d_4w_dgpu))
+  { m = NTH; c = 0; ix = th;
+    for (;;)
+    { for (;;)
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
         vi = v[i];
@@ -2310,20 +2311,23 @@ __device__ static void add_connections_config_gpu
         { s[j+ix] += vi * w[k+ix];
         }
       }
+      if (--m == 0) break;
+      if (NTH>1) ix = (ix+(NTH-1)) & (NTH-1);
     }
     if (SYNC_AFTER) __syncwarp(syncmask);
   }
 
-  cn = cf->other_dgpu;
-  c = cf->start_other_dgpu[th];
-  for (;;)
-  { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-    if (k<0) break;
-    vi = v[i];
-    if (off) vi += off[i];
-    s[j] += vi * w[k];
+  if (cn = cf->other_dgpu)
+  { c = cf->start_other_dgpu[th];
+    for (;;)
+    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      if (k<0) break;
+      vi = v[i];
+      if (off) vi += off[i];
+      s[j] += vi * w[k];
+    }
+    if (SYNC_AFTER) __syncwarp(syncmask);
   }
-  if (SYNC_AFTER) __syncwarp(syncmask);
 }
 
 #undef A

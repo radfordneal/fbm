@@ -1,22 +1,22 @@
-Commit: 7c3b4a70a50ab689e39ce447433e81fa167f6982
+Commit: 1c1ac192a78c7fedb52f3c35764c206a91479256
 
 Running exi1 with dbl-gpu on K40c:
 
 Number of training cases: 4999
-Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Tesla K40c, Compute Capability 3.5, 15 SM processors, 11.2 GBytes ECC
-Using 40 cases per block, max 500 blocks per launch, threads/case: 8
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16
-Desired # of blocks: 1, allowed shared mem per case: 1228 bytes, 153 values
+Desired # of blocks: 2, allowed shared mem per case: 768 bytes, 96 values
 Hid layer shrd mem: 0:80:0,-1 T 88
-With 4999 cases, need 1 launches, max 125 blocks/launch
-Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+With 4999 cases, need 1 launches, max 157 blocks/launch
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Tesla K40c, Compute Capability 3.5, 15 SM processors, 11.2 GBytes ECC
-Using 40 cases per block, max 500 blocks per launch, threads/case: 8
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16
-Desired # of blocks: 1, allowed shared mem per case: 1228 bytes, 153 values
+Desired # of blocks: 2, allowed shared mem per case: 768 bytes, 96 values
 Hid layer shrd mem: 0:80:0,-1 T 88
-With 4999 cases, need 1 launches, max 125 blocks/launch
+With 4999 cases, need 1 launches, max 157 blocks/launch
 
 Number of iterations used: 2
 
@@ -26,4 +26,5 @@ Average log probability of targets:    -1.050+-0.081
 Fraction of guesses that were wrong:    0.4900+-0.0502
 Average squared error guessing mean:    0.57732+-0.04266
 
-elapsed 12.46s
+elapsed 10.15s
+f9edd75f6bd04a73a6161f10117fa7ee62b46f91  -

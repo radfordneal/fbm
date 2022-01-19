@@ -3,12 +3,13 @@
 if [ x$system == x ]; then system=$SYSTEM; fi
 if [ x$precision == x ]; then precision=flt; fi
 
-for i in res-$system-*/$precision; do
-  echo -n `echo $i | sed "s,/.*,," | sed "s,.*-,,"`; echo -n "	"
+cd res-$system
+for i in */$precision; do
+  echo -n `echo $i | sed "s,/.*,,"`; echo -n "	"
   ( if [ x$commit == x ]; then
       cat $i | fgrep elapsed
     else
-      git show $commit:support/$i
+      git show $commit:support/res-$system/$i
     fi
   ) | fgrep elapsed | sed "s/.*elapsed //"
 done

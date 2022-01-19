@@ -3,8 +3,9 @@
 if [ x$system == x ]; then system=$SYSTEM; fi
 if [ x$precision == x ]; then precision=flt; fi
 
+cd res-$system
 n=1
-for i in res-$system-*/$precision; do
-  echo $n `echo $i | sed "s,/.*,," | sed "s,.*-,,"`
+for i in */$precision; do
+  echo $n `echo $i | sed "s,/.*,,"`
   n=`calc 1+$n`
 done

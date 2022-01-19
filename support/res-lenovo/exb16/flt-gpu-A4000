@@ -1,4 +1,4 @@
-Commit: aa3910401ed76f098b64291f059da7192de8d880
+Commit: 6bda8494f1468192143734195fc37899fc1baa15
 
 Running exb16 with flt-gpu on A4000:
 
@@ -26,5 +26,5 @@ Number of test cases: 1000
 Average log probability of targets:    -0.244+-0.016
 Fraction of guesses that were wrong:    0.1100+-0.0099
 
-elapsed 1.15s
+elapsed 1.19s
 147534f6ff845678540d98f90e3d27932b83c955  -

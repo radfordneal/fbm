@@ -1,4 +1,4 @@
-Commit: aa3910401ed76f098b64291f059da7192de8d880
+Commit: 6bda8494f1468192143734195fc37899fc1baa15
 
 Running exi4m with dbl-gpu on P620:
 
@@ -19,5 +19,5 @@ Average log probability of targets:    -1.383+-0.012
 Fraction of guesses that were wrong:    0.7000+-0.0461
 Average squared error guessing mean:    0.74808+-0.00596
 
-elapsed 17.70s
+elapsed 17.71s
 c5d37caac0277231ceb75b8cc9c21a9deddc1ec5  -

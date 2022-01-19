@@ -36,6 +36,6 @@ for w in $WHAT; do
       using $w net-display -P log | shasum
     ) >& $dir-$p/$w
     echo -n "For $p with $w on CPU: " 
-    grep "^elapsed " $dir-$p/$w
+    grep "^elapsed " $dir/$p/$w
   done
 done

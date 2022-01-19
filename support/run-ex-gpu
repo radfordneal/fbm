@@ -44,6 +44,6 @@ for w in $WHAT; do
       using $w net-display -P log | shasum
     ) >& $dir-$p/$w-$GPUNAME
     echo -n "For $p with $w on $GPUNAME: " 
-    grep "^elapsed " $dir-$p/$w-$GPUNAME
+    grep "^elapsed " $dir/$p/$w-$GPUNAME
   done
 done

@@ -361,9 +361,7 @@ net_config *net_config_to_gpu (net_config *cf)
 
   OADJ(oct_s_8d_8w_wgpu);
   OADJ(quad_s_4d_4w_wgpu);
-  OADJ(quad_s_4d_4w_2_wgpu);
   OADJ(other_wgpu);
-  OADJ(other_2_wgpu);
 
   OADJ(oct_s_8d_8w_dgpu);
   OADJ(quad_s_4d_4w_dgpu);

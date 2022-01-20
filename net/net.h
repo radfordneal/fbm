@@ -211,8 +211,6 @@ typedef struct
 #define CONFIG_QUAD_GPU_S_4D_4W_FW 1 /* Make quad_s_4d_4w_dgpu grps for forw? */
 #define CONFIG_QUAD_GPU_S_4D_4W_BW 1 /* Make quad_s_4d_4w_sgpu grps for back? */
 #define CONFIG_QUAD_GPU_S_4D_4W_GRAD (GTH>=4 && 1) /* Make quad grps for grad?*/
-#define MAKE_QUAD_GPU_PAIRS 0	/* Make quad_s_4d_4w_2_?gpu ver with pairs? */
-#define MAKE_OTHER_GPU_PAIRS 0	/* Make other_2_?gpu versions with pairs? */
 
 /* Set of connections between layers. */
 
@@ -262,12 +260,8 @@ typedef struct
   int start_oct_wgpu[GTH];	/* Starts for sections in oct_s_8d_8w_wgpu */
   net_connection *quad_s_4d_4w_wgpu;  /* GPU grad version, GTH -1 terminators*/
   int start_quad_wgpu[GTH];	/* Starts for sections in quad_s_4d_4w_wgpu */
-  net_connection *quad_s_4d_4w_2_wgpu;/* GPU grad version, GTH -1 terminators*/
-  int start_quad_2_wgpu[GTH];	/* Starts for sections in quad_s_4d_4w_2_wgpu */
   net_connection *other_wgpu;	/* Other connections for grad, has GTH -1s */
   int start_other_wgpu[GTH];	/* Start indexes for sections in other_wgpu */
-  net_connection *other_2_wgpu;	/* Pairs of other connections, same w for pair*/
-  int start_other_2_wgpu[GTH];	/* Start indexes for sections in other_2_wgpu */
 
   net_connection *all_gpu;	/* Pointer to block with items above */
   int all_gpu_length;		/* Length of 'all_gpu' block in use */

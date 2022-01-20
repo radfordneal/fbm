@@ -613,7 +613,7 @@ static void find_quad
   net_connection *quad,	/* Place to store condensed sets of four connections */
   int *quadn,		/* Number of sets in quad */
   net_connection *rem,	/* Place to store remaining connections */
-  int *remn		/* Number of connections in remn */
+  int *remn		/* Number of connections in rem */
 )
 {
   memcpy (rem, src, (n+1) * sizeof *rem);
@@ -892,55 +892,28 @@ static void net_config_sort (net_config *cf, int biases)
 
   /* If enabled, set up quad_s_4d_4w_wgpu connections for use in GPU
      gradient computations, sections marked by extra -1 indicators for
-     when the first weight mod GTH changes.  Optionally, sets are taken
-     out for pairs with the same weights, put in quad_s_4d_4w_2_wgpu. */
+     when the first weight mod GTH changes. */
 
   cf->quad_s_4d_4w_wgpu = 0;
-  cf->quad_s_4d_4w_2_wgpu = 0;
   if (CONFIG_QUAD_GPU_S_4D_4W_GRAD)
   { memcpy (tmp, left, (leftn+1) * sizeof *tmp);
     find_quad (tmp, leftn, tmp2, &c, left, &leftn);
     if (c>0)
-    { qsort (tmp2, c, sizeof *all_gpu, cmp_wmodGTH_w_d_s);
-      if (!MAKE_QUAD_GPU_PAIRS)
-      { cf->quad_s_4d_4w_2_wgpu = all_gpu+a_gpu;
-      }
-      else
-      { copy_pairs (tmp2, tmp, 0, 0);
-        c = copy_wmod (all_gpu+a_gpu, tmp, cf->start_quad_2_wgpu, GTH);
-        if (c>0)
-        { cf->quad_s_4d_4w_2_wgpu = all_gpu+a_gpu;
-          a_gpu += c+1;
-        }
-      }
+    { qsort (tmp2, c, sizeof *tmp2, cmp_wmodGTH_w_d_s);
       c = copy_wmod (all_gpu+a_gpu, tmp2, cf->start_quad_wgpu, GTH);
-      if (c>0)
-      { cf->quad_s_4d_4w_wgpu = all_gpu+a_gpu;
-        a_gpu += c+1;
-      }
+      cf->quad_s_4d_4w_wgpu = all_gpu+a_gpu;
+      a_gpu += c+1;
     }
   }
 
-  /* Set up other connections (not in oct or quad wgpu sets) for use
-     in GPU gradient computations, in other_wgpu.  In sections by w
-     mod GTH.  May make paired version in other_2_wgpu. */
+  /* Set up other connections (not in oct or quad wgpu sets) for use in
+     GPU gradient computations, in other_wgpu.  In sections by w mod GTH. */
 
   cf->other_wgpu = 0;
-  cf->other_2_wgpu = 0;
-
-  memcpy (tmp, left, (leftn+1) * sizeof *tmp);  
-  qsort (tmp, leftn, sizeof *tmp, cmp_wmodGTH_w_d_s);
-
-  if (MAKE_OTHER_GPU_PAIRS)
-  { copy_pairs (tmp, tmp2, &leftn, &c);
-    if (c>0)
-    { cf->other_2_wgpu = all_gpu+a_gpu;
-      a_gpu += copy_wmod (cf->other_2_wgpu, tmp2, cf->start_other_2_wgpu, GTH);
-    }
-  }
-
   if (leftn>0)
-  { cf->other_wgpu = all_gpu+a_gpu;
+  { memcpy (tmp, left, (leftn+1) * sizeof *tmp);  
+    qsort (tmp, leftn, sizeof *tmp, cmp_wmodGTH_w_d_s);
+    cf->other_wgpu = all_gpu+a_gpu;
     a_gpu += copy_wmod (cf->other_wgpu, tmp, cf->start_other_wgpu, GTH);
   }
 
@@ -950,8 +923,7 @@ static void net_config_sort (net_config *cf, int biases)
   leftn = n;
 
   /* The oct_s_8d_8w_dgpu connections are used for gpu forward
-     function computations, sorted by d, but a paired version is not
-     set up. In sections by d mod NTH. */
+     function computations, sorted by d.  In sections by d mod NTH. */
 
   cf->oct_s_8d_8w_dgpu = 0;
   if (CONFIG_OCT_GPU_S_8D_8W_FW)
@@ -993,8 +965,7 @@ static void net_config_sort (net_config *cf, int biases)
   leftn = n;
 
   /* The oct_s_8d_8w_sgpu connections are used for gpu backward pass
-     computations, sorted by s.  A paired version is not set up.  In
-     sections by s mod NTH. */
+     computations, sorted by s.  In sections by s mod NTH. */
 
   cf->oct_s_8d_8w_sgpu = 0;
   if (CONFIG_OCT_GPU_S_8D_8W_BW)

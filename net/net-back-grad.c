@@ -1853,7 +1853,7 @@ __device__ static void net_store1_grad1_config
   net_config const* cf    /* Configuration for biases */
 )
 { net_connection *cn;
-  int c, j, j2, k;
+  int c, j, k;
 
   for (k = th; k<cf->N_wts; k+=GTH)
   { g[ILV*k] = 0;
@@ -1896,23 +1896,6 @@ __device__ static void net_store1_grad1_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD && MAKE_QUAD_GPU_PAIRS
-       && (cn = cf->quad_s_4d_4w_2_wgpu))
-  { int thmod4 = (th&3) + 4;
-    int m, ix;
-    for (m = 0; m<4; m++)
-    { ix = (thmod4-m) & 3;
-      c = cf->start_quad_2_wgpu [(th-ix+GTH) & (GTH-1)];
-      for (;;)
-      { j = cn[c].d; k = cn[c].w; c += 1;
-        if (k<0) break;
-        j2 = cn[c].d; c += 1;
-        g[ILV*(k+ix)] += d0[j+ix] + d0[j2+ix];
-      }
-    }
-    if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
   if (cn = cf->other_wgpu)
   { c = cf->start_other_wgpu[th];
     j = cn[c].d; k = cn[c].w; c += 1;
@@ -1926,16 +1909,6 @@ __device__ static void net_store1_grad1_config
       g[ILV*kk] = s;
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
-  if (MAKE_OTHER_GPU_PAIRS && (cn = cf->other_2_wgpu))
-  { c = cf->start_other_2_wgpu[th];
-    for (;;)
-    { j = cn[c].d; k = cn[c].w; c += 1;
-      if (k<0) break;
-      j2 = cn[c].d; c += 1;
-      g[ILV*k] += d0[j] + d0[j2];
-    }
   }
 }
 
@@ -2057,7 +2030,7 @@ __device__ static void net_store1_grad2_config
 )
 {
   net_connection *cn;
-  int i, i2, j, j2, k, c;
+  int i, j, k, c;
 
   for (k = th; k<cf->N_wts; k+=GTH)
   { g[ILV*k] = 0;
@@ -2134,45 +2107,6 @@ __device__ static void net_store1_grad2_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD && MAKE_QUAD_GPU_PAIRS
-       && (cn = cf->quad_s_4d_4w_2_wgpu))
-  { int thmod4 = (th&3) + 4;
-    int m, ix;
-    if (off)
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_2_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          if (k<0) break;
-          net_value s0i = s0[i];
-          net_param o = off[i];
-          i2 = cn[c].s; j2 = cn[c].d; c += 1;
-          net_value s0i2 = s0[i2];
-          net_param o2 = off[i2];
-          g[ILV*(k+ix)] = g[ILV*(k+ix)] + (s0i+o)*d0[j+ix]
-                                        + (s0i2+o2)*d0[j2+ix];
-        }
-      }
-    }
-    else
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_2_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          if (k<0) break;
-          net_value s0i = s0[i];
-          i2 = cn[c].s; j2 = cn[c].d; c += 1;
-          net_value s0i2 = s0[i2];
-          g[ILV*(k+ix)] = g[ILV*(k+ix)] + s0i*d0[j+ix]
-                                        + s0i2*d0[j2+ix];
-        }
-      }
-    }
-    if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
   if (cn = cf->other_wgpu)
   { c = cf->start_other_wgpu[th];
     if (off)
@@ -2200,30 +2134,6 @@ __device__ static void net_store1_grad2_config
       }
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
-  if (MAKE_OTHER_GPU_PAIRS && (cn = cf->other_2_wgpu))
-  { c = cf->start_other_2_wgpu[th];
-    if (off)
-    { for (;;)
-      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        if (k<0) break;
-        net_param o = off[i];
-        i2 = cn[c].s; j2 = cn[c].d; c += 1;
-        net_param o2 = off[i2];
-        g[ILV*k] = g[ILV*k] + (s0[i]+o)*d0[j]
-                            + (s0[i2]+o2)*d0[j2];
-      }
-    }
-    else
-    { for (;;)
-      { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        if (k<0) break;
-        i2 = cn[c].s; j2 = cn[c].d; c += 1;
-        g[ILV*k] = g[ILV*k] + s0[i]*d0[j]
-                            + s0[i2]*d0[j2];
-      }
-    }
   }
 }
 
@@ -2316,30 +2226,6 @@ __device__ static void net_store2_grad1_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD && MAKE_QUAD_GPU_PAIRS
-       && (cn = cf->quad_s_4d_4w_2_wgpu))
-  { int thmod4 = (th&3) + 4;
-    int m, ix;
-    for (m = 0; m<4; m++)
-    { ix = (thmod4-m) & 3;
-      c = cf->start_quad_2_wgpu [(th-ix+GTH) & (GTH-1)];
-      for (;;)
-      { k = cn[c].w;
-        if (k<0) break;
-        net_value const*restrict d = d0+ix+cn[c].d;
-        net_value s = g[ILV*(k+ix)];
-        s += *d; d += ds;
-        s += *d;
-        c += 1;
-        d = d0+ix+cn[c].d;
-        s += *d; d += ds;
-        s += *d;
-        g[ILV*(k+ix)] = s;
-        c += 1;
-      }
-    }
-    if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
 
   if (cn = cf->other_wgpu)
   { c = cf->start_other_wgpu[th];
@@ -2356,24 +2242,6 @@ __device__ static void net_store2_grad1_config
       g[ILV*kk] = s;
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
-  if (MAKE_OTHER_GPU_PAIRS && (cn = cf->other_2_wgpu))
-  { c = cf->start_other_2_wgpu[th];
-    for (;;)
-    { k = cn[c].w;
-      if (k<0) break;
-      net_value const*restrict d = d0+cn[c].d;
-      net_value s = g[ILV*k];
-      s += *d; d += ds;
-      s += *d;
-      c += 1;
-      d = d0+cn[c].d;
-      s += *d; d += ds;
-      s += *d;
-      g[ILV*k] = s;
-      c += 1;
-    }
   }
 }
 
@@ -2631,63 +2499,6 @@ __device__ static void net_store2_grad2_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD && MAKE_QUAD_GPU_PAIRS
-       && (cn = cf->quad_s_4d_4w_2_wgpu))
-  { int thmod4 = (th&3) + 4;
-    int m, ix;
-    if (off)
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_2_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { i = cn[c].s; j = cn[c].d; k = cn[c].w;
-          if (k<0) break;
-          net_param o = off[i];
-          net_value s = g[ILV*(k+ix)];
-          net_value const*restrict v = v0+i;
-          net_value const*restrict d = d0+ix+j;
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; s += (tv+o)*td;
-          c += 1;
-          i = cn[c].s; j = cn[c].d;
-          o = off[i];
-          v = v0+i;
-          d = d0+ix+j;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; s += (tv+o)*td;
-          g[ILV*(k+ix)] = s;
-          c += 1;
-        }
-      }
-    }
-    else
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_2_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { k = cn[c].w;
-          if (k<0) break;
-          net_value s = g[ILV*(k+ix)];
-          net_value const*restrict v = v0+cn[c].s;
-          net_value const*restrict d = d0+ix+cn[c].d;
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; s += tv*td;
-          c += 1;
-          i = cn[c].s; j = cn[c].d;
-          v = v0+cn[c].s;
-          d = d0+ix+cn[c].d;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; s += tv*td;
-          g[ILV*(k+ix)] = s;
-          c += 1;
-        }
-      }
-    }
-    if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
   if (cn = cf->other_wgpu)
   { c = cf->start_other_wgpu[th];
     if (off)
@@ -2724,51 +2535,6 @@ __device__ static void net_store2_grad2_config
       }
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
-  if (MAKE_OTHER_GPU_PAIRS && (cn = cf->other_2_wgpu))
-  { c = cf->start_other_2_wgpu[th];
-    if (off)
-    { for (;;)
-      { i = cn[c].s; j = cn[c].d; k = cn[c].w;
-        if (k<0) break;
-        net_param o = off[i];
-        net_value const*restrict v = v0+i;
-        net_value const*restrict d = d0+j;
-        net_value s = g[ILV*k];
-        net_value tv, td;
-        tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-        tv = *v; td = *d; s += (tv+o)*td;
-        c += 1;
-        i = cn[c].s; j = cn[c].d;
-        o = off[i];
-        v = v0+i;
-        d = d0+j;
-        tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-        tv = *v; td = *d; s += (tv+o)*td;
-        g[ILV*k] = s;
-        c += 1;
-      }
-    }
-    else
-    { for (;;)
-      { k = cn[c].w;
-        if (k<0) break;
-        net_value const*restrict v = v0+cn[c].s;
-        net_value const*restrict d = d0+cn[c].d;
-        net_value s = g[ILV*k];
-        net_value tv, td;
-        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-        tv = *v; td = *d; s += tv*td;
-        c += 1;
-        v = v0+cn[c].s;
-        d = d0+cn[c].d;
-        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-        tv = *v; td = *d; s += tv*td;
-        g[ILV*k] = s;
-        c += 1;
-      }
-    }
   }
 }
 
@@ -2863,33 +2629,6 @@ __device__ static void net_store3_grad1_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD && MAKE_QUAD_GPU_PAIRS
-       && (cn = cf->quad_s_4d_4w_2_wgpu))
-  { int thmod4 = (th&3) + 4;
-    int m, ix;
-    for (m = 0; m<4; m++)
-    { ix = (thmod4-m) & 3;
-      c = cf->start_quad_2_wgpu [(th-ix+GTH) & (GTH-1)];
-      for (;;)
-      { k = cn[c].w;
-        if (k<0) break;
-        net_value const*restrict d = d0+ix+cn[c].d;
-        net_value s = g[ILV*(k+ix)];
-        s += *d; d += ds;
-        s += *d; d += ds;
-        s += *d;
-        c += 1;
-        d = d0+ix+cn[c].d;
-        s += *d; d += ds;
-        s += *d; d += ds;
-        s += *d;
-        g[ILV*(k+ix)] = s;
-        c += 1;
-      }
-    }
-    if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
   if (cn = cf->other_wgpu)
   { c = cf->start_other_wgpu[th];
     j = cn[c].d; k = cn[c].w; c += 1;
@@ -2906,26 +2645,6 @@ __device__ static void net_store3_grad1_config
       g[ILV*kk] = s;
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
-  if (MAKE_OTHER_GPU_PAIRS && (cn = cf->other_2_wgpu))
-  { c = cf->start_other_2_wgpu[th];
-    for (;;)
-    { k = cn[c].w;
-      if (k<0) break;
-      net_value const*restrict d = d0+cn[c].d;
-      net_value s = g[ILV*k];
-      s += *d; d += ds;
-      s += *d; d += ds;
-      s += *d;
-      c += 1;
-      d = d0+cn[c].d;
-      s += *d; d += ds;
-      s += *d; d += ds;
-      s += *d;
-      g[ILV*k] = s;
-      c += 1;
-    }
   }
 }
 
@@ -3199,67 +2918,6 @@ __device__ static void net_store3_grad2_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD && MAKE_QUAD_GPU_PAIRS
-       && (cn = cf->quad_s_4d_4w_2_wgpu))
-  { int thmod4 = (th&3) + 4;
-    int m, ix;
-    if (off)
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_2_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { i = cn[c].s; j = cn[c].d; k = cn[c].w;
-          if (k<0) break;
-          net_param o = off[i];
-          net_value s = g[ILV*(k+ix)];
-          net_value const*restrict v = v0+i;
-          net_value const*restrict d = d0+ix+j;
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; s += (tv+o)*td;
-          c += 1;
-          i = cn[c].s; j = cn[c].d;
-          o = off[i];
-          v = v0+i;
-          d = d0+ix+j;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; s += (tv+o)*td;
-          g[ILV*(k+ix)] = s;
-          c += 1;
-        }
-      }
-    }
-    else
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_2_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { k = cn[c].w;
-          if (k<0) break;
-          net_value s = g[ILV*(k+ix)];
-          net_value const*restrict v = v0+cn[c].s;
-          net_value const*restrict d = d0+ix+cn[c].d;
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; s += tv*td;
-          c += 1;
-          i = cn[c].s; j = cn[c].d;
-          v = v0+cn[c].s;
-          d = d0+ix+cn[c].d;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; s += tv*td;
-          g[ILV*(k+ix)] = s;
-          c += 1;
-        }
-      }
-    }
-    if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
   if (cn = cf->other_wgpu)
   { c = cf->start_other_wgpu[th];
     if (off)
@@ -3298,55 +2956,6 @@ __device__ static void net_store3_grad2_config
       }
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
-  if (MAKE_OTHER_GPU_PAIRS && (cn = cf->other_2_wgpu))
-  { c = cf->start_other_2_wgpu[th];
-    if (off)
-    { for (;;)
-      { i = cn[c].s; j = cn[c].d; k = cn[c].w;
-        if (k<0) break;
-        net_param o = off[i];
-        net_value const*restrict v = v0+i;
-        net_value const*restrict d = d0+j;
-        net_value s = g[ILV*k];
-        net_value tv, td;
-        tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-        tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-        tv = *v; td = *d; s += (tv+o)*td;
-        c += 1;
-        i = cn[c].s; j = cn[c].d;
-        o = off[i];
-        v = v0+i;
-        d = d0+j;
-        tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-        tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-        tv = *v; td = *d; s += (tv+o)*td;
-        g[ILV*k] = s;
-        c += 1;
-      }
-    }
-    else
-    { for (;;)
-      { k = cn[c].w;
-        if (k<0) break;
-        net_value const*restrict v = v0+cn[c].s;
-        net_value const*restrict d = d0+cn[c].d;
-        net_value s = g[ILV*k];
-        net_value tv, td;
-        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-        tv = *v; td = *d; s += tv*td;
-        c += 1;
-        v = v0+cn[c].s;
-        d = d0+cn[c].d;
-        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-        tv = *v; td = *d; s += tv*td;
-        g[ILV*k] = s;
-        c += 1;
-      }
-    }
   }
 }
 
@@ -3443,35 +3052,6 @@ __device__ static void net_store4_grad1_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD && MAKE_QUAD_GPU_PAIRS
-       && (cn = cf->quad_s_4d_4w_2_wgpu))
-  { int thmod4 = (th&3) + 4;
-    int m, ix;
-    for (m = 0; m<4; m++)
-    { ix = (thmod4-m) & 3;
-      c = cf->start_quad_2_wgpu [(th-ix+GTH) & (GTH-1)];
-      for (;;)
-      { k = cn[c].w;
-        if (k<0) break;
-        net_value const*restrict d = d0+ix+cn[c].d;
-        net_value s = g[ILV*(k+ix)];
-        s += *d; d += ds;
-        s += *d; d += ds;
-        s += *d; d += ds;
-        s += *d;
-        c += 1;
-        d = d0+ix+cn[c].d;
-        s += *d; d += ds;
-        s += *d; d += ds;
-        s += *d; d += ds;
-        s += *d;
-        g[ILV*(k+ix)] = s;
-        c += 1;
-      }
-    }
-    if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
   if (cn = cf->other_wgpu)
   { c = cf->start_other_wgpu[th];
     j = cn[c].d; k = cn[c].w; c += 1;
@@ -3489,28 +3069,6 @@ __device__ static void net_store4_grad1_config
       g[ILV*kk] = s;
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
-  if (MAKE_OTHER_GPU_PAIRS && (cn = cf->other_2_wgpu))
-  { c = cf->start_other_2_wgpu[th];
-    for (;;)
-    { k = cn[c].w;
-      if (k<0) break;
-      net_value const*restrict d = d0+cn[c].d;
-      net_value s = g[ILV*k];
-      s += *d; d += ds;
-      s += *d; d += ds;
-      s += *d; d += ds;
-      s += *d;
-      c += 1;
-      d = d0+cn[c].d;
-      s += *d; d += ds;
-      s += *d; d += ds;
-      s += *d; d += ds;
-      s += *d;
-      g[ILV*k] = s;
-      c += 1;
-    }
   }
 }
 
@@ -3800,71 +3358,6 @@ __device__ static void net_store4_grad2_config
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
 
-  if (CONFIG_QUAD_GPU_S_4D_4W_GRAD && MAKE_QUAD_GPU_PAIRS
-       && (cn = cf->quad_s_4d_4w_2_wgpu))
-  { int thmod4 = (th&3) + 4;
-    int m, ix;
-    if (off)
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_2_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { i = cn[c].s; j = cn[c].d; k = cn[c].w;
-          if (k<0) break;
-          net_param o = off[i];
-          net_value s = g[ILV*(k+ix)];
-          net_value const*restrict v = v0+i;
-          net_value const*restrict d = d0+ix+j;
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; s += (tv+o)*td;
-          c += 1;
-          i = cn[c].s; j = cn[c].d;
-          o = off[i];
-          v = v0+i;
-          d = d0+ix+j;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; s += (tv+o)*td;
-          g[ILV*(k+ix)] = s;
-          c += 1;
-        }
-      }
-    }
-    else
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_2_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { k = cn[c].w;
-          if (k<0) break;
-          net_value s = g[ILV*(k+ix)];
-          net_value const*restrict v = v0+cn[c].s;
-          net_value const*restrict d = d0+ix+cn[c].d;
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; s += tv*td;
-          c += 1;
-          i = cn[c].s; j = cn[c].d;
-          v = v0+cn[c].s;
-          d = d0+ix+cn[c].d;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; s += tv*td;
-          g[ILV*(k+ix)] = s;
-          c += 1;
-        }
-      }
-    }
-    if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
   if (cn = cf->other_wgpu)
   { c = cf->start_other_wgpu[th];
     if (off)
@@ -3905,59 +3398,6 @@ __device__ static void net_store4_grad2_config
       }
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
-  if (MAKE_OTHER_GPU_PAIRS && (cn = cf->other_2_wgpu))
-  { c = cf->start_other_2_wgpu[th];
-    if (off)
-    { for (;;)
-      { i = cn[c].s; j = cn[c].d; k = cn[c].w;
-        if (k<0) break;
-        net_param o = off[i];
-        net_value const*restrict v = v0+i;
-        net_value const*restrict d = d0+j;
-        net_value s = g[ILV*k];
-        net_value tv, td;
-        tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-        tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-        tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-        tv = *v; td = *d; s += (tv+o)*td;
-        c += 1;
-        i = cn[c].s; j = cn[c].d;
-        o = off[i];
-        v = v0+i;
-        d = d0+j;
-        tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-        tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-        tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-        tv = *v; td = *d; s += (tv+o)*td;
-        g[ILV*k] = s;
-        c += 1;
-      }
-    }
-    else
-    { for (;;)
-      { k = cn[c].w;
-        if (k<0) break;
-        net_value const*restrict v = v0+cn[c].s;
-        net_value const*restrict d = d0+cn[c].d;
-        net_value s = g[ILV*k];
-        net_value tv, td;
-        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-        tv = *v; td = *d; s += tv*td;
-        c += 1;
-        v = v0+cn[c].s;
-        d = d0+cn[c].d;
-        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-        tv = *v; td = *d; s += tv*td;
-        g[ILV*k] = s;
-        c += 1;
-      }
-    }
   }
 }
 

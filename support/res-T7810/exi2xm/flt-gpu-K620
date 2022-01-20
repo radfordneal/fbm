@@ -1,4 +1,4 @@
-Commit: cf150b39773a00e825ecc3327235ffe649001eaa
+Commit: 037b49e2ea90716468cd60bbdf5c56444a688fe5
 
 Running exi2xm with flt-gpu on K620:
 
@@ -19,5 +19,5 @@ Average log probability of targets:    -1.342+-0.018
 Fraction of guesses that were wrong:    0.6900+-0.0465
 Average squared error guessing mean:    0.72788+-0.00875
 
-elapsed 23.85s
+elapsed 23.94s
 06e92727ff57bf8788ee81f20be2e8ccd8f512b3  -

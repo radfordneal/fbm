@@ -1,6 +1,6 @@
 /* NET-CONFIG.C - Procedures relating to weight configuration files. */
 
-/* Copyright (c) 2022 by Radford M. Neal 
+/* Copyright (c) 2021-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -925,25 +925,24 @@ static void net_config_sort (net_config *cf, int biases)
      in GPU gradient computations, in other_wgpu.  In sections by w
      mod GTH.  May make paired version in other_2_wgpu. */
 
+  cf->other_wgpu = 0;
+  cf->other_2_wgpu = 0;
+
   memcpy (tmp, left, (leftn+1) * sizeof *tmp);  
   qsort (tmp, leftn, sizeof *tmp, cmp_wmodGTH_w_d_s);
 
-  if (!MAKE_OTHER_GPU_PAIRS)
-  { int e;
-    cf->other_2_wgpu = all_gpu+a_gpu;
-    for (e = 0; e<GTH; e++)
-    { all_gpu[a_gpu++].w = -1;
-      cf->start_other_2_wgpu[e] = e;
-   }
-  }
-  else
-  { copy_pairs (tmp, tmp2, 0, 0);
-    cf->other_2_wgpu = all_gpu+a_gpu;
-    a_gpu += copy_wmod (cf->other_2_wgpu, tmp2, cf->start_other_2_wgpu, GTH);
+  if (MAKE_OTHER_GPU_PAIRS)
+  { copy_pairs (tmp, tmp2, &leftn, &c);
+    if (c>0)
+    { cf->other_2_wgpu = all_gpu+a_gpu;
+      a_gpu += copy_wmod (cf->other_2_wgpu, tmp2, cf->start_other_2_wgpu, GTH);
+    }
   }
 
-  cf->other_wgpu = all_gpu+a_gpu;
-  a_gpu += copy_wmod (cf->other_wgpu, tmp, cf->start_other_wgpu, GTH);
+  if (leftn>0)
+  { cf->other_wgpu = all_gpu+a_gpu;
+    a_gpu += copy_wmod (cf->other_wgpu, tmp, cf->start_other_wgpu, GTH);
+  }
 
   /* -- Connections for forward computation (..._dgpu) -- */
 
@@ -967,25 +966,26 @@ static void net_config_sort (net_config *cf, int biases)
 
   /* Similarly for quad_s_4d_4w_dgpu connections. */
 
-  if (!CONFIG_QUAD_GPU_S_4D_4W_FW)
-  { int e;
-    cf->quad_s_4d_4w_dgpu = all_gpu+a_gpu;
-    for (e = 0; e<4; e++) all_gpu[a_gpu++].w = -1;
-  }
-  else
+  cf->quad_s_4d_4w_dgpu = 0;
+  if (CONFIG_QUAD_GPU_S_4D_4W_FW)
   { memcpy (tmp, left, (leftn+1) * sizeof *tmp);
     find_quad (tmp, leftn, tmp2, &c, left, &leftn);
-    qsort (tmp2, c, sizeof *tmp2, cmp_dmodNTH_d_w_s);
-    cf->quad_s_4d_4w_dgpu = all_gpu+a_gpu;
-    a_gpu += copy_dmod (cf->quad_s_4d_4w_dgpu, tmp2, cf->start_quad_dgpu, NTH);
+    if (c>0)
+    { qsort (tmp2, c, sizeof *tmp2, cmp_dmodNTH_d_w_s);
+      cf->quad_s_4d_4w_dgpu = all_gpu+a_gpu;
+      a_gpu += copy_dmod(cf->quad_s_4d_4w_dgpu, tmp2, cf->start_quad_dgpu, NTH);
+    }
   }
 
   /* Set up other connections (not in oct_s_8d_8w_dgpu and quad_s_4d_4w_dgpu)
      for use in gpu forward pass computations. */
 
-  qsort (left, leftn, sizeof *left, cmp_dmodNTH_d_w_s);
-  cf->other_dgpu = all_gpu+a_gpu;
-  a_gpu += copy_dmod (cf->other_dgpu, left, cf->start_other_dgpu, NTH);
+  cf->other_dgpu = 0;
+  if (leftn>0)
+  { qsort (left, leftn, sizeof *left, cmp_dmodNTH_d_w_s);
+    cf->other_dgpu = all_gpu+a_gpu;
+    a_gpu += copy_dmod (cf->other_dgpu, left, cf->start_other_dgpu, NTH);
+  }
 
   /* -- Connections for backward computation (..._dgpu) -- */
 
@@ -1009,25 +1009,26 @@ static void net_config_sort (net_config *cf, int biases)
 
   /* Similarly for quad_s_4d_4w_sgpu connections. */
 
-  if (!CONFIG_QUAD_GPU_S_4D_4W_BW)
-  { int e;
-    cf->quad_s_4d_4w_sgpu = all_gpu+a_gpu;
-    for (e = 0; e<4; e++) all_gpu[a_gpu++].w = -1;
-  }
-  else
+  cf->quad_s_4d_4w_sgpu = 0;
+  if (CONFIG_QUAD_GPU_S_4D_4W_BW)
   { memcpy (tmp, left, (leftn+1) * sizeof *tmp);
     find_quad (tmp, leftn, tmp2, &c, left, &leftn);
-    qsort (tmp2, c, sizeof *tmp2, cmp_smodNTH_s_w_d);
-    cf->quad_s_4d_4w_sgpu = all_gpu+a_gpu;
-    a_gpu += copy_smod (cf->quad_s_4d_4w_sgpu, tmp2, cf->start_quad_sgpu, NTH);
+    if (c>0)
+    { qsort (tmp2, c, sizeof *tmp2, cmp_smodNTH_s_w_d);
+      cf->quad_s_4d_4w_sgpu = all_gpu+a_gpu;
+      a_gpu += copy_smod(cf->quad_s_4d_4w_sgpu, tmp2, cf->start_quad_sgpu, NTH);
+    }
   }
 
   /* Set up other connections (not in oct_s_8d_8w_sgpu and quad_s_4d_4w_sgpu)
      for use in gpu backward pass computations. */
 
-  qsort (left, leftn, sizeof *left, cmp_smodNTH_s_w_d);
-  cf->other_sgpu = all_gpu+a_gpu;
-  a_gpu += copy_smod (cf->other_sgpu, left, cf->start_other_sgpu, NTH);
+  cf->other_sgpu = 0;
+  if (leftn>0)
+  { qsort (left, leftn, sizeof *left, cmp_smodNTH_s_w_d);
+    cf->other_sgpu = all_gpu+a_gpu;
+    a_gpu += copy_smod (cf->other_sgpu, left, cf->start_other_sgpu, NTH);
+  }
 
   /* Record the block all the GPU versions came from, in config structure. */
 

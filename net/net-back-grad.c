@@ -1867,10 +1867,15 @@ __device__ static void net_store1_grad1_config
     for (m = 0; m<8; m++)
     { ix = (thmod8-m) & 7;
       c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-      for (;;)
-      { j = cn[c].d; k = cn[c].w; c += 1;
-        if (k<0) break;
-        g[ILV*(k+ix)] += d0[j+ix];
+      j = cn[c].d; k = cn[c].w; c += 1;
+      while (k>=0)
+      { int kk = k;
+        net_value s = g[ILV*(kk+ix)];
+        do
+        { s += d0[j+ix];
+          j = cn[c].d; k = cn[c].w; c += 1;
+        } while (k==kk);
+        g[ILV*(kk+ix)] = s;
       }
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
@@ -2045,12 +2050,15 @@ __device__ static void net_store1_grad2_config
     { for (m = 0; m<8; m++)
       { ix = (thmod8-m) & 7;
         c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          if (k<0) break;
-          net_value s0i = s0[i];
-          net_param o = off[i];
-          g[ILV*(k+ix)] = g[ILV*(k+ix)] + (s0i+o)*d0[j+ix];
+        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        while (k>=0)
+        { int kk = k;
+          net_value s = g[ILV*(kk+ix)];
+          do
+          { s += (s0[i]+off[i]) * d0[j+ix];
+            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          } while (k==kk);
+          g[ILV*(kk+ix)] = s;
         }
       }
     }
@@ -2058,11 +2066,15 @@ __device__ static void net_store1_grad2_config
     { for (m = 0; m<8; m++)
       { ix = (thmod8-m) & 7;
         c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          if (k<0) break;
-          net_value s0i = s0[i];
-          g[ILV*(k+ix)] = g[ILV*(k+ix)] + s0i*d0[j+ix];
+        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        while (k>=0)
+        { int kk = k;
+          net_value s = g[ILV*(kk+ix)];
+          do
+          { s += s0[i] * d0[j+ix];
+            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          } while (k==kk);
+          g[ILV*(kk+ix)] = s;
         }
       }
     }
@@ -2190,15 +2202,17 @@ __device__ static void net_store2_grad1_config
     for (m = 0; m<8; m++)
     { ix = (thmod8-m) & 7;
       c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-      for (;;)
-      { k = cn[c].w;
-        if (k<0) break;
-        net_value const*restrict d = d0+ix+cn[c].d;
-        net_value s = g[ILV*(k+ix)];
-        s += *d; d += ds;
-        s += *d;
-        g[ILV*(k+ix)] = s;
-        c += 1;
+      j = cn[c].d; k = cn[c].w; c += 1;
+      while (k>=0)
+      { int kk = k;
+        net_value s = g[ILV*(kk+ix)];
+        do
+        { net_value const*restrict d = d0+j+ix;
+          s += *d; d += ds;
+          s += *d;
+          j = cn[c].d; k = cn[c].w; c += 1;
+        } while (k==kk);
+        g[ILV*(kk+ix)] = s;
       }
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
@@ -2416,18 +2430,20 @@ __device__ static void net_store2_grad2_config
     { for (m = 0; m<8; m++)
       { ix = (thmod8-m) & 7;
         c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { i = cn[c].s; j = cn[c].d; k = cn[c].w;
-          if (k<0) break;
-          net_param o = off[i];
-          net_value const*restrict v = v0+i;
-          net_value const*restrict d = d0+j+ix;
-          net_value s = g[ILV*(k+ix)];
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; 
-          g[ILV*(k+ix)] = s + (tv+o)*td;
-          c += 1;
+        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        while (k>=0)
+        { int kk = k;
+          net_value s = g[ILV*(kk+ix)];
+          do
+          { net_param o = off[i];
+            net_value const*restrict v = v0+i;
+            net_value const*restrict d = d0+j+ix;
+            net_value tv, td;
+            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+            tv = *v; td = *d; s += (tv+o)*td;
+            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          } while (k==kk);
+          g[ILV*(kk+ix)] = s;
         }
       }
     }
@@ -2435,17 +2451,19 @@ __device__ static void net_store2_grad2_config
     { for (m = 0; m<8; m++)
       { ix = (thmod8-m) & 7;
         c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { k = cn[c].w;
-          if (k<0) break;
-          net_value const*restrict v = v0+cn[c].s;
-          net_value const*restrict d = d0+ix+cn[c].d;
-          net_value s = g[ILV*(k+ix)];
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; 
-          g[ILV*(k+ix)] = s + tv*td;
-          c += 1;
+        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        while (k>=0)
+        { int kk = k;
+          net_value s = g[ILV*(kk+ix)];
+          do
+          { net_value const*restrict v = v0+i;
+            net_value const*restrict d = d0+j+ix;
+            net_value tv, td;
+            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+            tv = *v; td = *d; s += tv*td;
+            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          } while (k==kk);
+          g[ILV*(kk+ix)] = s;
         }
       }
     }
@@ -2591,16 +2609,18 @@ __device__ static void net_store3_grad1_config
     for (m = 0; m<8; m++)
     { ix = (thmod8-m) & 7;
       c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-      for (;;)
-      { k = cn[c].w;
-        if (k<0) break;
-        net_value const*restrict d = d0+ix+cn[c].d;
-        net_value s = g[ILV*(k+ix)];
-        s += *d; d += ds;
-        s += *d; d += ds;
-        s += *d;
-        g[ILV*(k+ix)] = s;
-        c += 1;
+      j = cn[c].d; k = cn[c].w; c += 1;
+      while (k>=0)
+      { int kk = k;
+        net_value s = g[ILV*(kk+ix)];
+        do
+        { net_value const*restrict d = d0+j+ix;
+          s += *d; d += ds;
+          s += *d; d += ds;
+          s += *d;
+          j = cn[c].d; k = cn[c].w; c += 1;
+        } while (k==kk);
+        g[ILV*(kk+ix)] = s;
       }
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
@@ -2831,19 +2851,21 @@ __device__ static void net_store3_grad2_config
     { for (m = 0; m<8; m++)
       { ix = (thmod8-m) & 7;
         c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { i = cn[c].s; j = cn[c].d; k = cn[c].w;
-          if (k<0) break;
-          net_param o = off[i];
-          net_value const*restrict v = v0+i;
-          net_value const*restrict d = d0+j+ix;
-          net_value s = g[ILV*(k+ix)];
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; 
-          g[ILV*(k+ix)] = s + (tv+o)*td;
-          c += 1;
+        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        while (k>=0)
+        { int kk = k;
+          net_value s = g[ILV*(kk+ix)];
+          do
+          { net_param o = off[i];
+            net_value const*restrict v = v0+i;
+            net_value const*restrict d = d0+j+ix;
+            net_value tv, td;
+            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+            tv = *v; td = *d; s += (tv+o)*td;
+            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          } while (k==kk);
+          g[ILV*(kk+ix)] = s;
         }
       }
     }
@@ -2851,18 +2873,20 @@ __device__ static void net_store3_grad2_config
     { for (m = 0; m<8; m++)
       { ix = (thmod8-m) & 7;
         c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { k = cn[c].w;
-          if (k<0) break;
-          net_value const*restrict v = v0+cn[c].s;
-          net_value const*restrict d = d0+ix+cn[c].d;
-          net_value s = g[ILV*(k+ix)];
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; 
-          g[ILV*(k+ix)] = s + tv*td;
-          c += 1;
+        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        while (k>=0)
+        { int kk = k;
+          net_value s = g[ILV*(kk+ix)];
+          do
+          { net_value const*restrict v = v0+i;
+            net_value const*restrict d = d0+j+ix;
+            net_value tv, td;
+            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+            tv = *v; td = *d; s += tv*td;
+            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          } while (k==kk);
+          g[ILV*(kk+ix)] = s;
         }
       }
     }
@@ -3012,17 +3036,19 @@ __device__ static void net_store4_grad1_config
     for (m = 0; m<8; m++)
     { ix = (thmod8-m) & 7;
       c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-      for (;;)
-      { k = cn[c].w;
-        if (k<0) break;
-        net_value const*restrict d = d0+ix+cn[c].d;
-        net_value s = g[ILV*(k+ix)];
-        s += *d; d += ds;
-        s += *d; d += ds;
-        s += *d; d += ds;
-        s += *d;
-        g[ILV*(k+ix)] = s;
-        c += 1;
+      j = cn[c].d; k = cn[c].w; c += 1;
+      while (k>=0)
+      { int kk = k;
+        net_value s = g[ILV*(kk+ix)];
+        do
+        { net_value const*restrict d = d0+j+ix;
+          s += *d; d += ds;
+          s += *d; d += ds;
+          s += *d; d += ds;
+          s += *d;
+          j = cn[c].d; k = cn[c].w; c += 1;
+        } while (k==kk);
+        g[ILV*(kk+ix)] = s;
       }
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
@@ -3267,20 +3293,22 @@ __device__ static void net_store4_grad2_config
     { for (m = 0; m<8; m++)
       { ix = (thmod8-m) & 7;
         c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { i = cn[c].s; j = cn[c].d; k = cn[c].w;
-          if (k<0) break;
-          net_param o = off[i];
-          net_value const*restrict v = v0+i;
-          net_value const*restrict d = d0+j+ix;
-          net_value s = g[ILV*(k+ix)];
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d;
-          g[ILV*(k+ix)] = s + (tv+o)*td;
-          c += 1;
+        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        while (k>=0)
+        { int kk = k;
+          net_value s = g[ILV*(kk+ix)];
+          do
+          { net_param o = off[i];
+            net_value const*restrict v = v0+i;
+            net_value const*restrict d = d0+j+ix;
+            net_value tv, td;
+            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
+            tv = *v; td = *d; s += (tv+o)*td;
+            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          } while (k==kk);
+          g[ILV*(kk+ix)] = s;
         }
       }
     }
@@ -3288,19 +3316,21 @@ __device__ static void net_store4_grad2_config
     { for (m = 0; m<8; m++)
       { ix = (thmod8-m) & 7;
         c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        for (;;)
-        { k = cn[c].w;
-          if (k<0) break;
-          net_value const*restrict v = v0+cn[c].s;
-          net_value const*restrict d = d0+ix+cn[c].d;
-          net_value s = g[ILV*(k+ix)];
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d;
-          g[ILV*(k+ix)] = s + tv*td;
-          c += 1;
+        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        while (k>=0)
+        { int kk = k;
+          net_value s = g[ILV*(kk+ix)];
+          do
+          { net_value const*restrict v = v0+i;
+            net_value const*restrict d = d0+j+ix;
+            net_value tv, td;
+            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+            tv = *v; td = *d; s += tv*td;
+            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+          } while (k==kk);
+          g[ILV*(kk+ix)] = s;
         }
       }
     }

@@ -1,4 +1,4 @@
-Commit: eacc93d24b3d6ac94f14d1d1b86f8f8e2543e399
+Commit: 18d1b2926a7bcfd427334947c4df579ea53fb4f6
 
 Running exb16 with flt-gpu on K40c:
 
@@ -26,5 +26,5 @@ Number of test cases: 1000
 Average log probability of targets:    -0.244+-0.016
 Fraction of guesses that were wrong:    0.1100+-0.0099
 
-elapsed 2.10s
+elapsed 1.94s
 147534f6ff845678540d98f90e3d27932b83c955  -

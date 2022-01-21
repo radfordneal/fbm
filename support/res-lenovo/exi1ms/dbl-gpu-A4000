@@ -1,4 +1,4 @@
-Commit: 002b4edecb6e1c66d9b9bd1acb523a3941b8809c
+Commit: 56fe463fefe812d3fb9fb693688e15e638eccb6d
 
 Running exi1ms with dbl-gpu on A4000:
 
@@ -7,8 +7,8 @@ Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 NVIDIA RTX A4000, Compute Capability 8.6, 48 SM processors, 14.7 GBytes ECC
 Using 32 cases per block, max 500 blocks per launch, threads/case: 4
 Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16
-Desired # of blocks: 4, allowed shared mem per case: 800 bytes, 100 values
-Hid layer shrd mem: 0:79:0,-1 T 84
+Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:79:0,79 T 164
 With 4999 cases, need 1 launches, max 157 blocks/launch
 
 Number of iterations used: 1
@@ -19,5 +19,5 @@ Average log probability of targets:    -1.278+-0.022
 Fraction of guesses that were wrong:    0.5500+-0.0500
 Average squared error guessing mean:    0.69480+-0.01233
 
-elapsed 3.76s
+elapsed 3.74s
 beef17b41576d88ab6dfd80583f6866a5b38c1eb  -

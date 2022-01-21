@@ -1,4 +1,4 @@
-Commit: 8578468605f900dd8bd8f1abb146cf3bc8560b74
+Commit: 30bb30080be31d9660ffd06f7ad7089160ac7ed6
 
 Running exb16 with dbl-gpu on M5000:
 
@@ -26,5 +26,5 @@ Number of test cases: 1000
 Average log probability of targets:    -0.241+-0.017
 Fraction of guesses that were wrong:    0.1030+-0.0096
 
-elapsed 1.93s
+elapsed 1.72s
 3dd95fa4d7bff983c83a7a95e07f1a2c912a3719  -

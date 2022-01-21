@@ -959,7 +959,7 @@ static void net_config_sort (net_config *cf, int biases)
     a_gpu += copy_dmod (cf->other_dgpu, left, cf->start_other_dgpu, NTH);
   }
 
-  /* -- Connections for backward computation (..._dgpu) -- */
+  /* -- Connections for backward computation (..._sgpu) -- */
 
   memcpy (left, cf->conn, (n+1) * sizeof *left);
   leftn = n;

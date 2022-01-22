@@ -1,4 +1,4 @@
-Commit: 18d1b2926a7bcfd427334947c4df579ea53fb4f6
+Commit: dd522d7b933cf4f1e35abc018a44e8cb57aa1424
 
 Running exr with dbl-gpu on K620:
 
@@ -6,17 +6,17 @@ Number of training cases: 100
 Number of test cases: 1000
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Quadro K620, Compute Capability 5.0, 3 SM processors, 2.0 GBytes
-Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Using 32 cases per block, max 500 blocks per launch, threads/case: 4
 Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
 Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 128 values
-Hid layer shrd mem: 0:8:0,8 T 24
+Hid layer shrd mem: 0:8:0,8 T 20
 With 100 cases, need 1 launches, max 4 blocks/launch
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Quadro K620, Compute Capability 5.0, 3 SM processors, 2.0 GBytes
-Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Using 32 cases per block, max 500 blocks per launch, threads/case: 4
 Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
 Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 128 values
-Hid layer shrd mem: 0:8:0,8 T 24
+Hid layer shrd mem: 0:8:0,8 T 20
 With 100 cases, need 1 launches, max 4 blocks/launch
  
 Predictions after running for 1000 iterations:
@@ -28,5 +28,5 @@ Number of test cases: 1000
 Average log probability of targets:     0.840+-0.021
 Average squared error guessing mean:    0.01712+-0.00283
 
-elapsed 4.39s
+elapsed 4.16s
 f6e7d544ec72400de160c7772c30aa7121c7030e  -

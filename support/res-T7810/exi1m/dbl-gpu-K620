@@ -1,14 +1,14 @@
-Commit: 18d1b2926a7bcfd427334947c4df579ea53fb4f6
+Commit: dd522d7b933cf4f1e35abc018a44e8cb57aa1424
 
 Running exi1m with dbl-gpu on K620:
 
 Number of training cases: 4999
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Quadro K620, Compute Capability 5.0, 3 SM processors, 2.0 GBytes
-Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Using 32 cases per block, max 500 blocks per launch, threads/case: 4
 Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
 Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 128 values
-Hid layer shrd mem: 0:80:0,-1 T 88
+Hid layer shrd mem: 0:80:0,-1 T 84
 With 4999 cases, need 1 launches, max 157 blocks/launch
 
 Number of iterations used: 1
@@ -19,5 +19,5 @@ Average log probability of targets:    -1.326+-0.027
 Fraction of guesses that were wrong:    0.6900+-0.0465
 Average squared error guessing mean:    0.72257+-0.01381
 
-elapsed 35.97s
+elapsed 42.17s
 21b932ef321309678159dab8ca70b2d8f69cf32b  -

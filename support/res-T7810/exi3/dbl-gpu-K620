@@ -1,21 +1,21 @@
-Commit: 18d1b2926a7bcfd427334947c4df579ea53fb4f6
+Commit: dd522d7b933cf4f1e35abc018a44e8cb57aa1424
 
 Running exi3 with dbl-gpu on K620:
 
 Number of training cases: 499
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Quadro K620, Compute Capability 5.0, 3 SM processors, 2.0 GBytes
-Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Using 32 cases per block, max 500 blocks per launch, threads/case: 4
 Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
 Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 128 values
-Hid layer shrd mem: 0:20:0,90 1:20:90,20 2:20:20,70 3:20:70,40 4:20:40,-1 5:10:60,110 T 120
+Hid layer shrd mem: 0:20:0,90 1:20:90,20 2:20:20,70 3:20:70,40 4:20:40,-1 5:10:60,110 T 124
 With 499 cases, need 1 launches, max 16 blocks/launch
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Quadro K620, Compute Capability 5.0, 3 SM processors, 2.0 GBytes
-Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Using 32 cases per block, max 500 blocks per launch, threads/case: 4
 Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
 Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 128 values
-Hid layer shrd mem: 0:20:0,90 1:20:90,20 2:20:20,70 3:20:70,40 4:20:40,-1 5:10:60,110 T 120
+Hid layer shrd mem: 0:20:0,90 1:20:90,20 2:20:20,70 3:20:70,40 4:20:40,-1 5:10:60,110 T 124
 With 499 cases, need 1 launches, max 16 blocks/launch
 
 Number of iterations used: 6
@@ -26,5 +26,5 @@ Average log probability of targets:    -1.321+-0.041
 Fraction of guesses that were wrong:    0.6400+-0.0482
 Average squared error guessing mean:    0.71716+-0.01995
 
-elapsed 90.53s
+elapsed 90.31s
 bef19977cc0ec9a54df55e6a115b2ec821fea84a  -

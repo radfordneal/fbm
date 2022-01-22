@@ -1,4 +1,4 @@
-Commit: 18d1b2926a7bcfd427334947c4df579ea53fb4f6
+Commit: dd522d7b933cf4f1e35abc018a44e8cb57aa1424
 
 Running exb with flt-gpu on K620:
 
@@ -6,17 +6,17 @@ Number of training cases: 300
 Number of test cases: 1000
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Quadro K620, Compute Capability 5.0, 3 SM processors, 2.0 GBytes
-Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Using 32 cases per block, max 500 blocks per launch, threads/case: 4
 Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
 Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 256 values
-Hid layer shrd mem: 0:15:0,15 T 40
+Hid layer shrd mem: 0:15:0,15 T 36
 With 300 cases, need 1 launches, max 10 blocks/launch
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Quadro K620, Compute Capability 5.0, 3 SM processors, 2.0 GBytes
-Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Using 32 cases per block, max 500 blocks per launch, threads/case: 4
 Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
 Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 256 values
-Hid layer shrd mem: 0:15:0,15 T 40
+Hid layer shrd mem: 0:15:0,15 T 36
 With 300 cases, need 1 launches, max 10 blocks/launch
 
 Number of iterations used: 20
@@ -26,5 +26,5 @@ Number of test cases: 1000
 Average log probability of targets:    -0.242+-0.017
 Fraction of guesses that were wrong:    0.1090+-0.0099
 
-elapsed 2.09s
+elapsed 2.34s
 e3e1dda74658ac6751dba8fca59321b483d334ca  -

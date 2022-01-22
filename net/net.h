@@ -114,8 +114,8 @@
 #define GTH THREADS_PER_GROUP
 #define BTH THREADS_PER_BLOCK
 
-#define MIN_WARPS_PER_SM 16  /* Desired minimum number of warps per SM */
-#define MIN_BLOCKS_PER_SM 2  /* Desired minimum number of blocks per SM */
+#define BLOCKS_PER_SM 2      /* Desired number of blocks that can run on an SM
+                                (an SM might run more, but in practice won't) */
 
 #define GRAD_ALIGN_BYTES 64  /* Alignment for gradient blocks in GPU, bytes
                                   - must be a power of two, minimum of 8 */

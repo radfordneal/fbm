@@ -655,12 +655,7 @@ void mc_app_initialize
       check_cuda_error (cudaGetDeviceProperties(&cuda_prop,0),
                         "Get properties");
 
-      int warps_per_block = (THREADS_PER_BLOCK + WARPSIZE - 1) / WARPSIZE;
-
-      int needed_blocks = MIN_BLOCKS_PER_SM;
-      while (needed_blocks*warps_per_block < MIN_WARPS_PER_SM)
-      { needed_blocks += 1;
-      }
+      int needed_blocks = BLOCKS_PER_SM;
       if (needed_blocks > maxblks)
       { needed_blocks = maxblks;
       }
@@ -2742,7 +2737,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 #if !SPLIT_MODEL && !SPLIT_BACK_GRAD
 
 __global__ void forward_model_back_grad_kernel  /* may also do reduction */
-__launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
+__launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
 (
   int start,            /* Start of cases to look at */
   int end,              /* End of cases to look at (index after last case) */
@@ -2766,7 +2761,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 #if SPLIT_MODEL && SPLIT_BACK_GRAD
 
 } __global__ void model_kernel
-__launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
+__launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
 (
   int start,            /* Start of cases to look at */
   int end,              /* End of cases to look at (index after last case) */
@@ -2782,7 +2777,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 #if SPLIT_MODEL && !SPLIT_BACK_GRAD
 
 } __global__ void model_back_grad_kernel  /* may also do reduction */
-__launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
+__launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
 (
   int start,            /* Start of cases to look at */
   int end,              /* End of cases to look at (index after last case) */
@@ -2856,7 +2851,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 #if SPLIT_BACK_GRAD
 
 } __global__ void back_grad_kernel  /* may also do reduction */
-__launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
+__launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
 (
   int start,            /* Start of cases to look at */
   int end,              /* End of cases to look at (index after last case) */
@@ -2909,7 +2904,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 #if SPLIT_REDUCTION
 
 } __global__ void reduction_kernel  
-__launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
+__launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
 (
   int start,            /* Start of cases to look at */
   int end,              /* End of cases to look at (index after last case) */

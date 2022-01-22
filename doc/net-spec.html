@@ -13,8 +13,8 @@ specifications of the network stored in that log file.
 
 Usage:
 
-    net-spec log-file N-inputs { N-hidden { flag } } N-outputs { flag }
-             / { group=prior } 
+    net-spec log-file N-inputs { N-hidden [ act-func ] } N-outputs
+             / { group=prior [ omit-spec | config-spec ] } 
 
 or: 
 
@@ -25,62 +25,62 @@ The first form above is for specifying a network archicture.
 The second form is for displaying the network architecture stored in
 the specified log file.  If the optional "sizes" argument is
 specified, the numbers of parameters for each group are output.  The
-optional "config" argument causes the detailed configurations from
-cfg-i, cfg-h, and cfg-b flags to be output, in fully-expanded form (as
+optional "config" argument causes the detailed configurations fro
+"config" specifications to be display, in fully-expanded form (as
 individual triplets or pairs).
 
 
-Specifying layer sizes and flags.
+Specifying layer sizes and activation functions.
 
 N-inputs and N-outputs are the numbers of units in the input and
 output layers.  The sizes of zero or more hidden layers are specified
-between these.  Flags pertaining to a layer may be specified after the
-argument giving the size of the layer, including flags that configure
-connections (eg, to specify a convolutional layer).
-
-For hidden layers, the activation function to use may be specified
-using one of the following flags:
+between these, with the activation function used for units in the
+layer following the size.  Possible activation functions are:
 
     tanh  softplus  identity
 
 The default is tanh, the hyperbolic tangent function.  The softplus
-activation function is h(u) = log(1+exp(u)).  The identity flag causes
-the output of a hidden unit in the layer to be identical its summed
-input.
+activation function is h(u) = log(1+exp(u)).  For the identity
+activation function, the output of a hidden unit is identical to its
+summed input.
 
-The following flag is supported for hidden layers and the output
-layer:
+
+Specifying layer connections and priors.
+
+Following a "/", the priors for groups of weights, biases, offsets,
+and adjustments are specified.  For the syntax of a prior
+specification (except for adjustments), see <A HREF="prior.html">prior.doc</A>.  If "-" is
+given instead of a prior specification (or if a prior specification is
+omitted entirely), the parameters in question do not exist at all,
+which is equivalent to their being zero.  For adjustments, the prior
+is specified by a single "alpha" value.  A value of "-" represents
+infinity (effectively eliminating the adjustment).  Omitting a prior
+for a set of adjustments also eliminates them.
+
+The prior of a group of input-to-hidden or input-output weights may be
+followed by a specification of inputs to be omitted, with the form:
 
     omit:[-]&lt;input&gt;{,&lt;input&gt;}
 
 This specifies that connections from certain inputs are to be omitted
-from those feeding into this layer (assuming that any inputs at all
-are looked at, as specifed by later arguments).  If the "-" is placed
-before the list of inputs, the list gives the inputs that are NOT
-omitted.  Inputs are numbered starting with 1.
+from those feeding into this layer.  If the "-" is placed before the
+list of inputs, the list gives the inputs that are NOT omitted.
+Inputs are numbered starting with 1.
 
-Hidden layers and the output layer may have configurations for biases
-and for connections to input or hidden layers, specified using the
-following flags:
+The prior for a group of weights for input-hidden, input-output,
+hidden-hidden, or hidden-output connections, or for hidden or output
+biases may have the configuration of connections for the weights or
+biases (with possible sharing) specified with an argument of the form:
 
-    cfg-b:&lt;file&gt;
-    cfg-i:&lt;file&gt;
-    cfg-h#:&lt;file&gt;
+    config:&lt;file&gt;
 
-except that the cfg-i flag may not be combined with an omit flag, the
-cfg-h flag may not be specified for the first hidden layer, and the
-cfg-i and cfg-h flags may not be specified if the layer has per-unit
-adjustments for the prior on the associated connections.  The # part
-of the cfg-h flag allows for separate configurations for the
-connections to the various earlier hidden layers (numbered from 0); it
-defaults to the previous hidden layer (the last hidden layer for
-outputs).
-
-The files given must contain specifications for which connections from
-the input layer or a previous hidden layer, or which biases, are
-present, and how the weight/bias parameters are used for these
-connections or biases (with possible sharing of weights/biases between
-connections). 
+This may not be combined with an "omit" specification.  It is also not
+allowed if the prior used specifies a value for Alpha-sub-group (see
+<A HREF="prior.html">prior.doc</A>), since sub-groups by source unit are not well-defined when
+weights may be shared.  The prior must also not have automatic width
+scaling (no "x" option).  Finally, the prior for weights in a group
+with a configuration file is not affected by the adjustments for its
+destination layer
 
 See <A HREF="net-config.html">net-config.doc</A> for documentation on how a configuration is
 specified in a file.  The named configuration files do not need to
@@ -88,27 +88,6 @@ exist when the configuration is specified; they are read (and checked
 for errors) only when needed later.  A configuration file may be
 specified with an initial "%", in which case the remainder is a
 command that is run to output the "file" contents.
-
-
-Specifying layer connections and priors.
-
-Following a "/", the priors for groups of weights, biases, offsets,
-and adjustments are specified.  For the syntax of
-a prior specification (except for adjustments), see <A HREF="prior.html">prior.doc</A>.  If "-"
-is given instead of a prior specification (or if a prior specification
-is omitted entirely), the parameters in question do not exist at all,
-which is equivalent to their being zero.  For adjustments, the prior
-is specified by a single "alpha" value.  A value of "-" represents
-infinity (effectively eliminating the adjustment).  Omitting a prior
-for a set of adjustments also eliminates them.
-
-If a configuration file is specified for a group of connections, with
-a cfg-i or cfg-h flag, the corresponding prior must not specifying a
-value for Alpha-sub-group (see <A HREF="prior.html">prior.doc</A>), since sub-groups by source
-unit are not well-defined when weights may be shared.  The prior must
-also not have automatic width scaling (no "x" option).  Finally, the
-prior for weights in a group with a configuration file is not affected
-by the adjustments for its destination layer.
 
 Groups of parameters are identified by name, sometimes with a hidden
 layer number (from 0), as follows:
@@ -138,12 +117,12 @@ if any learning is to be done.
 Two records are written to the newly created log file - one with type
 'A' with a net_arch structure as data, and one with type 'P' with a
 net_priors structure as data.  A record of type 'F' will be written as
-well if any flags were specified.  These records have an index of -1.
-When the second form of the command is used (with just the log file as
-argument), these records are read and the information they contain is
-displayed on standard output.
+well if there are "omit" or "config" specifications.  These records
+have an index of -1.  When the second form of the command is used
+(with just the log file as argument), these records are read and the
+information they contain is displayed on standard output.
 
-            Copyright (c) 1995-2021 by Radford M. Neal
+            Copyright (c) 1995-2022 by Radford M. Neal
 </pre>
 </body>
 </html>

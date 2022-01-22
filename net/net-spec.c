@@ -1050,24 +1050,22 @@ static void print_config (net_config *cf, int biases)
 static void usage(void)
 {
   fprintf(stderr,
-   "Usage: net-spec log-file N-inputs { N-hidden { flag } } N-outputs { flag }\n");
+   "Usage: net-spec log-file N-inputs { N-hidden [ act-func ] } N-outputs\n");
 
   fprintf(stderr,
-   "                / { group=prior }\n");
+   "                / { group=prior [ omit-spec | config-spec ] }\n");
 
   fprintf(stderr,
    "   or: net-spec log-file [ \"sizes\" ] [ \"config\" ]  (display specifications)\n");
 
   fprintf(stderr,
-   "Group: ti ih# bh# th# h#h# h#o io bo ah# ao\n");
+   " act-fun: tanh softplus identity    group: ti ih# bh# th# h#h# h#o io bo ah# ao\n");
 
   fprintf(stderr,
-   "Prior: [x]Width[:[Alpha-type][:[Alpha-unit][:[Alpha-weight]]]]\n");
+   " prior: [x]Width[:[Alpha-type][:[Alpha-unit][:[Alpha-weight]]]]\n");
 
   fprintf(stderr,
-   "Flags: cfg-i:<file> cfg-h:<file> cfg-b:<file>\n");
-  fprintf(stderr,
-   "       omit:[-]<input>{,<input>} tanh softplus identity\n");
+   " omit-spec: omit:[-]<input>{,<input>}    config-spec: config:<file>\n");
 
   exit(1);
 }

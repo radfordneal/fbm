@@ -338,6 +338,8 @@ typedef struct
    Stored in log files under type 'F', but may be omitted if all the
    flags are zero / no configs.  Changes may invalidate old log files. */
 
+#define Config_file_space 2000
+
 typedef struct
 {
   unsigned short omit[Max_inputs]; /* Whether inputs omitted, for each layer */
@@ -352,8 +354,8 @@ typedef struct
   short nonseq_config[Max_nonseq]; /* Index of non-sequential config file name,
                                       0 if none, order as in net_priors nsq */
 
-  char config_files[2000];         /* Names of files for input/hidden configs */
-
+  char config_files[Config_file_space]; /* Names of files with configurations
+                                           for groups of weights/biases */
 } net_flags;
 
 

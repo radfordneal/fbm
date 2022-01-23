@@ -5,9 +5,9 @@
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 2  tanh
-  Hidden layer 1:  size 1  tanh
-  Hidden layer 2:  size 2  tanh
+  Hidden layer 0:  size 2    tanh
+  Hidden layer 1:  size 1    tanh
+  Hidden layer 2:  size 2    tanh
   Output layer:    size 1
 
 
@@ -130,9 +130,9 @@ Largest absolute log ratio: 0.0096
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 2  tanh
-  Hidden layer 1:  size 1  tanh
-  Hidden layer 2:  size 2  tanh
+  Hidden layer 0:  size 2    tanh
+  Hidden layer 1:  size 1    tanh
+  Hidden layer 2:  size 2    tanh
   Output layer:    size 1
 
 
@@ -271,9 +271,9 @@ Largest absolute log ratio: 0.0026
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 2  tanh
-  Hidden layer 1:  size 1  tanh
-  Hidden layer 2:  size 2  tanh  cfg-h:%echo 1 1 1
+  Hidden layer 0:  size 2    tanh
+  Hidden layer 1:  size 1    tanh
+  Hidden layer 2:  size 2    tanh
   Output layer:    size 1
 
 
@@ -290,7 +290,7 @@ Prior Specifications:
          Hidden Layer 2
 
   Hidden0-Hidden Weights:  7.000
-  Hidden-Hidden Weights:   3.000
+  Hidden-Hidden Weights:   3.000  config:%echo 1 1 1
 
          Output Layer
 
@@ -417,9 +417,9 @@ Largest absolute log ratio: 0.0119
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 2  tanh
-  Hidden layer 1:  size 1  tanh
-  Hidden layer 2:  size 2  tanh  cfg-h0:%echo 1 1 1
+  Hidden layer 0:  size 2    tanh
+  Hidden layer 1:  size 1    tanh
+  Hidden layer 2:  size 2    tanh
   Output layer:    size 1
 
 
@@ -435,7 +435,7 @@ Prior Specifications:
 
          Hidden Layer 2
 
-  Hidden0-Hidden Weights:  7.000
+  Hidden0-Hidden Weights:  7.000  config:%echo 1 1 1
   Hidden-Hidden Weights:   3.000
 
          Output Layer
@@ -557,9 +557,9 @@ Largest absolute log ratio: 0.0029
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 2  tanh
-  Hidden layer 1:  size 1  tanh
-  Hidden layer 2:  size 2  tanh  cfg-h0:%echo 1 1 1
+  Hidden layer 0:  size 2    tanh
+  Hidden layer 1:  size 1    tanh
+  Hidden layer 2:  size 2    tanh
   Output layer:    size 1
 
 
@@ -575,7 +575,7 @@ Prior Specifications:
 
          Hidden Layer 2
 
-  Hidden0-Hidden Weights:  7.000
+  Hidden0-Hidden Weights:  7.000  config:%echo 1 1 1
   Hidden-Hidden Weights:   3.000
 
          Output Layer
@@ -697,9 +697,9 @@ Largest absolute log ratio: 0.0004
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 2  tanh
-  Hidden layer 1:  size 1  tanh
-  Hidden layer 2:  size 2  tanh  cfg-h0:%echo 1 1 1
+  Hidden layer 0:  size 2    tanh
+  Hidden layer 1:  size 1    tanh
+  Hidden layer 2:  size 2    tanh
   Output layer:    size 1
 
 
@@ -715,7 +715,7 @@ Prior Specifications:
 
          Hidden Layer 2
 
-  Hidden0-Hidden Weights:  7.000:1.00:2.00
+  Hidden0-Hidden Weights:  7.000:1.00:2.00  config:%echo 1 1 1
   Hidden-Hidden Weights:   3.000:1.00
 
          Output Layer
@@ -866,9 +866,9 @@ Noise levels
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 2  tanh
-  Hidden layer 1:  size 1  tanh
-  Hidden layer 2:  size 2  tanh
+  Hidden layer 0:  size 2    tanh
+  Hidden layer 1:  size 1    tanh
+  Hidden layer 2:  size 2    tanh
   Output layer:    size 1
 
 

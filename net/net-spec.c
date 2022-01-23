@@ -49,7 +49,7 @@ int main
   log_file logf;
   log_gobbled logg;
 
-  char ps[2000];
+  char ps[Config_file_space];
   char **ap;
   int i, j, l;
   int nsqi;
@@ -112,67 +112,16 @@ int main
 
     printf ("  Input layer:     size %d\n", a->N_inputs);  
 
-    nsqi = 0;
     for (l = 0; l<a->N_layers; l++) 
-    { printf("  Hidden layer %d:  size %d",l,a->N_hidden[l]);
+    { printf("  Hidden layer %d:  size %-3d",l,a->N_hidden[l]);
       if (a->layer_type[l]==Tanh_type)            printf("  tanh");
       else if (a->layer_type[l]==Softplus_type)   printf("  softplus");
       else if (a->layer_type[l]==Identity_type)   printf("  identity");
       else                                        printf("  UNKNOWN TYPE!");
-      if (flgs && list_flags (flgs->omit, a->N_inputs, 1<<(l+1), ps) > 0)
-      { printf("  omit%s",ps);
-      }
-      if (flgs && flgs->input_config[l])
-      { printf("  cfg-i:%s",flgs->config_files+flgs->input_config[l]);
-      }
-      if (flgs)
-      { unsigned b;
-        int ls;
-        for (ls = 0, b = a->has_nsq[l]; b!=0; ls++, b>>=1)
-        { if (b&1)
-          { if (ls>=l-1) abort();
-            int c = flgs->nonseq_config[nsqi++];
-            if (c)
-            { printf("  cfg-h%d:%s", ls, flgs->config_files+c);
-            }
-          }
-        }
-      }
-      if (flgs && flgs->hidden_config[l])
-      { printf("  cfg-h:%s",flgs->config_files+flgs->hidden_config[l]);
-      }
-      if (flgs && flgs->bias_config[l])
-      { printf("  cfg-b:%s",flgs->config_files+flgs->bias_config[l]);
-      }
       printf("\n");
     }
 
-    printf ("  Output layer:    size %d", a->N_outputs);
-    if (flgs && list_flags (flgs->omit, a->N_inputs, 1, ps) > 0)
-    { printf("  omit%s",ps);
-    }
-    if (flgs && flgs->input_config[a->N_layers])
-    { printf("  cfg-i:%s",
-             flgs->config_files+flgs->input_config[a->N_layers]);
-    }
-    for (l = a->N_layers-1; l>=0; l--)
-    { int k = 2*a->N_layers-1-l;
-      if (flgs && flgs->hidden_config[k])
-      { if (a->N_layers==1)
-        { printf("  cfg-h:%s",
-                 flgs->config_files+flgs->hidden_config[k]);
-        }
-        else
-        { printf("  cfg-h%d:%s", l,
-                 flgs->config_files+flgs->hidden_config[k]);
-        }
-      }
-    }
-    if (flgs && flgs->bias_config[a->N_layers])
-    { printf("  cfg-b:%s",
-             flgs->config_files+flgs->bias_config[a->N_layers]);
-    }
-    printf("\n");
+    printf ("  Output layer:    size %d\n", a->N_outputs);
   
     printf("\n");
     
@@ -197,18 +146,38 @@ int main
       int lp;
       for (lp = 0; lp<l; lp++)
       { if ((a->has_nsq[l]>>lp) & 1)
-        { printf("  Hidden%d-Hidden Weights: %s\n", 
-                  lp, prior_show(ps,p->nsq[nsqi++]));
+        { printf("  Hidden%d-Hidden Weights: %s", 
+                 lp, prior_show(ps,p->nsq[nsqi]));
+          if (flgs && flgs->nonseq_config[nsqi])
+          { printf("  config:%s", flgs->config_files+flgs->nonseq_config[nsqi]);
+          }
+          nsqi += 1;
+          printf("\n");
         }
       }
       if (l>0 && a->has_hh[l-1])
-      { printf("  Hidden-Hidden Weights:  %s\n", prior_show(ps,p->hh[l-1]));
+      { printf("  Hidden-Hidden Weights:  %s", prior_show(ps,p->hh[l-1]));
+        if (flgs && flgs->hidden_config[l])
+        { printf("  config:%s", flgs->config_files+flgs->hidden_config[l]);
+        }
+        printf("\n");
       }
       if (a->has_ih[l]) 
-      { printf("  Input-Hidden Weights:   %s\n", prior_show(ps,p->ih[l]));
+      { printf("  Input-Hidden Weights:   %s", prior_show(ps,p->ih[l]));
+        if (flgs && list_flags (flgs->omit, a->N_inputs, 1<<(l+1), ps) > 0)
+        { printf("  omit%s",ps);
+        }
+        if (flgs && flgs->input_config[l])
+        { printf("  config:%s", flgs->config_files+flgs->input_config[l]);
+        }
+        printf("\n");
       }
       if (a->has_bh[l]) 
-      { printf("  Hidden Biases:          %s\n", prior_show(ps,p->bh[l]));
+      { printf("  Hidden Biases:          %s", prior_show(ps,p->bh[l]));
+        if (flgs && flgs->bias_config[l])
+        { printf("  config:%s", flgs->config_files+flgs->bias_config[l]);
+        }
+        printf("\n");
       }
       if (a->has_th[l]) 
       { printf("  Hidden Offsets:         %s\n", prior_show(ps,p->th[l]));
@@ -219,16 +188,34 @@ int main
 
     for (l = a->N_layers-1; l>=0; l--)
     { if (a->has_ho[l]) 
-      { printf("  Hidden%d-Output Weights: %s\n",l,prior_show(ps,p->ho[l]));
+      { printf("  Hidden%d-Output Weights: %s",l,prior_show(ps,p->ho[l]));
+        int k = 2*a->N_layers-1-l;
+        if (flgs && flgs->hidden_config[k])
+        { printf("  config:%s", flgs->config_files+flgs->hidden_config[k]);
+        }
+        printf("\n");
       }
     }
 
     if (a->has_io) 
-    { printf("  Input-Output Weights:   %s\n",prior_show(ps,p->io));
+    { printf("  Input-Output Weights:   %s",prior_show(ps,p->io));
+      if (flgs && list_flags (flgs->omit, a->N_inputs, 1, ps) > 0)
+      { printf("  omit%s",ps);
+      }
+      if (flgs && flgs->input_config[a->N_layers])
+      { printf("  config:%s",
+               flgs->config_files+flgs->input_config[a->N_layers]);
+      }
+      printf("\n");
     }
 
     if (a->has_bo) 
-    { printf("  Output Biases:          %s\n",prior_show(ps,p->bo));
+    { printf("  Output Biases:          %s",prior_show(ps,p->bo));
+      if (flgs && flgs->bias_config[a->N_layers])
+      { printf("  config:%s",
+               flgs->config_files+flgs->bias_config[a->N_layers]);
+      }
+      printf("\n");
     }
 
     for (l = 0; l<a->N_layers && !a->has_ah[l]; l++) ;

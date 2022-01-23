@@ -2,7 +2,7 @@
 
 echo " "; echo "--- A"; echo " "
 
-net-spec log 5 2 omit:2,4 identity 1 / ih=15 bh=4 ho=25 io=30
+net-spec log 5 2 identity 1 / ih=15 omit:2,4 bh=4 ho=25 io=30
 data-spec log 5 1 / "%echo 11 7 22 8 33 5000000" .
 model-spec log real 10000
 net-gen log fix - <<end
@@ -21,7 +21,7 @@ net-grad-test log 0 0.005
 
 echo " "; echo "--- B"; echo " "
 
-net-spec log 5 2 omit:2,4 1 / ih=15 bh=4 ho=25 io=30
+net-spec log 5 2 1 / ih=15 omit:2,4 bh=4 ho=25 io=30
 data-spec log 5 1 / "%echo 1.1 .7 2.2 .8 3.3 100" .
 model-spec log real 1000
 net-gen log fix - <<end
@@ -57,7 +57,7 @@ net-grad-test log 0 0.002
 
 echo " "; echo "--- D"; echo " "
 
-net-spec log 5 3 omit:2,4 identity 1 / ti=1 ih=15 bh=4 ho=25 io=30
+net-spec log 5 3 identity 1 / ti=1 ih=15 omit:2,4 bh=4 ho=25 io=30
 data-spec log 5 1 / "%echo 11 7 22 8 33 5000000" .
 model-spec log real 10000
 net-gen log fix - <<end

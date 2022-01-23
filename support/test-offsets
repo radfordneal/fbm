@@ -2,7 +2,7 @@
 
 echo " "; echo "--- A"; echo " "
 
-net-spec log 5 1 omit:3 / ti=2 io=3
+net-spec log 5 1 omit:3 / ti=2 io=3 omit:3
 model-spec log real 4
 data-spec log 5 1 / "% echo 1 3 4 2 5 22" .
 net-gen log fix - <<end

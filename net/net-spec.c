@@ -551,6 +551,12 @@ int main
         }
         a->has_ih[l] = 1;
         if (!prior_parse(&p->ih[l],pr)) usage();
+        if (*(ap+1)!=0 && strncmp(*(ap+1),"omit:",5)==0)
+        { ap += 1;
+          parse_flags (*ap+4, flgs->omit, a->N_inputs, 1<<(l+1));
+          a->any_omitted[l] = 1;
+          any_flags = 1;
+        }
       }
     }
     else if (sscanf(*ap,"bh%c",&eq)==1 && eq=='='
@@ -614,6 +620,12 @@ int main
     { if (strcmp(pr,"-")!=0)
       { a->has_io = 1;
         if (!prior_parse(&p->io,pr)) usage();
+        if (*(ap+1)!=0 && strncmp(*(ap+1),"omit:",5)==0)
+        { ap += 1;
+          parse_flags (*ap+4, flgs->omit, a->N_inputs, 1);
+          a->any_omitted[a->N_layers] = 1;
+          any_flags = 1;
+        }
       }
     }
     else if (sscanf(*ap,"bo%c",&eq)==1 && eq=='=')

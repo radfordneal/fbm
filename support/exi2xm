@@ -1,16 +1,16 @@
 #!/bin/bash
 
+net-spec log 36 272 softplus 4 \
+   / ih=0.2:2 config:iconfigx bh=0.3:2 config:bconfigx \
+     ho=0.1:2 config:hconfigx bo=0.1:2
 
-
-  net-spec log 36 272 softplus cfg-b:bconfigx cfg-i:iconfigx 4 cfg-h:hconfigx \
-                / ih=0.2:2 bh=0.3:2 ho=0.1:2 bo=0.1:2
-  model-spec log class
+model-spec log class
   
-  data-spec log 36 1 4 / idata@1:1998 .
+data-spec log 36 1 4 / idata@1:1998 .
   
-  net-gen log fix 0.1
+net-gen log fix 0.1
 
-  mc-spec log met-1 1.5
-  net-mc log 20
+mc-spec log met-1 1.5
+net-mc log 20
 
 net-pred nmpa log 18: / idata@5001:5100 .

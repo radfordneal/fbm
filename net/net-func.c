@@ -126,32 +126,26 @@ void STATIC_IF_INCLUDED net_func
       }
     }
 
-    if (a->has_nsq[l])
-    { for (ls = 0; ls<l; ls++)
-      { int nsqi = pre->nonseq[ls][l];
-        if (nsqi>=0)
-        { if (a->nonseq_config[nsqi])
-          { add_connections_config (vh, N_hidden, v->h[ls], w->nsq[nsqi], 
-              a->has_th[ls] ? w->th[ls] : 0, a->nonseq_config[nsqi]);
-          }
-          else
-          { add_connections (vh, N_hidden, v->h[ls], a->N_hidden[ls],
-              w->nsq[nsqi], a->has_th[ls] ? w->th[ls] : 0, 
-              (unsigned short *) 0, 0, 0);
-          }
-        }
-      }
-    }
-
-    if (l>0 && a->has_hh[l-1])
-    { if (a->hidden_config[l])
-      { add_connections_config (vh, N_hidden, v->h[l-1], w->hh[l-1], 
-          a->has_th[l-1] ? w->th[l-1] : 0, a->hidden_config[l]);
+    for (ls = l-1; ls>=0; ls--)
+    { net_config *cf; net_param *wh;
+      if (ls==l-1 && a->has_hh[ls])
+      { cf = a->hidden_config[l];
+        wh = w->hh[ls];
       }
       else
-      { add_connections (vh, N_hidden, v->h[l-1], a->N_hidden[l-1],
-          w->hh[l-1], a->has_th[l-1] ? w->th[l-1] : 0, (unsigned short *) 0, 0,
-          0);
+      { if (!a->has_nsq[l]) break;
+        int nsqi = pre->nonseq[ls][l];
+        if (nsqi<0) continue;
+        cf = a->nonseq_config[nsqi];
+        wh = w->nsq[nsqi];
+      }
+      if (cf)         
+      { add_connections_config (vh, N_hidden, v->h[ls], wh,
+          a->has_th[ls] ? w->th[ls] : 0, cf);
+      }
+      else
+      { add_connections (vh, N_hidden, v->h[ls], a->N_hidden[ls],
+          wh, a->has_th[ls] ? w->th[ls] : 0, (unsigned short *) 0, 0, 0);
       }
     }
 
@@ -1753,33 +1747,27 @@ __device__ __forceinline__ static void net_func_gpu
       }
     }
 
-    if (A.has_nsq[l])
-    { for (ls = 0; ls<l; ls++)
-      { int nsqi = PRE.nonseq[ls][l];
-        net_value *vhs = fw_hidden_loc(&PRE,v,ls);
-        if (nsqi>=0)
-        { if (A.nonseq_config[nsqi])
-          { add_connections_config_gpu (th, vh, vhs, W.nsq[nsqi],
-              A.has_th[ls] ? W.th[ls] : 0, A.nonseq_config[nsqi], syncmask);
-          }
-          else
-          { add_connections_gpu (th, vh, N_hidden, vhs, A.N_hidden[ls],
-              W.nsq[nsqi], A.has_th[ls] ? W.th[ls] : 0,
-              (unsigned short *) 0, 0, 0, syncmask);
-          }
-        }
-      }
-    }
-
-    if (l>0 && A.has_hh[l-1])
-    { if (A.hidden_config[l])
-      { add_connections_config_gpu (th, vh, vhp, W.hh[l-1], 
-          A.has_th[l-1] ? W.th[l-1] : 0, A.hidden_config[l], syncmask);
+    for (ls = l-1; ls>=0; ls--)
+    { net_config *cf; net_param *wh;
+      if (ls==l-1 && A.has_hh[ls])
+      { cf = A.hidden_config[l];
+        wh = W.hh[ls];
       }
       else
-      { add_connections_gpu (th, vh, N_hidden, vhp, A.N_hidden[l-1],
-          W.hh[l-1], A.has_th[l-1] ? W.th[l-1] : 0, (unsigned short *) 0, 
-          0, 0, syncmask);
+      { if (!A.has_nsq[l]) break;
+        int nsqi = PRE.nonseq[ls][l];
+        if (nsqi<0) continue;
+        cf = A.nonseq_config[nsqi];
+        wh = W.nsq[nsqi];
+      }
+      net_value *vhs = fw_hidden_loc(&PRE,v,ls);
+      if (cf)
+      { add_connections_config_gpu (th, vh, vhs, wh,
+          A.has_th[ls] ? W.th[ls] : 0, cf, syncmask);
+      }
+      else
+      { add_connections_gpu (th, vh, N_hidden, vhs, A.N_hidden[ls], wh,
+          A.has_th[ls] ? W.th[ls] : 0, (unsigned short *) 0, 0, 0, syncmask);
       }
     }
 

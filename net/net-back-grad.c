@@ -3454,7 +3454,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
   int sparse            /* Might source unit values often be zero? */
 )
 {
-  int l, ld, ls, nsqi, i;
+  int l, ld, ls, i;
 
   /* Add parts of gradients that don't depend on computing derivatives
      with respect to hidden or input unit values - only on inputs and hidden
@@ -3852,7 +3852,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
     if (a->has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { nsqi = pre.nonseq[ls][l];
+      { int nsqi = pre.nonseq[ls][l];
         if (nsqi>=0)
         { if (a->nonseq_config[nsqi])
           { add_grad2_config
@@ -4055,7 +4055,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
   unsigned syncmask     /* Mask of active threads for backprop */
 )
 {
-  int l, ld, ls, nsqi, i;
+  int l, ld, ls, i;
 
   /* Compute parts of gradients that don't depend on computing derivatives
      with respect to hidden or input unit values - only on inputs and hidden
@@ -4330,12 +4330,10 @@ __device__ __forceinline__ static void net_back_grad_gpu
 
     if (A.has_nsq[l])
     { for (ls = 0; ls<l; ls++)
-      { nsqi = PRE.nonseq[ls][l];
+      { int nsqi = PRE.nonseq[ls][l];
         if (nsqi>=0)
-        { 
-          net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,ls,0);
+        { net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,ls,0);
           int us = fw_hidden_stride(&PRE,ls);
-
           if (A.nonseq_config[nsqi])
           { store_grad2_config (thrg, gsz, g->nsq[nsqi], u0, us,
                                 A.has_th[ls] ? W.th[ls] : 0,
@@ -4351,10 +4349,8 @@ __device__ __forceinline__ static void net_back_grad_gpu
     }
 
     if (l>0 && A.has_hh[l-1])
-    { 
-      net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,l-1,0);
+    { net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,l-1,0);
       int us = fw_hidden_stride(&PRE,l-1);
-
       if (A.hidden_config[l])
       { store_grad2_config (thrg, gsz, g->hh[l-1], u0, us,
                             A.has_th[l-1] ? W.th[l-1] : 0,

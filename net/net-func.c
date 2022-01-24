@@ -128,8 +128,9 @@ void STATIC_IF_INCLUDED net_func
 
     for (ls = l-1; ls>=0; ls--)
     { net_config *cf; net_param *wh;
-      if (ls==l-1 && a->has_hh[ls])
-      { cf = a->hidden_config[l];
+      if (ls==l-1)
+      { if (!a->has_hh[ls]) continue;
+        cf = a->hidden_config[l];
         wh = w->hh[ls];
       }
       else
@@ -1749,8 +1750,9 @@ __device__ __forceinline__ static void net_func_gpu
 
     for (ls = l-1; ls>=0; ls--)
     { net_config *cf; net_param *wh;
-      if (ls==l-1 && A.has_hh[ls])
-      { cf = A.hidden_config[l];
+      if (ls==l-1)
+      { if (!A.has_hh[ls]) continue;
+        cf = A.hidden_config[l];
         wh = W.hh[ls];
       }
       else

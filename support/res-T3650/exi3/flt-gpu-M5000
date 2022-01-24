@@ -1,4 +1,4 @@
-Commit: 30bb30080be31d9660ffd06f7ad7089160ac7ed6
+Commit: 905857b431e008ebaec0ae7855b3354576bc3220
 
 Running exi3 with flt-gpu on M5000:
 
@@ -22,9 +22,9 @@ Number of iterations used: 6
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.385+-0.003
-Fraction of guesses that were wrong:    0.7000+-0.0461
-Average squared error guessing mean:    0.74939+-0.00174
+Average log probability of targets:    -1.374+-0.007
+Fraction of guesses that were wrong:    0.7100+-0.0456
+Average squared error guessing mean:    0.74392+-0.00354
 
-elapsed 15.12s
-c4c36143eda8949c8e8cd7368611f835703ca3ea  -
+elapsed 15.01s
+148bad6eb59bf7321b61be3ba024b87bef8a0393  -

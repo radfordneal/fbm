@@ -1,4 +1,4 @@
-Commit: 30bb30080be31d9660ffd06f7ad7089160ac7ed6
+Commit: 905857b431e008ebaec0ae7855b3354576bc3220
 
 Running exi2 with flt-gpu on M5000:
 
@@ -26,5 +26,5 @@ Average log probability of targets:    -0.756+-0.107
 Fraction of guesses that were wrong:    0.2700+-0.0446
 Average squared error guessing mean:    0.38772+-0.04793
 
-elapsed 7.53s
+elapsed 7.67s
 9bbd41271d592e2dace3ab25e2dcac719b8b7520  -

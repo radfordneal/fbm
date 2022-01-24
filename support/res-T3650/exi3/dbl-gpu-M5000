@@ -1,4 +1,4 @@
-Commit: 30bb30080be31d9660ffd06f7ad7089160ac7ed6
+Commit: 905857b431e008ebaec0ae7855b3354576bc3220
 
 Running exi3 with dbl-gpu on M5000:
 
@@ -22,9 +22,9 @@ Number of iterations used: 6
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.321+-0.041
-Fraction of guesses that were wrong:    0.6400+-0.0482
-Average squared error guessing mean:    0.71716+-0.01995
+Average log probability of targets:    -1.381+-0.006
+Fraction of guesses that were wrong:    0.7600+-0.0429
+Average squared error guessing mean:    0.74719+-0.00277
 
-elapsed 25.23s
-bef19977cc0ec9a54df55e6a115b2ec821fea84a  -
+elapsed 25.11s
+5235be9d9584231812a5383b15481fe0ee92eabc  -

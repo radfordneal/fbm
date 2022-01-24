@@ -31,8 +31,23 @@ static void print_config (net_config *, int);
 
 static int show_config_details;
 
-static int hconfig[Max_layers+1][Max_layers]; /* Indexes of cfg-h, or 0 if
-                                                 not appeared yet */
+
+/* TAKE A CONFIGURATION FILE SPEC FROM CONFIG ARGUMENT. */
+
+static int fileix = 1;  /* don't start at 0, since 0 is used for "none" */
+
+static int take_config (char *p, net_flags *flgs)
+{ int len = strlen(p+6);
+  int strt = fileix;
+  if (strt+len+1>Config_file_space)
+  { fprintf(stderr,"Config specs occupy too much space\n");
+    exit(1);
+  }
+  strcpy(flgs->config_files+strt,p+7);
+  fileix += len+1;
+  return strt;
+}
+
 
 /* MAIN PROGRAM. */
 
@@ -387,79 +402,20 @@ int main
 
   if (*ap==0 || (a->N_inputs = atoi(*ap++))<=0) usage();
 
-  int fileix = 1;  /* don't start at 0 since 0 is used for "none" */
-
   while (*ap!=0 && strcmp(*ap,"/")!=0)
   { 
     double size;
-    int omit, iconfig, bconfig, type;
+    int type;
     int i;
 
     if ((size = atoi(*ap++))<=0) usage();
 
     if (*ap==0) usage();
 
-    omit = 0;
-    iconfig = 0;
-    bconfig = 0;
     type = -1;
 
     while (*ap!=0 && (*ap)[0]>='a' && (*ap)[0]<='z')
-    { if (strncmp(*ap,"omit:",5)==0)
-      { if (omit) usage();
-        omit = 1;
-        parse_flags (*ap+4, flgs->omit, a->N_inputs, 1);
-        any_flags = 1;
-      }
-      else if (strncmp(*ap,"cfg-i:",6)==0)
-      { if (iconfig) usage();
-        iconfig = 1;
-        strcpy(flgs->config_files+fileix,*ap+6);
-        if (a->N_layers<=Max_layers) flgs->input_config[a->N_layers] = fileix;
-        fileix += strlen(flgs->config_files+fileix) + 1;
-        any_flags = 1;
-      }
-      else if (strncmp(*ap,"cfg-h",5)==0)
-      { char *q;
-        int k;
-        if (ap[0][5]==':')
-        { q = *ap+6;
-          k = a->N_layers-1;
-        }
-        else
-        { q = strchr(*ap,':');
-          if (q==0) usage();
-          q += 1;
-          k = atoi(*ap+5);
-          if (k<0) usage();
-        }
-        if (a->N_layers<1)
-        { fprintf(stderr,
-                 "Can't have cfg-h flag when no previous hidden layer\n");
-          exit(2);
-        }
-        if (hconfig[a->N_layers][k])
-        { fprintf(stderr,"Duplicate cfg-h%d flag\n",k);
-          exit(2);
-        }
-        if (k>a->N_layers-1)
-        { fprintf(stderr,"Connections must be from earlier hidden layer\n");
-          exit(2);
-        }
-        strcpy(flgs->config_files+fileix,q);
-        hconfig[a->N_layers][k] = fileix;
-        fileix += strlen(flgs->config_files+fileix) + 1;
-        any_flags = 1;
-      }
-      else if (strncmp(*ap,"cfg-b:",6)==0)
-      { if (bconfig) usage();
-        bconfig = 1;
-        strcpy(flgs->config_files+fileix,*ap+6);
-        if (a->N_layers<=Max_layers) flgs->bias_config[a->N_layers] = fileix;
-        fileix += strlen(flgs->config_files+fileix) + 1;
-        any_flags = 1;
-      }
-      else if (strcmp(*ap,"tanh")==0)
+    { if (strcmp(*ap,"tanh")==0)
       { if (type>=0) usage();
         type = Tanh_type;
       }
@@ -477,11 +433,6 @@ int main
       ap += 1;
     }
 
-    if (omit && iconfig)
-    { fprintf(stderr, "omit flag may not be combined with cfg-i\n");
-      exit(2);
-    }
-
     if (*ap!=0 && strcmp(*ap,"/")!=0)  /* more to come, so a hidden layer */
     { 
       if (a->N_layers == Max_layers)
@@ -491,16 +442,6 @@ int main
       }
       a->N_hidden[a->N_layers] = size;
       a->layer_type[a->N_layers] = type==-1 ? Tanh_type : type;
-      for (i = 0; i<a->N_inputs; i++) 
-      { flgs->omit[i] = 
-          (flgs->omit[i] | ((flgs->omit[i]&1)<<(a->N_layers+1))) & ~1;
-      }
-      a->any_omitted[a->N_layers] = omit;
-
-      if (a->N_layers>0 && hconfig[a->N_layers][a->N_layers-1])
-      { flgs->hidden_config[a->N_layers] = hconfig[a->N_layers][a->N_layers-1];
-      }
-
       a->N_layers += 1;
     }
 
@@ -508,13 +449,6 @@ int main
     { 
       a->N_outputs = size;
       if (type!=-1) usage();
-      a->any_omitted[a->N_layers] = omit;
-
-      for (l = 0; l<a->N_layers; l++)
-      { if (hconfig[a->N_layers][l])
-        { flgs->hidden_config[2*a->N_layers-1-l] = hconfig[a->N_layers][l];
-        }
-      }
     }
   }
 
@@ -557,6 +491,11 @@ int main
           a->any_omitted[l] = 1;
           any_flags = 1;
         }
+        else if (*(ap+1)!=0 && strncmp(*(ap+1),"config:",7)==0)
+        { ap += 1;
+          flgs->input_config[l] = take_config(*ap,flgs);
+          any_flags = 1;
+        }
       }
     }
     else if (sscanf(*ap,"bh%c",&eq)==1 && eq=='='
@@ -569,6 +508,11 @@ int main
         }
         a->has_bh[l] = 1;
         if (!prior_parse(&p->bh[l],pr)) usage();
+        if (*(ap+1)!=0 && strncmp(*(ap+1),"config:",7)==0)
+        { ap += 1;
+          flgs->bias_config[l] = take_config(*ap,flgs);
+          any_flags = 1;
+        }
       }
     }
     else if (sscanf(*ap,"th%c",&eq)==1 && eq=='='
@@ -596,10 +540,21 @@ int main
         if (ls==l-1)
         { a->has_hh[l-1] = 1;
           if (!prior_parse(&p->hh[l-1],pr)) usage();
+          if (*(ap+1)!=0 && strncmp(*(ap+1),"config:",7)==0)
+          { ap += 1;
+            flgs->hidden_config[l] = take_config(*ap,flgs);
+            any_flags = 1;
+          }
         }
         else
         { a->has_nsq[l] |= 1<<ls;
-          if (!prior_parse(&p->nsq[nsqi++],pr)) usage();
+          if (!prior_parse(&p->nsq[nsqi],pr)) usage();
+          if (*(ap+1)!=0 && strncmp(*(ap+1),"config:",7)==0)
+          { ap += 1;
+            flgs->nonseq_config[nsqi] = take_config(*ap,flgs);
+            any_flags = 1;
+          }
+          nsqi += 1;
         }
       }
     }
@@ -614,6 +569,11 @@ int main
         }
         a->has_ho[l] = 1;
         if (!prior_parse(&p->ho[l],pr)) usage();
+        if (*(ap+1)!=0 && strncmp(*(ap+1),"config:",7)==0)
+        { ap += 1;
+          flgs->hidden_config[2*a->N_layers-l-1] = take_config(*ap,flgs);
+          any_flags = 1;
+        }
       }
     }
     else if (sscanf(*ap,"io%c",&eq)==1 && eq=='=')
@@ -626,12 +586,22 @@ int main
           a->any_omitted[a->N_layers] = 1;
           any_flags = 1;
         }
+        else if (*(ap+1)!=0 && strncmp(*(ap+1),"config:",7)==0)
+        { ap += 1;
+          flgs->input_config[a->N_layers] = take_config(*ap,flgs);
+          any_flags = 1;
+        }
       }
     }
     else if (sscanf(*ap,"bo%c",&eq)==1 && eq=='=')
     { if (strcmp(pr,"-")!=0)
       { a->has_bo = 1;
         if (!prior_parse(&p->bo,pr)) usage();
+        if (*(ap+1)!=0 && strncmp(*(ap+1),"config:",7)==0)
+        { ap += 1;
+          flgs->bias_config[a->N_layers] = take_config(*ap,flgs);
+          any_flags = 1;
+        }
       }
     }
     else if (sscanf(*ap,"ah%c",&eq)==1 && eq=='='
@@ -724,21 +694,6 @@ int main
     { fprintf (stderr,
         "Illegal prior for weights with hidden configuration file (h%do)\n",l);
       exit(1); 
-    }
-  }
-
-  /* Set up any configurations for non-sequential connections, now that
-     both configs and priors are available. */
-
-  nsqi = 0;
-  for (l = 0; l<a->N_layers; l++)
-  { unsigned b;
-    int ls;
-    for (ls = 0, b = a->has_nsq[l]; b!=0; ls++, b>>=1)
-    { if (b&1)
-      { if (ls>=l-1) abort();
-        flgs->nonseq_config[nsqi++] = hconfig[l][ls];
-      }
     }
   }
 

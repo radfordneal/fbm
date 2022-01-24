@@ -1,21 +1,21 @@
-Commit: 56fe463fefe812d3fb9fb693688e15e638eccb6d
+Commit: 18ff11a84ff0f61f02b550a6cae07f0b1ac73711
 
 Running exi2x with flt-gpu on A4000:
 
 Number of training cases: 3997
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 NVIDIA RTX A4000, Compute Capability 8.6, 48 SM processors, 14.7 GBytes ECC
-Using 32 cases per block, max 500 blocks per launch, threads/case: 4
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16
 Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 384 values
-Hid layer shrd mem: 0:272:0,-1 T 276
+Hid layer shrd mem: 0:272:0,-1 T 280
 With 3997 cases, need 1 launches, max 125 blocks/launch
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 NVIDIA RTX A4000, Compute Capability 8.6, 48 SM processors, 14.7 GBytes ECC
-Using 32 cases per block, max 500 blocks per launch, threads/case: 4
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16
 Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 384 values
-Hid layer shrd mem: 0:272:0,-1 T 276
+Hid layer shrd mem: 0:272:0,-1 T 280
 With 3997 cases, need 1 launches, max 125 blocks/launch
 
 Number of iterations used: 1
@@ -26,5 +26,5 @@ Average log probability of targets:    -0.818+-0.097
 Fraction of guesses that were wrong:    0.2900+-0.0456
 Average squared error guessing mean:    0.42724+-0.04697
 
-elapsed 1.48s
+elapsed 1.33s
 e0ed0c0e23bcee9109304a175e0e0d8471e9a73c  -

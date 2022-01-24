@@ -1,14 +1,14 @@
-Commit: 56fe463fefe812d3fb9fb693688e15e638eccb6d
+Commit: 18ff11a84ff0f61f02b550a6cae07f0b1ac73711
 
 Running exi4m with flt-gpu on P620:
 
 Number of training cases: 1500
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Quadro P620, Compute Capability 6.1, 4 SM processors, 2.0 GBytes
-Using 32 cases per block, max 500 blocks per launch, threads/case: 4
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 98304, Blks/SM: 32
 Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 384 values
-Hid layer shrd mem: 0:64:0,80 1:16:128,64 T 148
+Hid layer shrd mem: 0:64:0,80 1:16:128,64 T 152
 With 1500 cases, need 1 launches, max 47 blocks/launch
 
 Number of iterations used: 1
@@ -19,5 +19,5 @@ Average log probability of targets:    -1.383+-0.012
 Fraction of guesses that were wrong:    0.7000+-0.0461
 Average squared error guessing mean:    0.74808+-0.00596
 
-elapsed 6.91s
+elapsed 6.73s
 4f3dfec03aca78b53dffad293b7aaf6c540d9f3e  -

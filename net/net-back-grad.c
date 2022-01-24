@@ -3549,38 +3549,41 @@ void STATIC_IF_INCLUDED net_back_add_grad
     }
 
     for (ld = l+1; ld<a->N_layers; ld++)
-    { int nsqi = pre.nonseq[l][ld];
-      if (nsqi>=0)
-      { if (a->nonseq_config[nsqi])
-        { sum_derivatives_config (d->h[ld], dh, N_hidden, 
-                                  params.nsq[nsqi], a->nonseq_config[nsqi]);
+    { net_config *cf; net_param *wh; net_param *wht;
+      if (ld==l+1)
+      { if (!a->has_hh[l]) continue;
+        cf = a->hidden_config[ld];
+        wh = params.hh[l];
+#       if USE_TRANSPOSED_WEIGHTS
+        { if (TRANS_WEIGHTS(N_hidden,a->N_hidden[ld]))
+          { wht = params_trans.hh[l];
+          }
         }
-        else if (TRANS_WEIGHTS(N_hidden,a->N_hidden[ld]))
-        { add_connections (dh, N_hidden, d->h[ld], a->N_hidden[ld], 
-                           params_trans.nsq[nsqi],
-                           (net_param const*) 0, (unsigned short *) 0, 0, 0);
-        }
-        else
-        { sum_derivatives
-            (d->h[ld], a->N_hidden[ld], dh, N_hidden,
-             params.nsq[nsqi], (unsigned short *) 0, 0);
-        }
+#       endif
       }
-    }
-
-    if (l<a->N_layers-1 && a->has_hh[l])
-    { if (a->hidden_config[l+1])
-      { sum_derivatives_config (d->h[l+1], dh, N_hidden, 
-                                params.hh[l], a->hidden_config[l+1]);
+      else
+      { int nsqi = pre.nonseq[l][ld];
+        if (nsqi<0) continue;
+        cf = a->nonseq_config[nsqi];
+        wh = params.nsq[nsqi];
+#       if USE_TRANSPOSED_WEIGHTS
+        { if (TRANS_WEIGHTS(N_hidden,a->N_hidden[ld]))
+          { wht = params_trans.nsq[nsqi];
+          }
+        }
+#       endif
       }
-      else if (TRANS_WEIGHTS(N_hidden,a->N_hidden[l+1]))
-      { add_connections (dh, N_hidden, d->h[l+1], a->N_hidden[l+1], 
-                         params_trans.hh[l],
+      net_value *restrict dhd = d->h[ld];
+      if (cf)
+      { sum_derivatives_config (dhd, dh, N_hidden, wh, cf);
+      }
+      else if (TRANS_WEIGHTS(N_hidden,a->N_hidden[ld]))
+      { add_connections (dh, N_hidden, dhd, a->N_hidden[ld], wht,
                          (net_param const*) 0, (unsigned short *) 0, 0, 0);
       }
       else
-      { sum_derivatives (d->h[l+1], a->N_hidden[l+1], dh, N_hidden,
-                         params.hh[l], (unsigned short *) 0, 0);
+      { sum_derivatives (dhd, a->N_hidden[ld], dh, N_hidden,
+                         wh, (unsigned short *) 0, 0);
       }
     }
 
@@ -4191,42 +4194,42 @@ __device__ __forceinline__ static void net_back_grad_gpu
     }
 
     for (ld = l+1; ld<A.N_layers; ld++)
-    { int nsqi = PRE.nonseq[l][ld];
-      net_value *restrict dhd = bw_hidden_loc(&PRE,dth,ld);
-      if (nsqi>=0)
-      { if (A.nonseq_config[nsqi])
-        { sum_derivatives_config_gpu
-            (thrb, dhd, dh, W.nsq[nsqi], A.nonseq_config[nsqi], syncmask);
+    { net_config *cf; net_param *wh; net_param *wht;
+      if (ld==l+1)
+      { if (!A.has_hh[l]) continue;
+        cf = A.hidden_config[ld];
+        wh = W.hh[l];
+#       if USE_TRANSPOSED_WEIGHTS
+        { if (TRANS_WEIGHTS(N_hidden,a->N_hidden[ld]))
+          { wht = WT.hh[l];
+          }
         }
-        else if (TRANS_WEIGHTS(N_hidden,A.N_hidden[ld]))
-        { add_connections_gpu (thrb, dh, N_hidden, dhd, A.N_hidden[ld], 
-                               WT.nsq[nsqi],
-                               (net_param const*) 0, (unsigned short *) 0, 0, 0,
-                               syncmask);
-        }
-        else
-        { sum_derivatives_gpu
-            (thrb, dhd, A.N_hidden[ld], dh, N_hidden,
-             W.nsq[nsqi], (unsigned short *) 0, 0, syncmask);
-        }
+#       endif
       }
-    }
-
-    if (l<A.N_layers-1 && A.has_hh[l])
-    { net_value *restrict dhd = bw_hidden_loc(&PRE,dth,l+1);
-      if (A.hidden_config[l+1])
-      { sum_derivatives_config_gpu 
-          (thrb, dhd, dh, W.hh[l], A.hidden_config[l+1], syncmask);
+      else
+      { int nsqi = PRE.nonseq[l][ld];
+        if (nsqi<0) continue;
+        cf = A.nonseq_config[nsqi];
+        wh = W.nsq[nsqi];
+#       if USE_TRANSPOSED_WEIGHTS
+        { if (TRANS_WEIGHTS(N_hidden,a->N_hidden[ld]))
+          { wht = WT.nsq[nsqi];
+          }
+        }
+#       endif
+      }
+      net_value *restrict dhd = bw_hidden_loc(&PRE,dth,ld);
+      if (cf)
+      { sum_derivatives_config_gpu (thrb, dhd, dh, wh, cf, syncmask);
       }
       else if (TRANS_WEIGHTS(N_hidden,A.N_hidden[ld]))
-      { add_connections_gpu (thrb, dh, N_hidden, dhd, A.N_hidden[l+1], WT.hh[l],
+      { add_connections_gpu (thrb, dh, N_hidden, dhd, A.N_hidden[ld], wht,
                              (net_param const*) 0, (unsigned short *) 0, 0, 0,
                              syncmask);
       }
       else
-      { sum_derivatives_gpu 
-          (thrb, dhd, A.N_hidden[l+1], dh, N_hidden,
-           W.hh[l], (unsigned short *) 0, 0, syncmask);
+      { sum_derivatives_gpu (thrb, dhd, A.N_hidden[ld], dh, N_hidden,
+                             wh, (unsigned short *) 0, 0, syncmask);
       }
     }
 

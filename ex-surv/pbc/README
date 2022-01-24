@@ -5,6 +5,10 @@ slides from this talk are available via the following web page:
 
     http://www.cs.toronto.edu/~radford/misc-docs.html
 
+NOTE:  The command files will not work for versions of the software
+       after the release of 2020-01-24, due to the change in syntax
+       for net-spec.  (They could be updated, but haven't been.)
+
 The data set used is from a clinical trial of a drug to treat Primary
 Biliary Cirrhosis (PBC), which was used as an example by Fleming and
 Harrington in their book on Counting Processes and Survival Analysis.

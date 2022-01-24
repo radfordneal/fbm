@@ -659,7 +659,8 @@ int main
   for (l = 0; l<a->N_layers; l++)
   { if (p->bh[l].scale || p->bh[l].alpha[2]!=0
      || p->th[l].scale || p->th[l].alpha[2]!=0)
-    { fprintf(stderr,"Illegal prior for hidden biases or offsets\n");
+    { fprintf(stderr,
+       "Illegal prior for hidden biases or offsets (bh%d or th%d\n",l,l);
       exit(1); 
     }
   }
@@ -669,6 +670,7 @@ int main
     exit(1); 
   }
 
+  nsqi = 0;
   for (l = 0; l<a->N_layers; l++)
   { if (flgs->input_config[l] && (p->ih[l].scale || p->ih[l].alpha[1]!=0))
     { fprintf (stderr, 
@@ -680,6 +682,19 @@ int main
     { fprintf (stderr,
         "Illegal prior for weights with hidden configuration file (hh%d)\n",l);
       exit(1); 
+    }
+    int lp;
+    for (lp = 0; lp<l; lp++)
+    { if ((a->has_nsq[l]>>lp) & 1)
+      { if (flgs->nonseq_config[nsqi] 
+             && (p->nsq[nsqi].scale || p->nsq[nsqi].alpha[1]!=0))
+        { fprintf (stderr,
+          "Illegal prior for weights with hidden configuration file (h%dh%d)\n",
+           lp, l);
+          exit(1); 
+        }
+        nsqi += 1;
+      }
     }
   }
 

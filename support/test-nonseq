@@ -104,7 +104,7 @@ net-grad-test log 0 0.001
 echo " "; echo "--- F"; echo " "
 
 net-spec log 1 2 1 2 1 \
-   / ih0=1:1:2 ih1=2:1:2 h0h2=7:1:2 config:"%echo 1 1 1" h1h2=3:1 h2o=4:1:2
+   / ih0=1:1:2 ih1=2:1:2 h0h2=7:1 config:"%echo 1 1 1" h1h2=3:1 h2o=4:1:2
 net-spec log config
 cat >data <<end
 0.8 1.3

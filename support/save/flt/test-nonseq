@@ -715,7 +715,7 @@ Prior Specifications:
 
          Hidden Layer 2
 
-  Hidden0-Hidden Weights:  7.000:1.00:2.00  config:%echo 1 1 1
+  Hidden0-Hidden Weights:  7.000:1.00  config:%echo 1 1 1
   Hidden-Hidden Weights:   3.000:1.00
 
          Output Layer

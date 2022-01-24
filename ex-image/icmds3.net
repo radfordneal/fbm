@@ -18,11 +18,9 @@ for run in 1 2 3 4; do (
   end=`calc 384\*$run`
   start=`calc $end-383`
 
-  net-spec $log 36 \
-                80 softplus cfg-b:bconfig cfg-i:iconfig \
-                16 cfg-h:h2config \
-                4 \
-           / ih=0.2:2 bh0=0.3:2 hh=0.1:2 bh1=0.3:2 ho=0.1:2 bo=0.1:2
+  net-spec $log 36 80 softplus 16 4 \
+    / ih=0.2:2 config:iconfig bh0=0.3:2 config:bconfig \
+      hh=0.1:2 config:h2config bh1=0.3:2 ho=0.1:2 bo=0.1:2
   model-spec $log class
   
   data-spec $log 36 1 4 / idata-train@-$start:$end . idata-train@$start:$end .

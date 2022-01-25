@@ -1,9 +1,9 @@
-Commit: 390ca3f83b5b57e7cae0980b142ea6ad0f90c220
+Commit: b1b4f2e12fd0151b2c2690c3f7a5648e9e72e9d6
 
 Running exi0 with flt:
 
 Number of training cases: 4999
-Precision: FP32, SIMD capability: AVX, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Precision: FP32, SIMD capability: AVX, Use: SIMD FMA SLEEF
 
 Number of iterations used: 2
 
@@ -13,4 +13,5 @@ Average log probability of targets:    -1.344+-0.059
 Fraction of guesses that were wrong:    0.6500+-0.0479
 Average squared error guessing mean:    0.72575+-0.02640
 
-elapsed 42.97s
+elapsed 42.06s
+d92a7d28dff53ebd8cd4f2f4214df08532a80665  -

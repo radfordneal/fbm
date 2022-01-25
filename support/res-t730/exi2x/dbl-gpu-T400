@@ -1,0 +1,30 @@
+Commit: b1b4f2e12fd0151b2c2690c3f7a5648e9e72e9d6
+
+Running exi2x with dbl-gpu on T400:
+
+Number of training cases: 3997
+Precision: FP64, SIMD capability: AVX, Use: SIMD FMA SLEEF
+NVIDIA T400, Compute Capability 7.5, 6 SM processors, 1.8 GBytes
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 128 values
+Hid layer shrd mem: 0:272:-1,-1 T 0
+With 3997 cases, need 1 launches, max 125 blocks/launch
+Precision: FP64, SIMD capability: AVX, Use: SIMD FMA SLEEF
+NVIDIA T400, Compute Capability 7.5, 6 SM processors, 1.8 GBytes
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 128 values
+Hid layer shrd mem: 0:272:-1,-1 T 0
+With 3997 cases, need 1 launches, max 125 blocks/launch
+
+Number of iterations used: 1
+
+Number of test cases: 100
+
+Average log probability of targets:    -0.818+-0.097
+Fraction of guesses that were wrong:    0.2900+-0.0456
+Average squared error guessing mean:    0.42724+-0.04697
+
+elapsed 28.65s
+d2955b89f26c7de758bf647b00c5aa260ff233c6  -

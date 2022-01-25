@@ -1,0 +1,23 @@
+Commit: b1b4f2e12fd0151b2c2690c3f7a5648e9e72e9d6
+
+Running exi2xm with flt-gpu on T400:
+
+Number of training cases: 1998
+Precision: FP32, SIMD capability: AVX, Use: SIMD FMA SLEEF
+NVIDIA T400, Compute Capability 7.5, 6 SM processors, 1.8 GBytes
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 256 values
+Hid layer shrd mem: 0:272:-1,-1 T 0
+With 1998 cases, need 1 launches, max 63 blocks/launch
+
+Number of iterations used: 3
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.342+-0.018
+Fraction of guesses that were wrong:    0.6900+-0.0465
+Average squared error guessing mean:    0.72788+-0.00875
+
+elapsed 7.26s
+06e92727ff57bf8788ee81f20be2e8ccd8f512b3  -

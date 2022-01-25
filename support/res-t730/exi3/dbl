@@ -1,17 +1,18 @@
-Commit: 390ca3f83b5b57e7cae0980b142ea6ad0f90c220
+Commit: b1b4f2e12fd0151b2c2690c3f7a5648e9e72e9d6
 
 Running exi3 with dbl:
 
 Number of training cases: 499
-Precision: FP64, SIMD capability: AVX, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
-Precision: FP64, SIMD capability: AVX, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Precision: FP64, SIMD capability: AVX, Use: SIMD FMA SLEEF
+Precision: FP64, SIMD capability: AVX, Use: SIMD FMA SLEEF
 
 Number of iterations used: 6
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.330+-0.028
-Fraction of guesses that were wrong:    0.6700+-0.0473
-Average squared error guessing mean:    0.72019+-0.01356
+Average log probability of targets:    -1.326+-0.046
+Fraction of guesses that were wrong:    0.6100+-0.0490
+Average squared error guessing mean:    0.71524+-0.02093
 
-elapsed 193.68s
+elapsed 196.21s
+50a8473c1efa03704c7423e370680bc8c3c6450e  -

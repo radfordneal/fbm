@@ -1,11 +1,11 @@
-Commit: 390ca3f83b5b57e7cae0980b142ea6ad0f90c220
+Commit: b1b4f2e12fd0151b2c2690c3f7a5648e9e72e9d6
 
 Running exc with dbl:
 
 Number of training cases: 400
 Number of test cases: 1000
-Precision: FP64, SIMD capability: AVX, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
-Precision: FP64, SIMD capability: AVX, Use: SIMD FMA SLEEF, Cfg: SQ2-Q2O2
+Precision: FP64, SIMD capability: AVX, Use: SIMD FMA SLEEF
+Precision: FP64, SIMD capability: AVX, Use: SIMD FMA SLEEF
 
 Number of iterations used: 30
 
@@ -14,4 +14,5 @@ Number of test cases: 1000
 Average log probability of targets:    -0.469+-0.022
 Fraction of guesses that were wrong:    0.1960+-0.0126
 
-elapsed 9.02s
+elapsed 9.08s
+e0d885de7b93d4336259c7d8c7ae61fe9d3595ab  -

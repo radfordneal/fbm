@@ -3850,32 +3850,27 @@ void STATIC_IF_INCLUDED net_back_add_grad
       }
     }
 
-    if (a->has_nsq[l])
-    { for (ls = 0; ls<l; ls++)
-      { int nsqi = pre.nonseq[ls][l];
-        if (nsqi>=0)
-        { if (a->nonseq_config[nsqi])
-          { add_grad2_config
-                (g->nsq[nsqi], v->h[ls], a->has_th[ls] ? params.th[ls] : 0,
-                dh, a->nonseq_config[nsqi]);
-          }
-          else
-          { add_grad2(g->nsq[nsqi], v->h[ls], a->has_th[ls] ? params.th[ls] : 0,
-              a->N_hidden[ls], dh, N_hidden, (unsigned short *)0, 0, 0);
-          }
-        }
-      }
-    }
-
-    if (l>0 && a->has_hh[l-1])
-    { if (a->hidden_config[l])
-      { add_grad2_config
-           (g->hh[l-1], v->h[l-1], a->has_th[l-1] ? params.th[l-1] : 0,
-            dh, a->hidden_config[l]);
+    for (ls = 0; ls<l; ls++)
+    { net_config *cf; net_param *gh;
+      if (ls==l-1)
+      { if (!a->has_hh[ls]) break;
+        cf = a->hidden_config[l];
+        gh = g->hh[ls];
       }
       else
-      { add_grad2 (g->hh[l-1], v->h[l-1], a->has_th[l-1] ? params.th[l-1] : 0,
-          a->N_hidden[l-1], dh, N_hidden, (unsigned short *)0, 0, 0);
+      { if (!a->has_nsq[l]) continue;
+        int nsqi = pre.nonseq[ls][l];
+        if (nsqi<0) continue;
+        cf = a->nonseq_config[nsqi];
+        gh = g->nsq[nsqi];
+      }
+      if (cf)
+      { add_grad2_config (gh, v->h[ls], a->has_th[ls] ? params.th[ls] : 0, 
+                          dh, cf);
+      }
+      else
+      { add_grad2 (gh, v->h[ls], a->has_th[ls] ? params.th[ls] : 0,
+          a->N_hidden[ls], dh, N_hidden, (unsigned short *)0, 0, 0);
       }
     }
 
@@ -4328,37 +4323,29 @@ __device__ __forceinline__ static void net_back_grad_gpu
       }
     }
 
-    if (A.has_nsq[l])
-    { for (ls = 0; ls<l; ls++)
-      { int nsqi = PRE.nonseq[ls][l];
-        if (nsqi>=0)
-        { net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,ls,0);
-          int us = fw_hidden_stride(&PRE,ls);
-          if (A.nonseq_config[nsqi])
-          { store_grad2_config (thrg, gsz, g->nsq[nsqi], u0, us,
-                                A.has_th[ls] ? W.th[ls] : 0,
-                                c0, cs, A.nonseq_config[nsqi]);
-          }
-          else
-          { store_grad2 (thrg, gsz, g->nsq[nsqi], u0, us,
-                         A.has_th[ls] ? W.th[ls] : 0, A.N_hidden[ls], 
-                         c0, cs, N_hidden, (unsigned short *)0, 0, 0);
-          }
-        }
-      }
-    }
-
-    if (l>0 && A.has_hh[l-1])
-    { net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,l-1,0);
-      int us = fw_hidden_stride(&PRE,l-1);
-      if (A.hidden_config[l])
-      { store_grad2_config (thrg, gsz, g->hh[l-1], u0, us,
-                            A.has_th[l-1] ? W.th[l-1] : 0,
-                            c0, cs, A.hidden_config[l]);
+    for (ls = 0; ls<l; ls++)
+    { net_config *cf; net_param *gh;
+      if (ls==l-1)
+      { if (!A.has_hh[ls]) break;
+        cf = A.hidden_config[l];
+        gh = g->hh[ls];
       }
       else
-      { store_grad2 (thrg, gsz, g->hh[l-1], u0, us,
-                     A.has_th[l-1] ? W.th[l-1] : 0, A.N_hidden[l-1], 
+      { if (!A.has_nsq[l]) continue;
+        int nsqi = PRE.nonseq[ls][l];
+        if (nsqi<0) continue;
+        cf = A.nonseq_config[nsqi];
+        gh = g->nsq[nsqi];
+      }
+      net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,ls,0);
+      int us = fw_hidden_stride(&PRE,ls);
+      if (cf)
+      { store_grad2_config (thrg, gsz, gh, u0, us, A.has_th[ls] ? W.th[ls] : 0,
+                            c0, cs, cf);
+      }
+      else
+      { store_grad2 (thrg, gsz, gh, u0, us,
+                     A.has_th[ls] ? W.th[ls] : 0, A.N_hidden[ls], 
                      c0, cs, N_hidden, (unsigned short *)0, 0, 0);
       }
     }
@@ -4370,7 +4357,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
   if (A.has_ti)
   { 
     if (A.N_layers==0)  /* otherwise done at end of loop above */
-    {__syncthreads();
+    { __syncthreads();
     }
 
     store_grad1 (thrg, gsz, g->ti, d[0].i, d[1].i-d[0].i, A.N_inputs);

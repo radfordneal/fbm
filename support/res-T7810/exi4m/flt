@@ -1,4 +1,4 @@
-Commit: dd522d7b933cf4f1e35abc018a44e8cb57aa1424
+Commit: 27cb4c709a37a76cafa9c87a484e6882cc898e7b
 
 Running exi4m with flt:
 
@@ -13,5 +13,5 @@ Average log probability of targets:    -1.383+-0.012
 Fraction of guesses that were wrong:    0.7000+-0.0461
 Average squared error guessing mean:    0.74808+-0.00596
 
-elapsed 27.48s
+elapsed 27.56s
 e5217ba2b054f55c896e675204cdb7ac802c26c1  -

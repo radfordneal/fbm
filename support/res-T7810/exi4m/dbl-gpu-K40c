@@ -1,14 +1,14 @@
-Commit: dd522d7b933cf4f1e35abc018a44e8cb57aa1424
+Commit: 27cb4c709a37a76cafa9c87a484e6882cc898e7b
 
 Running exi4m with dbl-gpu on K40c:
 
 Number of training cases: 1500
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Tesla K40c, Compute Capability 3.5, 15 SM processors, 11.2 GBytes ECC
-Using 32 cases per block, max 500 blocks per launch, threads/case: 4
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16
 Desired # of blocks: 2, allowed shared mem per case: 768 bytes, 96 values
-Hid layer shrd mem: 0:64:0,-1 1:16:64,-1 T 84
+Hid layer shrd mem: 0:64:0,-1 1:16:64,-1 T 88
 With 1500 cases, need 1 launches, max 47 blocks/launch
 
 Number of iterations used: 1
@@ -19,5 +19,5 @@ Average log probability of targets:    -1.383+-0.012
 Fraction of guesses that were wrong:    0.7000+-0.0461
 Average squared error guessing mean:    0.74808+-0.00596
 
-elapsed 6.29s
+elapsed 4.45s
 c5d37caac0277231ceb75b8cc9c21a9deddc1ec5  -

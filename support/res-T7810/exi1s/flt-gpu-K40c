@@ -1,21 +1,21 @@
-Commit: dd522d7b933cf4f1e35abc018a44e8cb57aa1424
+Commit: 27cb4c709a37a76cafa9c87a484e6882cc898e7b
 
 Running exi1s with flt-gpu on K40c:
 
 Number of training cases: 4999
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Tesla K40c, Compute Capability 3.5, 15 SM processors, 11.2 GBytes ECC
-Using 32 cases per block, max 500 blocks per launch, threads/case: 4
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16
 Desired # of blocks: 2, allowed shared mem per case: 768 bytes, 192 values
-Hid layer shrd mem: 0:79:0,79 T 164
+Hid layer shrd mem: 0:79:0,79 T 168
 With 4999 cases, need 1 launches, max 157 blocks/launch
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Tesla K40c, Compute Capability 3.5, 15 SM processors, 11.2 GBytes ECC
-Using 32 cases per block, max 500 blocks per launch, threads/case: 4
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
 Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16
 Desired # of blocks: 2, allowed shared mem per case: 768 bytes, 192 values
-Hid layer shrd mem: 0:79:0,79 T 164
+Hid layer shrd mem: 0:79:0,79 T 168
 With 4999 cases, need 1 launches, max 157 blocks/launch
 
 Number of iterations used: 2
@@ -26,5 +26,5 @@ Average log probability of targets:    -1.055+-0.090
 Fraction of guesses that were wrong:    0.4500+-0.0500
 Average squared error guessing mean:    0.57465+-0.04356
 
-elapsed 9.40s
+elapsed 7.21s
 38c0f9f37de8a891dfda2900c29e9c98252710c2  -

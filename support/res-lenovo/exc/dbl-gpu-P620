@@ -1,4 +1,4 @@
-Commit: 579062961d260a42f5da3938eaee7b5454e9055d
+Commit: e0b9b11460bae020453ac6cc9fe85137a50ff8d5
 
 Running exc with dbl-gpu on P620:
 
@@ -26,5 +26,5 @@ Number of test cases: 1000
 Average log probability of targets:    -0.468+-0.023
 Fraction of guesses that were wrong:    0.1930+-0.0125
 
-elapsed 5.55s
+elapsed 5.50s
 f51d6a11f5ac2e38895863212cecd6ffebcd31a3  -

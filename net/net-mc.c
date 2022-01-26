@@ -1108,91 +1108,98 @@ void mc_app_initialize
        space on GPU for values in all training cases, with pointers set up. */
 
 #   if __CUDACC__
-    { 
-      size_t sz;
-      int i;
+    { if (N_train>0)
+      { 
+        size_t sz;
+        int i;
 
-      net_values *tmp_values
-                    = (net_values *) chk_alloc (N_train, sizeof *tmp_values);
+        net_values *tmp_values
+                      = (net_values *) chk_alloc (N_train, sizeof *tmp_values);
 
-      net_value *iblk, *oblk, *vblk;
+        net_value *iblk, *oblk, *vblk;
 
-      check_cuda_error (cudaGetLastError(), "Before copying of data to GPU");
+        check_cuda_error (cudaGetLastError(), "Before copying of data to GPU");
 
-      sz = N_inputs * N_train * sizeof *iblk;
-      check_cuda_error (CUDAMALLOC (&iblk, sz), "CUDAMALLOC of iblk");
-      check_cuda_error (cudaMemcpy 
-          (iblk, train_iblock, sz, cudaMemcpyHostToDevice),
-        "copy to iblk");
+        sz = N_inputs * N_train * sizeof *iblk;
+        check_cuda_error (CUDAMALLOC (&iblk, sz), "cudaMalloc of iblk");
+        check_cuda_error (cudaMemcpy 
+                           (iblk, train_iblock, sz, cudaMemcpyHostToDevice),
+                          "copy to iblk");
 
-      sz = arch->N_outputs * N_train * sizeof *oblk;
-      check_cuda_error (CUDAMALLOC (&oblk, sz), "CUDAMALLOC of oblk for train");
-      sz = value_count_noinout * N_train * sizeof *vblk;
-      check_cuda_error (CUDAMALLOC (&vblk, sz), "CUDAMALLOC of vblk for train");
+        sz = arch->N_outputs * N_train * sizeof *oblk;
+        check_cuda_error (CUDAMALLOC (&oblk, sz), 
+                          "cudaMalloc of oblk for train");
+        sz = value_count_noinout * N_train * sizeof *vblk;
+        check_cuda_error (CUDAMALLOC (&vblk, sz), 
+                          "cudaMalloc of vblk for train");
 
-      pre.fw_stride = value_count_noinout;
-      for (i = 0; i<N_train; i++) 
-      { net_setup_value_pointers_aligned 
+        pre.fw_stride = value_count_noinout;
+        for (i = 0; i<N_train; i++) 
+        { net_setup_value_pointers_aligned 
             (&tmp_values[i], vblk+i*pre.fw_stride, arch,
              NET_VALUE_ALIGN_ELEMENTS, iblk+N_inputs*i, oblk+arch->N_outputs*i);
-      }
-
-      sz = N_train * sizeof *dev_train_values;
-      check_cuda_error (CUDAMALLOC (&dev_train_values, sz), 
-                        "CUDAMALLOC of dev_train_values");
-      check_cuda_error (cudaMemcpy 
-          (dev_train_values, tmp_values, sz, cudaMemcpyHostToDevice),
-        "copy to dev_train_values");
-      
-      sz = N_targets * N_train * sizeof *dev_train_targets;
-      check_cuda_error (CUDAMALLOC (&dev_train_targets, sz),
-                        "CUDAMALLOC of dev_train_targets");
-      check_cuda_error (cudaMemcpy
-          (dev_train_targets, train_targets, sz, cudaMemcpyHostToDevice),
-        "copy to dev_train_targets");
-
-      sz = arch->N_outputs * N_train * sizeof *oblk;
-      check_cuda_error (CUDAMALLOC (&oblk, sz), "CUDAMALLOC of oblk for deriv");
-
-      if (arch->has_ti)  /* Must allow for derivatives w.r.t. inputs */
-      { pre.bw_stride = value_count_noout;
-        sz = pre.bw_stride * N_train * sizeof *vblk;
-        check_cuda_error (CUDAMALLOC(&vblk, sz),"CUDAMALLOC of vblk for deriv");
-        for (i = 0; i<N_train; i++) 
-        { net_setup_value_pointers_aligned 
-            (&tmp_values[i], vblk+value_count_noout*i,
-             arch, NET_VALUE_ALIGN_ELEMENTS, 0, oblk+arch->N_outputs*i);
         }
-      }
-      else  /* Derivatives w.r.t. inputs will not be taken */
-      { pre.bw_stride = value_count_noinout;
-        sz = pre.bw_stride * N_train * sizeof *vblk;
-        check_cuda_error (CUDAMALLOC(&vblk, sz),"CUDAMALLOC of vblk for deriv");
-        for (i = 0; i<N_train; i++) 
-        { net_setup_value_pointers_aligned 
-            (&tmp_values[i], vblk+value_count_noinout*i, 
-             arch, NET_VALUE_ALIGN_ELEMENTS, 
-             iblk+N_inputs*i /* not actually used */, 
-             oblk+arch->N_outputs*i);
+
+        sz = N_train * sizeof *dev_train_values;
+        check_cuda_error (CUDAMALLOC (&dev_train_values, sz), 
+                          "cudaMalloc of dev_train_values");
+        check_cuda_error (cudaMemcpy 
+            (dev_train_values, tmp_values, sz, cudaMemcpyHostToDevice),
+          "copy to dev_train_values");
+        
+        sz = N_targets * N_train * sizeof *dev_train_targets;
+        check_cuda_error (CUDAMALLOC (&dev_train_targets, sz),
+                          "cudaMalloc of dev_train_targets");
+        check_cuda_error (cudaMemcpy
+            (dev_train_targets, train_targets, sz, cudaMemcpyHostToDevice),
+          "copy to dev_train_targets");
+
+        sz = arch->N_outputs * N_train * sizeof *oblk;
+        check_cuda_error (CUDAMALLOC (&oblk, sz), 
+                          "cudaMalloc of oblk for deriv");
+
+        if (arch->has_ti)  /* Must allow for derivatives w.r.t. inputs */
+        { pre.bw_stride = value_count_noout;
+          sz = pre.bw_stride * N_train * sizeof *vblk;
+          check_cuda_error (CUDAMALLOC(&vblk, sz),
+                            "cudaMalloc of vblk for deriv");
+          for (i = 0; i<N_train; i++) 
+          { net_setup_value_pointers_aligned 
+              (&tmp_values[i], vblk+value_count_noout*i,
+               arch, NET_VALUE_ALIGN_ELEMENTS, 0, oblk+arch->N_outputs*i);
+          }
         }
+        else  /* Derivatives w.r.t. inputs will not be taken */
+        { pre.bw_stride = value_count_noinout;
+          sz = pre.bw_stride * N_train * sizeof *vblk;
+          check_cuda_error (CUDAMALLOC(&vblk, sz),
+                            "cudaMalloc of vblk for deriv");
+          for (i = 0; i<N_train; i++) 
+          { net_setup_value_pointers_aligned 
+              (&tmp_values[i], vblk+value_count_noinout*i, 
+               arch, NET_VALUE_ALIGN_ELEMENTS, 
+               iblk+N_inputs*i /* not actually used */, 
+               oblk+arch->N_outputs*i);
+          }
+        }
+
+        sz = max_cases_per_launch * sizeof *dev_deriv;
+        check_cuda_error (CUDAMALLOC (&dev_deriv, sz),
+                          "cudaMalloc of dev_deriv");
+        check_cuda_error (cudaMemcpy 
+            (dev_deriv, tmp_values, sz, cudaMemcpyHostToDevice),
+          "copy to dev_deriv");
+
+        sz = SCRATCH_PER_CASE(arch->N_outputs) * max_cases_per_launch 
+                                               * sizeof *dev_scratch;
+        check_cuda_error (CUDAMALLOC (&dev_scratch, sz),
+                          "cudaMalloc of dev_scratch");
+
+        grad_aligned_total = (params.total_params + GRAD_ALIGN_ELEMENTS - 1)
+                                & ~(GRAD_ALIGN_ELEMENTS - 1);
+
+        free(tmp_values);
       }
-
-      sz = max_cases_per_launch * sizeof *dev_deriv;
-      check_cuda_error (CUDAMALLOC (&dev_deriv, sz),
-                        "CUDAMALLOC of dev_deriv");
-      check_cuda_error (cudaMemcpy 
-          (dev_deriv, tmp_values, sz, cudaMemcpyHostToDevice),
-        "copy to dev_deriv");
-
-      sz = SCRATCH_PER_CASE(arch->N_outputs) * max_cases_per_launch 
-                                             * sizeof *dev_scratch;
-      check_cuda_error (CUDAMALLOC (&dev_scratch, sz),
-                        "CUDAMALLOC of dev_scratch");
-
-      grad_aligned_total = (params.total_params + GRAD_ALIGN_ELEMENTS - 1)
-                              & ~(GRAD_ALIGN_ELEMENTS - 1);
-
-      free(tmp_values);
     }
 #   endif
 
@@ -3045,9 +3052,10 @@ static void net_training_cases_gpu
      when gradient is needed. */
 
   check_cuda_error (cudaMemcpy (dev_param_block_addr, params.param_block,
-   (1+(any_transposed&&gr!=0)) * params.total_params * sizeof *params.param_block,
-   cudaMemcpyHostToDevice),
-  "Copying parameters to GPU");
+                      (1+(any_transposed&&gr!=0)) * params.total_params 
+                                                  * sizeof *params.param_block,
+                      cudaMemcpyHostToDevice),
+    "Copying parameters to GPU");
 
   if (sigmas.noise != 0)
   { check_cuda_error (cudaMemcpy (dev_noise, sigmas.noise,

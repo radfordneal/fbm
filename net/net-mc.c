@@ -1111,7 +1111,7 @@ void mc_app_initialize
     { if (N_train>0)
       { 
         size_t sz;
-        int i;
+        int i, b;
 
         net_values *tmp_values
                       = (net_values *) chk_alloc (N_train, sizeof *tmp_values);
@@ -1129,15 +1129,17 @@ void mc_app_initialize
         sz = arch->N_outputs * N_train * sizeof *oblk;
         check_cuda_error (CUDAMALLOC (&oblk, sz), 
                           "cudaMalloc of oblk for train");
-        sz = value_count_noinout * N_train * sizeof *vblk;
+        sz = value_count_noinout * max_cases_per_launch * sizeof *vblk;
         check_cuda_error (CUDAMALLOC (&vblk, sz), 
                           "cudaMalloc of vblk for train");
 
         pre.fw_stride = value_count_noinout;
+        b = 0;
         for (i = 0; i<N_train; i++) 
         { net_setup_value_pointers_aligned 
-            (&tmp_values[i], vblk+i*pre.fw_stride, arch,
+            (&tmp_values[i], vblk+b*pre.fw_stride, arch,
              NET_VALUE_ALIGN_ELEMENTS, iblk+N_inputs*i, oblk+arch->N_outputs*i);
+          if (++b > max_cases_per_launch) b = 0;
         }
 
         sz = N_train * sizeof *dev_train_values;
@@ -1160,26 +1162,30 @@ void mc_app_initialize
 
         if (arch->has_ti)  /* Must allow for derivatives w.r.t. inputs */
         { pre.bw_stride = value_count_noout;
-          sz = pre.bw_stride * N_train * sizeof *vblk;
+          sz = pre.bw_stride * max_cases_per_launch * sizeof *vblk;
           check_cuda_error (CUDAMALLOC(&vblk, sz),
                             "cudaMalloc of vblk for deriv");
+          b = 0;
           for (i = 0; i<N_train; i++) 
           { net_setup_value_pointers_aligned 
-              (&tmp_values[i], vblk+value_count_noout*i,
+              (&tmp_values[i], vblk+value_count_noout*b,
                arch, NET_VALUE_ALIGN_ELEMENTS, 0, oblk+arch->N_outputs*i);
+            if (++b > max_cases_per_launch) b = 0;
           }
         }
         else  /* Derivatives w.r.t. inputs will not be taken */
         { pre.bw_stride = value_count_noinout;
-          sz = pre.bw_stride * N_train * sizeof *vblk;
+          sz = pre.bw_stride * max_cases_per_launch * sizeof *vblk;
           check_cuda_error (CUDAMALLOC(&vblk, sz),
                             "cudaMalloc of vblk for deriv");
+          b = 0;
           for (i = 0; i<N_train; i++) 
           { net_setup_value_pointers_aligned 
-              (&tmp_values[i], vblk+value_count_noinout*i, 
+              (&tmp_values[i], vblk+value_count_noinout*b, 
                arch, NET_VALUE_ALIGN_ELEMENTS, 
                iblk+N_inputs*i /* not actually used */, 
                oblk+arch->N_outputs*i);
+            if (++b > max_cases_per_launch) b = 0;
           }
         }
 

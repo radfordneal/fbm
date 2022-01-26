@@ -341,9 +341,6 @@ void net_evaluate
   { fprintf(stderr,"  records missing\n"); return;
   }
 
-  params.param_block 
-    = (net_param *) logg->data['W'];  /* Needed due to KLUDGE in net-mc.c */
-
   ev_train = ev_test = 0;
 
   for (v = 0; v<Max_quantities; v++)

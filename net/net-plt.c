@@ -48,8 +48,8 @@ void (*quant_app_record_sizes[]) (log_gobbled *) =
 };
 
 void (*quant_app_initialize[]) (log_gobbled *) =
-{ net_initialize,
-  mc_initialize,
+{ mc_initialize,   /* do first, so KLUDGE in net-mc.c will be seen later */
+  net_initialize,
   0 
 };
 

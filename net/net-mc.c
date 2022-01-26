@@ -40,9 +40,22 @@
 #include "sleef-use.h"
 
 
+/* DEBUG/INFO SETTINGS. */
+
 #ifndef CHECK_NAN
-#define CHECK_NAN 0                 /* Normally 0, can set to 1 for debugging */
+#define CHECK_NAN 0           /* Normally 0, can set to 1 for debugging */
 #endif
+
+#ifndef SHOW_MALLOC_SIZES
+#define SHOW_MALLOC_SIZES 0   /* Normally 0, can set to 1 to debug / get info */
+#endif
+
+#define CUDAMALLOC(ptr,sz) \
+( (void) ( SHOW_MALLOC_SIZES \
+     ? printf("CUDAMALLOC of %ld bytes at line %d\n", (long)(sz), __LINE__) \
+     : 0 ), \
+  cudaMalloc((ptr),(sz)) \
+)
 
 
 #if __CUDACC__
@@ -348,14 +361,15 @@ void mc_app_record_sizes
 net_config *net_config_to_gpu (net_config *cf)
 { 
   net_config dcf;
+  size_t sz;
 
   dcf = *cf;
 
-  check_cuda_error (cudaMalloc (&dcf.all_gpu, 
-                                dcf.all_gpu_length * sizeof *dcf.all_gpu),
+  sz = dcf.all_gpu_length * sizeof *dcf.all_gpu;
+
+  check_cuda_error (CUDAMALLOC (&dcf.all_gpu, sz),
                     "alloc of dev config all_gpu");
-  check_cuda_error (cudaMemcpy (dcf.all_gpu, cf->all_gpu, 
-                                dcf.all_gpu_length * sizeof *dcf.all_gpu,
+  check_cuda_error (cudaMemcpy (dcf.all_gpu, cf->all_gpu, sz,
                                 cudaMemcpyHostToDevice),
                     "copy to dev config all_gpu");
 
@@ -373,7 +387,7 @@ net_config *net_config_to_gpu (net_config *cf)
   
 
   net_config *dev_dcf;
-  check_cuda_error (cudaMalloc (&dev_dcf, sizeof *dev_dcf),
+  check_cuda_error (CUDAMALLOC (&dev_dcf, sizeof *dev_dcf),
                     "alloc of dev config struct");
   check_cuda_error (cudaMemcpy (dev_dcf, &dcf, sizeof dcf,
                                 cudaMemcpyHostToDevice),
@@ -883,7 +897,7 @@ void mc_app_initialize
 
 #   if __CUDACC__
     { if (sigmas.noise != 0)
-      { check_cuda_error (cudaMalloc (&dev_noise, 
+      { check_cuda_error (CUDAMALLOC (&dev_noise, 
                                       arch->N_outputs * sizeof *dev_noise),
                           "alloc of dev_noise");
       }
@@ -902,7 +916,7 @@ void mc_app_initialize
                           "get symbol address");
         dev_param_block_addr = (net_param *)p;
 #     else
-        check_cuda_error (cudaMalloc (&dev_param_block_addr,
+        check_cuda_error (CUDAMALLOC (&dev_param_block_addr,
          (1+any_transposed)*params.total_params*sizeof *tmp_params.param_block),
          "alloc of params block for GPU");
 #     endif
@@ -1106,15 +1120,15 @@ void mc_app_initialize
       check_cuda_error (cudaGetLastError(), "Before copying of data to GPU");
 
       sz = N_inputs * N_train * sizeof *iblk;
-      check_cuda_error (cudaMalloc (&iblk, sz), "cudaMalloc of iblk");
+      check_cuda_error (CUDAMALLOC (&iblk, sz), "CUDAMALLOC of iblk");
       check_cuda_error (cudaMemcpy 
           (iblk, train_iblock, sz, cudaMemcpyHostToDevice),
         "copy to iblk");
 
       sz = arch->N_outputs * N_train * sizeof *oblk;
-      check_cuda_error (cudaMalloc (&oblk, sz), "cudaMalloc of oblk for train");
+      check_cuda_error (CUDAMALLOC (&oblk, sz), "CUDAMALLOC of oblk for train");
       sz = value_count_noinout * N_train * sizeof *vblk;
-      check_cuda_error (cudaMalloc (&vblk, sz), "cudaMalloc of vblk for train");
+      check_cuda_error (CUDAMALLOC (&vblk, sz), "CUDAMALLOC of vblk for train");
 
       pre.fw_stride = value_count_noinout;
       for (i = 0; i<N_train; i++) 
@@ -1124,26 +1138,26 @@ void mc_app_initialize
       }
 
       sz = N_train * sizeof *dev_train_values;
-      check_cuda_error (cudaMalloc (&dev_train_values, sz), 
-                        "cudaMalloc of dev_train_values");
+      check_cuda_error (CUDAMALLOC (&dev_train_values, sz), 
+                        "CUDAMALLOC of dev_train_values");
       check_cuda_error (cudaMemcpy 
           (dev_train_values, tmp_values, sz, cudaMemcpyHostToDevice),
         "copy to dev_train_values");
       
       sz = N_targets * N_train * sizeof *dev_train_targets;
-      check_cuda_error (cudaMalloc (&dev_train_targets, sz),
-                        "cudaMalloc of dev_train_targets");
+      check_cuda_error (CUDAMALLOC (&dev_train_targets, sz),
+                        "CUDAMALLOC of dev_train_targets");
       check_cuda_error (cudaMemcpy
           (dev_train_targets, train_targets, sz, cudaMemcpyHostToDevice),
         "copy to dev_train_targets");
 
       sz = arch->N_outputs * N_train * sizeof *oblk;
-      check_cuda_error (cudaMalloc (&oblk, sz), "cudaMalloc of oblk for deriv");
+      check_cuda_error (CUDAMALLOC (&oblk, sz), "CUDAMALLOC of oblk for deriv");
 
       if (arch->has_ti)  /* Must allow for derivatives w.r.t. inputs */
       { pre.bw_stride = value_count_noout;
         sz = pre.bw_stride * N_train * sizeof *vblk;
-        check_cuda_error (cudaMalloc(&vblk, sz),"cudaMalloc of vblk for deriv");
+        check_cuda_error (CUDAMALLOC(&vblk, sz),"CUDAMALLOC of vblk for deriv");
         for (i = 0; i<N_train; i++) 
         { net_setup_value_pointers_aligned 
             (&tmp_values[i], vblk+value_count_noout*i,
@@ -1153,7 +1167,7 @@ void mc_app_initialize
       else  /* Derivatives w.r.t. inputs will not be taken */
       { pre.bw_stride = value_count_noinout;
         sz = pre.bw_stride * N_train * sizeof *vblk;
-        check_cuda_error (cudaMalloc(&vblk, sz),"cudaMalloc of vblk for deriv");
+        check_cuda_error (CUDAMALLOC(&vblk, sz),"CUDAMALLOC of vblk for deriv");
         for (i = 0; i<N_train; i++) 
         { net_setup_value_pointers_aligned 
             (&tmp_values[i], vblk+value_count_noinout*i, 
@@ -1164,16 +1178,16 @@ void mc_app_initialize
       }
 
       sz = max_cases_per_launch * sizeof *dev_deriv;
-      check_cuda_error (cudaMalloc (&dev_deriv, sz),
-                        "cudaMalloc of dev_deriv");
+      check_cuda_error (CUDAMALLOC (&dev_deriv, sz),
+                        "CUDAMALLOC of dev_deriv");
       check_cuda_error (cudaMemcpy 
           (dev_deriv, tmp_values, sz, cudaMemcpyHostToDevice),
         "copy to dev_deriv");
 
       sz = SCRATCH_PER_CASE(arch->N_outputs) * max_cases_per_launch 
                                              * sizeof *dev_scratch;
-      check_cuda_error (cudaMalloc (&dev_scratch, sz),
-                        "cudaMalloc of dev_scratch");
+      check_cuda_error (CUDAMALLOC (&dev_scratch, sz),
+                        "CUDAMALLOC of dev_scratch");
 
       grad_aligned_total = (params.total_params + GRAD_ALIGN_ELEMENTS - 1)
                               & ~(GRAD_ALIGN_ELEMENTS - 1);
@@ -2585,7 +2599,7 @@ void cuda_setup
 
   if (energy && case_energy==0)
   { 
-    check_cuda_error (cudaMalloc (&case_energy,
+    check_cuda_error (CUDAMALLOC (&case_energy,
                         n_energy_accum * sizeof *case_energy),
                       "alloc case_energy");
 
@@ -2597,7 +2611,7 @@ void cuda_setup
       block_energy = (double *) 
         chk_alloc (max_blocks_per_launch, sizeof *block_energy);
 #   endif
-    check_cuda_error (cudaMalloc (&dev_block_energy,
+    check_cuda_error (CUDAMALLOC (&dev_block_energy,
                          max_blocks_per_launch * sizeof *dev_block_energy),
                       "alloc of dev_block_energy");
     cudaMemcpyToSymbol
@@ -2632,13 +2646,13 @@ void cuda_setup
     if (GROUPS_PER_BLOCK>1)
     { tmp_grad = (net_params *) chk_alloc (n_grad_accum, sizeof *tmp_grad);
       tmp_grad->total_params = grad.total_params;
-      check_cuda_error (cudaMalloc 
+      check_cuda_error (CUDAMALLOC 
          (&tmp_grad->param_block, n_grad_accum * grad_aligned_total
                                    * sizeof *tmp_grad->param_block),
        "alloc tmp_grad param block for group_grad");
       net_setup_gradients (tmp_grad, n_grad_accum, ILV,
                            arch, flgs, grad_aligned_total);
-      check_cuda_error (cudaMalloc (&group_grad,
+      check_cuda_error (CUDAMALLOC (&group_grad,
                           n_grad_accum * sizeof *group_grad),
                         "alloc group_grad");
       check_cuda_error (cudaMemcpy (group_grad, tmp_grad,
@@ -2658,7 +2672,7 @@ void cuda_setup
     tmp_grad = (net_params *) 
       chk_alloc (max_blocks_per_launch, sizeof *tmp_grad);
     tmp_grad->total_params = grad.total_params;
-    check_cuda_error (cudaMalloc 
+    check_cuda_error (CUDAMALLOC 
        (&dev_block_grad_params, max_blocks_per_launch * grad_aligned_total
                                  * sizeof *tmp_grad->param_block),
      "alloc for dev_block_grad_params");
@@ -2666,7 +2680,7 @@ void cuda_setup
     net_setup_param_pointers (tmp_grad, arch, flgs);
     net_replicate_param_pointers(tmp_grad, arch, max_blocks_per_launch,
                                  grad_aligned_total);
-    check_cuda_error (cudaMalloc (&dev_block_grad,
+    check_cuda_error (CUDAMALLOC (&dev_block_grad,
                         max_blocks_per_launch * sizeof *dev_block_grad),
                       "alloc dev_block_grad");
     check_cuda_error (cudaMemcpy (dev_block_grad, tmp_grad,

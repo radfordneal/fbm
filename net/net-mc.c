@@ -1288,6 +1288,10 @@ void mc_app_initialize
 
 #   endif
 
+    if (show_info)
+    { fflush(stdout);
+    }
+
     /* Make sure we don't do all this again. */
 
     initialize_done = 1;

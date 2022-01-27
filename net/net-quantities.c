@@ -123,7 +123,7 @@ void net_initialize
     (net_value *) chk_alloc (net_setup_value_count(arch), sizeof (net_value)),
     arch, 0, 0);
 
-  /* Read training and test data, if present. */
+  /* Set up to read training and test data, if present. */
 
   have_train_data = have_test_data = have_test_targets = 0;
   data_spec = (data_specifications *) logg->data['D'];
@@ -141,12 +141,12 @@ void net_initialize
     have_test_targets = data_spec->test_targets[0]!=0;
 
     net_data_free ();   
-    net_data_read (1, 1, arch, model, surv);
 
     M_targets = arch->N_outputs;
 
     target_guess = (net_value *) chk_alloc (M_targets, sizeof *target_guess);
   }
+
 }
 
 
@@ -172,11 +172,19 @@ void net_available
     if (letter && qd[v].available==0 && (strchr("iItT",letter)==0 || mod!=-1)
                && !((letter=='c' || letter=='C') && mod!=-1))
     {
-      if (strchr("ixoygtzlcbav",letter)!=0 && !have_train_data
-       || strchr("IXOYGTZLCBAV",letter)!=0 && !have_test_data
-       || strchr("ZBA",letter)!=0          && !have_test_targets)
+      int want_train = strchr("ixoygtzlcbav",letter)!=0;
+      int want_test = strchr("IXOYGTZLCBAV",letter)!=0;
+      int want_test_targets = strchr("TZLBA",letter)!=0;
+
+      if (want_train && !have_train_data
+       || want_test && !have_test_data
+       || want_test_targets && !have_test_targets)
       { qd[v].available = -1;
         continue;
+      }
+
+      if (want_train || want_test)
+      { net_data_read (want_train, want_test, arch, model, surv);
       }
 
 # if 0 /* Disable these */
@@ -251,10 +259,6 @@ void net_available
 
       else if (strchr("IXOYGTZLBA",letter)!=0)
       { if (strchr("IXOYTZG",letter)!=0 && qd[v].low==-1 || qd[v].high>=N_test) 
-        { qd[v].available = -1;
-          continue;
-        }
-        if (strchr("TZLAB",letter)!=0 && !have_test_targets)
         { qd[v].available = -1;
           continue;
         }

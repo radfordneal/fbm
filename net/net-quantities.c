@@ -123,7 +123,9 @@ void net_initialize
     (net_value *) chk_alloc (net_setup_value_count(arch), sizeof (net_value)),
     arch, 0, 0);
 
-  /* Set up to read training and test data, if present. */
+  /* Set up to read training and test data, if present.  Not read
+     here, since we try to only read the data that turns out to be
+     needed (but training data may be read anyway in net-mc.c). */
 
   have_train_data = have_test_data = have_test_targets = 0;
   data_spec = (data_specifications *) logg->data['D'];
@@ -172,7 +174,7 @@ void net_available
     if (letter && qd[v].available==0 && (strchr("iItT",letter)==0 || mod!=-1)
                && !((letter=='c' || letter=='C') && mod!=-1))
     {
-      int want_train = strchr("ixoygtzlcbav",letter)!=0;
+      int want_train = strchr("ixoygzlcbav",letter)!=0 || letter=='t'&&mod!=-1;
       int want_test = strchr("IXOYGTZLCBAV",letter)!=0;
       int want_test_targets = strchr("TZLBA",letter)!=0;
 

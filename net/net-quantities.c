@@ -142,8 +142,6 @@ void net_initialize
     have_test_data = data_spec->test_inputs[0]!=0;
     have_test_targets = data_spec->test_targets[0]!=0;
 
-    net_data_free ();   
-
     M_targets = arch->N_outputs;
 
     target_guess = (net_value *) chk_alloc (M_targets, sizeof *target_guess);
@@ -804,4 +802,15 @@ void net_evaluate
       }
     }
   }
+}
+
+
+/* CLEAN UP AFTER ONE LOG FILE. */
+
+void net_cleanup(void)
+{ 
+  net_data_free ();   
+
+  extern int initialize_done;
+  initialize_done = 0;  /* redo initialization in net-mc.c for next file */
 }

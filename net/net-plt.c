@@ -32,10 +32,7 @@ extern void net_initialize (log_gobbled *);
 extern void net_available  (struct quantdesc[Max_quantities], log_gobbled *);
 extern void net_evaluate   (struct quantdesc[Max_quantities], quantities_held *,
                             log_gobbled *);
-extern int initialize_done;
-void net_mc_cleanup(void)
-{ initialize_done = 0;
-}
+extern void net_cleanup    (void);
 
 void (*quant_app_arguments[]) (char ***) =
 { net_arguments,
@@ -67,7 +64,7 @@ void (*quant_app_evaluate[])(struct quantdesc[Max_quantities], quantities_held*,
 };
 
 void (*quant_app_cleanup[]) (void) = 
-{ net_mc_cleanup,
+{ net_cleanup,
   0
 };
 

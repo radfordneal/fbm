@@ -1,0 +1,18 @@
+Commit: f69abc614bfb21514f45f12f170cb5e4291631b7
+
+Running exb16 with dbl:
+
+Number of training cases: 300
+Number of test cases: 1000
+Precision: FP64, SIMD capability: AVX, Use: SIMD SLEEF
+Precision: FP64, SIMD capability: AVX, Use: SIMD SLEEF
+
+Number of iterations used: 20
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.235+-0.017
+Fraction of guesses that were wrong:    0.1030+-0.0096
+
+elapsed 14.17s
+be6aff5e9ea91d5c77bdcf554c3b36bc7903010a  -

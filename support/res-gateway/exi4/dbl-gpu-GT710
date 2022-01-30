@@ -1,0 +1,30 @@
+Commit: f69abc614bfb21514f45f12f170cb5e4291631b7
+
+Running exi4 with dbl-gpu on GT710:
+
+Number of training cases: 2500
+Precision: FP64, SIMD capability: AVX, Use: SIMD SLEEF
+NVIDIA GeForce GT 710, Compute Capability 3.5, 1 SM processors, 2.0 GBytes
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 768 bytes, 96 values
+Hid layer shrd mem: 0:64:0,-1 1:16:64,-1 T 88
+With 2500 cases, need 1 launches, max 79 blocks/launch
+Precision: FP64, SIMD capability: AVX, Use: SIMD SLEEF
+NVIDIA GeForce GT 710, Compute Capability 3.5, 1 SM processors, 2.0 GBytes
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 768 bytes, 96 values
+Hid layer shrd mem: 0:64:0,-1 1:16:64,-1 T 88
+With 2500 cases, need 1 launches, max 79 blocks/launch
+
+Number of iterations used: 2
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.164+-0.083
+Fraction of guesses that were wrong:    0.4900+-0.0502
+Average squared error guessing mean:    0.61709+-0.03923
+
+elapsed 98.20s
+fd826b6bf4c03be8b57f323ef27f610e40722f5e  -

@@ -1,27 +1,30 @@
-Commit: 190671ad3b1b676b87ce52355ffce45f688dcf79
+Commit: f69abc614bfb21514f45f12f170cb5e4291631b7
 
 Running exc with flt-gpu on GT710:
 
 Number of training cases: 400
 Number of test cases: 1000
-Precision: FP32, SIMD capability: AVX, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
+Precision: FP32, SIMD capability: AVX, Use: SIMD SLEEF
 NVIDIA GeForce GT 710, Compute Capability 3.5, 1 SM processors, 2.0 GBytes
-Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
-Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 384 bytes/case
-Hid layer shrd mem: 0:8:0,8 T 16
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 768 bytes, 192 values
+Hid layer shrd mem: 0:8:0,8 T 24
 With 400 cases, need 1 launches, max 13 blocks/launch
-Precision: FP32, SIMD capability: AVX, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
+Precision: FP32, SIMD capability: AVX, Use: SIMD SLEEF
 NVIDIA GeForce GT 710, Compute Capability 3.5, 1 SM processors, 2.0 GBytes
-Specified 32 cases per block, max 500 blocks per launch, threads/case: 4
-Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16 -> 384 bytes/case
-Hid layer shrd mem: 0:8:0,8 T 16
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 768 bytes, 192 values
+Hid layer shrd mem: 0:8:0,8 T 24
 With 400 cases, need 1 launches, max 13 blocks/launch
 
 Number of iterations used: 30
 
 Number of test cases: 1000
 
-Average log probability of targets:    -0.474+-0.024
-Fraction of guesses that were wrong:    0.1960+-0.0126
+Average log probability of targets:    -0.470+-0.022
+Fraction of guesses that were wrong:    0.1990+-0.0126
 
-elapsed 20.15s
+elapsed 16.97s
+9a4d5b302d28278d280120ef710d62cd1e1dc55a  -

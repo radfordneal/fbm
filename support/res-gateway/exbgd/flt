@@ -1,9 +1,9 @@
-Commit: 190671ad3b1b676b87ce52355ffce45f688dcf79
+Commit: f69abc614bfb21514f45f12f170cb5e4291631b7
 
 Running exbgd with flt:
 
 Number of training cases: 800
-Precision: FP32, SIMD capability: AVX, Use: SIMD SLEEF, Cfg: SQ2-Q2O2
+Precision: FP32, SIMD capability: AVX, Use: SIMD SLEEF
 
 Number of iterations used: 1
 
@@ -13,4 +13,5 @@ Average log probability of targets:    -0.238+-0.025
 Fraction of guesses that were wrong:    0.1120+-0.0141
 Average squared error guessing mean:    0.07571+-0.00848
 
-elapsed 96.98s
+elapsed 101.11s
+5df3724ef4f07119d472f893d8efb1da4d48b49f  -

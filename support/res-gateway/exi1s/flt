@@ -1,0 +1,18 @@
+Commit: f69abc614bfb21514f45f12f170cb5e4291631b7
+
+Running exi1s with flt:
+
+Number of training cases: 4999
+Precision: FP32, SIMD capability: AVX, Use: SIMD SLEEF
+Precision: FP32, SIMD capability: AVX, Use: SIMD SLEEF
+
+Number of iterations used: 2
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.187+-0.063
+Fraction of guesses that were wrong:    0.5400+-0.0501
+Average squared error guessing mean:    0.64156+-0.03101
+
+elapsed 201.15s
+71c5b1118e809238f5371f6008fed9849a5b690d  -

@@ -1,0 +1,23 @@
+Commit: f69abc614bfb21514f45f12f170cb5e4291631b7
+
+Running exi2xm with dbl-gpu on GT710:
+
+Number of training cases: 1998
+Precision: FP64, SIMD capability: AVX, Use: SIMD SLEEF
+NVIDIA GeForce GT 710, Compute Capability 3.5, 1 SM processors, 2.0 GBytes
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 768 bytes, 96 values
+Hid layer shrd mem: 0:272:-1,-1 T 0
+With 1998 cases, need 1 launches, max 63 blocks/launch
+
+Number of iterations used: 3
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.342+-0.018
+Fraction of guesses that were wrong:    0.6900+-0.0465
+Average squared error guessing mean:    0.72788+-0.00875
+
+elapsed 107.48s
+8d0e36d4326379d8bb03f79dce8cd6029a52df03  -

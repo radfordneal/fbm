@@ -1,0 +1,23 @@
+Commit: 862d751d517a6f806c996b3d6fb45ccb9746d3ad
+
+Running exbgd with dbl-gpu on GP100:
+
+Number of training cases: 800
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+Quadro GP100, Compute Capability 6.0, 56 SM processors, 15.9 GBytes ECC
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
+Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 128 values
+Hid layer shrd mem: 0:15:0,15 T 40
+With 800 cases, need 1 launches, max 25 blocks/launch
+
+Number of iterations used: 1
+
+Number of test cases: 500
+
+Average log probability of targets:    -0.238+-0.025
+Fraction of guesses that were wrong:    0.1120+-0.0141
+Average squared error guessing mean:    0.07571+-0.00848
+
+elapsed 3.98s
+2d033f693f378bbbc2fc96af6c5bad8858aca936  -

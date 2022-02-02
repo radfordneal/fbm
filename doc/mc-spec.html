@@ -470,11 +470,12 @@ stepsize-alpha of infinity, window of one, and jump of one.
 
 The trajectory specification can have one of the following forms:
 
-    leapfrog [ halfp | halfq ] [ N-approx | frac ] [ approx-file ]
+    leapfrog [ "halfp" | "halfq" ] [ N-approx | frac ] [ approx-file ]
 
-        Use the leapfrog method.  The "halfp" or "halfq" option specifies 
-        whether the half-steps at the beginning and end of the trajectory 
-        are for p (momentum) or q (position).  The default is "halfp".
+        Use the leapfrog method.  The "halfp" or "halfq" option
+        specifies whether the half-steps at the beginning and end of
+        the trajectory are for p (momentum) or q (position).  The
+        default is "halfp".
 
         The N-approx option results in N-approx leapfrog steps for
         each overall step, which use successive approximations to the
@@ -493,29 +494,31 @@ The trajectory specification can have one of the following forms:
         containing further information on how the approximations are
         constructed, whose contents are specific to the application.
 
-    opt2 [ rev | sym ] [ firstq | firstp ] [ frac ]
+    opt2 [ "rev" | "sym" ] [ "firstq" | "firstp" ] [ frac ]
 
-        Apply McLachlan and Atela's "optimal" two stage method, with the
-        first step being done for the position (firstq) or momentum
-        (firstp) variables.  The default is "firstp".  This method is
-        not symmetrical.  The "rev" option gives the reversed version.
-        The "sym" option gives the ordinary followed by the reversed
-        version, with half the stepsize for each, thereby producing 
-        a symmetrical method.  Only the symmetrical method should be
-        used in conjuntion with "hybrid" and "tempered hybrid" operations.  
+        Apply McLachlan and Atela's "optimal" two stage method, with
+        the first step being done for the position (firstq) or
+        momentum (firstp) variables.  The default is "firstp".  This
+        method is not symmetrical.  The "rev" option gives the
+        reversed version.  The "sym" option gives the ordinary
+        followed by the reversed version, with half the stepsize for
+        each, thereby producing a symmetrical method.  Only the
+        symmetrical method should be used in conjuntion with "hybrid"
+        and "tempered hybrid" operations.
 
-    gen2 [ rev | sym ] [ firstq | firstp ] a2 [ frac ]
+    gen2 [ "rev" | "sym" ] [ "firstq" | "firstp" ] a2 [ frac ]
 
         Apply a two stage second-order method with parameter a2, as
-        described by McLachlan and Atela.  Firstq and firstp are as for
-        opt2.  This is probably only interesting for research, since the
-        most useful values for a2 are covered by "leapfrog" and "opt2".
-        The "rev" and "sym" options are as for opt2.
+        described by McLachlan and Atela.  Firstq and firstp are as
+        for opt2.  This is probably only interesting for research,
+        since the most useful values for a2 are covered by "leapfrog"
+        and "opt2".  The "rev" and "sym" options are as for opt2.
 
-    opt4 [ rev | sym ] [ frac ]
+    opt4 [ "rev" | "sym" ] [ frac ]
 
         Apply McLachlan and Atela's "optimal" four stage method for
-        quadratic kinetic energy. The "rev" and "sym" options are as for opt2.
+        quadratic kinetic energy. The "rev" and "sym" options are as
+        for opt2.
 
 The frac option for all these specifications causes the gradient of
 the energy use to be based on that fraction of some set of terms (eg,
@@ -523,7 +526,7 @@ training cases).  The default is to use all terms (ie, frac of 1).
 This option may be ignored by some applications.
 
 The default if no specification is given is "leapfrog halfp".  The
-opt2, gen2, and opt4 methods are taken from a paper by Robert I. 
+opt2, gen2, and opt4 methods are taken from a paper by Robert I.
 McLachlan and Pau Atela, "The accuracy of symplectic integrators",
 Nonlinearity, vol. 5, pp. 541-562, 1992.  (Note: there is a typo in
 their description of opt2 in table 2. b1=1-b2 should be 1-1/sqrt(2).)
@@ -531,7 +534,7 @@ their description of opt2 in table 2. b1=1-b2 should be 1-1/sqrt(2).)
 The list of operations is stored in a record of type 'o'; the
 trajectory specification in a record of type 't'.
 
-            Copyright (c) 1995-2019 by Radford M. Neal
+            Copyright (c) 1995-2022 by Radford M. Neal
 </pre>
 </body>
 </html>

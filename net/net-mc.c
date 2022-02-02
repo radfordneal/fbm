@@ -2724,7 +2724,7 @@ void cuda_setup
 
 #if __CUDACC__
 
-#define KDEBUG 0        /* Set to 1 to enable debug output below */
+#define KDEBUG 1        /* Set to 1 to enable debug output below */
 
 #define KERNEL_PRELUDE \
   int m = threadIdx.x / NTH; \
@@ -3097,8 +3097,8 @@ static void net_training_cases_gpu
 
       if (KDEBUG) 
       { printf(
-       "\nABOUT TO LAUNCH KERNELS: i %d, cases %d, blks %d, thrds %d, mem %d\n",
-          i, cases, blks, THREADS_PER_BLOCK, shared_mem);
+"\nABOUT TO LAUNCH KERNELS %d,%d: i %d, cases %d, blks %d, thrds %d, mem %d\n",
+          en!=0, gr!=0, i, cases, blks, THREADS_PER_BLOCK, shared_mem);
       }
           
 #     if SPLIT_MODEL

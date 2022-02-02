@@ -57,6 +57,8 @@
   cudaMalloc((ptr),(sz)) \
 )
 
+static int show_info;	/* Whether to display info (INFO env var set to 1) */
+
 
 #if __CUDACC__
 
@@ -70,6 +72,9 @@ static int max_blocks_per_launch;	/* Largest number of blocks for one
                                            CUDA kernel launch */
 static int max_cases_per_launch;        /* Largest number of cases handled by
 					   one CUDA kernel launch */
+
+static char *info_for_n;		/* Flags for whether info regarding
+					   usage for n cases yet displayed */
 
 #define SCRATCH_PER_CASE(Nout) (2*(Nout)) /* Amount of GPU scratch memory per 
                                              case, as function of N_outputs */
@@ -602,9 +607,9 @@ void mc_app_initialize
     }
 
     char *e =  getenv("INFO");
-    int show_info = e!=0 && strcmp(e,"false")!=0
-                         && strcmp(e,"FALSE")!=0
-                         && strcmp(e,"0")!=0;
+    show_info = e!=0 && strcmp(e,"false")!=0
+                     && strcmp(e,"FALSE")!=0
+                     && strcmp(e,"0")!=0;
 
     if (show_info)
     { fprintf (stderr, 
@@ -1095,6 +1100,7 @@ void mc_app_initialize
         { printf ("With %d cases, need %d launches, max %d blocks/launch\n",
                   N_train, n_launches, max_blocks_per_launch);
         }
+        info_for_n = (char *) chk_alloc (N_train, sizeof *info_for_n);
       }
       else
       { if (show_info)
@@ -3050,8 +3056,7 @@ static void net_training_cases_gpu
   double gr_weight	/* Weight for this case for gradient */
 )
 
-{ int j;
-
+{ 
   cuda_setup (energy, gr ? gr->param_block : 0);
 
   /* Copy current parameters to GPU, including transposed versions (if any)
@@ -3070,6 +3075,22 @@ static void net_training_cases_gpu
                       "Copying noise sigmas to GPU");
   }
 
+  int launches, max_cases, max_blocks;
+  launches = (n + max_cases_per_launch - 1) / max_cases_per_launch;
+  max_cases = (n + launches - 1) / launches;
+  max_blocks = (max_cases + BLKCASES - 1) / BLKCASES;
+  max_cases = max_blocks * BLKCASES;
+
+  if (max_cases>max_cases_per_launch) abort();
+
+  if (show_info && n>0 && n<N_train && !info_for_n[n])
+  { 
+    printf ("With %d cases, need %d launches, max %d blocks/launch\n",
+             n, launches, max_blocks);
+
+    info_for_n[n] = 1;
+  }
+
   int prev_blks = 0;  /* Number of blocks waiting to be reduced */
 
   while (n > 0 || prev_blks > 0)
@@ -3080,7 +3101,7 @@ static void net_training_cases_gpu
 
     if (n > 0)
     {
-      cases = n < max_cases_per_launch ? n : max_cases_per_launch;
+      cases = n < max_cases ? n : max_cases;
       blks = (cases + BLKCASES-1) / BLKCASES;
 
       check_cuda_error (cudaGetLastError(), "Before launching kernel(s)");
@@ -3142,6 +3163,7 @@ static void net_training_cases_gpu
 
     if (energy && prev_blks>0)
     { double e = *energy;
+      int j;
       for (j = 0; j<prev_blks; j++)
       { e += block_energy[j];
       }
@@ -3151,6 +3173,7 @@ static void net_training_cases_gpu
     if (gr && prev_blks>0)
     { 
       net_params *np = block_grad;
+      int j;
 
       for (j = 0; j<prev_blks; j++)
       { net_param *restrict npb = np->param_block;

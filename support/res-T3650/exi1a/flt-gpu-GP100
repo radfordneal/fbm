@@ -1,0 +1,30 @@
+Commit: 2f36d7b6fa5078ef364ac5cb15cca796e441af69
+
+Running exi1a with flt-gpu on GP100:
+
+Number of training cases: 4999
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+Quadro GP100, Compute Capability 6.0, 56 SM processors, 15.9 GBytes ECC
+Using 32 cases per block, max 75 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
+Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 256 values
+Hid layer shrd mem: 0:80:0,80 T 168
+With 4999 cases, need 3 launches, max 53 blocks/launch
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+Quadro GP100, Compute Capability 6.0, 56 SM processors, 15.9 GBytes ECC
+Using 32 cases per block, max 75 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
+Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 256 values
+Hid layer shrd mem: 0:80:0,80 T 168
+With 4999 cases, need 3 launches, max 53 blocks/launch
+
+Number of iterations used: 2
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.050+-0.081
+Fraction of guesses that were wrong:    0.4900+-0.0502
+Average squared error guessing mean:    0.57732+-0.04266
+
+elapsed 2.69s
+17e1ddfdc371ee4eb2427bddea1cd3111c3c5e2b  -

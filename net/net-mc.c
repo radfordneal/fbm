@@ -3439,14 +3439,14 @@ void mc_app_energy
           low  = (N_train * (w_approx-1)) / N_approx;
           high = (N_train * w_approx) / N_approx;
 
-          if (energy)    
-          { net_training_cases (energy, 0, i, low, inv_temp, 1);
+          if (energy && low>0)
+          { net_training_cases (energy, 0, 0, low, inv_temp, 1);
           }
 
           net_training_cases (energy, &grad, low, high-low, 
                               inv_temp, inv_temp*N_approx);
 
-          if (energy)    
+          if (energy && high<N_train)
           { net_training_cases (energy, 0, high, N_train-high, inv_temp, 1);
           }
         }

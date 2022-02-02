@@ -2724,7 +2724,7 @@ void cuda_setup
 
 #if __CUDACC__
 
-#define KDEBUG 1        /* Set to 1 to enable debug output below */
+#define KDEBUG 0        /* Set to 1 to enable debug output below */
 
 #define KERNEL_PRELUDE \
   int m = threadIdx.x / NTH; \

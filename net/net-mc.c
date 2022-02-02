@@ -612,8 +612,7 @@ void mc_app_initialize
                      && strcmp(e,"0")!=0;
 
     if (show_info)
-    { fprintf (stderr, 
-               "Precision: %s%s%s%s%s%s\n",
+    { printf ("Precision: %s%s%s%s%s%s\n",
                FP32 ? "FP32" : "FP64",
 #              if __AVX2__ && __FMA__
                  ", SIMD capability: AVX2 FMA",
@@ -3087,6 +3086,7 @@ static void net_training_cases_gpu
   { 
     printf ("With %d cases, need %d launches, max %d blocks/launch\n",
              n, launches, max_blocks);
+    fflush(stdout);
 
     info_for_n[n] = 1;
   }

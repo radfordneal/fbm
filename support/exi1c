@@ -1,0 +1,19 @@
+#!/bin/bash
+
+export MAXBLKS=75
+
+net-spec log 36 80 softplus 4 \
+              / ih=0.2:2 bh=0.3:2 ho=0.1:2 bo=0.1:2
+model-spec log class
+
+data-spec log 36 1 4 / idata@1:4999 .
+
+net-gen log fix 0.1
+
+mc-spec log repeat 10 heatbath hybrid 100:20 0.12 / leapfrog 3
+net-mc log 1
+
+mc-spec log repeat 2 sample-sigmas heatbath hybrid 500:40 0.15 / leapfrog 3
+net-mc log 4
+
+net-pred nmpa log 3: / idata@5001:5100 .

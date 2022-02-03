@@ -1,0 +1,38 @@
+Commit: 98772b190c6364dfe0e207a8b7eca3df57e1dde3
+
+Running exi1c with flt-gpu on GP100:
+
+Number of training cases: 4999
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+Quadro GP100, Compute Capability 6.0, 56 SM processors, 15.9 GBytes ECC
+Using 32 cases per block, max 75 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
+Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 256 values
+Hid layer shrd mem: 0:80:0,80 T 168
+With 4999 cases, need 3 launches, max 53 blocks/launch
+With 1666 cases, need 1 launches, max 53 blocks/launch
+With 1667 cases, need 1 launches, max 53 blocks/launch
+With 3333 cases, need 2 launches, max 53 blocks/launch
+With 3332 cases, need 2 launches, max 53 blocks/launch
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+Quadro GP100, Compute Capability 6.0, 56 SM processors, 15.9 GBytes ECC
+Using 32 cases per block, max 75 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
+Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 256 values
+Hid layer shrd mem: 0:80:0,80 T 168
+With 4999 cases, need 3 launches, max 53 blocks/launch
+With 1666 cases, need 1 launches, max 53 blocks/launch
+With 1667 cases, need 1 launches, max 53 blocks/launch
+With 3333 cases, need 2 launches, max 53 blocks/launch
+With 3332 cases, need 2 launches, max 53 blocks/launch
+
+Number of iterations used: 2
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.032+-0.081
+Fraction of guesses that were wrong:    0.4100+-0.0494
+Average squared error guessing mean:    0.55233+-0.04175
+
+elapsed 2.96s
+0460ce926a5bcd0b843af3e91a05ddb3e99792f5  -

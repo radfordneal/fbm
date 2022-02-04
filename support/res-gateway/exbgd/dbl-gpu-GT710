@@ -1,4 +1,4 @@
-Commit: f69abc614bfb21514f45f12f170cb5e4291631b7
+Commit: 8c99ea1c0f48a579bbb935f3c6f61c4d071aa88e
 
 Running exbgd with dbl-gpu on GT710:
 
@@ -19,5 +19,5 @@ Average log probability of targets:    -0.238+-0.025
 Fraction of guesses that were wrong:    0.1120+-0.0141
 Average squared error guessing mean:    0.07571+-0.00848
 
-elapsed 54.18s
+elapsed 54.17s
 2d033f693f378bbbc2fc96af6c5bad8858aca936  -

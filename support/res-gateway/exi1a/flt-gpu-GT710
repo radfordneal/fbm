@@ -1,0 +1,30 @@
+Commit: 8c99ea1c0f48a579bbb935f3c6f61c4d071aa88e
+
+Running exi1a with flt-gpu on GT710:
+
+Number of training cases: 4999
+Precision: FP32, SIMD capability: AVX, Use: SIMD SLEEF
+NVIDIA GeForce GT 710, Compute Capability 3.5, 1 SM processors, 2.0 GBytes
+Using 32 cases per block, max 75 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 768 bytes, 192 values
+Hid layer shrd mem: 0:80:0,80 T 168
+With 4999 cases, need 3 launches, max 53 blocks/launch
+Precision: FP32, SIMD capability: AVX, Use: SIMD SLEEF
+NVIDIA GeForce GT 710, Compute Capability 3.5, 1 SM processors, 2.0 GBytes
+Using 32 cases per block, max 75 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 49152, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 768 bytes, 192 values
+Hid layer shrd mem: 0:80:0,80 T 168
+With 4999 cases, need 3 launches, max 53 blocks/launch
+
+Number of iterations used: 2
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.050+-0.081
+Fraction of guesses that were wrong:    0.4900+-0.0502
+Average squared error guessing mean:    0.57732+-0.04266
+
+elapsed 68.19s
+17e1ddfdc371ee4eb2427bddea1cd3111c3c5e2b  -

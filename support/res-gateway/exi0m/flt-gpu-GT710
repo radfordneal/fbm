@@ -1,4 +1,4 @@
-Commit: f69abc614bfb21514f45f12f170cb5e4291631b7
+Commit: 8c99ea1c0f48a579bbb935f3c6f61c4d071aa88e
 
 Running exi0m with flt-gpu on GT710:
 
@@ -19,5 +19,5 @@ Average log probability of targets:    -1.371+-0.014
 Fraction of guesses that were wrong:    0.7500+-0.0435
 Average squared error guessing mean:    0.74180+-0.00683
 
-elapsed 29.12s
+elapsed 29.10s
 7c2c2991fbfc345777e04fbe32f3ddfd2d531905  -

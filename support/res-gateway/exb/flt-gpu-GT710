@@ -1,4 +1,4 @@
-Commit: f69abc614bfb21514f45f12f170cb5e4291631b7
+Commit: 8c99ea1c0f48a579bbb935f3c6f61c4d071aa88e
 
 Running exb with flt-gpu on GT710:
 
@@ -26,5 +26,5 @@ Number of test cases: 1000
 Average log probability of targets:    -0.242+-0.017
 Fraction of guesses that were wrong:    0.1090+-0.0099
 
-elapsed 6.71s
+elapsed 6.68s
 e3e1dda74658ac6751dba8fca59321b483d334ca  -

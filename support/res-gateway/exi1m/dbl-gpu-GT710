@@ -1,4 +1,4 @@
-Commit: f69abc614bfb21514f45f12f170cb5e4291631b7
+Commit: 8c99ea1c0f48a579bbb935f3c6f61c4d071aa88e
 
 Running exi1m with dbl-gpu on GT710:
 
@@ -19,5 +19,5 @@ Average log probability of targets:    -1.326+-0.027
 Fraction of guesses that were wrong:    0.6900+-0.0465
 Average squared error guessing mean:    0.72257+-0.01381
 
-elapsed 81.53s
+elapsed 81.55s
 0db9eedb6725e16796788171628780f2c6a7510b  -

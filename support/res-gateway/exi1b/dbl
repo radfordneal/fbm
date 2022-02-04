@@ -1,0 +1,18 @@
+Commit: 8c99ea1c0f48a579bbb935f3c6f61c4d071aa88e
+
+Running exi1b with dbl:
+
+Number of training cases: 4999
+Precision: FP64, SIMD capability: AVX, Use: SIMD SLEEF
+Precision: FP64, SIMD capability: AVX, Use: SIMD SLEEF
+
+Number of iterations used: 2
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.032+-0.075
+Fraction of guesses that were wrong:    0.3900+-0.0490
+Average squared error guessing mean:    0.56241+-0.03976
+
+elapsed 395.52s
+96b63399a17066b2f706b8f5370b2055b3bfba10  -

@@ -1,4 +1,4 @@
-Commit: f69abc614bfb21514f45f12f170cb5e4291631b7
+Commit: 8c99ea1c0f48a579bbb935f3c6f61c4d071aa88e
 
 Running exi2xm with flt-gpu on GT710:
 
@@ -19,5 +19,5 @@ Average log probability of targets:    -1.342+-0.018
 Fraction of guesses that were wrong:    0.6900+-0.0465
 Average squared error guessing mean:    0.72788+-0.00875
 
-elapsed 83.41s
+elapsed 83.54s
 06e92727ff57bf8788ee81f20be2e8ccd8f512b3  -

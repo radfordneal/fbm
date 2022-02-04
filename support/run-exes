@@ -4,7 +4,7 @@ set -e
 
 if [ x$1 == x ]; then
   list="exb exb16 exbgd exc \
-        exi0 exi0m exi1 exi1 exib exi1m exi1ms exi1s \
+        exi0 exi0m exi1 exi1a exi1b exi1m exi1ms exi1s \
         exi2 exi2m exi2x exi2xm exi3 exi3m exi4 exi4m exr"
 else
   list="$@"

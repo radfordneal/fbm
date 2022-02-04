@@ -1,4 +1,4 @@
-Commit: b1b4f2e12fd0151b2c2690c3f7a5648e9e72e9d6
+Commit: 8c99ea1c0f48a579bbb935f3c6f61c4d071aa88e
 
 Running exi2x with dbl-gpu on T400:
 
@@ -26,5 +26,5 @@ Average log probability of targets:    -0.818+-0.097
 Fraction of guesses that were wrong:    0.2900+-0.0456
 Average squared error guessing mean:    0.42724+-0.04697
 
-elapsed 28.65s
+elapsed 28.64s
 d2955b89f26c7de758bf647b00c5aa260ff233c6  -

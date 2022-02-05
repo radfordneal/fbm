@@ -2745,7 +2745,7 @@ void cuda_setup
 #if SPLIT_MODEL
 
 __global__ void forward_kernel
-__launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
+__launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
 (
   int start,            /* Start of cases to look at */
   int end               /* End of cases to look at (index after last case) */
@@ -2757,7 +2757,7 @@ __launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
 #if !SPLIT_MODEL && SPLIT_BACK_GRAD
 
 __global__ void forward_model_kernel
-__launch_bounds__(THREADS_PER_BLOCK,MIN_BLOCKS_PER_SM)
+__launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
 (
   int start,            /* Start of cases to look at */
   int end,              /* End of cases to look at (index after last case) */

@@ -1109,19 +1109,24 @@ void mc_app_initialize
     }
 #   endif
 
-    /* Copy training inputs and training targets to GPU memory, and allocate
-       space on GPU for values in all training cases, with pointers set up. */
+    /* Copy training inputs and training targets to GPU memory. Allocate
+       space on GPU for outputs in all training cases, and hidden values for
+       the maximum cases in a launch.  Also set up for derivatives. */
 
 #   if __CUDACC__
     { if (N_train>0)
       { 
+        net_value *iblk, *oblk, *vblk;
         size_t sz;
         int i, b;
+
+        /* Allocate space in CPU for values structures (for all training cases)
+           with pointers to GPU memory.  These will later be copied to GPU. */
 
         net_values *tmp_values
                       = (net_values *) chk_alloc (N_train, sizeof *tmp_values);
 
-        net_value *iblk, *oblk, *vblk;
+        /* Copy inputs for all training cases to GPU. */
 
         check_cuda_error (cudaGetLastError(), "Before copying of data to GPU");
 
@@ -1131,28 +1136,7 @@ void mc_app_initialize
                            (iblk, train_iblock, sz, cudaMemcpyHostToDevice),
                           "copy to iblk");
 
-        sz = arch->N_outputs * N_train * sizeof *oblk;
-        check_cuda_error (CUDAMALLOC (&oblk, sz), 
-                          "cudaMalloc of oblk for train");
-        sz = value_count_noinout * max_cases_per_launch * sizeof *vblk;
-        check_cuda_error (CUDAMALLOC (&vblk, sz), 
-                          "cudaMalloc of vblk for train");
-
-        pre.fw_stride = value_count_noinout;
-        b = 0;
-        for (i = 0; i<N_train; i++) 
-        { net_setup_value_pointers_aligned 
-            (&tmp_values[i], vblk+b*pre.fw_stride, arch,
-             NET_VALUE_ALIGN_ELEMENTS, iblk+N_inputs*i, oblk+arch->N_outputs*i);
-          if (++b > max_cases_per_launch) b = 0;
-        }
-
-        sz = N_train * sizeof *dev_train_values;
-        check_cuda_error (CUDAMALLOC (&dev_train_values, sz), 
-                          "cudaMalloc of dev_train_values");
-        check_cuda_error (cudaMemcpy 
-            (dev_train_values, tmp_values, sz, cudaMemcpyHostToDevice),
-          "copy to dev_train_values");
+        /* Copy targets for all training cases to GPU. */
         
         sz = N_targets * N_train * sizeof *dev_train_targets;
         check_cuda_error (CUDAMALLOC (&dev_train_targets, sz),
@@ -1160,6 +1144,47 @@ void mc_app_initialize
         check_cuda_error (cudaMemcpy
             (dev_train_targets, train_targets, sz, cudaMemcpyHostToDevice),
           "copy to dev_train_targets");
+
+        /* Allocate space for outputs in all training cases. */
+
+        sz = arch->N_outputs * N_train * sizeof *oblk;
+        check_cuda_error (CUDAMALLOC (&oblk, sz), 
+                          "cudaMalloc of oblk for train");
+
+        /* Allocate space to hold hidden unit values for up to 
+           max_cases_per_launch cases. */
+
+        sz = value_count_noinout * max_cases_per_launch * sizeof *vblk;
+        check_cuda_error (CUDAMALLOC (&vblk, sz), 
+                          "cudaMalloc of vblk for train");
+
+        /* Set up pointers in values structures for all training cases 
+           to point to memory for inputs, outputs, and hidden unit values.
+           Only space for hidden unit values for max_cases_per_launch cases
+           is allocated, used sequentially with wrap-around, which should
+           work when any consecutive subset of up to max_cases_per_launch
+           cases are used. */
+
+        pre.fw_stride = value_count_noinout;
+        b = 0;
+        for (i = 0; i<N_train; i++) 
+        { net_setup_value_pointers_aligned 
+            (&tmp_values[i], vblk+b*pre.fw_stride, arch,
+             NET_VALUE_ALIGN_ELEMENTS, iblk+N_inputs*i, oblk+arch->N_outputs*i);
+          if (++b >= max_cases_per_launch) b = 0;
+        }
+
+        /* Copy the values structures (with pointers) that have been set up
+           to GPU memory. */
+
+        sz = N_train * sizeof *dev_train_values;
+        check_cuda_error (CUDAMALLOC (&dev_train_values, sz), 
+                          "cudaMalloc of dev_train_values");
+        check_cuda_error (cudaMemcpy 
+            (dev_train_values, tmp_values, sz, cudaMemcpyHostToDevice),
+          "copy to dev_train_values");
+
+        /* Allocate and set up for derivatives. */
 
         sz = arch->N_outputs * N_train * sizeof *oblk;
         check_cuda_error (CUDAMALLOC (&oblk, sz), 
@@ -1175,7 +1200,7 @@ void mc_app_initialize
           { net_setup_value_pointers_aligned 
               (&tmp_values[i], vblk+value_count_noout*b,
                arch, NET_VALUE_ALIGN_ELEMENTS, 0, oblk+arch->N_outputs*i);
-            if (++b > max_cases_per_launch) b = 0;
+            if (++b >= max_cases_per_launch) b = 0;
           }
         }
         else  /* Derivatives w.r.t. inputs will not be taken */
@@ -1190,7 +1215,7 @@ void mc_app_initialize
                arch, NET_VALUE_ALIGN_ELEMENTS, 
                iblk+N_inputs*i /* not actually used */, 
                oblk+arch->N_outputs*i);
-            if (++b > max_cases_per_launch) b = 0;
+            if (++b >= max_cases_per_launch) b = 0;
           }
         }
 
@@ -3051,8 +3076,8 @@ static void net_training_cases_gpu
   net_params *gr,	/* Place to store/increment gradient, 0 if not needed */
   int i,		/* First case to look at */
   int n,		/* Number of cases to look at */
-  double en_weight,	/* Weight for this case for energy */
-  double gr_weight	/* Weight for this case for gradient */
+  double en_weight,	/* Weight for these cases for energy */
+  double gr_weight	/* Weight for these cases for gradient */
 )
 
 { 
@@ -3092,6 +3117,15 @@ static void net_training_cases_gpu
   }
 
   int prev_blks = 0;  /* Number of blocks waiting to be reduced */
+
+  if (KDEBUG)
+  { static int already_set = 0;  /* set not allowed after first use of printf */
+    if (!already_set)
+    { check_cuda_error (cudaDeviceSetLimit (cudaLimitPrintfFifoSize, 100000000),
+                        "Setting printf fifo size");
+      already_set = 1;
+    }
+  }
 
   while (n > 0 || prev_blks > 0)
   { 

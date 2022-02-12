@@ -27,3 +27,35 @@ mc-spec log heatbath hybrid 5:2 0.1
 net-mc log 6
 net-grad-test log 6 0.001
 net-tbl -h tmDKE log 
+
+echo " "; echo "--- C"; echo " "
+
+(echo 100 200 300 17 18; echo 101 202 300 17.1 18.2) >data
+
+net-spec log 3 2 / io=3 bo=4
+data-spec log 3 2 / "%cat data data data data" .
+model-spec log real 1
+net-gen log
+mc-spec log heatbath hybrid 40 0.25
+echo Iteration 0:; net-display -P log
+net-mc log 1
+echo Iteration 1:; net-display -P log
+net-mc log 2
+echo Iteration 2:; net-display -P log
+net-mc log 3
+echo Iteration 3:; net-display -P log
+net-tbl -h trDKE log 1:
+
+net-spec log 3 2 / io=3 bo=4
+data-spec log 3 2 / "%cat data data data data" .
+model-spec log real 1
+net-gen log
+mc-spec log heatbath hybrid 10 1.0 / leapfrog 4
+echo Iteration 0:; net-display -P log
+net-mc log 1
+echo Iteration 1:; net-display -P log
+net-mc log 2
+echo Iteration 2:; net-display -P log
+net-mc log 3
+echo Iteration 3:; net-display -P log
+net-tbl -h trDKE log 1:

@@ -82,3 +82,25 @@ net-grad-test log 3 0.001
 net-tbl -h tKEb log 0:
 net-tbl -h q0q1q2q3q4 log
 net-tbl -h q5q6q7o1@ log
+
+echo " "; echo "--- E"; echo " "
+
+(echo 100 200 300 17 18; echo 101 202 300 17.1 18.2) >data
+
+net-spec log 3 2 / io=3 bo=4
+data-spec log 3 2 / "%cat data data data data" .
+model-spec log real 1
+mc-spec log heatbath dynamic 40 0.25
+net-mc log 3
+net-tbl -h tKEb log 1:
+net-tbl -h q0q1q2q3q4 log
+net-tbl -h q5q6q7o1@ log
+
+net-spec log 3 2 / io=3 bo=4
+data-spec log 3 2 / "%cat data data data data" .
+model-spec log real 1
+mc-spec log heatbath dynamic 10 1.0 / leapfrog 4
+net-mc log 3
+net-tbl -h tKEb log 1:
+net-tbl -h q0q1q2q3q4 log
+net-tbl -h q5q6q7o1@ log

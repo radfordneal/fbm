@@ -3387,6 +3387,8 @@ static void net_training_cases_gpu
 
 /* APPLICATION-SPECIFIC ENERGY/GRADIENT PROCEDURE.  Called from 'mc' module. */
 
+#define DEBUG_MC_APP_ENERGY 0  /* Can set to 1 for debugging */
+
 void mc_app_energy
 ( mc_dynamic_state *ds,	/* Current dynamical state */
   int N_approx,		/* Number of gradient approximations in use */
@@ -3395,15 +3397,24 @@ void mc_app_energy
   mc_value *gr		/* Place to store gradient, null if not required */
 )
 {
-  double log_prob, inv_temp;
   int i, j, low, high;
+  double log_prob;
+
+  double inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
+
+  if (DEBUG_MC_APP_ENERGY)
+  { printf(
+     "MC_APP_ENERGY: energy %p, gr %p, N_approx %d, w_approx %d, inv_temp %f\n",
+      energy, gr, N_approx, w_approx, inv_temp);
+  }
 
   if (energy==0 && gr==0) return;  /* Nothing being returned -> nothing to do */
 
-  inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
-
   if (gr && grad.param_block!=gr)
-  { grad.param_block = gr;
+  { if (DEBUG_MC_APP_ENERGY)
+    { printf ("mc_app_energy: setting up grad param pointers\n");
+    }
+    grad.param_block = gr;
     net_setup_param_pointers (&grad, arch, flgs);
   }
 
@@ -3412,6 +3423,9 @@ void mc_app_energy
   if (inv_temp>=0)
   { net_prior_prob (&params, &sigmas, &log_prob, gr ? &grad : 0, 
                     arch, flgs, priors, 2);
+    if (DEBUG_MC_APP_ENERGY)
+    { printf ("mc_app_energy: log_prob %.6g\n", log_prob);
+    }
   }
   else
   { log_prob = 0;
@@ -3473,6 +3487,13 @@ void mc_app_energy
       {
         net_training_cases (energy, gr ? &grad : 0, 0, N_train, 
                             inv_temp, inv_temp);
+        if (DEBUG_MC_APP_ENERGY)
+        { printf ("mc_app_energy: gr==0 so called with all %d training cases\n",
+                   N_train);
+          if (energy)
+          { printf ("mc_app_energy: energy %.4f\n", *energy);
+          }
+        }
       }
       else /* We're using multiple approximations */
       {
@@ -3483,7 +3504,7 @@ void mc_app_energy
 
           for (j = low; j<high; j++)
           { i = approx_case[j] - 1;
-            net_training_cases (0, &grad, i, 1, 
+            net_training_cases (0, gr ? &grad : 0, i, 1, 
                                 1, (double)inv_temp*N_approx/approx_times[i]);
           }
 
@@ -3496,15 +3517,37 @@ void mc_app_energy
           low  = (N_train * (w_approx-1)) / N_approx;
           high = (N_train * w_approx) / N_approx;
 
-          if (energy && low>0)
-          { net_training_cases (energy, 0, 0, low, inv_temp, 1);
+          if (DEBUG_MC_APP_ENERGY)
+          { printf ("mc_app_energy: approx %d of %d, low %d, high %d",
+                     w_approx, N_approx, low, high);
           }
 
-          net_training_cases (energy, &grad, low, high-low, 
+          if (DEBUG_MC_APP_ENERGY && energy)
+          { printf (", energy: p=%.4f", *energy);
+          }
+
+          if (energy && low>0)
+          { net_training_cases (energy, 0, 0, low, inv_temp, 1);
+            if (DEBUG_MC_APP_ENERGY)
+            { printf (" +[0,%d)=%.4f", low, *energy);
+            }
+          }
+
+          net_training_cases (energy, gr ? &grad : 0, low, high-low, 
                               inv_temp, inv_temp*N_approx);
+          if (DEBUG_MC_APP_ENERGY && energy)
+          { printf (" +[%d,%d)=%.4f", low, high, *energy);
+          }
 
           if (energy && high<N_train)
           { net_training_cases (energy, 0, high, N_train-high, inv_temp, 1);
+            if (DEBUG_MC_APP_ENERGY)
+            { printf (" +[%d,%d)=%.4f", high, N_train, *energy);
+            }
+          }
+
+          if (DEBUG_MC_APP_ENERGY) 
+          { printf ("\n");
           }
         }
       }

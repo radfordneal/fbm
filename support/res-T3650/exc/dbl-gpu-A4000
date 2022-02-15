@@ -1,0 +1,30 @@
+Commit: 2431b75d02a7590c84b61062fe0ca6c6a01dd3b7
+
+Running exc with dbl-gpu on A4000:
+
+Number of training cases: 400
+Number of test cases: 1000
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+NVIDIA RTX A4000, Compute Capability 8.6, 48 SM processors, 14.7 GBytes ECC
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:8:0,8 T 24
+With 400 cases, need 1 launches, max 13 blocks/launch
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+NVIDIA RTX A4000, Compute Capability 8.6, 48 SM processors, 14.7 GBytes ECC
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:8:0,8 T 24
+With 400 cases, need 1 launches, max 13 blocks/launch
+
+Number of iterations used: 30
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.468+-0.023
+Fraction of guesses that were wrong:    0.1930+-0.0125
+
+elapsed 2.20s
+f51d6a11f5ac2e38895863212cecd6ffebcd31a3  -

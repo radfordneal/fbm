@@ -1,0 +1,23 @@
+Commit: 2431b75d02a7590c84b61062fe0ca6c6a01dd3b7
+
+Running exbgd with flt-gpu on A4000:
+
+Number of training cases: 800
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+NVIDIA RTX A4000, Compute Capability 8.6, 48 SM processors, 14.7 GBytes ECC
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 102400, Blks/SM: 16
+Desired # of blocks: 2, allowed shared mem per case: 1536 bytes, 384 values
+Hid layer shrd mem: 0:15:0,15 T 40
+With 800 cases, need 1 launches, max 25 blocks/launch
+
+Number of iterations used: 1
+
+Number of test cases: 500
+
+Average log probability of targets:    -0.238+-0.025
+Fraction of guesses that were wrong:    0.1120+-0.0141
+Average squared error guessing mean:    0.07571+-0.00848
+
+elapsed 3.01s
+3c286942e4f8b6e07b2ef05b0a6c16441f27ce96  -

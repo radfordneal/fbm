@@ -1,4 +1,4 @@
-Commit: 98772b190c6364dfe0e207a8b7eca3df57e1dde3
+Commit: 63471902b4d75aa251d28a6672787f1b086fd8d5
 
 Running exi1c with dbl-gpu on GP100:
 
@@ -34,5 +34,5 @@ Average log probability of targets:    -1.042+-0.077
 Fraction of guesses that were wrong:    0.4900+-0.0502
 Average squared error guessing mean:    0.57868+-0.04134
 
-elapsed 4.83s
+elapsed 4.84s
 966216d7e6c15367fa417ecb33cdb5c6d407e50d  -

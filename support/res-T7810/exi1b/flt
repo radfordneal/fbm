@@ -1,6 +1,6 @@
 Commit: b5a7e6a6ea465d0c44dfa3d03f133e4defa24bc6
 
-Running exi1 with flt:
+Running exi1b with flt:
 
 Number of training cases: 4999
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
@@ -10,9 +10,9 @@ Number of iterations used: 2
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.050+-0.081
-Fraction of guesses that were wrong:    0.4900+-0.0502
-Average squared error guessing mean:    0.57732+-0.04266
+Average log probability of targets:    -1.032+-0.075
+Fraction of guesses that were wrong:    0.3900+-0.0490
+Average squared error guessing mean:    0.56243+-0.03976
 
-elapsed 23.82s
-bd6ac7c5790ae25072aebc6b619b42a8cb937e57  -
+elapsed 28.57s
+1b3976de34e919263acbeca15b496ae1ab81474e  -

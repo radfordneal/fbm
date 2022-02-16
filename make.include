@@ -36,6 +36,7 @@ NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
          --generate-code=arch=compute_35,code=sm_35 \
          --generate-code=arch=compute_50,code=sm_50 \
          --generate-code=arch=compute_52,code=sm_52 \
+         --generate-code=arch=compute_60,code=sm_60 \
          --generate-code=arch=compute_61,code=sm_61 \
          --generate-code=arch=compute_75,code=sm_75 \
          --generate-code=arch=compute_86,code=sm_86 \

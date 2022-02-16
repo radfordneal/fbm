@@ -1,4 +1,4 @@
-Commit: 8c99ea1c0f48a579bbb935f3c6f61c4d071aa88e
+Commit: 1f471e8a14024ea03fd48e1b93a13778c21f4d90
 
 Running exi1c with dbl-gpu on T400:
 
@@ -34,5 +34,5 @@ Average log probability of targets:    -1.042+-0.077
 Fraction of guesses that were wrong:    0.4900+-0.0502
 Average squared error guessing mean:    0.57868+-0.04134
 
-elapsed 41.00s
+elapsed 40.82s
 966216d7e6c15367fa417ecb33cdb5c6d407e50d  -

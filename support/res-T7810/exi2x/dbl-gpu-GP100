@@ -1,0 +1,30 @@
+Commit: b5a7e6a6ea465d0c44dfa3d03f133e4defa24bc6
+
+Running exi2x with dbl-gpu on GP100:
+
+Number of training cases: 3997
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+Quadro GP100, Compute Capability 6.0, 56 SM processors, 15.9 GBytes ECC
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
+Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 128 values
+Hid layer shrd mem: 0:272:-1,-1 T 0
+With 3997 cases, need 1 launches, max 125 blocks/launch
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+Quadro GP100, Compute Capability 6.0, 56 SM processors, 15.9 GBytes ECC
+Using 32 cases per block, max 500 blocks per launch, threads/case: 8
+Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
+Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 128 values
+Hid layer shrd mem: 0:272:-1,-1 T 0
+With 3997 cases, need 1 launches, max 125 blocks/launch
+
+Number of iterations used: 1
+
+Number of test cases: 100
+
+Average log probability of targets:    -0.818+-0.097
+Fraction of guesses that were wrong:    0.2900+-0.0456
+Average squared error guessing mean:    0.42724+-0.04697
+
+elapsed 4.81s
+d2955b89f26c7de758bf647b00c5aa260ff233c6  -

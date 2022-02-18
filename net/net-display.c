@@ -46,6 +46,7 @@ int main
   int sigmas_only;
   int params_only;
   int dump_params;
+  int dump_sigmas;
   int index;
 
   /* Look at arguments. */
@@ -53,14 +54,10 @@ int main
   sigmas_only = 0;
   params_only = 0;
   dump_params = 0;
+  dump_sigmas = 0;
 
   if (argc>1 && (strcmp(argv[1],"-p")==0 || strcmp(argv[1],"-w")==0))
   { params_only = 1;
-    argv += 1;
-    argc -= 1;
-  }
-  else if (argc>1 && strcmp(argv[1],"-P")==0)
-  { dump_params = 1;
     argv += 1;
     argc -= 1;
   }
@@ -69,12 +66,23 @@ int main
     argv += 1;
     argc -= 1;
   }
+  else if (argc>1 && strcmp(argv[1],"-P")==0)
+  { dump_params = 1;
+    argv += 1;
+    argc -= 1;
+  }
+  else if (argc>1 && strcmp(argv[1],"-H")==0)
+  { dump_sigmas = 1;
+    argv += 1;
+    argc -= 1;
+  }
 
   index = -1;
 
   if (argc!=2 && argc!=3 
    || argc>2 && (index = atoi(argv[2]))<=0 && strcmp(argv[2],"0")!=0) 
-  { fprintf(stderr,"Usage: net-display [ -p | -h | -P ] log-file [ index ]\n");
+  { fprintf (stderr,
+             "Usage: net-display [ -p | -h | -P | -H ] log-file [ index ]\n");
     exit(1);
   }
 
@@ -149,7 +157,7 @@ int main
   net_setup_sigma_pointers (s, a, flgs, m);
   net_setup_param_pointers (w, a, flgs);
 
-  /* Print values of the parameters and hyperparameters, or whatever. */
+  /* Do only a raw dump, if asked to. */
 
   if (dump_params)
   { int i;
@@ -158,6 +166,16 @@ int main
     }
     exit(0);
   }
+
+  if (dump_sigmas)
+  { int i;
+    for (i = 0; i<s->total_sigmas; i++)
+    { printf("%.16g\n",s->sigma_block[i]);
+    }
+    exit(0);
+  }
+
+  /* Print values of the parameters and/or hyperparameters. */
 
   printf("\nNetwork in file \"%s\" with index %d%s\n", logf.file_name, index,
     sigmas_only ? " (sigmas only)" : params_only ? " (parameters only)" : "");

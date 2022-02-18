@@ -78,8 +78,9 @@ Feature changes in the version:
     checking the full gradient can be very slow for high-dimensional
     models.)  See xxx-grad-test.doc for details.
 
-12) The net-display program now has a -P option for displaying
-    unadorned high-precision parameter values.
+12) The net-display program now allows for a -P or -H option, for
+    displaying unadorned high-precision parameter or hyperparameter
+    values.
 
 13) The "omit" option in net-spec should now be placed after the
     corresponding prior on connections to inputs, rather than after

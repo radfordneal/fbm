@@ -10,7 +10,7 @@ and/or the hyperparameters (sigmas) of the network.
 
 Usage:
 
-    net-display [ -p | -h | -P ] log-file [ index ]
+    net-display [ -p | -h | -P | -H ] log-file [ index ]
 
 If no index is specified, the last network in the log file is
 displayed.  By default, the parameters and hyperparameters are both
@@ -18,10 +18,13 @@ displayed.  The -p option (or -w option) causes only the parameters
 (weights) to be displayed (to higher precision).  The -h option (or -s
 option) causes only the hyperparameters (sigmas) to be displayed.  The
 -P option causes only parameters to be printed, in a raw format
-without headers, one per line, in high precision.
+without headers, one per line, in high precision.  Similarly, the -H
+option causes hyperparameters to be printed in a raw format (including
+any hyperparameters that are exactly tied to a higher-level
+hyperparameter).
 
-The output of the program (except when -P is specified) consists of
-one section for each type of parameter, plus a section for noise
+The output of the program (except when -P or -H is specified) consists
+of one section for each type of parameter, plus a section for noise
 levels, if a regression data model is being used.  The format of a
 section is best described by looking at the section for the weights
 from input units to output units, which is as follows, for a net with
@@ -67,7 +70,7 @@ their index order in the configuration, which may have nothing to do
 with their source or destination units.  Note that these weights may
 be shared by more than one connection.
 
-            Copyright (c) 1995-2021 by Radford M. Neal
+            Copyright (c) 1995-2022 by Radford M. Neal
 </pre>
 </body>
 </html>

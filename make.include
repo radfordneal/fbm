@@ -15,18 +15,32 @@
 # The USE_SLEEF_CUDA option for nvcc enables use of SLEEP functions in 
 # GPU code.
 
+
 CC = gcc               # C compiler to use
+
+
+# Setup for optional use of address sanitizer for testing.  Best used with
+# an environment setting ASAN_OPTIONS=detect_leaks=0 since there are some
+# innocuous leaks of small amounts of memory.
+
+SANITIZE_OPTS = -fsanitize=address -fsanitize=bounds-strict \
+                -static-libasan -fno-omit-frame-pointer
+
+SANITIZE = # $(SANITIZE_OPTS)  # Remove '#' to enable
+
 
 # Options when compiling .c files
 
-CFLAGS = -g -O3 -march=native -mtune=native \
+CFLAGS = -g -O3 $(SANITIZE) \
          -Wno-logical-op-parentheses -Wno-absolute-value -Wno-unused-result \
          -DUSE_SIMD_INTRINSICS -DUSE_FMA \
          -DUSE_SLEEF -ffp-contract=off   # USE_SLEEF requires -ffp-contract=off
 
+
 # Options when linking .o files
 
-LFLAGS =               
+LFLAGS = $(SANITIZE)
+
 
 # Options for nvcc (CUDA compiler for GPU code)
 
@@ -43,5 +57,4 @@ NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
          --ptxas-options=-v \
          -ccbin=g++ \
          -DUSE_SIMD_INTRINSICS -DUSE_FMA \
-         -DUSE_SLEEF -Xcompiler -ffp-contract=off
-#        -DUSE_SLEEF_CUDA
+         -DUSE_SLEEF -Xcompiler -ffp-contract=off # -DUSE_SLEEF_CUDA

@@ -1,6 +1,6 @@
 /* DATA.H - Interface to system for specifying data sets. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -41,9 +41,12 @@ typedef struct
    the context of the defauts mentioned in the documentation for 'data-spec.c'
    If not present, the test set specifications are empty strings. 
 
-   This record is of variable length, varying with the number of inputs and
-   targets, since the space needed for transformations varies.  The proper
-   size if given by the data_spec_size macro. */
+   This record is of variable length, varying with the number of
+   inputs and targets, since the space needed for transformations
+   varies.  The proper size if given by the data_spec_size macro.  The
+   declared dimension of Max_inputs+Max_targets is the maximum, but 
+   would waste space if actually used when not necessary. (But will
+   be used if a data_specifications var is allocated statically.) */
 
 typedef struct
 {
@@ -57,13 +60,15 @@ typedef struct
   char test_inputs[100];	/* Source of test set input values */
   char test_targets[100];	/* Source of test set target values */
 
-  data_transformation trans[1];	/* Transformations for inputs and targets, with
-				   tr. for inputs first, followed by targets */
+  data_transformation trans[Max_inputs+Max_targets];
+                                /* Transformations for inputs and targets, with
+				   trans for inputs first, followed by targets*/
 } data_specifications;
 
 #define data_spec_size(n_inputs,n_targets) \
 ( sizeof (data_specifications) \
-   + sizeof (data_transformation) * ((n_inputs) + (n_targets) - 1) )
+   - sizeof (data_transformation) * (Max_inputs+Max_targets) \
+   + sizeof (data_transformation) * ((n_inputs) + (n_targets)) )
 
 
 /* PROCEDURES. */

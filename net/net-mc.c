@@ -60,25 +60,26 @@
 static int show_info;	/* Whether to display info (INFO env var set to 1) */
 
 
-#if __CUDACC__
-
 /* CUDA-RELATED VARIABLES. */
+
+#if __CUDACC__
 
 static int maxblks = DEFAULT_MAXBLKS;	/* Max number of blocks per kernel */
 
 static int n_launches;			/* Number of launches needed to 
                                            handle all training cases */
+
 static int max_blocks_per_launch;	/* Largest number of blocks for one
                                            CUDA kernel launch */
+
 static int max_cases_per_launch;        /* Largest number of cases handled by
 					   one CUDA kernel launch */
 
 static char *info_for_n;		/* Flags for whether info regarding
 					   usage for n cases yet displayed */
 
-#define SCRATCH_PER_CASE(Nout) (2*(Nout)) /* Amount of GPU scratch memory per 
+#define SCRATCH_PER_CASE(Nout) (2*(Nout)) /* Number of GPU scratch values per 
                                              case, as function of N_outputs */
-
 #endif
 
 
@@ -424,7 +425,7 @@ net_config *net_config_to_gpu (net_config *cf)
    can be overlapped with memory for derivatives.  Also, derivatives
    for sequential layers are no longer needed after the derivatives
    for the layer before are computed.  To facilitate this memory
-   re-use, the memory for derivatives in a leyer is stacked opposite
+   re-use, the memory for derivatives in a layer is stacked opposite
    the memory for the values in that layer.
 
    Memory for derivatives for hidden layers with input from
@@ -578,7 +579,7 @@ static void decide_gpu_shared_mem_use
 
 
 /* INITIALIZE AND SET UP DYNAMIC STATE STRUCTURE.  Skips some stuff
-   if it's already been done, as indicated by the initialize_done
+   if it has already been done, as indicated by the initialize_done
    variable. */
 
 void mc_app_initialize
@@ -696,15 +697,16 @@ void mc_app_initialize
           cuda_prop.ECCEnabled ? " ECC" : "");
 
         printf (
-       "Using %d cases per block, max %d blocks per launch, threads/case: %d\n",
-          BLKCASES, maxblks, THREADS_PER_CASE);
+    "Using %d cases per block, %d threads per case, max %d blocks per launch\n",
+     BLKCASES, THREADS_PER_CASE, maxblks);
 
-        printf ("Shared mem/blk: %d, Shared mem/SM: %d, Blks/SM: %d\n",
+        printf 
+         ("Shared mem per blk: %d, shared mem per SM: %d, blks per SM: %d\n",
                 (int) cuda_prop.sharedMemPerBlock, 
                 (int) cuda_prop.sharedMemPerMultiprocessor ,
                 (int) cuda_prop.maxBlocksPerMultiProcessor);
         printf (
- "Desired # of blocks: %d, allowed shared mem per case: %d bytes, %d values\n",
+"Desired blks per SM: %d, allowed shared mem per case: %d bytes, %d values\n",
           needed_blocks, allowed_shared_mem, 
           (int) (allowed_shared_mem / sizeof(net_value)));
       }
@@ -1091,7 +1093,7 @@ void mc_app_initialize
 
 #   if __CUDACC__
     { if (N_train>0)
-      { n_launches = (N_train + BLKCASES*maxblks-1) / (BLKCASES*maxblks);
+      { n_launches = (N_train + BLKCASES*maxblks - 1) / (BLKCASES*maxblks);
         max_cases_per_launch = (N_train + n_launches - 1) / n_launches;
         max_blocks_per_launch = (max_cases_per_launch + BLKCASES-1) / BLKCASES;
         max_cases_per_launch = max_blocks_per_launch * BLKCASES;
@@ -1198,8 +1200,10 @@ void mc_app_initialize
           b = 0;
           for (i = 0; i<N_train; i++) 
           { net_setup_value_pointers_aligned 
-              (&tmp_values[i], vblk+value_count_noout*b,
-               arch, NET_VALUE_ALIGN_ELEMENTS, 0, oblk+arch->N_outputs*i);
+              (&tmp_values[i], vblk+pre.bw_stride*b,
+               arch, NET_VALUE_ALIGN_ELEMENTS, 
+               0, 
+               oblk+arch->N_outputs*i);
             if (++b >= max_cases_per_launch) b = 0;
           }
         }
@@ -1211,7 +1215,7 @@ void mc_app_initialize
           b = 0;
           for (i = 0; i<N_train; i++) 
           { net_setup_value_pointers_aligned 
-              (&tmp_values[i], vblk+value_count_noinout*b, 
+              (&tmp_values[i], vblk+pre.bw_stride*b, 
                arch, NET_VALUE_ALIGN_ELEMENTS, 
                iblk+N_inputs*i /* not actually used */, 
                oblk+arch->N_outputs*i);

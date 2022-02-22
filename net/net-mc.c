@@ -1155,15 +1155,15 @@ void mc_app_initialize
 
         /* Set up pointers in values structures for all training cases
            to point to memory for inputs, outputs, and hidden unit
-           values.  Only space for hidden unit values for max_cases_per_launch
-           cases need be allocated, used sequentially with
-           wrap-around, since this should work when any consecutive
-           subset of up to max_cases_per_launch cases are
-           used. However, there is the complication that values for
-           hidden units for cases in a gradient group are assumed to
-           be allocated sequentially in net-back-grad.c - so BLKCASES-1
-           extra sets of values are allocated, allowing for fudging this 
-           before calling net-func_gpu.. */
+           values.  Naively, only space for hidden unit values for
+           max_cases_per_launch cases need be allocated, used
+           sequentially with wrap-around, since this should work when
+           any consecutive subset of up to max_cases_per_launch cases
+           are used. However, there is the complication that values
+           for hidden units for cases in a gradient group are assumed
+           to be allocated sequentially in net-back-grad.c. Hence
+           BLKCASES-1 extra sets of values are allocated, allowing for
+           fudging this before calling net-func_gpu.. */
 
         sz = value_count_noinout * (max_cases_per_launch + BLKCASES-1)
                                  * sizeof *vblk;
@@ -2825,19 +2825,33 @@ __launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
 
     /* Fudge to make sure the whole block has consecutive hidden unit
        values (which might not be so due to wrap around), so that the
-       assumptions in net_store[234]_... are true. */
+       assumptions in net_store[234]_... are true.  This uses the
+       extra BLKCASES-1 sets of values allocated at the end.  Since
+       the fudge may be done more than once, with different values for
+       start, it has to either use these extras, or stop using these
+       extras, as necessary. */
 
     if (GROUP_SIZE>1 && const_arch.N_layers>0)
-    { int a = start + blockIdx.x*BLKCASES;
-      int b = a + BLKCASES;
-      if (b>end) b = end;
-      if (const_train_values[b-1].h[0] 
-           != const_train_values[a].h[0] + (b-1-a)*const_pre.fw_stride)
-      { if (th==0)
+    { int a = start + blockIdx.x*BLKCASES;      /* first in this block */
+      int b = a + BLKCASES; if (b>end) b = end; /* after last in this block */
+      if (const_train_values[a].h[0] 
+                + (b-1-a)*const_pre.fw_stride
+           != const_train_values[b-1].h[0])     /* not sequential: wrap-around*/
+      { 
+        if (th==0)  /* do things only in the first thread for each case */
         { int l;
-          for (l = 0; l < const_arch.N_layers; l++)
-          { train_vals_h->h[l] 
-             = const_train_values[a].h[l] + m*const_pre.fw_stride;
+          if (const_train_values[b-1].h[0] <=
+               const_train_values[BLKCASES-1].h[0])  /* wraps to beginning */
+          { for (l = 0; l < const_arch.N_layers; l++)
+            { train_vals_h->h[l] 
+               = const_train_values[a].h[l] + m*const_pre.fw_stride;
+            }
+          }
+          else   /* undo previous unwrapping with extras by reusing originals */
+          { for (l = 0; l < const_arch.N_layers; l++)
+            { train_vals_h->h[l] 
+               = const_train_values[b-1].h[l] - (b-1-a-m)*const_pre.fw_stride;
+            }
           }
         }
         __syncthreads();

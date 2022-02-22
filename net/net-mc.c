@@ -1153,19 +1153,22 @@ void mc_app_initialize
         check_cuda_error (CUDAMALLOC (&oblk, sz), 
                           "cudaMalloc of oblk for train");
 
-        /* Allocate space to hold hidden unit values for up to 
-           max_cases_per_launch cases. */
+        /* Set up pointers in values structures for all training cases
+           to point to memory for inputs, outputs, and hidden unit
+           values.  Only space for hidden unit values for max_cases_per_launch
+           cases need be allocated, used sequentially with
+           wrap-around, since this should work when any consecutive
+           subset of up to max_cases_per_launch cases are
+           used. However, there is the complication that values for
+           hidden units for cases in a gradient group are assumed to
+           be allocated sequentially in net-back-grad.c - so BLKCASES-1
+           extra sets of values are allocated, allowing for fudging this 
+           before calling net-func_gpu.. */
 
-        sz = value_count_noinout * max_cases_per_launch * sizeof *vblk;
+        sz = value_count_noinout * (max_cases_per_launch + BLKCASES-1)
+                                 * sizeof *vblk;
         check_cuda_error (CUDAMALLOC (&vblk, sz), 
                           "cudaMalloc of vblk for train");
-
-        /* Set up pointers in values structures for all training cases 
-           to point to memory for inputs, outputs, and hidden unit values.
-           Only space for hidden unit values for max_cases_per_launch cases
-           is allocated, used sequentially with wrap-around, which should
-           work when any consecutive subset of up to max_cases_per_launch
-           cases are used. */
 
         pre.fw_stride = value_count_noinout;
         b = 0;
@@ -2818,6 +2821,27 @@ __launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
   { if (KDEBUG) 
     { printf("Forward computation: blk %d, thread %d, start %d, end %d\n",
               blockIdx.x,threadIdx.x,start,end);
+    }
+
+    /* Fudge to make sure the whole block has consecutive hidden unit
+       values (which might not be so due to wrap around), so that the
+       assumptions in net_store[234]_... are true. */
+
+    if (GROUP_SIZE>1 && const_arch.N_layers>0)
+    { int a = start + blockIdx.x*BLKCASES;
+      int b = a + BLKCASES;
+      if (b>end) b = end;
+      if (const_train_values[b-1].h[0] 
+           != const_train_values[a].h[0] + (b-1-a)*const_pre.fw_stride)
+      { if (th==0)
+        { int l;
+          for (l = 0; l < const_arch.N_layers; l++)
+          { train_vals_h->h[l] 
+             = const_train_values[a].h[l] + m*const_pre.fw_stride;
+          }
+        }
+        __syncthreads();
+      }
     }
 
     net_func_gpu (th, train_vals_h, const_sparse, syncmask);

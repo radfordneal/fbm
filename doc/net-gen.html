@@ -51,7 +51,7 @@ Two records are written for every network generated - an 'S' record
 containing the hyperparameters ('sigma' values), and a 'W' record
 containing the parameters (weights, biases, and offsets).  An 'r'
 record recording the random number generator state is written as well
-(unless "fix" was used).
+if any parameters were randomly generated.
 
             Copyright (c) 1995-2020 by Radford M. Neal
 

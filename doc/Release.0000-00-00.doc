@@ -59,8 +59,9 @@ Feature changes in the version:
    (But note that these are masked for mixture models, where they have
    another meaning.)
 
-8) The net-gen program has been extended to allow parameters to be set
-   from standard input, rather than being set to zero, or randomly,
+8) The net-gen program has been extended to allow more flexibility in
+   how parameters are set, including from standard input, rather than 
+   to zero, or randomly.  See net-gen.doc for details.
 
 9) The xxx-tbl commands can now take a -f argument, causes them to
    continually follow iterations being added to the last log file

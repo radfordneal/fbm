@@ -28,7 +28,9 @@
 
 static void usage()
 { fprintf(stderr,
-"Usage: net-gen log-file [ max-index ] [ \"fix\" [ value [ out-value ] ] [ \"-\" ] ]\n");
+   "net-gen log-file [ max-index ] [ \"fix\" [ value [ out-value ] ] ]\n");
+  fprintf(stderr,
+   "                 [ \"zero\" | \"rand\" | \"-\" ] [ \"zero\" | \"rand\" | \"-\" ]\n");
   exit(1);
 }
 
@@ -50,7 +52,7 @@ int main
   net_sigmas  sigmas, *s = &sigmas;
   net_params  params, *w = &params;
 
-  int max_index, index, fix, has_out_value, from_stdin;
+  int max_index, index, fix, has_out_value, param_opt, out_param_opt;
   double value, out_value;
 
   log_file logf;
@@ -60,7 +62,8 @@ int main
 
   max_index = 0;
   value = out_value = 0;
-  from_stdin = 0;
+  fix = 0;
+  param_opt = out_param_opt = 1;
 
   if (argc<2) 
   { usage();
@@ -68,26 +71,49 @@ int main
 
   logf.file_name = argv[1];
 
-  if (argc>2 && strcmp(argv[2],"fix")!=0)
-  { if ((max_index = atoi(argv[2]))<=0 && strcmp(argv[2],"0")!=0)
+  int arg = 2;
+
+  if (arg<argc && strcmp(argv[arg],"fix")!=0 && strcmp(argv[arg],"-")!=0 
+        && strcmp(argv[arg],"zero")!=0 && strcmp(argv[arg],"rand")!=0)
+  { if ((max_index = atoi(argv[arg]))<=0 && strcmp(argv[arg],"0")!=0)
     { usage();
     }
-    argv += 1;
-    argc -= 1;
+    arg += 1;
   }
 
-  fix = argc>2 && strcmp(argv[2],"fix")==0;
-  if (fix)
-  { if (strcmp(argv[argc-1],"-")==0)
-    { from_stdin = 1; 
-      argc -= 1;
-    }
-    if (argc>3 && (value = out_value = atof(argv[3]))<=0
-     || argc>4 && (out_value = atof(argv[4]))<=0
-     || argc>5)
-    { usage();
+  if (arg<argc && strcmp(argv[arg],"fix")==0)
+  { fix = 1;
+    param_opt = out_param_opt = 0;
+    arg += 1;
+    if (arg<argc && strcmp(argv[arg],"-")!=0 
+         && strcmp(argv[arg],"zero")!=0 && strcmp(argv[arg],"rand")!=0)
+    { value = out_value = atof(argv[arg]);
+      if (value<=0) usage();
+      arg += 1;
+      if (arg<argc && strcmp(argv[arg],"-")!=0 
+           && strcmp(argv[arg],"zero")!=0 && strcmp(argv[arg],"rand")!=0)
+      { out_value = atof(argv[arg]);
+        if (out_value<=0) usage();
+        arg += 1;
+      }
     }
   }
+
+  if (arg<argc && (strcmp(argv[arg],"-")==0 
+        || strcmp(argv[arg],"zero")==0 || strcmp(argv[arg],"rand")==0))
+  { param_opt = out_param_opt = strcmp(argv[arg],"-")==0 ? 2 
+                              : strcmp(argv[arg],"rand")==0 ? 1 : 0;
+    arg += 1;
+  }
+
+  if (arg<argc && (strcmp(argv[arg],"-")==0 
+        || strcmp(argv[arg],"zero")==0 || strcmp(argv[arg],"rand")==0))
+  { out_param_opt = strcmp(argv[arg],"-")==0 ? 2 
+                  : strcmp(argv[arg],"rand")==0 ? 1 : 0;
+    arg += 1;
+  }
+
+  if (arg<argc) usage();
 
   /* Open log file and read network architecture and priors. */
 
@@ -121,28 +147,6 @@ int main
   net_setup_sigma_pointers (s, a, flgs, m);
   net_setup_param_pointers (w, a, flgs);
 
-  /* Read weights from standard input, if doing that. */
-
-  net_param *wts;
-  if (from_stdin)
-  { double d;
-    int i;
-    wts = chk_alloc (w->total_params, sizeof (net_param));
-    for (i = 0; i<w->total_params; i++)
-    { if (scanf("%lf",&d) != 1) 
-      { fprintf(stderr,"Error reading weights: %d of %d\n",i+1,w->total_params);
-        exit(2);
-      }
-      wts[i] = d;
-    }
-    char junk = 0;
-    if (scanf(" %c",&junk) != 0 && junk != 0) 
-    { fprintf(stderr,"Junk present after weights (%d total): '%c'\n",
-              w->total_params, junk);
-      exit(2);
-    }
-  }
-
   /* Read last records in log file to see where to start, and to get random
      number state left after last network was generated. */
 
@@ -166,7 +170,7 @@ int main
   for ( ; index<=max_index; index++)
   {
     net_prior_generate (w, s, a, flgs, m, p, fix, value, out_value, 
-                        !fix, !fix);
+                        param_opt, out_param_opt);
 
     logf.header.type = 'S';
     logf.header.index = index;
@@ -176,9 +180,9 @@ int main
     logf.header.type = 'W';
     logf.header.index = index;
     logf.header.size = w->total_params * sizeof (net_param);
-    log_file_append (&logf, from_stdin ? wts : w->param_block);
+    log_file_append (&logf, w->param_block);
 
-    if (!fix)
+    if (param_opt==1 || out_param_opt==1)
     { logf.header.type = 'r';
       logf.header.index = index;
       logf.header.size = sizeof (rand_state);

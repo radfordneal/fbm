@@ -72,7 +72,7 @@ void net_prior_generate
   net_flags *flgs,	/* Network flags, null if none */
   model_specification *m, /* Specification for data model */
   net_priors *p,	/* Network priors */
-  int centre,		/* Choose "centre" rather than random value for sigma?*/
+  int fix,		/* Choose "centre" rather than random value for sigma?*/
   double value,		/* Use specific value for centre */
   double out_value,	/* Use specific value for centre for output weights */
   int param_opt,	/* Option for param gen: 0=zero, 1=rand, 2=stdin */
@@ -86,12 +86,12 @@ void net_prior_generate
 
   if (a->has_ti) 
   { pick_unit_params (w->ti, s->ti_cm, a->N_inputs, 0, p->ti, 
-                      centre, value, param_opt);
+                      fix, value, param_opt);
   }
 
   if (a->has_ao)
   { for (i = 0; i<a->N_outputs; i++)
-    { s->ao[i] = centre ? 1.0 : prior_pick_sigma(1.0,p->ao);
+    { s->ao[i] = fix ? 1.0 : prior_pick_sigma(1.0,p->ao);
     }
   }
 
@@ -99,7 +99,7 @@ void net_prior_generate
   {
     if (a->has_ah[l])
     { for (i = 0; i<a->N_hidden[l]; i++)
-      { s->ah[l][i] = centre ? 1.0 : prior_pick_sigma(1.0,p->ah[l]);
+      { s->ah[l][i] = fix ? 1.0 : prior_pick_sigma(1.0,p->ah[l]);
       }
     }
 
@@ -109,29 +109,27 @@ void net_prior_generate
         if (a->nonseq_config[nsqi])
         { pick_weights_config (w->nsq[nsqi], s->nsq_cm[nsqi], s->nsq[nsqi],
                                a->N_hidden[ls], a->nonseq_config[nsqi]->N_wts,
-                               p->nsq[nsqi], centre, value, param_opt);
+                               p->nsq[nsqi], fix, value, param_opt);
         }
         else
         { pick_weights (w->nsq[nsqi], s->nsq_cm[nsqi], s->nsq[nsqi], 
                         a->N_hidden[ls], a->N_hidden[l], 
-                        s->ah[l], p->nsq[nsqi], centre, value, param_opt);
+                        s->ah[l], p->nsq[nsqi], fix, value, param_opt);
         }
         nsqi += 1;
       }
     }
 
-    if (l>0)
-    { if (a->has_hh[l-1]) 
-      { if (a->hidden_config[l])
-        { pick_weights_config (w->hh[l-1], s->hh_cm[l-1], s->hh[l-1],
-                               a->N_hidden[l-1], a->hidden_config[l]->N_wts,
-                               p->hh[l-1], centre, value, param_opt);
-        }
-        else
-        { pick_weights (w->hh[l-1], s->hh_cm[l-1], s->hh[l-1], 
-                        a->N_hidden[l-1], a->N_hidden[l], 
-                        s->ah[l], p->hh[l-1], centre, value, param_opt);
-        }
+    if (l>0 && a->has_hh[l-1]) 
+    { if (a->hidden_config[l])
+      { pick_weights_config (w->hh[l-1], s->hh_cm[l-1], s->hh[l-1],
+                             a->N_hidden[l-1], a->hidden_config[l]->N_wts,
+                             p->hh[l-1], fix, value, param_opt);
+      }
+      else
+      { pick_weights (w->hh[l-1], s->hh_cm[l-1], s->hh[l-1], 
+                      a->N_hidden[l-1], a->N_hidden[l], 
+                      s->ah[l], p->hh[l-1], fix, value, param_opt);
       }
     }
 
@@ -139,40 +137,44 @@ void net_prior_generate
     { if (a->input_config[l])
       { pick_weights_config (w->ih[l], s->ih_cm[l], s->ih[l],
                              a->N_inputs, a->input_config[l]->N_wts,
-                             p->ih[l], centre, value, param_opt);
+                             p->ih[l], fix, value, param_opt);
       }
       else
       { pick_weights (w->ih[l], s->ih_cm[l], s->ih[l], 
-         not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1)), a->N_hidden[l], 
-         s->ah[l], p->ih[l], centre, value, param_opt);
+          not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1)), a->N_hidden[l], 
+          s->ah[l], p->ih[l], fix, value, param_opt);
       }
     }
 
     if (a->has_bh[l])
     { if (a->bias_config[l])
       { pick_unit_params_config(w->bh[l], s->bh_cm[l], a->bias_config[l]->N_wts,
-                                p->bh[l], centre, value, param_opt);
+                                p->bh[l], fix, value, param_opt);
       }
       else
       { pick_unit_params (w->bh[l], s->bh_cm[l], a->N_hidden[l], s->ah[l],
-                          p->bh[l], centre, value, param_opt);
+                          p->bh[l], fix, value, param_opt);
       }
     }
     
-    if (a->has_th[l]) pick_unit_params (w->th[l], s->th_cm[l], a->N_hidden[l], 
-                                        0, p->th[l], centre, value, param_opt);
+    if (a->has_th[l])
+    { pick_unit_params (w->th[l], s->th_cm[l], a->N_hidden[l], 
+                        0, p->th[l], fix, value, param_opt);
+    }
+  }
 
-    if (a->has_ho[l])
+  for (l = a->N_layers-1; l>=0; l--)
+  { if (a->has_ho[l])
     { int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { pick_weights_config (w->ho[l], s->ho_cm[l], s->ho[l],
                              a->N_hidden[l], a->hidden_config[k]->N_wts,
-                             p->ho[l], centre, value, out_param_opt);
+                             p->ho[l], fix, out_value, out_param_opt);
       }
       else
       { pick_weights (w->ho[l], s->ho_cm[l], s->ho[l], 
                       a->N_hidden[l], a->N_outputs, 
-                      s->ao, p->ho[l], centre, out_value, out_param_opt);
+                      s->ao, p->ho[l], fix, out_value, out_param_opt);
       }
     }
   }
@@ -181,12 +183,12 @@ void net_prior_generate
   { if (a->input_config[a->N_layers])
     { pick_weights_config (w->io, s->io_cm, s->io,
                            a->N_inputs, a->input_config[a->N_layers]->N_wts,
-                           p->io, centre, out_value, out_param_opt);
+                           p->io, fix, out_value, out_param_opt);
     }
     else
     { pick_weights (w->io, s->io_cm, s->io,
                     not_omitted(flgs?flgs->omit:0,a->N_inputs,1), a->N_outputs, 
-                    s->ao, p->io, centre, out_value, out_param_opt);
+                    s->ao, p->io, fix, out_value, out_param_opt);
     }
   }
 
@@ -194,21 +196,21 @@ void net_prior_generate
   { if (a->bias_config[a->N_layers])
     { pick_unit_params_config 
                        (w->bo, s->bo_cm, a->bias_config[a->N_layers]->N_wts,
-                        p->bo, centre, value, out_param_opt);
+                        p->bo, fix, out_value, out_param_opt);
     }
     else
     { pick_unit_params (w->bo, s->bo_cm, a->N_outputs, 
-                        s->ao, p->bo, centre, value, out_param_opt);
+                        s->ao, p->bo, fix, out_value, out_param_opt);
     }
   }
 
   if (m!=0 && m->type=='R') 
   {
-    *s->noise_cm = centre ? m->noise.width
+    *s->noise_cm = fix ? m->noise.width
                          : prior_pick_sigma (m->noise.width, m->noise.alpha[0]);
 
     for (i = 0; i<a->N_outputs; i++)
-    { s->noise[i] = centre ? *s->noise_cm
+    { s->noise[i] = fix ? *s->noise_cm
                            : prior_pick_sigma (*s->noise_cm, m->noise.alpha[1]);
     }
   }
@@ -223,7 +225,7 @@ static void pick_unit_params
   int n,		/* Number of units */
   net_sigma *adj,	/* Adjustments for destination units, or zero */
   prior_spec pr,	/* Prior to use */
-  int centre,		/* Choose "centre" rather than random value? */
+  int fix,		/* Choose "centre" rather than random value? */
   double value,		/* Use specific value for sigma? */
   int param_opt		/* How to generate parameters */
 )
@@ -231,8 +233,8 @@ static void pick_unit_params
   net_sigma unit_sigma;
   int i;
 
-  *sd_cm = centre ? (value==0 || pr.alpha[0]==0 ? pr.width : value)
-                  : prior_pick_sigma (pr.width, pr.alpha[0]);
+  *sd_cm = fix ? (value==0 || pr.alpha[0]==0 ? pr.width : value)
+               : prior_pick_sigma (pr.width, pr.alpha[0]);
 
   for (i = 0; i<n; i++)
   { 
@@ -266,7 +268,7 @@ static void pick_unit_params_config
   net_sigma *sd_cm,	/* Place to store common sigma */
   int n,		/* Number of weights, possibly sparse and/or shared */
   prior_spec pr,	/* Prior to use */
-  int centre,		/* Choose "centre" rather than random value? */
+  int fix,		/* Choose "centre" rather than random value? */
   double value,		/* Use specific value for sigma? */
   int param_opt		/* How to generate parameters */
 )
@@ -274,8 +276,8 @@ static void pick_unit_params_config
   net_sigma unit_sigma;
   int i;
 
-  *sd_cm = centre ? (value==0 || pr.alpha[0]==0 ? pr.width : value)
-                  : prior_pick_sigma (pr.width, pr.alpha[0]);
+  *sd_cm = fix ? (value==0 || pr.alpha[0]==0 ? pr.width : value)
+               : prior_pick_sigma (pr.width, pr.alpha[0]);
 
   for (i = 0; i<n; i++)
   { 
@@ -310,7 +312,7 @@ static void pick_weights
   int nd,		/* Number of destination units */
   net_sigma *adj,	/* Adjustments for destination units, or zero */
   prior_spec pr,	/* Prior to use */
-  int centre,		/* Choose "centre" rather than random value? */
+  int fix,		/* Choose "centre" rather than random value? */
   double value,		/* Use specific value for sigma? */
   int param_opt		/* How to generate parameters */
 )
@@ -320,13 +322,13 @@ static void pick_weights
 
   width = prior_width_scaled(&pr,n);
 
-  *sd_cm = centre ? (value==0 || pr.alpha[0]==0 ? width : value)
-         : prior_pick_sigma (width, pr.alpha[0]);
+  *sd_cm = fix ? (value==0 || pr.alpha[0]==0 ? width : value)
+               : prior_pick_sigma (width, pr.alpha[0]);
 
   for (i = 0; i<n; i++)
   { 
-    sd[i] = centre ? (value==0 || pr.alpha[1]==0 ? *sd_cm : value)
-                   : prior_pick_sigma (*sd_cm, pr.alpha[1]);
+    sd[i] = fix ? (value==0 || pr.alpha[1]==0 ? *sd_cm : value)
+                : prior_pick_sigma (*sd_cm, pr.alpha[1]);
 
     for (j = 0; j<nd; j++)
     { 
@@ -363,7 +365,7 @@ static void pick_weights_config
   int n,		/* Number of source units */
   int nw,		/* Number of weights, possibly sparse and/or shared */
   prior_spec pr,	/* Prior to use */
-  int centre,		/* Choose "centre" rather than random value? */
+  int fix,		/* Choose "centre" rather than random value? */
   double value,		/* Use specific value for sigma? */
   int param_opt		/* How to generate parameters */
 )
@@ -373,8 +375,8 @@ static void pick_weights_config
 
   width = pr.width;
 
-  *sd_cm = centre ? (value==0 || pr.alpha[0]==0 ? width : value)
-         : prior_pick_sigma (width, pr.alpha[0]);
+  *sd_cm = fix ? (value==0 || pr.alpha[0]==0 ? width : value)
+               : prior_pick_sigma (width, pr.alpha[0]);
 
   for (i = 0; i<n; i++)
   { sd[i] = *sd_cm;

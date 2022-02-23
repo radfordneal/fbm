@@ -1,6 +1,6 @@
 /* NET-GEN.C - Program to generate networks (eg, from prior distribution). */
 
-/* Copyright (c) 1995-2021 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -165,7 +165,8 @@ int main
 
   for ( ; index<=max_index; index++)
   {
-    net_prior_generate (w, s, a, flgs, m, p, fix, value, out_value);
+    net_prior_generate (w, s, a, flgs, m, p, fix, value, out_value, 
+                        !fix, !fix);
 
     logf.header.type = 'S';
     logf.header.index = index;

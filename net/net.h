@@ -609,7 +609,7 @@ void net_setup_value_pointers_aligned
 
 void net_prior_generate (net_params *, net_sigmas *, net_arch *, net_flags *,
                          model_specification *m, net_priors *, int, 
-                         double, double);
+                         double, double, int, int);
 
 void net_prior_prob (net_params *, net_sigmas *, double *, net_params *,
                      net_arch *, net_flags *, net_priors *, int);

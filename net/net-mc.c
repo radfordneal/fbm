@@ -823,7 +823,8 @@ void mc_app_initialize
       net_setup_sigma_pointers (&sigmas, arch, flgs, model);
       net_setup_param_pointers (&params, arch, flgs);
    
-      net_prior_generate (&params, &sigmas, arch, flgs, model, priors, 1, 0, 0);
+      net_prior_generate (&params, &sigmas, arch, flgs, model, priors, 
+                          1, 0, 0, 0, 0);
     }
 
     /* Set up CPU version of transposed parameter values. */
@@ -3605,7 +3606,8 @@ int mc_app_zero_gen
 ( mc_dynamic_state *ds	/* Current dynamical state */
 )
 { 
-  net_prior_generate (&params, &sigmas, arch, flgs, model, priors, 0, 0, 0);
+  net_prior_generate (&params, &sigmas, arch, flgs, model, priors, 
+                      0, 0, 0, 1, 1);
 
   return 1;
 }

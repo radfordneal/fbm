@@ -1,6 +1,6 @@
 /* NET-REJ.C - Generate networks from posterior by rejection sampling. */
 
-/* Copyright (c) 1995-2021 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -135,7 +135,7 @@ int main
   {
     for (;;)
     {
-      net_prior_generate (w, s, a, flgs, m, p, 0, 0, 0);
+      net_prior_generate (w, s, a, flgs, m, p, 0, 0, 0, 1, 1);
 
       if (m->type=='R') 
       { 

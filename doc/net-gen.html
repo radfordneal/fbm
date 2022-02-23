@@ -10,31 +10,42 @@ file, with the architecture specified in that log file.
 
 Usage:
 
-    net-gen log-file [ max-index ] [ "fix" [ value [ out-value ] ] [ "-" ] ]
+    net-gen log-file [ max-index ] [ "fix" [ value [ out-value ] ] ]
+                     [ "zero" | "rand" | "-" ] [ "zero" | "rand" | "-" ]
 
 The networks with indexes from zero up to the indicated index are
 generated (the default is max-index of zero).  If the log file already
 contains networks with some of these indexes, only the networks with
 indexes greater than the last one in the log file are generated.
 
-If just max-index is specified, the networks are generated randomly
-from the prior, using the random number seed taken from the log file
-(eg, as specified by rand-seed).
+If just max-index is specified, the network hyperparametrs are
+generated randomly from the prior, using the random number seed taken
+from the log file (eg, as specified by rand-seed), and network
+parameters are then generated randomly based on the generated
+hyperparameters.
 
-The "fix" option is useful for initializing iterative programs, and
-for testing.  When "fix" is given, the networks are not generated at
-random, but rather the hyperparameters are set to 'value', except that
-hyperparameters controlling connections to outputs are set to
-'out-value', if specified.  If 'value' is not specified, the
-hyperparameters are each set to the top-level width for that
-hyperparameter (and this is also true if the prior does not allow any
-other value).
+Random generation can be overridden by later options.
 
-All parameters are set to zero, unless "-" is the last argument, in
-which case they are read from standard input.
+When "fix" is given, the hyperparameters are not generated at random,
+but rather are set to 'value', except that hyperparameters controlling
+connections to outputs are set to 'out-value', if specified.  If
+'value' is not specified, the hyperparameters are each set to the
+top-level width for that hyperparameter (and this is also true even if
+'value' is specified when the prior does not allow any other value).
+
+Specifying arguments of "zero", "rand", or "-" can be used to specify
+how parameters are generated, with "zero" specifying that they are set
+to zero, "rand" specifying that they are generated randomly based on
+the hyperparameters that were chosen, and "-" specifying that they are
+read from standard input.  The default is "rand", unless "fix" is
+specified, in which case the default is "zero".  If a second argument
+of this form is given, it applies to parameters on connections to the
+outputs; if no such argument is given, these connections are treated
+the same as the others.
 
 No data model is required to use net-gen, but if a model is specified,
-the hyperparameters with it are generated as well.
+the hyperparameters with it are generated as well (with any "fix"
+option ignored for these hyperparameters).
 
 Two records are written for every network generated - an 'S' record
 containing the hyperparameters ('sigma' values), and a 'W' record
@@ -42,7 +53,7 @@ containing the parameters (weights, biases, and offsets).  An 'r'
 record recording the random number generator state is written as well
 (unless "fix" was used).
 
-            Copyright (c) 1995-2004 by Radford M. Neal
+            Copyright (c) 1995-2020 by Radford M. Neal
 
 </pre>
 </body>

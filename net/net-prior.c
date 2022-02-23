@@ -39,16 +39,16 @@
 /* LOCAL PROCEDURES. */
 
 static void pick_unit_params (net_param *, net_sigma *, int, net_sigma *,
-                              prior_spec, int, double);
+                              prior_spec, int, double, int);
 
 static void pick_unit_params_config (net_param *, net_sigma *, int,
-                                     prior_spec, int, double);
+                                     prior_spec, int, double, int);
 
 static void pick_weights (net_param *, net_sigma *, net_sigma *, 
-                          int, int, net_sigma *, prior_spec, int, double);
+                          int, int, net_sigma *, prior_spec, int, double, int);
 
 static void pick_weights_config (net_param *, net_sigma *, net_sigma *, 
-                                 int, int, prior_spec, int, double);
+                                 int, int, prior_spec, int, double, int);
 
 static void compute_prior (net_param *, int, double *, net_param *, 
                            net_sigma, double, net_sigma *, int);
@@ -63,14 +63,7 @@ static void max_second (net_param *, int, net_sigma, net_sigma *, double);
    are stored in the arrays pointed to from the structures passed as the
    first two arguments, which must have been properly set up by the caller. 
    
-   The last three arguments can be used to set parameters and hyperparameters
-   to non-random values.  If 'centre' is non-zero, the weights are set to 
-   zero, and the hyperparameters to a "centre" value that is either the
-   "width" part of the prior specification or the 'value' argument passed
-   ('out_value' for weights on connections into the output units) if the 
-   latter is non-zero and the prior specification is not fixed (no alphas 
-   given).  The 'value' given also applies only to hyperparameters controlling 
-   weights and biases, not to "adjustments" or the noise sigma. */
+   Further arguments parallel the options for the net-gen program. */
 
 void net_prior_generate
 ( net_params *w,	/* Arrays to store weights, biases, and offsets in */
@@ -79,9 +72,11 @@ void net_prior_generate
   net_flags *flgs,	/* Network flags, null if none */
   model_specification *m, /* Specification for data model */
   net_priors *p,	/* Network priors */
-  int centre,		/* Choose "centre" rather than random value? */
+  int centre,		/* Choose "centre" rather than random value for sigma?*/
   double value,		/* Use specific value for centre */
-  double out_value	/* Use specific value for centre for output weights */
+  double out_value,	/* Use specific value for centre for output weights */
+  int param_opt,	/* Option for param gen: 0=zero, 1=rand, 2=stdin */
+  int out_param_opt	/* Option for gen of params going to output units */
 )
 { 
   int l, ls, nsqi, i;
@@ -90,7 +85,8 @@ void net_prior_generate
   nsqi = 0;
 
   if (a->has_ti) 
-  { pick_unit_params (w->ti, s->ti_cm, a->N_inputs, 0, p->ti, centre, value);
+  { pick_unit_params (w->ti, s->ti_cm, a->N_inputs, 0, p->ti, 
+                      centre, value, param_opt);
   }
 
   if (a->has_ao)
@@ -113,12 +109,12 @@ void net_prior_generate
         if (a->nonseq_config[nsqi])
         { pick_weights_config (w->nsq[nsqi], s->nsq_cm[nsqi], s->nsq[nsqi],
                                a->N_hidden[ls], a->nonseq_config[nsqi]->N_wts,
-                               p->nsq[nsqi], centre, value);
+                               p->nsq[nsqi], centre, value, param_opt);
         }
         else
         { pick_weights (w->nsq[nsqi], s->nsq_cm[nsqi], s->nsq[nsqi], 
                         a->N_hidden[ls], a->N_hidden[l], 
-                        s->ah[l], p->nsq[nsqi], centre, value);
+                        s->ah[l], p->nsq[nsqi], centre, value, param_opt);
         }
         nsqi += 1;
       }
@@ -129,12 +125,12 @@ void net_prior_generate
       { if (a->hidden_config[l])
         { pick_weights_config (w->hh[l-1], s->hh_cm[l-1], s->hh[l-1],
                                a->N_hidden[l-1], a->hidden_config[l]->N_wts,
-                               p->hh[l-1], centre, value);
+                               p->hh[l-1], centre, value, param_opt);
         }
         else
         { pick_weights (w->hh[l-1], s->hh_cm[l-1], s->hh[l-1], 
                         a->N_hidden[l-1], a->N_hidden[l], 
-                        s->ah[l], p->hh[l-1], centre, value);
+                        s->ah[l], p->hh[l-1], centre, value, param_opt);
         }
       }
     }
@@ -143,40 +139,40 @@ void net_prior_generate
     { if (a->input_config[l])
       { pick_weights_config (w->ih[l], s->ih_cm[l], s->ih[l],
                              a->N_inputs, a->input_config[l]->N_wts,
-                             p->ih[l], centre, value);
+                             p->ih[l], centre, value, param_opt);
       }
       else
       { pick_weights (w->ih[l], s->ih_cm[l], s->ih[l], 
          not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1)), a->N_hidden[l], 
-         s->ah[l], p->ih[l], centre, value);
+         s->ah[l], p->ih[l], centre, value, param_opt);
       }
     }
 
     if (a->has_bh[l])
     { if (a->bias_config[l])
       { pick_unit_params_config(w->bh[l], s->bh_cm[l], a->bias_config[l]->N_wts,
-                                p->bh[l], centre, value);
+                                p->bh[l], centre, value, param_opt);
       }
       else
-      { pick_unit_params (w->bh[l], s->bh_cm[l], a->N_hidden[l], 
-                                    s->ah[l], p->bh[l], centre, value);
+      { pick_unit_params (w->bh[l], s->bh_cm[l], a->N_hidden[l], s->ah[l],
+                          p->bh[l], centre, value, param_opt);
       }
     }
     
     if (a->has_th[l]) pick_unit_params (w->th[l], s->th_cm[l], a->N_hidden[l], 
-                                        0, p->th[l], centre, value);
+                                        0, p->th[l], centre, value, param_opt);
 
     if (a->has_ho[l])
     { int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { pick_weights_config (w->ho[l], s->ho_cm[l], s->ho[l],
                              a->N_hidden[l], a->hidden_config[k]->N_wts,
-                             p->ho[l], centre, value);
+                             p->ho[l], centre, value, out_param_opt);
       }
       else
       { pick_weights (w->ho[l], s->ho_cm[l], s->ho[l], 
-                                a->N_hidden[l], a->N_outputs, 
-                                s->ao, p->ho[l], centre, out_value);
+                      a->N_hidden[l], a->N_outputs, 
+                      s->ao, p->ho[l], centre, out_value, out_param_opt);
       }
     }
   }
@@ -185,12 +181,12 @@ void net_prior_generate
   { if (a->input_config[a->N_layers])
     { pick_weights_config (w->io, s->io_cm, s->io,
                            a->N_inputs, a->input_config[a->N_layers]->N_wts,
-                           p->io, centre, out_value);
+                           p->io, centre, out_value, out_param_opt);
     }
     else
     { pick_weights (w->io, s->io_cm, s->io,
                     not_omitted(flgs?flgs->omit:0,a->N_inputs,1), a->N_outputs, 
-                    s->ao, p->io, centre, out_value);
+                    s->ao, p->io, centre, out_value, out_param_opt);
     }
   }
 
@@ -198,11 +194,11 @@ void net_prior_generate
   { if (a->bias_config[a->N_layers])
     { pick_unit_params_config 
                        (w->bo, s->bo_cm, a->bias_config[a->N_layers]->N_wts,
-                        p->bo, centre, value);
+                        p->bo, centre, value, out_param_opt);
     }
     else
     { pick_unit_params (w->bo, s->bo_cm, a->N_outputs, 
-                        s->ao, p->bo, centre, value);
+                        s->ao, p->bo, centre, value, out_param_opt);
     }
   }
 
@@ -228,7 +224,8 @@ static void pick_unit_params
   net_sigma *adj,	/* Adjustments for destination units, or zero */
   prior_spec pr,	/* Prior to use */
   int centre,		/* Choose "centre" rather than random value? */
-  double value		/* Use specific value for sigma? */
+  double value,		/* Use specific value for sigma? */
+  int param_opt		/* How to generate parameters */
 )
 { 
   net_sigma unit_sigma;
@@ -239,8 +236,16 @@ static void pick_unit_params
 
   for (i = 0; i<n; i++)
   { 
-    if (centre)
+    if (param_opt==0)
     { *wt = 0;
+    }
+    else if (param_opt==2)
+    { double d; 
+      if (scanf("%lf",&d)!=1)
+      { fprintf (stderr, "Error reading parameter from standard input\n");
+        exit(3);
+      }
+      *wt = d;
     }
     else
     { unit_sigma = prior_pick_sigma (*sd_cm, pr.alpha[1]);
@@ -262,7 +267,8 @@ static void pick_unit_params_config
   int n,		/* Number of weights, possibly sparse and/or shared */
   prior_spec pr,	/* Prior to use */
   int centre,		/* Choose "centre" rather than random value? */
-  double value		/* Use specific value for sigma? */
+  double value,		/* Use specific value for sigma? */
+  int param_opt		/* How to generate parameters */
 )
 { 
   net_sigma unit_sigma;
@@ -273,8 +279,16 @@ static void pick_unit_params_config
 
   for (i = 0; i<n; i++)
   { 
-    if (centre)
+    if (param_opt==0)
     { *wt = 0;
+    }
+    else if (param_opt==2)
+    { double d; 
+      if (scanf("%lf",&d)!=1)
+      { fprintf (stderr, "Error reading parameter from standard input\n");
+        exit(3);
+      }
+      *wt = d;
     }
     else
     { unit_sigma = prior_pick_sigma (*sd_cm, pr.alpha[1]);
@@ -297,7 +311,8 @@ static void pick_weights
   net_sigma *adj,	/* Adjustments for destination units, or zero */
   prior_spec pr,	/* Prior to use */
   int centre,		/* Choose "centre" rather than random value? */
-  double value		/* Use specific value for sigma? */
+  double value,		/* Use specific value for sigma? */
+  int param_opt		/* How to generate parameters */
 )
 { 
   net_sigma width, weight_sigma;
@@ -315,8 +330,16 @@ static void pick_weights
 
     for (j = 0; j<nd; j++)
     { 
-      if (centre)
+      if (param_opt==0)
       { *wt = 0;
+      }
+      else if (param_opt==2)
+      { double d; 
+        if (scanf("%lf",&d)!=1)
+        { fprintf (stderr, "Error reading parameter from standard input\n");
+          exit(3);
+        }
+        *wt = d;
       }
       else
       { weight_sigma = prior_pick_sigma (sd[i], pr.alpha[2]);
@@ -341,7 +364,8 @@ static void pick_weights_config
   int nw,		/* Number of weights, possibly sparse and/or shared */
   prior_spec pr,	/* Prior to use */
   int centre,		/* Choose "centre" rather than random value? */
-  double value		/* Use specific value for sigma? */
+  double value,		/* Use specific value for sigma? */
+  int param_opt		/* How to generate parameters */
 )
 { 
   net_sigma width, weight_sigma;
@@ -358,8 +382,16 @@ static void pick_weights_config
 
   for (j = 0; j<nw; j++)
   { 
-    if (centre)
+    if (param_opt==0)
     { *wt = 0;
+    }
+    else if (param_opt==2)
+    { double d; 
+      if (scanf("%lf",&d)!=1)
+      { fprintf (stderr, "Error reading parameter from standard input\n");
+        exit(3);
+      }
+      *wt = d;
     }
     else
     { weight_sigma = prior_pick_sigma (*sd_cm, pr.alpha[2]);

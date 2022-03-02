@@ -136,6 +136,7 @@ Bayesian neural networks [net]:
     net-gd          Train a network by gradient descent in the error
 
   * net-display     Print network parameters and/or hyperparameters
+    net-config-check  Check/display a network configuration specification
 
   * net-quantities  Quantities from log files relating to networks
   * net-plt         Get quantities from net log files, suitable for plotting

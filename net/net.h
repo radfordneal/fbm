@@ -184,7 +184,7 @@
    Note that net_config_to_gpu may need to be updated when net_config 
    changes. */
 
-#define Max_conn 2000000	/* Maximum number of connections in a group */
+#define Max_conn 4000000	/* Maximum number of connections in a group */
 
 /* A single connection, or a sequence of connections, depending on context.
    For biases, s is always 0. */

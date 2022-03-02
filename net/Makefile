@@ -1,6 +1,6 @@
 # MAKEFILE FOR NEURAL NET PROGRAMS. 
 
-# Copyright (c) 1995-2021 by Radford M. Neal 
+# Copyright (c) 1995-2022 by Radford M. Neal 
 #
 # Permission is granted for anyone to copy, use, modify, or distribute this
 # program and accompanying programs and documents for any purpose, provided 
@@ -33,7 +33,7 @@ NVCC_OPTIONS += $(PREC_FLAGS)
 
 
 programs:	net-spec net-gen net-rej net-eval net-display net-pred net-mc \
-		net-gd net-plt net-tbl net-hist net-dvar \
+		net-gd net-plt net-tbl net-hist net-dvar net-config-check \
 		net-grad-test net-stepsizes net-genp net-approx net-his
 
 # GPU versions of some programs.  Note that the GPU version of net-eval 
@@ -145,6 +145,13 @@ net-dvar:	net-dvar.o	net-util.o net-config.o net-setup.o net-func.o \
 		  net-util.o net-config.o misc.o log.o rand.o -lm -o net-dvar
 
 net-dvar.o:	net-dvar.c	misc.h prior.h model.h net.h data.h log.h 
+
+net-config-check:	net-config-check.o net-config.o misc.o
+		$(CC) $(LFLAGS) net-config-check.o net-config.o misc.o \
+		  -lm -o net-config-check
+
+net-config-check.o:	net-config-check.c \
+			net.h prior.h data.h model.h log.h misc.h
 
 net-grad-test:	mc-grad-test.o	net-mc.o ars.o net-plt.o misc.o log.o rand.o \
 				numin.o data-trans.o mc-iter.o mc-traj.o \

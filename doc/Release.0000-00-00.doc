@@ -22,8 +22,9 @@ Feature changes in the version:
    biases, may now be set up explicitly, rather than (as previously)
    layers always being fully-connected, without weight sharing.  In
    particular, this allows for specification of models with
-   convolutional layers.  See net-spec.doc and net-config.doc for
-   details, as well as the tutorial example in Ex-image.doc.
+   convolutional layers.  See net-spec.doc, net-config.doc, and
+   net-config-check.doc for details, as well as the tutorial example
+   in Ex-image.doc.
 
 2) Non-sequential hidden layer connections are now supported - ie,
    hidden layers can now connect to later hidden layers other than

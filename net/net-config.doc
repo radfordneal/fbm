@@ -7,9 +7,12 @@ connections exist from the previous hidden layer (or any hidden layer
 for outputs) or from the input layer, as well as any sharing of
 weights between these connections.  Similarly, biases for hidden
 layers and the outputs may be configured with sharing or sparsity.
-The configuration files to use are specified by the "cfg-i", "cfg-h",
-or "cfg-b" flags in the network specification.  See net-spec.doc for
-details.
+The configuration files to use are specified by "config:" options in
+the network specification.  See net-spec.doc for details.
+
+The net-config-check command can be used to check for errors and
+display information regarding a configuration file, as described in
+net-config-check.doc.
 
 Configuration files can be written in various ways, as given by the
 detailed syntax at the end of this document.  The simplest form, as a

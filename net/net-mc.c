@@ -3787,8 +3787,10 @@ void mc_app_stepsizes
   for (l = 0; l<arch->N_layers; l++)
   { for (ls = 0, bits = arch->has_nsq[l]; bits!=0; ls++, bits>>=1)
     { if (ls>=l-1) abort();
-      ns[ls][l] = nsqi;
-      nsqi += 1;
+      if (bits&1)
+      { ns[ls][l] = nsqi;
+        nsqi += 1;
+      }
     }
   }
 

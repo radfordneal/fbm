@@ -110,7 +110,7 @@ int main
         if (i_option>1)
         { fprintf(stderr,"\n");
           for (i = 0; i<ns; i++)
-          { printf("%6d %6d\n",i+1,scnt[i]);
+          { fprintf(stderr,"%6d %6d\n",i+1,scnt[i]);
           }
           fprintf(stderr,"\n");
         }
@@ -121,7 +121,7 @@ int main
       if (i_option>1)
       { fprintf(stderr,"\n");
         for (i = 0; i<nd; i++)
-        { printf("%6d %6d\n",i+1,dcnt[i]);
+        { fprintf(stderr,"%6d %6d\n",i+1,dcnt[i]);
         }
         fprintf(stderr,"\n");
       }
@@ -131,7 +131,7 @@ int main
       if (i_option>1)
       { fprintf(stderr,"\n");
         for (i = 0; i<cf->N_wts; i++)
-        { printf("%6d %6d\n",i+1,wcnt[i]);
+        { fprintf(stderr,"%6d %6d\n",i+1,wcnt[i]);
         }
         fprintf(stderr,"\n");
       }

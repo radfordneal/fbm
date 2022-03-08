@@ -1,6 +1,6 @@
 /* MC-SPEC.C - Specify parameters of Markov chain Monte Carlo simulation. */
 
-/* Copyright (c) 1995-2019 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -120,7 +120,23 @@ int main
     exit(0);
   }
 
-  /* Otherwise, look at remaining arguments. */
+  /* We're adding a specification, not displaying... */
+
+  /* Open log file and read all records (so we see all 'o' and 't' records). */
+
+  log_file_open (&logf, 1);
+
+  log_gobble_init(&logg,0);
+  logg.req_size['o'] = sizeof *ops;
+  logg.req_size['t'] = sizeof *traj;
+
+  while (!logf.at_end)
+  { log_gobble(&logf,&logg);
+  }
+
+  index = logf.header.index<0 ? 0 : logf.header.index;
+
+  /* Look at remaining arguments with operation / trajectory specifications. */
 
   ap = argv+2; 
 
@@ -887,13 +903,6 @@ int main
     if (*ap) usage();
   }
 
-  /* Open log file and read last record. */
-
-  log_file_open (&logf, 1);
-  log_file_last (&logf);
-
-  index = logf.at_end || logf.header.index<0 ? 0 : logf.header.index;
-
   /* Write specifications to log file. */
 
   if (o>0)
@@ -904,8 +913,12 @@ int main
     log_file_append (&logf, ops);
   }
 
-  if (have_traj)
+  if (have_traj || logg.data['t'])
   { 
+    if (traj->type==0)
+    { traj->halfp = 1;
+      traj->N_approx = 1;
+    }
     logf.header.type = 't';
     logf.header.index = index;
     logf.header.size = sizeof *traj;
@@ -1346,11 +1359,9 @@ static void display_specs
     }
   }
 
-  if (logg->data['t']!=0)
+  if (logg->data['t']!=0 && (traj = logg->data['t'])->type!=0)
   {
     printf("\nMethod for computing trajectories:\n\n");
-
-    traj = logg->data['t'];
     
     switch (traj->type)
     {

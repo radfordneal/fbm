@@ -1,6 +1,6 @@
 /* MC.H - Interface to Markov chain Monte Carlo module. */
 
-/* Copyright (c) 1995-2019 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -113,7 +113,8 @@ typedef struct
 
 typedef struct
 { 
-  int type;		/* Type of discretization, 'L'=leapfrog, etc. */
+  int type;		/* Type of discretization, 'L'=leapfrog, etc. 
+                           0 is default (leapfrog halfp) */
 
   int halfp;		/* Should first and last half steps be for p? 
 			   Also used to store the similar firstp flag */

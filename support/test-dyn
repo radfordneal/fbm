@@ -104,3 +104,21 @@ net-mc log 3
 net-tbl -h tKEb log 1:
 net-tbl -h q0q1q2q3q4 log
 net-tbl -h q5q6q7o1@ log
+
+echo " "; echo "--- F"; echo " "
+
+net-spec log 1 1 / io=3
+model-spec log real 3
+mc-spec log heatbath dynamic 2 0.3
+net-mc log 2
+mc-spec log heatbath dynamic 2 0.4 / leapfrog 2
+net-mc log 4
+mc-spec log heatbath dynamic 2 0.5 / leapfrog 3
+net-mc log 6
+mc-spec log heatbath dynamic 2 0.6
+net-mc log 8
+mc-spec log heatbath dynamic 2 0.7
+log-records log
+mc-spec log all
+mc-spec log 6
+mc-spec log

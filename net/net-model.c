@@ -1,6 +1,6 @@
 /* NET-MODEL.C - Module dealing with the interpretation of network outputs. */
 
-/* Copyright (c) 1995-2021 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -305,7 +305,7 @@ void STATIC_IF_INCLUDED net_model_max_second
   double alpha;
   int i;
 
-  switch (m->type)
+  switch (m ? m->type : 0)
   {
     case 'B':  /* Binary data values */
     {

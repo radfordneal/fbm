@@ -367,3 +367,80 @@ Number of training cases: 8
 -8.79416708e-03  3.63007963e-01  9.51207161e+00  1.35889168e+01  1.36560669e+01  1.35889168e+01  1.36560669e+01  1.35889168e+01  1.36560669e+01  1.35889168e+01  1.36560669e+01 
 -1.02689108e-02  4.23202085e+00  4.52529001e+00  1.68384552e+01  1.69923935e+01  1.68384552e+01  1.69923935e+01  1.68384552e+01  1.69923935e+01  1.68384552e+01  1.69923935e+01 
 -1.08875399e-02  5.56633282e+00  4.48346472e+00  1.75027351e+01  1.76655903e+01  1.75027351e+01  1.76655903e+01  1.75027351e+01  1.76655903e+01  1.75027351e+01  1.76655903e+01 
+ 
+--- F
+ 
+   -1 A:1136 P:3848 M:208
+    0 o:3920
+    1 S:16 W:4 p:4 r:32 i:168
+    2 S:16 W:4 p:4 r:32 i:168 o:3920 t:232
+    3 S:16 W:4 p:4 r:32 i:168
+    4 S:16 W:4 p:4 r:32 i:168 o:3920 t:232
+    5 S:16 W:4 p:4 r:32 i:168
+    6 S:16 W:4 p:4 r:32 i:168 o:3920 t:232
+    7 S:16 W:4 p:4 r:32 i:168
+    8 S:16 W:4 p:4 r:32 i:168 o:3920 t:232
+
+SPECIFICATIONS AT INDEX 0 IN LOG FILE:
+
+Operations making up each iteration:
+
+  heatbath
+  dynamic 2 0.3000
+
+
+SPECIFICATIONS AT INDEX 2 IN LOG FILE:
+
+Operations making up each iteration:
+
+  heatbath
+  dynamic 2 0.4000
+
+Method for computing trajectories:
+
+  leapfrog halfp 2 
+
+
+SPECIFICATIONS AT INDEX 4 IN LOG FILE:
+
+Operations making up each iteration:
+
+  heatbath
+  dynamic 2 0.5000
+
+Method for computing trajectories:
+
+  leapfrog halfp 3 
+
+
+SPECIFICATIONS AT INDEX 6 IN LOG FILE:
+
+Operations making up each iteration:
+
+  heatbath
+  dynamic 2 0.6000
+
+
+SPECIFICATIONS AT INDEX 8 IN LOG FILE:
+
+Operations making up each iteration:
+
+  heatbath
+  dynamic 2 0.7000
+
+
+SPECIFICATIONS AT INDEX 6 IN LOG FILE:
+
+Operations making up each iteration:
+
+  heatbath
+  dynamic 2 0.6000
+
+
+LAST SPECIFICATIONS IN LOG FILE:
+
+Operations making up each iteration:
+
+  heatbath
+  dynamic 2 0.7000
+

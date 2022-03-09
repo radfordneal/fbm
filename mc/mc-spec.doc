@@ -474,11 +474,19 @@ The trajectory specification can have one of the following forms:
         the trajectory are for p (momentum) or q (position).  The
         default is "halfp".
 
-        The N-approx option results in N-approx leapfrog steps for
-        each overall step, which use successive approximations to the
-        energy (whose average must be the true value), in an order
-        randomly selected at the start of the trajectory.  The default
-        for N-approx is one, in which case the exact values are used.
+        The N-approx option results in each step using N-approx
+        approximations to the energy gradient (whose average must be
+        the true value), used successively in an order randomly
+        selected at the start of the trajectory.  The first
+        approximation is used for an initial half-step, then the
+        remaining ones for full steps, and finally the first again for
+        a final half-step (which merges with the next such half-step
+        when for than one complete step is done).  The approximations
+        are applied in the reverse order when simulating a trajectory
+        backwards (to find states in a window before the start state).
+
+        The default for N-approx is one, in which case the exact
+        gradient is used.
 
         The stepsize for each of the N-approx steps is reduced by the
         factor N-approx, so the total simulation time for an overall
@@ -486,6 +494,14 @@ The trajectory specification can have one of the following forms:
         the approximations are good, a larger stepsize adjustment
         factor can be used, while keeping the acceptance rate high,
         improving computational efficiency.
+
+        If N-approx is negative, the number of approximations is minus
+        the value given, but each approximation is used twice, in a
+        symmetrical fashion.  For example, if N-approx is -3 and the
+        random ordering of the three approximations is 2,1,3, these
+        approximations are applied in the order 2,1,3,2,3,1,2 (with
+        the first and last uses of 2 being half steps).  The stepsize
+        used is reduced by the factor -2*N-approx.
 
         The optional approx-file arguement gives the name of a file
         containing further information on how the approximations are

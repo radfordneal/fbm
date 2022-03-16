@@ -12,8 +12,10 @@ Unpacking the files.
 The software is distributed as a Unix tar archive.  You should
 download the tar archive for the desired version from my web page at
 www.cs.utoronto.ca/~radford/fbm.software.html via your Web browser, or
-using 'wget', saving it in a file with a name of the form
-'fbm.YYYY-MM-DD.tar', and then issue the command
+using 'wget'.  Or alternatively, you can get it from the gitlab
+repository at gitlab.com/radfordneal/fbm.  It should be saved in a
+file with a name of the form 'fbm.YYYY-MM-DD.tar'.  You should then
+unpack it with the command
 
     tar xf fbm.YYYY-MM-DD.tar
 
@@ -36,8 +38,8 @@ under the name it had when they were compiled.
 
 Compiling the programs.
 
-Compling the programs requires a C development environment.  On a
-Linux system, you may need to use 
+Compling the programs requires a C development environment.  On an
+Ubuntu Linux system, you may need to use
 
     sudo apt-get install build-essential
 
@@ -50,13 +52,13 @@ with your exact system.
 
 Once the build tools are installed, you will probably be able to
 compile the programs as described below without having to change
-anything.  However, it is possible that you will want to use a
-different C compiler, or set certain compilation options.  You can
-probably set the required options by modifying the 'make.include' file
-in the main directory, which is included at the beginning of all
-Makefiles, though for some problems you might have to modify the
-'Makefile' and 'xxx.make' files in the various sub-directories, or
-modify the source files.
+anything.  However, you may well want to use a different C compiler
+than the default gcc, or set certain compilation options that could
+increase performance.  You can set the required options by modifying
+the 'make.include' file in the main directory, which gets included in
+all Makefiles used, though for some problems you might have to modify
+the 'Makefile' and 'xxx.make' files in the various sub-directories, or
+modify the source files. 
 
 Here are some reasons that you might need to customize things:
 
@@ -108,13 +110,13 @@ It is possible that these compilation commands will fail for some
 reason, in which case you'll have to figure out what's wrong and fix
 it.  You might want to start by looking at the make-all shell script.
 
-You can pass one or two arguments to make-all.  A final argument of
-"gpu" causes versions of some programs that make use of a GPU to be
-compiled (in addition to the versions that use only the CPU).  This
-requires that a suitable GPU be present, and that suitable software be
-installed.  A first argument of "dbl" or "flt" specifies the precision
-used for arithmetic (in some modules) for the version of the programs
-compiled.
+You can pass one or two arguments to make-all.  A first argument of
+"dbl" or "flt" specifies the precision used for arithmetic (in some
+modules) for the version of the programs compiled.  The default with
+no arguments is "dbl".  A second argument of "gpu" causes versions of
+some programs that make use of a GPU to be compiled (in addition to
+the versions that use only the CPU).  This requires that a suitable
+GPU be present, and that suitable software be installed.
 
 
 Using the programs.
@@ -133,18 +135,19 @@ arithmetic.
 
 Multiple architectures.
 
-If you want to use the programs on more than one type of machine
-(sharing the file system you are using), you will need to compile them
-several times, once for each machine architecture (do a 'make-clean',
-as described below, before re-compiling for a new architecture).  You
-will also need to set your search path to a directory that contains
-the versions of the programs compiled for the machine you are
-currently using.  By convention, these directories should be called
-"bin.ARCH", where ARCH is the name of the machine architecture.  The
-shell file install-arch creates such a directory (if necessary) and
-copies the programs from the "bin" directory to the "bin.ARCH"
-directory for the current architecture.  It is assumed that a program
-called 'arch' exists that returns the name of the architecture.
+If you want to use the programs on more than one type of machine,
+which share the file system you are using (which is nowadays an
+uncommon thing to do), you will need to compile them several times,
+once for each machine architecture (do a 'make-clean', as described
+below, before re-compiling for a new architecture).  You will also
+need to set your search path to a directory that contains the versions
+of the programs compiled for the machine you are currently using.  By
+convention, these directories should be called "bin.ARCH", where ARCH
+is the name of the machine architecture.  The shell file install-arch
+creates such a directory (if necessary) and copies the programs from
+the "bin" directory to the "bin.ARCH" directory for the current
+architecture.  It is assumed that a program called 'arch' exists that
+returns the name of the architecture.
 
 
 Cleaning things up.

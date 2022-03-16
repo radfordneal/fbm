@@ -4,7 +4,7 @@ USING THE SOFTWARE
 
 Once you have installed the software, as described in Install.doc, you
 can start using it to fit models to data and make predictions.  See
-Overiew.doc for an overview of the facilities provided.  Here, I
+Overview.doc for an overview of the facilities provided.  Here, I
 describe how you should go about running the programs, and accessing
 the documentation on them.
 
@@ -60,8 +60,8 @@ For interactive use, however, it is most convenient to use the 'graph'
 program from my version of the GNU 'plotutils' package, which is
 available at github.com/radfordneal/plotutils, since it allows the
 output of a plotting command to be piped into the 'graph' program in a
-command typed to the shell.  It's best to use the 'graph' program with
-the "-n" option to enable the new set of defaults.
+command typed to the shell.  It is best to use the 'graph' program
+with the "-n" option to enable the new set of defaults.
 
 See Ex-intro.doc for more information.
 

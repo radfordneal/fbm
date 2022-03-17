@@ -19,13 +19,12 @@ software one machine, with "&gt;" at the start of a line indicating a
 command line that was input.  It is possible (even likely) that your
 results will differ, even if you have installed the software
 correctly, since small differences in floating point arithmetic (eg,
-due to whether or not fused multiply-add instructions are used, or to
-different implementations of math functions) can be magnified into
-large differences in the course of the simulation.  However, unless
-one of the simulations became stuck in an isolated local mode, the
-final predictions you obtain (eg, from 'net-pred' or 'gp-pred'), and
-the final distributions of model parameters, should be close to those
-reported below.
+due to different implementations of math functions) can be magnified
+into large differences in the course of the simulation.  However,
+unless one of the simulations became stuck in an isolated local mode,
+the final predictions you obtain (eg, from 'net-pred' or 'gp-pred'),
+and the final distributions of model parameters, should be close to
+those reported below.
 
 Some of the examples show the output of "xxx-plt" commands being piped
 into a program called "plot", or "plot-points".  Any plot program
@@ -45,13 +44,13 @@ and then read this file into whatever plotting program you have.  As a
 last resort, you can just look at the numbers in the file yourself.
 
 All the data sets mentioned here are present in directories with names
-beginning with "ex", along with the C source of the programs that
-generated the data.  The commands given assume that you are in the
-directory containing the data.  The command sequences used for each
-example are also stored in these directories, in shell files with the
-names like 'rcmds.net', 'rcmds.gp', 'bcmds.net', 'bcmds.gp', etc.
-Some of these directories also contain other command files used for
-examples in my papers.
+beginning with "ex-", along with the data and the source of the C
+programs that generated the data.  The commands given assume that you
+are in the directory containing the data.  The command sequences used
+for each example are also stored in these directories, in shell files
+with the names like 'rcmds.net', 'rcmds.gp', 'bcmds.net', 'bcmds.gp',
+etc.  Some of these directories also contain other command files used
+for examples in my papers.
 
 Computation times are given for many of the examples.  These are all
 for the current version of the software, run on the system described

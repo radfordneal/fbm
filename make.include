@@ -42,19 +42,58 @@ CFLAGS = -g -O3 $(SANITIZE) -march=native -mtune=native \
 LFLAGS = $(SANITIZE)
 
 
-# Options for nvcc (CUDA compiler for GPU code)
+# Options for nvcc (CUDA compiler for GPU code), written for CUDA 11.x.  
+#
+# The settings below are designed to work well for the widest possible 
+# set of GPUs supported by the current versions of CUDA.  The first 
+# --generate-code line compiles for a virtual architecture, and hence 
+# will be runnable on future GPUs.  Other lines are for specific GPUs;
+# any that you don't use can be deleted.
+#
+# See below for some other possibilities for how to set these options.
 
 NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
-         --threads=0 \
-         --generate-code=arch=compute_35,code=compute_35 \
+         --threads=0 --Wno-deprecated-gpu-targets \
+         --generate-code=arch=compute_86,code=compute_86 \
          --generate-code=arch=compute_35,code=sm_35 \
+         --generate-code=arch=compute_37,code=sm_37 \
          --generate-code=arch=compute_50,code=sm_50 \
          --generate-code=arch=compute_52,code=sm_52 \
+         --generate-code=arch=compute_53,code=sm_53 \
          --generate-code=arch=compute_60,code=sm_60 \
          --generate-code=arch=compute_61,code=sm_61 \
+         --generate-code=arch=compute_62,code=sm_62 \
+         --generate-code=arch=compute_70,code=sm_70 \
+         --generate-code=arch=compute_72,code=sm_72 \
          --generate-code=arch=compute_75,code=sm_75 \
+         --generate-code=arch=compute_80,code=sm_80 \
          --generate-code=arch=compute_86,code=sm_86 \
          --ptxas-options=-v \
          -ccbin=g++ \
          -DUSE_SIMD_INTRINSICS -DUSE_FMA \
          -DUSE_SLEEF -Xcompiler -ffp-contract=off # -DUSE_SLEEF_CUDA
+
+
+# Settings that should work with CUDA 11.5 and later, compiling for all
+# current architectures, plus a virtual architecture that will work for
+# later architectures.
+
+# NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
+#          --threads=0 --gpu-architecture=all \
+#          --ptxas-options=-v \
+#          -ccbin=g++ \
+#          -DUSE_SIMD_INTRINSICS -DUSE_FMA \
+#          -DUSE_SLEEF -Xcompiler -ffp-contract=off # -DUSE_SLEEF_CUDA
+
+
+# Settings that should work for GPUs of compute capability 5.2 and later,
+# relying on JIT compilation by the NVIDIA driver (so there will be some 
+# delay the first time a program is run).  This will give faster compilation
+# than the settings above.
+
+# NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
+#          --generate-code=arch=compute_52,code=compute_52 \
+#          --ptxas-options=-v \
+#          -ccbin=g++ \
+#          -DUSE_SIMD_INTRINSICS -DUSE_FMA \
+#          -DUSE_SLEEF -Xcompiler -ffp-contract=off # -DUSE_SLEEF_CUDA

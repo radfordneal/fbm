@@ -1,0 +1,32 @@
+<html>
+<body>
+<pre>
+
+
+NET-CONFIG-CHECK:  Check/display a network configuration specification.
+
+Net-config-check reads a file containing a specification of network
+connections, as might be used for a "config:" option in a network
+specification (see <A HREF="net-spec.html">net-spec.doc</A>), checks it for errors, and optionally
+displays the connections it specifies on standard output.
+
+Usage:
+
+    net-config-check [ -p ] [ -i | -I ] config-file [ ns ] nd
+
+Reads the specified configuration file, checks it for errors, and
+displays the connections specified on standard output if the -p option
+is given.  Any errors found, and the output from any "@" directives in
+the specification, are displayed on standard error.  In addition, if
+the -i option is specified, some information (useful for debugging)
+regarding the specified connections is written to standard error, even
+more if -I is specified.  The number of source units, ns, and the
+number of destination units, nd, must be specified, with ns omitted if
+the specification is for bias connections.  The configuation file
+specified may begin with "%", in which case the remainder is a shell
+command to execute, which outputs the configuration file.
+
+            Copyright (c) 2022 by Radford M. Neal
+</pre>
+</body>
+</html>

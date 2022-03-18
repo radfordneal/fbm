@@ -104,7 +104,7 @@ as a circle only if you have a three-dimensional plotting program.
 
 However, the 9990 points plotted are not independent, as can also be
 seen from the plots of "x", "y", and "z" versus "t".  The effect of
-this can be seen more clearly by looking at only point sup to
+this can be seen more clearly by looking at only points up to
 iteration 1000:
 
     > dist-plt x y glog.met,1 11:1000 | plot-points

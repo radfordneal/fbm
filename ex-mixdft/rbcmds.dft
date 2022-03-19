@@ -4,6 +4,7 @@
 # of two real values and a binary class in order to classify test cases.
 # The argument of this script is the number (out of 500) of the training
 # cases at the front of rdata in which the class should be made unknown.  
+# It should be 490 to reproduce the tutorial example in the documentation.
 # The result, stored in rdata.p1, is the probability of class 1 for the 
 # 500 test cases at the end of rdata.
 

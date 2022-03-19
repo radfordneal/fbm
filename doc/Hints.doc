@@ -84,7 +84,7 @@ HINTS AND WARNINGS
    a less-than-complete set of full records.  It is best to assess the 
    situation using 'log-records' before proceeding.
 
-7) If you need to change the name of a program to avoid conflicts with 
-   other programs you use, it is probably best to simply change the name 
-   of the link in this software's 'bin' directory, leaving the name 
-   unchanged in all the other directories.
+7) If you need to change the name of a program to avoid conflicts with
+   other programs you use, it is probably best to simply change the
+   name of the link in this software's 'bin-...' directories, leaving
+   the name unchanged in all the other directories.

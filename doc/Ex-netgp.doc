@@ -9,7 +9,7 @@ is real-valued, this is known as "regression".  When the target takes
 on values from a finite set, it is known as "classification".
 Simple examples of both sorts are discussed here.
 
-Some mre complex classification models for images are discussed in
+Some more complex classification models for images are discussed in
 Ex-image.doc.
 
 The data and command files for these examples are in the "ex-netgp"

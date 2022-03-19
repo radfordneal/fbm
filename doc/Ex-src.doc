@@ -3,10 +3,10 @@
 EXAMPLES OF INFERENCE FOR LOCATIONS OF SOURCES OF ATMOSPHERIC CONTAMINATION.
 
 The 'src' module is used to perform inference for models of the spread
-of atmospheric contaminants from point sources.  Reference is in
-src.doc and related files.  Some tutorial examples are here.  The
-documentation and examples on the general operation of this package
-for flexible Bayesian modeling should also be consulted.
+of atmospheric contaminants from point sources.  See src.doc and
+linked files for general information before looking at these tutorial
+examples.  The documentation and examples on the general operation of
+this package for flexible Bayesian modeling should also be consulted.
 
 Files containing the commands used in these examples can be found in
 the 'ex-src' directory (in slightly more general form).  That

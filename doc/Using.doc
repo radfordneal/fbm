@@ -61,7 +61,10 @@ program from my version of the GNU 'plotutils' package, which is
 available at github.com/radfordneal/plotutils, since it allows the
 output of a plotting command to be piped into the 'graph' program in a
 command typed to the shell.  It is best to use the 'graph' program
-with the "-n" option to enable the new set of defaults.
+with the "-n" option to enable the new set of defaults.  The '-ly'
+option for 'graph' is often useful to get logarithmic plots, and the
+'-p' option to get point plots rather than line plots ('-p1' for
+smaller points).
 
 See Ex-intro.doc for more information.
 

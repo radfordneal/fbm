@@ -51,4 +51,6 @@ for examples in my papers.
 
 Computation times are given for many of the examples.  These are all
 for the current version of the software, run on the system described
-in Ex-test-system.doc.
+in Ex-test-system.doc.  Note in particular that double precision
+arithmetic is used for all the examples.  The neural network examples
+would be faster if done using single-precision arithmetic.

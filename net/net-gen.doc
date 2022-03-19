@@ -30,10 +30,10 @@ connections to outputs are set to 'out-value', if specified.  If
 top-level width for that hyperparameter (and this is also true even if
 'value' is specified when the prior does not allow any other value).
 
-Specifying arguments of "zero", "rand", or "-" can be used to specify
-how parameters are generated, with "zero" specifying that they are set
-to zero, "rand" specifying that they are generated randomly based on
-the hyperparameters that were chosen, and "-" specifying that they are
+Arguments of "zero", "rand", or "-" can be used to specify how
+parameters are generated, with "zero" specifying that they are set to
+zero, "rand" specifying that they are generated randomly based on the
+hyperparameters that were chosen, and "-" specifying that they are
 read from standard input.  The default is "rand", unless "fix" is
 specified, in which case the default is "zero".  If a second argument
 of this form is given, it applies to parameters on connections to the

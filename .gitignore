@@ -80,6 +80,7 @@ mol/mol-spec
 mol/mol-stepsizes
 mol/mol-tbl
 net/net-approx
+net/net-config-check
 net/net-display
 net/net-dvar
 net/net-eval

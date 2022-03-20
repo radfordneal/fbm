@@ -433,7 +433,8 @@ static void sum_derivatives_config
                         _mm_mul_pd (_mm_loadu_pd(dd+j+2), _mm_loadu_pd(w+k+2)));
         S = _mm_add_pd (S,
              _mm_add_pd(_mm_mul_pd (_mm_loadu_pd(dd+j+4), _mm_loadu_pd(w+k+4)),
-                        _mm_mul_pd (_mm_loadu_pd(dd+j+6), _mm_loadu_pd(w+k+6)));
+                        _mm_mul_pd (_mm_loadu_pd(dd+j+6), _mm_loadu_pd(w+k+6)))
+            );
         _mm_store_sd (ds+i, _mm_add_sd (_mm_load_sd(ds+i), _mm_hadd_pd(S,S)));
       }
     }

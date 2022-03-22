@@ -84,7 +84,7 @@ if [ x$1 != xgpu ]; then
     echo "Copying programs to bin-$1"
     mkdir -p bin-$1
     for i in bin-fbm/*; do
-      if [ -n "`echo $i | sed s/.*-gpu$//`" ]; then
+      if [ $GPU == yes -o -n "`echo $i | sed s/.*-gpu$//`" ]; then
         cp $i bin-$1 || true
       fi
     done

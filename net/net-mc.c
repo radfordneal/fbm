@@ -487,7 +487,7 @@ static void decide_gpu_shared_mem_use
     { in_use += arch->N_hidden[l];
     }
     if (arch->has_nsq[l])
-    { bwshared[l] = nonseq+arch->N_hidden[l] <= allowed_elements-nonseq;
+    { bwshared[l] = in_use+arch->N_hidden[l] <= allowed_elements-nonseq;
       if (bwshared[l])
       { nonseq += arch->N_hidden[l];
       }

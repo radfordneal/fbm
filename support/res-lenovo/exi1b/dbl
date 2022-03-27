@@ -1,4 +1,4 @@
-Commit: 96278dcc13ab37a535a09f1b979ff2b45c713269
+Commit: 41469385004f06eb75b28833b5060b7707a2f0f4
 
 Running exi1b with dbl:
 
@@ -14,5 +14,5 @@ Average log probability of targets:    -1.032+-0.075
 Fraction of guesses that were wrong:    0.3900+-0.0490
 Average squared error guessing mean:    0.56241+-0.03976
 
-elapsed 39.10s
+elapsed 36.96s
 958acbcd52d0bcd8e55b62541a68e375765c9ddb  -

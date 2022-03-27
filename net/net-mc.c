@@ -287,6 +287,9 @@ __constant__ net_params const_params_trans; /* Transposed parameters in GPU */
 __constant__ net_values *const_deriv;  /* Copy of deriv ptr in constant memory*/
 __constant__ net_values *const_train_values; /* Const copy of train_values ptr*/
 __constant__ net_value *const_train_targets; /* Const copy of train_targets */
+__constant__ net_value *const_vblk;     /* Start of block used for net values */
+__constant__ net_value *const_vblk_end; /* End of block used for net values, 
+                                           not counting BLKSIZE-1 extras */
 
 __constant__ double *const_block_energy;   /* Copy of dev_block_energy ptr */
 __constant__ net_params *const_block_grad; /* Copy of dev_block_grad ptr */
@@ -1164,13 +1167,19 @@ void mc_app_initialize
            for hidden units for cases in a gradient group are assumed
            to be allocated sequentially in net-back-grad.c. Hence
            BLKCASES-1 extra sets of values are allocated, allowing for
-           fudging this before calling net-func_gpu.. */
+           fudging this before calling net-func_gpu. */
 
         sz = value_count_noinout * (max_cases_per_launch + BLKCASES-1)
                                  * sizeof *vblk;
         check_cuda_error (CUDAMALLOC (&vblk, sz), 
                           "cudaMalloc of vblk for train");
-
+        check_cuda_error (cudaMemcpyToSymbol 
+                            (const_vblk, &vblk, sizeof vblk),
+                          "copy to const_vblk");
+        net_value *vblke = vblk + value_count_noinout * max_cases_per_launch;
+        check_cuda_error (cudaMemcpyToSymbol 
+                            (const_vblk_end, &vblke, sizeof vblke),
+                          "copy to const_vblk_end");
         pre.fw_stride = value_count_noinout;
         b = 0;
         for (i = 0; i<N_train; i++) 
@@ -2825,7 +2834,7 @@ __launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
     }
 
     /* Fudge to make sure the whole block has consecutive hidden unit
-       values (which might not be so due to wrap around), so that the
+       values (which might not be so due to wrap-around), so that the
        assumptions in net_store[234]_... are true.  This uses the
        extra BLKCASES-1 sets of values allocated at the end.  Since
        the fudge may be done more than once, with different values for
@@ -2841,8 +2850,7 @@ __launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
       { 
         if (th==0)  /* do things only in the first thread for each case */
         { int l;
-          if (const_train_values[b-1].h[0] <=
-               const_train_values[BLKCASES-1].h[0])  /* wraps to beginning */
+          if (const_train_values[a].h[0] < const_vblk_end)  /* use extras */
           { for (l = 0; l < const_arch.N_layers; l++)
             { train_vals_h->h[l] 
                = const_train_values[a].h[l] + m*const_pre.fw_stride;

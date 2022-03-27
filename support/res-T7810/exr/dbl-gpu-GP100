@@ -1,4 +1,4 @@
-Commit: b5a7e6a6ea465d0c44dfa3d03f133e4defa24bc6
+Commit: 140f9e54f6d4a4a5bca55825168eef00094d4e8f
 
 Running exr with dbl-gpu on GP100:
 
@@ -6,16 +6,16 @@ Number of training cases: 100
 Number of test cases: 1000
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Quadro GP100, Compute Capability 6.0, 56 SM processors, 15.9 GBytes ECC
-Using 32 cases per block, max 500 blocks per launch, threads/case: 8
-Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
-Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 128 values
+Using 32 cases per block, 8 threads per case, max 500 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 65536, blks per SM: 32
+Desired blks per SM: 2, allowed shared mem per case: 1024 bytes, 128 values
 Hid layer shrd mem: 0:8:0,8 T 24
 With 100 cases, need 1 launches, max 4 blocks/launch
 Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Quadro GP100, Compute Capability 6.0, 56 SM processors, 15.9 GBytes ECC
-Using 32 cases per block, max 500 blocks per launch, threads/case: 8
-Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
-Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 128 values
+Using 32 cases per block, 8 threads per case, max 500 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 65536, blks per SM: 32
+Desired blks per SM: 2, allowed shared mem per case: 1024 bytes, 128 values
 Hid layer shrd mem: 0:8:0,8 T 24
 With 100 cases, need 1 launches, max 4 blocks/launch
  
@@ -28,5 +28,5 @@ Number of test cases: 1000
 Average log probability of targets:     0.840+-0.021
 Average squared error guessing mean:    0.01712+-0.00283
 
-elapsed 3.45s
+elapsed 3.91s
 f6e7d544ec72400de160c7772c30aa7121c7030e  -

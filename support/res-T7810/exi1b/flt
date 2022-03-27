@@ -1,4 +1,4 @@
-Commit: b5a7e6a6ea465d0c44dfa3d03f133e4defa24bc6
+Commit: 140f9e54f6d4a4a5bca55825168eef00094d4e8f
 
 Running exi1b with flt:
 
@@ -14,5 +14,5 @@ Average log probability of targets:    -1.032+-0.075
 Fraction of guesses that were wrong:    0.3900+-0.0490
 Average squared error guessing mean:    0.56243+-0.03976
 
-elapsed 28.57s
+elapsed 28.72s
 1b3976de34e919263acbeca15b496ae1ab81474e  -

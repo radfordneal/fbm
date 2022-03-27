@@ -1,22 +1,22 @@
-Commit: b5a7e6a6ea465d0c44dfa3d03f133e4defa24bc6
+Commit: 140f9e54f6d4a4a5bca55825168eef00094d4e8f
 
 Running exi1b with flt-gpu on GP100:
 
 Number of training cases: 4999
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Quadro GP100, Compute Capability 6.0, 56 SM processors, 15.9 GBytes ECC
-Using 32 cases per block, max 75 blocks per launch, threads/case: 8
-Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
-Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 256 values
+Using 32 cases per block, 8 threads per case, max 75 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 65536, blks per SM: 32
+Desired blks per SM: 2, allowed shared mem per case: 1024 bytes, 256 values
 Hid layer shrd mem: 0:80:0,80 T 168
 With 4999 cases, need 3 launches, max 53 blocks/launch
 With 2499 cases, need 2 launches, max 40 blocks/launch
 With 2500 cases, need 2 launches, max 40 blocks/launch
 Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
 Quadro GP100, Compute Capability 6.0, 56 SM processors, 15.9 GBytes ECC
-Using 32 cases per block, max 75 blocks per launch, threads/case: 8
-Shared mem/blk: 49152, Shared mem/SM: 65536, Blks/SM: 32
-Desired # of blocks: 2, allowed shared mem per case: 1024 bytes, 256 values
+Using 32 cases per block, 8 threads per case, max 75 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 65536, blks per SM: 32
+Desired blks per SM: 2, allowed shared mem per case: 1024 bytes, 256 values
 Hid layer shrd mem: 0:80:0,80 T 168
 With 4999 cases, need 3 launches, max 53 blocks/launch
 With 500 cases, need 1 launches, max 16 blocks/launch

@@ -52,7 +52,60 @@ LFLAGS = $(SANITIZE)
 #
 # See below for some other possibilities for how to set these options.
 
+#### This version has a large number of -D compiler options for
+#### ..._H_INCLUDED symbols, that have the effect of disabling the
+#### Intel intrinsics for AVX512, which are not used by FBM, and which
+#### casue nvcc to fail with ubuntu 20.04, gcc 9.4.0, and CUDA 11.4 or
+#### 11.6.  The problem will presumably be fixed sometime, at which
+#### point this will no longer be necessary (and might cause problems
+#### if left in).
+
 NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
+         -D_AVX512FINTRIN_H_INCLUDED \
+         -D_AVX512ERINTRIN_H_INCLUDED \
+         -D_AVX512PFINTRIN_H_INCLUDED \
+         -D_AVX512CDINTRIN_H_INCLUDED \
+         -D_AVX512VLINTRIN_H_INCLUDED \
+         -D_AVX512BWINTRIN_H_INCLUDED \
+         -D_AVX512DQINTRIN_H_INCLUDED \
+         -D_AVX512VLBWINTRIN_H_INCLUDED \
+         -D_AVX512VLDQINTRIN_H_INCLUDED \
+         -D_AVX512IFMAINTRIN_H_INCLUDED \
+         -D_AVX512IFMAVLINTRIN_H_INCLUDED \
+         -D_AVX512VBMIINTRIN_H_INCLUDED \
+         -D_AVX512VBMIVLINTRIN_H_INCLUDED \
+         -D_AVX5124FMAPSINTRIN_H_INCLUDED \
+         -D_AVX5124VNNIWINTRIN_H_INCLUDED \
+         -D_AVX512VPOPCNTDQINTRIN_H_INCLUDED \
+         -D__AVX512VBMI2INTRIN_H_INCLUDED \
+         -D_AVX512VBMI2VLINTRIN_H_INCLUDED \
+         -D__AVX512VNNIINTRIN_H_INCLUDED \
+         -D_AVX512VNNIVLINTRIN_H_INCLUDED \
+         -D_AVX512VPOPCNTDQVLINTRIN_H_INCLUDED \
+         -D_AVX512BITALGINTRIN_H_INCLUDED \
+         -D_SHAINTRIN_H_INCLUDED \
+         -D_LZCNTINTRIN_H_INCLUDED \
+         -D_BMIIINTRIN_H_INCLUDED \
+         -D_BMI2INTRIN_H_INCLUDED \
+         -D_F16CINTRIN_H_INCLUDED \
+         -D_RTMINTRIN_H_INCLUDED \
+         -D_XTESTINTRIN_H_INCLUDED \
+         -D_CETINTRIN_H_INCLUDED \
+         -D_GFNIINTRIN_H_INCLUDED \
+         -D__VAESINTRIN_H_INCLUDED \
+         -D_VPCLMULQDQINTRIN_H_INCLUDED \
+         -D_MOVDIRINTRIN_H_INCLUDED \
+         -D_SGXINTRIN_H_INCLUDED \
+         -D_PCONFIGINTRIN_H_INCLUDED \
+         -D_WAITPKGINTRIN_H_INCLUDED \
+         -D_CLDEMOTEINTRIN_H_INCLUDED \
+         -D_RDSEEDINTRIN_H_INCLUDED \
+         -D_PRFCHWINTRIN_H_INCLUDED \
+         -D_ADXINTRIN_H_INCLUDED \
+         -D_CLWBINTRIN_H_INCLUDED \
+         -D_CLFLUSHOPTINTRIN_H_INCLUDED \
+         -D_WBNOINVDINTRIN_H_INCLUDED \
+         -D_PKUINTRIN_H_INCLUDED \
          --threads=0 --Wno-deprecated-gpu-targets \
          --generate-code=arch=compute_86,code=compute_86 \
          --generate-code=arch=compute_35,code=sm_35 \

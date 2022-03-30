@@ -77,6 +77,7 @@ int main (int argc, char **argv)
     for (j = 0; j<D; j++)
     { for (k = 0; k<D; k++)
       { image[j][k] += round (1000 * noise * rand_gaussian()) / 1000;
+        image[j][k] = round (1000 * image[j][k]) / 1000;
       }
     }
 

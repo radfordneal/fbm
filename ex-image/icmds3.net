@@ -29,13 +29,13 @@ for run in 1 2 3 4; do (
   
   net-gen $log fix 0.1
 
-  mc-spec $log repeat 120 heatbath hybrid 200:20 0.06
+  mc-spec $log repeat 120 heatbath hybrid 200:20 0.04
   net-mc $log 1
 
-  mc-spec $log repeat 60 sample-sigmas heatbath hybrid 400:40 0.1
+  mc-spec $log repeat 60 sample-sigmas heatbath hybrid 400:40 0.09
   net-mc $log 2
   
-  mc-spec $log repeat 24 sample-sigmas heatbath 0.9 hybrid 1000:100 0.18 negate
+  mc-spec $log repeat 24 sample-sigmas heatbath 0.9 hybrid 1000:100 0.19 negate
   net-mc $log 1500 
 
 ) & done

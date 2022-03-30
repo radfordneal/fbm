@@ -29,10 +29,10 @@ for run in 1 2 3 4; do (
   mc-spec $log repeat 120 heatbath hybrid 200:20 0.05
   net-mc $log 1
 
-  mc-spec $log repeat 60 sample-sigmas heatbath hybrid 400:40 0.1
+  mc-spec $log repeat 60 sample-sigmas heatbath hybrid 400:40 0.11
   net-mc $log 2
   
-  mc-spec $log repeat 24 sample-sigmas heatbath 0.9 hybrid 1000:100 0.15 negate
+  mc-spec $log repeat 24 sample-sigmas heatbath 0.9 hybrid 1000:100 0.20 negate
   net-mc $log 1500 
 
 ) & done

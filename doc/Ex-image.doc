@@ -562,7 +562,12 @@ The 1500 iterations for the four runs take 26.6 hours on the system
 used (Ex-test-system.doc).  Plots of the move point, training set
 error, validation set error, and hyperparameter values (for the first
 run) can be seen in ilog3-m.png, ilog3-b.png, ilog3-BB.png, and
-ilog3-h1h2h3h4h5.png.
+ilog3-h1h2h3h4h5.png.  Note that one can see that the second run
+differed substantially from the others until about iteration 1050.
+Though the iterations before this are probably not representative of
+the posterior distribution, this is not certain (there could be two
+modes), and they will be included when making predictions below.
+(Running for longer would help resolve this issue.)
 
 The results on the test set using iterations 501 to 1500 of the four
 runs are as follows:

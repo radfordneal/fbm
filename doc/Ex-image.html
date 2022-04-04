@@ -21,6 +21,11 @@ advisable before actually using predictions from a Bayesian model, to
 guard against statistical mistakes, poor convergence of MCMC methods,
 or, if nothing else, out-and-out bugs in the scripts or programs used.
 
+The computation times given below were obtained running on a CPU, with
+arithmetic done in double precision.  Compiling the programs to use
+single precision arithmetic and/or running them on a GPU might reduce
+the time considerably.
+
 The command files for this example are in the ex-image sub-directory.
 
 
@@ -218,7 +223,7 @@ HMC is used for the final sampling phase.
 
 Each full iteration of this sampling procedure takes about 45 seconds
 on the system used (<A HREF="Ex-test-system.html">Ex-test-system.doc</A>), for a total of about 1160
-minutes (about 19 hours) for the 1500 iterations done.  The command
+minutes (about 19.3 hours) for the 1500 iterations done.  The command
 script in ex-image/icmds1.net does all four runs in parallel, so this
 will be the total wall-clock time if the system used has at least four
 processor cores.
@@ -287,95 +292,95 @@ test set as follows (with the first 500 iterations discarded as
 
 The output is as follows:
 
-  Number of iterations used: 8000
+  Number of iterations used: 4000
 
-  Number of test cases: 2400
+  Number of test cases: 20000
 
-  Average log probability of targets:    -1.030+-0.012
-  Fraction of guesses that were wrong:    0.4517+-0.0102
-  Average squared error guessing mean:    0.57219+-0.00671
+  Average log probability of targets:    -1.058+-0.004
+  Fraction of guesses that were wrong:    0.4701+-0.0035
+  Average squared error guessing mean:    0.58614+-0.00240
 
 Only slightly worse results would be obtained using runs only one
-tenth as long (3.3 hours).  The command
+tenth as long (150 iterations, taking about two hours).  The command
 
-  net-pred mnpa ilog1.net1 101:300 ilog1.net2 101:300 \
-                ilog1.net3 101:300 ilog1.net4 101:300 / idata-test .
+  net-pred mnpa ilog1.net1 71:150 ilog1.net2 71:150 \
+                ilog1.net3 71:150 ilog1.net4 71:150 / idata-test .
 
 produces the following output:
 
-  Number of iterations used: 800
+  Number of iterations used: 320
 
-  Number of test cases: 2400
+  Number of test cases: 20000
 
-  Average log probability of targets:    -1.032+-0.012
-  Fraction of guesses that were wrong:    0.4579+-0.0102
-  Average squared error guessing mean:    0.57331+-0.00672
+  Average log probability of targets:    -1.062+-0.004
+  Fraction of guesses that were wrong:    0.4722+-0.0035
+  Average squared error guessing mean:    0.58823+-0.00239
 
 Note that guessing by ignoring the inputs and assigning equal
 probabilities to the four classes gives an average log probability of
 -1.386, an error rate of 0.75, and an average squared error of 0.75.
 So this model performs significantly better than random guessing.
-However, the error rate of 45.2% is considerably more than the 8.2%
+However, the error rate of 47% is considerably more than the 6.9%
 error rate that is achievable with knowledge of the true generating
 process, so there is much room for improvement.
 
 
 A convolutional Bayesian neural network model.
 
-Supposing that we know that the symbol to be recognized is 3 pixels by
-3 pixels, and that it may appear at any position in the image, it
-makes sense to use a convolutional network, that uses several filters
-looking at 3x3 patches of the image.  Each such filter is defined by
-the 9 weights on connectiions from a 3x3 patch at some position in the
-image to a hidden unit, with the weights for all possible positions
-being the same.  We might expect that four filters, one for each
-class, would be sufficient, but the network defined here will allow
-for five filters, which may make it easier to find the four needed,
-since a "spare" filter may allow locally-optimal modes to be more
+Supposing that we know that the symbol to be recognized is a 3 pixel
+by 3 pixel patch in a 6 by 6 image, and that this patch may appear at
+any position in the image, it makes sense to use a convolutional
+network, that uses several filters looking at 3x3 patches of the
+image.  Each such filter is defined by the 9 weights on connectiions
+from a 3x3 patch at some position in the image to a hidden unit, with
+the weights for all possible positions being the same.  We might
+expect that four filters, one for each class, would be sufficient, but
+the network defined here will allow for five filters (computing five
+output channels), which may make it easier to find the four needed,
+since a "spare" filter may allow only-locally-optimal modes to be more
 easily escaped.
 
 The simplest model of this type has a single hidden layer with 80
-hidden units (5 filters, each needing 16 units for all possible symbol
-positions), which connect to the four output units used to define
-class probabilities.  Such a network model can be specified as
-follows:
+hidden units (5 filters/channels, each needing 16 units for all
+possible symbol positions), which connect to the four output units
+used to define class probabilities.  Such a network model can be
+specified as follows:
 
-  net-spec $log 36 80 input-config:iconfig 4 \
-                / ih=0.2:2 bh=0.3:2 ho=0.1:3::4 bo=0.1:2
+  net-spec $log 36 80 softplus 4 \
+                / ih=0.2:2 config:iconfig bh=0.3:2 ho=0.1:3::4 bo=0.1:2
   model-spec $log class
 
-The "input-config" flag after the specification of the size of the
-hidden layer says that the configuration of the weights for
-connections from inputs to hidden units is specified in the file
-"iconfig", whose contents are as follows:
+The "input-config" flag after the specification of the prior for
+input-to-hidden weights says that the configuration of these weights
+is specified in the file "iconfig", whose contents are as follows:
 
   # Configuration for convolutional layer connections for model of test images.
-  
+
   D=6  # image width and height
   P=3  # patch width and height
   F=5  # number of filters
-  
+
   [ 1 1 1 ]
-  
+
   D-P+1{  # Loop over vertical positions of patch
-  
+
     D-P+1{  # Loop over horizontal positions of patch
-  
+
       P{  # Loop over rows of patch
-  
+
         P{  # Loop over pixels within row of patch
-  
+
             = = =   F-1{ = + + }  # Connections for all filters 
-  
+
             [ + = +F ]
         }  
-  
+
         [ +D = = ]   P[ = = +F ]
       }
-  
+
       [ + +F 1 ]
     }
-  
+
     [ +D = 1 ]   D-P+1[ = +F 1 ]
   }
 
@@ -388,12 +393,12 @@ looking at 9 pixels), which are shared by 16x9x5=720 connections
 The other commands used are almost the same as for the fully-connected
 network model above, except that stepsizes have been increased a bit.
 
-Each full iteration takes about 37 seconds on the system used
-(<A HREF="Ex-test-system.html">Ex-test-system.doc</A>), for a total of 31 hours (with the four runs done
-in parallel).  This is a bit faster then for the fully-connected
-network, since there are fewer input-to-hidden connections (an
-advantage partially offset by the overhead of processing the
-non-contiguous configuration of connections).
+Each full iteration takes about 45 seconds on the system used
+(<A HREF="Ex-test-system.html">Ex-test-system.doc</A>), for a total of 18.7 hours (with the four runs
+done in parallel).  This is slightly faster then the time for the
+fully-connected network, since there are fewer input-to-hidden
+connections (an advantage partially offset by the overhead of
+processing the non-contiguous configuration of connections).
 
 As above, we can plot the 'm' (move point), 'b' (squared error on
 training data), and 'B' (squared error on validation data) quantities

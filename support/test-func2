@@ -116,3 +116,18 @@ net-display log 0
 net-tbl -h o0@ log 0
 calc "Log(1+Exp(-1)) + 10*Log(1+Exp(1)) + 20*Log(1+Exp(1.5))"
 net-grad-test log 0 0.003
+
+echo " "; echo "--- H"; echo " "
+
+net-spec log 1 3 softplus0 1 / ih=10 ho=25
+data-spec log 1 1 / "%echo 1 1" .
+model-spec log real 10
+net-gen log fix - <<end
+-1 1 1.5
+1 10 20
+end
+net-display log 0
+net-tbl -h o0@ log 0
+calc l2="Log(2)" \
+     "(Log(1+Exp(-1))-l2) + 10*(Log(1+Exp(1))-l2) + 20*(Log(1+Exp(1.5))-l2)"
+net-grad-test log 0 0.003

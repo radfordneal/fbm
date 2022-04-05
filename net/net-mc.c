@@ -3882,6 +3882,7 @@ void mc_app_stepsizes
         switch (arch->layer_type[l])
         { case Tanh_type: 
           case Softplus_type:
+          case Softplus0_type:
           case Identity_type:
           { seconds.h[l][i] = s;
             break;

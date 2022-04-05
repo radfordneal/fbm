@@ -285,6 +285,7 @@ typedef struct
 #define Tanh_type 0		/* Tanh units */
 #define Identity_type 1		/* Identity units */
 #define Softplus_type 3		/* Softplus units */
+#define Softplus0_type 4	/* Softplus0 units (softplus - log(2)) */
 
 typedef struct
 { 

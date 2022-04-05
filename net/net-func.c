@@ -39,7 +39,6 @@
 
 #endif
 
-
 #define USE_QUICK_AND_DIRTY_TANH 1  /* Whether to use the faster tanh below */
 
 #if USE_QUICK_AND_DIRTY_TANH
@@ -47,6 +46,8 @@
 #else
 # define TANH(x) prec_tanh(x)
 #endif
+
+#define LOG2 0.69314718055994530941  /* Set to log(2) */
 
 
 /* COMPUTE TANH QUICKLY, BUT NOT VERY ACCURATELY.  Loses accuracy for
@@ -337,6 +338,7 @@ void STATIC_IF_INCLUDED net_func
 #       endif
 #     endif
     }
+
     else if (a->layer_type[l]==Softplus_type)
     {
 #     if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
@@ -490,6 +492,21 @@ void STATIC_IF_INCLUDED net_func
       }
 #     endif
     }
+
+    else if (a->layer_type[l]==Softplus0_type)
+    {
+#     if 1
+      { for (j = 0; j<N_hidden; j++)
+        { net_value a = vh[j];
+          net_value v = 
+            prec_log (1 + prec_exp(-prec_fabs(a)));  /* avoid overflow */
+          if (a>0) v += a;
+          vh[j] = v - LOG2;
+        }
+      }
+#     endif
+    }
+
     else /* identity */
     { /* nothing to do */
     }
@@ -1788,6 +1805,16 @@ __device__ __forceinline__ static void net_func_gpu
          prec_log ((net_value)1 + prec_exp(-prec_fabs(a)));/* avoid overflow*/
         if (a>0) v += a;
         vh[j] = v;
+      }
+      if (SYNC_AFTER && N_hidden % NTH != 0) __syncwarp(syncmask);
+    }
+    else if (A.layer_type[l]==Softplus0_type)
+    { for (j = th; j<N_hidden; j+=NTH)
+      { net_value a = vh[j];
+        net_value v = 
+         prec_log ((net_value)1 + prec_exp(-prec_fabs(a)));/* avoid overflow*/
+        if (a>0) v += a;
+        vh[j] = v - LOG2;
       }
       if (SYNC_AFTER && N_hidden % NTH != 0) __syncwarp(syncmask);
     }

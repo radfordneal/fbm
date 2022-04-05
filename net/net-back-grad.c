@@ -39,6 +39,8 @@
 
 #endif
 
+#define LOG2 0.69314718055994530941  /* Set to log(2) */
+
 
 /* -------------------------------------------------------------------------- */
 
@@ -3715,6 +3717,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
       }
 #     endif
     }
+
     else if (a->layer_type[l]==Softplus_type)
     { 
 #     if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
@@ -3816,6 +3819,17 @@ void STATIC_IF_INCLUDED net_back_add_grad
       }
 #     endif
     }
+
+    else if (a->layer_type[l]==Softplus0_type)
+    {
+#     if 1
+      { for (i = 0; i<N_hidden; i++)
+        { dh[i] *= 1 - prec_exp(-LOG2-vh[i]);
+        }
+      }
+#     endif
+    }
+
     else /* identity */
     { /* nothing to do */
     }
@@ -4261,6 +4275,11 @@ __device__ __forceinline__ static void net_back_grad_gpu
       else if (A.layer_type[l]==Softplus_type)
       { for (i = thrb; i<N_hidden; i+=NTH)
         { dh[i] *= 1 - prec_exp(-vh[i]);
+        }
+      }
+      else if (A.layer_type[l]==Softplus0_type)
+      { for (i = thrb; i<N_hidden; i+=NTH)
+        { dh[i] *= 1 - prec_exp(-LOG2-vh[i]);
         }
       }
       else /* identity */

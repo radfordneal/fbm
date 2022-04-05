@@ -34,12 +34,13 @@ output layers.  The sizes of zero or more hidden layers are specified
 between these, with the activation function used for units in the
 layer following the size.  Possible activation functions are:
 
-    tanh  softplus  identity
+    tanh  softplus  softplus0  identity
 
 The default is tanh, the hyperbolic tangent function.  The softplus
-activation function is h(u) = log(1+exp(u)).  For the identity
-activation function, the output of a hidden unit is identical to its
-summed input.
+activation function is h(u) = log(1+exp(u)).  The softplus0 function
+is similar, h(u) = log(1+exp(u))-log(2), which has value zero when the
+input is zero.  For the identity activation function, the output of a
+hidden unit is identical to its summed input.
 
 
 Specifying layer connections and priors.

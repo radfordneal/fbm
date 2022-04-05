@@ -131,6 +131,7 @@ int main
     { printf("  Hidden layer %d:  size %-3d",l,a->N_hidden[l]);
       if (a->layer_type[l]==Tanh_type)            printf("  tanh");
       else if (a->layer_type[l]==Softplus_type)   printf("  softplus");
+      else if (a->layer_type[l]==Softplus0_type)  printf("  softplus0");
       else if (a->layer_type[l]==Identity_type)   printf("  identity");
       else                                        printf("  UNKNOWN TYPE!");
       printf("\n");
@@ -426,6 +427,10 @@ int main
       else if (strcmp(*ap,"softplus")==0)
       { if (type>=0) usage();
         type = Softplus_type;
+      }
+      else if (strcmp(*ap,"softplus0")==0)
+      { if (type>=0) usage();
+        type = Softplus0_type;
       }
       else
       { usage();
@@ -1022,19 +1027,19 @@ static void usage(void)
    "Usage: net-spec log-file N-inputs { N-hidden [ act-func ] } N-outputs\n");
 
   fprintf(stderr,
-   "                / { group=prior [ omit-spec | config-spec ] }\n");
+   "                / { group=prior [ config-spec | omit-spec ] }\n");
 
   fprintf(stderr,
    "   or: net-spec log-file [ \"sizes\" ] [ \"config\" ]  (display specifications)\n");
 
   fprintf(stderr,
-   " act-fun: tanh softplus identity    group: ti ih# bh# th# h#h# h#o io bo ah# ao\n");
+   " config-spec: config:<file>          omit-spec: omit:[-]<input>{,<input>}\n");
+
+  fprintf(stderr,
+   " act-fun: tanh softplus[0] identity  group: ti ih# bh# th# h#h# h#o io bo ah# ao\n");
 
   fprintf(stderr,
    " prior: [x]Width[:[Alpha-type][:[Alpha-unit][:[Alpha-weight]]]]\n");
-
-  fprintf(stderr,
-   " omit-spec: omit:[-]<input>{,<input>}    config-spec: config:<file>\n");
 
   exit(1);
 }

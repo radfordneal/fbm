@@ -327,3 +327,129 @@ Log file: log  Index: 0  Delta: 0.002000  Energy: 64289.96
 
 Largest absolute log ratio: 0.2082
 
+ 
+--- E
+ 
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+10.00 10.00: -1.00  +1.00  +1.50
+
+Hidden Layer 0 to Output Weights [2]
+
+25.00 25.00: +1.00
+
+      25.00:+10.00
+
+      25.00:+20.00
+
+Noise levels
+
+  10.00 - 10.00
+
+       o0@0     
+ 3.90000000e+01 
+39
+
+Computed energy and gradient, compared with that from finite differences
+
+Log file: log  Index: 0  Delta: 0.003000  Energy: 10.86
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   -1.00   +5.5531e-04  +5.5338e-04   +3.6956e-01  +3.7000e-01    -0.0012
+     1   +1.00   +5.7180e-03  +5.7122e-03   +3.8101e+00  +3.8100e+00     0.0000
+     2   +1.50   +1.1428e-02  +1.1417e-02   +7.6151e+00  +7.6150e+00     0.0000
+     3   +1.00   -5.6599e-04  -5.6790e-04   -3.7796e-01  -3.7840e-01    -0.0012
+     4  +10.00   +5.9430e-04  +5.9239e-04   +3.9556e-01  +3.9600e-01    -0.0011
+     5  +20.00   +9.0437e-04  +9.0247e-04   +6.0228e-01  +6.0200e-01    +0.0005
+
+Largest absolute log ratio: 0.0012
+
+ 
+--- F
+ 
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+10.00 10.00: -1.00  +1.00  +1.50
+
+Hidden Layer 0 to Output Weights [2]
+
+25.00 25.00: +1.00
+
+      25.00:+10.00
+
+      25.00:+20.00
+
+Noise levels
+
+  10.00 - 10.00
+
+       o0@0     
+ 2.49573135e+01 
+24.9573
+
+Computed energy and gradient, compared with that from finite differences
+
+Log file: log  Index: 0  Delta: 0.003000  Energy: 6.51
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   -1.00   +1.3569e-04  +1.3567e-04   +9.0454e-02  +9.0615e-02    -0.0018
+     1   +1.00   +1.5223e-03  +1.5266e-03   +1.0163e+00  +1.0161e+00    +0.0001
+     2   +1.50   +1.3190e-03  +1.3233e-03   +8.8078e-01  +8.8085e-01    -0.0001
+     3   +1.00   -2.7130e-04  -2.7131e-04   -1.8087e-01  -1.8086e-01    +0.0001
+     4  +10.00   +2.9771e-04  +2.9770e-04   +1.9847e-01  +1.9846e-01    +0.0001
+     5  +20.00   +3.7270e-04  +3.7365e-04   +2.4878e-01  +2.4885e-01    -0.0003
+
+Largest absolute log ratio: 0.0018
+
+ 
+--- G
+ 
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+10.00 10.00: -1.00  +1.00  +1.50
+
+Hidden Layer 0 to Output Weights [2]
+
+25.00 25.00: +1.00
+
+      25.00:+10.00
+
+      25.00:+20.00
+
+Noise levels
+
+  10.00 - 10.00
+
+       o0@0     
+ 4.74741440e+01 
+47.4741
+
+Computed energy and gradient, compared with that from finite differences
+
+Log file: log  Index: 0  Delta: 0.003000  Energy: 14.44
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   -1.00   +1.7002e-04  +1.7191e-04   +1.1398e-01  +1.1499e-01    -0.0088
+     1   +1.00   +5.1114e-03  +5.1114e-03   +3.4076e+00  +3.4075e+00     0.0000
+     2   +1.50   +1.1425e-02  +1.1419e-02   +7.6145e+00  +7.6142e+00     0.0000
+     3   +1.00   +2.2175e-04  +2.1984e-04   +1.4719e-01  +1.4719e-01    +0.0001
+     4  +10.00   +9.3953e-04  +9.3953e-04   +6.2635e-01  +6.2633e-01     0.0000
+     5  +20.00   +1.2324e-03  +1.2343e-03   +8.2226e-01  +8.2272e-01    -0.0006
+
+Largest absolute log ratio: 0.0088
+

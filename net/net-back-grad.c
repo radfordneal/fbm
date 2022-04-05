@@ -3737,7 +3737,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
           i += 2;
         }
         if (i<=N_hidden)
-        { dh[i] *= 1 - prec_exp(-vh[i]);
+        { dh[i-1] *= 1 - prec_exp(-vh[i-1]);
         }
       }
 #     elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
@@ -3752,7 +3752,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
           i += 2;
         }
         if (i<=N_hidden)
-        { dh[i] *= 1 - prec_exp(-vh[i]);
+        { dh[i-1] *= 1 - prec_exp(-vh[i-1]);
         }
       }
 #     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
@@ -3783,7 +3783,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
           i += 2;
         }
         if (i<=N_hidden)
-        { dh[i] *= 1 - prec_exp(-vh[i]);
+        { dh[i-1] *= 1 - prec_exp(-vh[i-1]);
         }
       }
 #     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
@@ -3806,7 +3806,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
           i += 2;
         }
         if (i<=N_hidden)
-        { dh[i] *= 1 - prec_exp(-vh[i]);
+        { dh[i-1] *= 1 - prec_exp(-vh[i-1]);
         }
       }
 #     else

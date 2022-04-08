@@ -16,7 +16,7 @@ for run in 1 2 3 4; do
   end=`calc 384\*$run`
   start=`calc $end-383`
 
-  net-spec $log 36 80 4 / ih=10 config:iconfig bh=10 ho=10 bo=10
+  net-spec $log 36 80 softplus 4 / ih=10 config:iconfig bh=10 ho=10 bo=10
   model-spec $log class
   
   data-spec $log 36 1 4 / idata-train@-$start:$end . idata-train@$start:$end .

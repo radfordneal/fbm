@@ -1,4 +1,4 @@
-Commit: 41469385004f06eb75b28833b5060b7707a2f0f4
+Commit: 1a1252d3e5c165a624dec9fef36f73bea7196bb3
 
 Running exi1c with dbl:
 
@@ -10,9 +10,9 @@ Number of iterations used: 2
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.042+-0.077
-Fraction of guesses that were wrong:    0.4900+-0.0502
-Average squared error guessing mean:    0.57868+-0.04134
+Average log probability of targets:    -1.062+-0.080
+Fraction of guesses that were wrong:    0.4400+-0.0499
+Average squared error guessing mean:    0.57778+-0.04052
 
-elapsed 36.54s
-9d486f2c8cc3fe120da074b0fbe5de54a497f47c  -
+elapsed 36.55s
+62f8acefc8684eff5f8161cb8253d00e85b0bbb4  -

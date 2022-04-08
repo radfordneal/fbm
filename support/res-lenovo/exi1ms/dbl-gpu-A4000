@@ -1,4 +1,4 @@
-Commit: 41469385004f06eb75b28833b5060b7707a2f0f4
+Commit: 1a1252d3e5c165a624dec9fef36f73bea7196bb3
 
 Running exi1ms with dbl-gpu on A4000:
 
@@ -15,9 +15,9 @@ Number of iterations used: 1
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.278+-0.022
-Fraction of guesses that were wrong:    0.5500+-0.0500
-Average squared error guessing mean:    0.69480+-0.01233
+Average log probability of targets:    -1.275+-0.024
+Fraction of guesses that were wrong:    0.5900+-0.0494
+Average squared error guessing mean:    0.69415+-0.01275
 
-elapsed 3.49s
-beef17b41576d88ab6dfd80583f6866a5b38c1eb  -
+elapsed 3.51s
+913720491dc8e580d7b6d625e9010d682a4a00f7  -

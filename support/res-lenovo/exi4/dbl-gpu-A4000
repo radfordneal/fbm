@@ -1,4 +1,4 @@
-Commit: 41469385004f06eb75b28833b5060b7707a2f0f4
+Commit: 1a1252d3e5c165a624dec9fef36f73bea7196bb3
 
 Running exi4 with dbl-gpu on A4000:
 
@@ -22,9 +22,9 @@ Number of iterations used: 2
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.164+-0.083
+Average log probability of targets:    -1.115+-0.073
 Fraction of guesses that were wrong:    0.4900+-0.0502
-Average squared error guessing mean:    0.61709+-0.03923
+Average squared error guessing mean:    0.61600+-0.03636
 
 elapsed 3.54s
-5ba2994360bd90f24d7ddeb86179e0de4438af23  -
+7794b4e1d15b4d6363fa71f9dfc7f6e22268bb8a  -

@@ -3760,6 +3760,13 @@ void mc_app_stepsizes
           }
         }
       }
+      else if (arch->layer_type[l]==Softplus_type)
+      { for (j = 0; j<arch->N_hidden[l]; j++)
+        { if (typl[j]<LOG2*LOG2)
+          { typl[j] = LOG2*LOG2;
+          }
+        }
+      }
     }
 
     if (debug)

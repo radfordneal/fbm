@@ -179,6 +179,7 @@ The following activation functions are supported:\vspace{-22pt}
 \begin{tabbing}
 {\bf tanh:}\ \ \ \ \ \ \ \= $a(u)\ =\ \tanh(u)$\\[3pt]
 {\bf softplus:}\> $a(u)\ =\ \log(1+\exp(u))$\\[3pt]
+{\bf softplus0:}\> $a(u)\ =\ \log(1+\exp(u))\ -\ \log(2)$\\[3pt]
 {\bf identity:}\> $a(u)\ =\ u$\vspace{-5pt}
 \end{tabbing}
 \end{quotation}
@@ -682,10 +683,13 @@ then the inputs (if required):\beq
     \sum_{\ell} \sum_j w^{I,\ell}_{i,j} {\partial L \over \partial u^{\ell}_j }
 \eeq%
 The second term in the first equation above is omitted for the last
-hidden layer.  In the second equation, $a'^{\ell}(u^{\ell}_i)$ is the derivative
-of the activation function, evaluated at $u^{\ell}_i$.  For the $\tanh$
-activation function, this is equal to $1 - \big[v^{\ell}_i\big]^2\!$.
-For the softplus activation function, it is $1\,/\,(1+\exp(-u^{\ell}_i))$.
+hidden layer.  In the second equation, $a'^{\ell}(u^{\ell}_i)$ is the
+derivative of the activation function, evaluated at $u^{\ell}_i$.  For
+computational reasons, it is convenient to express this derivative in
+terms of $v^{\ell}_i$.  For the $\tanh$ activation function, the
+derivative of $L$ is $1 - \big[v^{\ell}_i\big]^2\!$.  For the softplus
+activation function, it is $1 - \exp(-v^{\ell}_i)$, and for
+softplus0, it is $1 - \exp(-v^{\ell}_i-\log(2)^2))$.
 
 When the connections from a hidden layer to the next hidden layer are
 configured, the first equation above is modified as follows:\beq
@@ -811,7 +815,7 @@ positive or negative, its effects will (optimistically) cancel when
 averaged over the training set.  Since $u$ is not known, the second
 approximation above takes the maximum with respect to $u$.  
 For the currently-used activation functions --- $\tanh$, softplus, 
-and identity --- $\max[a'(u)^2] = 1$, so nothing need actually
+softplus0, and identity --- $\max[a'(u)^2] = 1$, so nothing need actually
 be done for this.
 
 Note that the backward propagation ignores any interactions between
@@ -868,10 +872,14 @@ bias) on that connection, as given by the controlling hyperparameter.
 (For parameters with t distributions, the variance is capped at what
 it would be if the degrees of freedom were three.)
 
-For a layer of tanh hidden units, the typical squared value found in
-this way is reduced to one if it exceeds one, since one is the maximum
-squared value of tanh.  Units with the softplus activation function 
-are treated the same as those with identity activation function.
+For a layer of tanh hidden units, the typical squared value for the
+unit's input found in this way is reduced to one if it exceeds one,
+since one is the maximum squared value of tanh.  For the softplus
+activation function, if the typical squared value of the unit's input
+is less than $\log(2)^2$, the value is increased to $\log(2)^2$, which
+is the value when the inputs are zero. For units with the softplus0
+activation function, the typical squared input value is used
+unchanged, as for the identity activation function.
 
 Second derivatives with respect to biases are simply equal to the
 second derivatives with respect to the associated summed input to the

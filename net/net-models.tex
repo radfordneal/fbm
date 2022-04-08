@@ -29,7 +29,7 @@
 \subsection*{Neural Network Models Implemented in the Flexible
    Bayesian Modelling Software}
 
-Radford M. Neal, 2021
+Radford M. Neal, 2022
 
 This document gives the mathematical details of the Bayesian neural
 network models implemented in the FBM software.  The notation used is
@@ -147,10 +147,10 @@ Each unit in the input and hidden layers may have an offset, added to
 its output.  Any of these sets of parameters may be missing in any
 particular network, which has the same effect as their being zero.
 
-(The software now also supports connecting a hidden layer to an
+The software now also supports connecting a hidden layer to an
 earlier hidden layer other than the immediately preceeding one.  Such
-non-sequential connections are handled in the obvious way, with this
-extension not otherwise noted in this presentation.)
+non-sequential connections are handled in the obvious way, with 
+the required extensions mostly not noted in this presentation.
 
 The interpretation of the output units is determined by the data
 model, described below.
@@ -683,13 +683,16 @@ then the inputs (if required):\beq
     \sum_{\ell} \sum_j w^{I,\ell}_{i,j} {\partial L \over \partial u^{\ell}_j }
 \eeq%
 The second term in the first equation above is omitted for the last
-hidden layer.  In the second equation, $a'^{\ell}(u^{\ell}_i)$ is the
-derivative of the activation function, evaluated at $u^{\ell}_i$.  For
-computational reasons, it is convenient to express this derivative in
-terms of $v^{\ell}_i$.  For the $\tanh$ activation function, the
-derivative of $L$ is $1 - \big[v^{\ell}_i\big]^2\!$.  For the softplus
-activation function, it is $1 - \exp(-v^{\ell}_i)$, and for
-softplus0, it is $1 - \exp(-v^{\ell}_i-\log(2)^2))$.
+hidden layer; additional terms of this sort will be present when there
+are non-sequential connections between hidden layers.  In the second
+equation, $a'^{\ell}(u^{\ell}_i)$ is the derivative of the activation
+function, evaluated at $u^{\ell}_i$.  For computational reasons, it is
+convenient to express this derivative in terms of $v^{\ell}_i$, which is
+possible since all the activation functions used are strictly monotonic.
+For the $\tanh$ activation function, the derivative of $L$ is $1 -
+\big[v^{\ell}_i\big]^2\!$.  For the softplus activation function, it
+is $1 - \exp(-v^{\ell}_i)$, and for softplus0, it is $1 -
+\exp(-v^{\ell}_i-\log(2)))$.
 
 When the connections from a hidden layer to the next hidden layer are
 configured, the first equation above is modified as follows:\beq

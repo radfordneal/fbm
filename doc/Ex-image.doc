@@ -19,9 +19,8 @@ guard against statistical mistakes, poor convergence of MCMC methods,
 or, if nothing else, out-and-out bugs in the scripts or programs used.
 
 The computation times given below were obtained running on a CPU, with
-arithmetic done in double precision.  Compiling the programs to use
-single precision arithmetic and/or running them on a GPU might reduce
-the time considerably.
+arithmetic done in single precision.  Running the calls of net-mc on a
+GPU might reduce the time considerably.
 
 The command files for this example are in the ex-image sub-directory.
 
@@ -212,15 +211,14 @@ such pairs of hyperparameter updates and HMC updates for parameters.
 The HMC updates all use the "windowed" method, to increase acceptance
 rate, with the windows being 1/10 of the trajectory.  Relatively small
 leapfrog stepsizes are used initially, to guard against rejection
-rates being high when starting at an atypical location.  The stepsize
-of 0.09 for the main sampling phase produces a rejection rate of about
-3%.  To further reduce random walk behaviour, without reducing the
-number of hyperparameter updates, the "persistent momentum" version of
-HMC is used for the final sampling phase.
+rates being high when starting at an atypical location.  To further
+reduce random walk behaviour, without reducing the number of
+hyperparameter updates, the "persistent momentum" version of HMC is
+used for the final sampling phase.
 
-Each full iteration of this sampling procedure takes about 45 seconds
-on the system used (Ex-test-system.doc), for a total of about 1160
-minutes (about 19.3 hours) for the 1500 iterations done.  The command
+Each full iteration of this sampling procedure takes about 27 seconds
+on the system used (Ex-test-system.doc), for a total of about 690
+minutes (about 11.5 hours) for the 1500 iterations done.  The command
 script in ex-image/icmds1.net does all four runs in parallel, so this
 will be the total wall-clock time if the system used has at least four
 processor cores.
@@ -228,13 +226,21 @@ processor cores.
 Various plots can be made to check whether these runs are sampling (or
 have sampled) well, or whether more iterations (or a better scheme)
 are needed.  The performance of the HMC updates can be checked by
-plotting the point on the trajectory moved to in each iteration:
+plotting the rejection rates for each iteration:
 
-  net-plt t m ilog1.net? | plot-points
+  net-plt t r ilog1.net? | plot-points
 
-As seen in ilog1-m.png (with different colours for each run), most of
-the moves (but not all) are to the accept window of the trajectory, so
-the stepsize used is reasonable.
+As seen in ilog1-r.png (with different colours for each run), most of
+the iterations have rejection rates below 0.2, but not very close to
+0, with no apparent trend, so the stepsize seems reasonable.  The
+average rejection rate can be found as follows:
+
+  net-tbl r ilog1.net? | series m
+
+which gives a mean of 0.032225, small enough that there should not be
+much problem with trajectory reversals from rejections when using
+persistent momentum with factor 0.9 (which randomizes momentum on a
+time scale of about 1/(1-0.9) = 10 iterations, less than 1/0.032225).
 
 The fit (squared error) for the training data can be checked with
 
@@ -278,7 +284,8 @@ each iteration of the first run as follows:
 This data is best plotted on a log scale, because the three
 hyperparameters differ greatly in magnitude.  The plot is in
 ilog1-h1h2h3.png.  Note that h1 (input-to-hidden) is red, h2 (hidden
-biases) is green, and h3 (hidden-to-output) is blue.
+biases) is green, and h3 (hidden-to-output) is blue.  From this plot,
+equilibrium seems to have been reached after about 300 iterations.
   
 Once all runs have finished, we can assess performance on the actual
 test set as follows (with the first 500 iterations discarded as
@@ -294,11 +301,11 @@ The output is as follows:
   Number of test cases: 20000
 
   Average log probability of targets:    -1.058+-0.004
-  Fraction of guesses that were wrong:    0.4701+-0.0035
-  Average squared error guessing mean:    0.58614+-0.00240
+  Fraction of guesses that were wrong:    0.4704+-0.0035
+  Average squared error guessing mean:    0.58624+-0.00240
 
 Only slightly worse results would be obtained using runs only one
-tenth as long (150 iterations, taking about two hours).  The command
+tenth as long (150 iterations, taking about an hour).  The command
 
   net-pred mnpa ilog1.net1 71:150 ilog1.net2 71:150 \
                 ilog1.net3 71:150 ilog1.net4 71:150 / idata-test .
@@ -309,9 +316,9 @@ produces the following output:
 
   Number of test cases: 20000
 
-  Average log probability of targets:    -1.062+-0.004
-  Fraction of guesses that were wrong:    0.4722+-0.0035
-  Average squared error guessing mean:    0.58823+-0.00239
+  Average log probability of targets:    -1.061+-0.004
+  Fraction of guesses that were wrong:    0.4733+-0.0035
+  Average squared error guessing mean:    0.58784+-0.00240
 
 Note that guessing by ignoring the inputs and assigning equal
 probabilities to the four classes gives an average log probability of
@@ -390,17 +397,18 @@ looking at 9 pixels), which are shared by 16x9x5=720 connections
 The other commands used are almost the same as for the fully-connected
 network model above, except that stepsizes have been increased a bit.
 
-Each full iteration takes about 45 seconds on the system used
-(Ex-test-system.doc), for a total of 18.7 hours (with the four runs
-done in parallel).  This is slightly faster then the time for the
-fully-connected network, since there are fewer input-to-hidden
-connections (an advantage partially offset by the overhead of
-processing the non-contiguous configuration of connections).
+Each full iteration takes about 32 seconds on the system used
+(Ex-test-system.doc), for a total of 13.4 hours (with the four runs
+done in parallel).  This is actually a bit slower then the time for
+the fully-connected network - there are fewer input-to-hidden
+connections to handle, but in this case, that advantage is more than
+offset by the overhead of processing the non-contiguous configuration
+of connections.
 
-As above, we can plot the 'm' (move point), 'b' (squared error on
+As above, we can plot the 'r' (rejection rate), 'b' (squared error on
 training data), and 'B' (squared error on validation data) quantities
 for the four runs using net-plt.  The results can be seen as
-ilog2-m.png, ilog2-b.png, and ilog2-BB.png.  The main hyperparameter
+ilog2-r.png, ilog2-b.png, and ilog2-BB.png.  The main hyperparameter
 values for the first run can also be plotted, as above, giving the
 result in ilog2-h1h2h3.png.
 
@@ -411,8 +419,8 @@ test set as follows:
                 ilog2.net3 501: ilog2.net4 501: / idata-test .
 
 Here, the first 500 iterations are discarded as "burn-in".  This seems
-mostly ufficient given the plots above (although there may be slight
-trends in hyperparameter values even after iteration 500).
+mostly sufficient given the plots above, except that the fourth run
+may not have reached equilibrium until around iteration 700.
 
 The output is as follows:
 
@@ -420,12 +428,12 @@ The output is as follows:
 
   Number of test cases: 20000
 
-  Average log probability of targets:    -0.735+-0.006
-  Fraction of guesses that were wrong:    0.2651+-0.0031
-  Average squared error guessing mean:    0.39446+-0.00327
+  Average log probability of targets:    -0.731+-0.006
+  Fraction of guesses that were wrong:    0.2661+-0.0031
+  Average squared error guessing mean:    0.39534+-0.00321
 
-Very similar (in fact, very slightly better) results would be obtained
-using runs only half as long.  The command
+Results only slightly worse would be obtained using runs only half as
+long.  The command
 
   net-pred mnpa ilog2.net1 301:750 ilog2.net2 301:750 \
                 ilog2.net3 301:750 ilog2.net4 301:750 / idata-test .
@@ -436,9 +444,9 @@ produces the following output:
 
   Number of test cases: 20000
 
-  Average log probability of targets:    -0.734+-0.006
-  Fraction of guesses that were wrong:    0.2645+-0.0031
-  Average squared error guessing mean:    0.39418+-0.00328
+  Average log probability of targets:    -0.743+-0.005
+  Fraction of guesses that were wrong:    0.2698+-0.0031
+  Average squared error guessing mean:    0.40237+-0.00298
 
 These results are considerably better than were obtained above when
 using a fully-connected network, demonstrating the advantage of using
@@ -451,48 +459,48 @@ This can be done with the "idisp" shell file (which uses R).  The
 output for the last iteration of the first run is as follows:
 
   , , 1
-
+  
        [,1] [,2] [,3]
-  [1,]  2.7  2.2  4.3
-  [2,]  7.9 -0.1  5.0
-  [3,]  1.1  2.2  1.9
-
+  [1,]  4.0  3.4  4.5
+  [2,]  5.3 -5.3  4.5
+  [3,]  4.1  5.7  5.2
+  
   , , 2
-
+  
        [,1] [,2] [,3]
-  [1,]  4.6 -4.0  5.7
-  [2,] -6.0  3.4 -6.3
-  [3,]  4.3 -5.4  5.5
-
+  [1,]  5.0 -6.0  3.4
+  [2,]  3.9  3.5  4.7
+  [3,]  4.4 -2.0  4.1
+  
   , , 3
-
+  
        [,1] [,2] [,3]
-  [1,] -7.1  6.2 -7.0
-  [2,]  6.1  7.1  4.5
-  [3,] -5.5  3.7 -4.0
-
+  [1,] -4.3  4.8 -4.2
+  [2,]  3.7  5.3  3.4
+  [3,] -3.2  3.7 -2.7
+  
   , , 4
-
+  
        [,1] [,2] [,3]
-  [1,]  4.7  4.6  7.0
-  [2,]  7.2 -4.8  3.5
-  [3,]  8.0  6.8  6.8
-
+  [1,]  6.9 -2.4  5.1
+  [2,] -5.5  4.0 -3.8
+  [3,]  4.4 -4.2  2.7
+  
   , , 5
-
+  
        [,1] [,2] [,3]
-  [1,]  4.9 -5.3  4.0
-  [2,]  5.5  4.8  4.7
-  [3,]  5.0 -3.2  4.9
+  [1,]  0.8 -3.6  3.2
+  [2,] -3.9  1.5 -3.6
+  [3,]  3.9 -1.9  3.0
 
-One can see that the first and fourth filters are sensitive to the "O"
-symbol, the second to the "X" symbol, the third to the "+" symbol, and
-the fifth to the "H" symbol.
+One can see that the first filter is sensitive to the "O" symbol, the
+second to the "H" symbol, the third to the "+" symbol, and the fourth
+and fifth to the "X" symbol.
 
 
 Adding another hidden layer, with more assumptions.
 
-The 26.5% error rate for the model with one convolutional hidden layer
+The 26.6% error rate for the model with one convolutional hidden layer
 is still not close to the 6.9% error rate obtained using the true
 generative model.  We can try adding a second hidden layer to allow
 more complex computations that could allow for closer to optimal
@@ -510,8 +518,8 @@ constrained to be the same for all positions in the image (ie, there
 are only 5 bias parameters, one for each of the filters).  Similarly,
 the connections from units in the first hidden layer to the second
 hidden layer will be the same for all positions.  These constraints
-are based on the assumption that the pattern being looked is equally
-likely to occur anywhere in the image.
+are based on the assumption that the pattern being looked for is
+equally likely to occur anywhere in the image.
 
 This network model is specified as follows:
 
@@ -558,16 +566,11 @@ that are for the same filter:
 The mc-spec and other commands are the same as for the previous two
 networks, except for stepsize adjustments.  
 
-The 1500 iterations for the four runs take 26.6 hours on the system
-used (Ex-test-system.doc).  Plots of the move point, training set
+The 1500 iterations for the four runs take 20.1 hours on the system
+used (Ex-test-system.doc).  Plots of the rejection rate, training set
 error, validation set error, and hyperparameter values (for the first
-run) can be seen in ilog3-m.png, ilog3-b.png, ilog3-BB.png, and
-ilog3-h1h2h3h4h5.png.  Note that one can see that the second run
-differed substantially from the others until about iteration 1050.
-Though the iterations before this are probably not representative of
-the posterior distribution, this is not certain (there could be two
-modes), and they will be included when making predictions below.
-(Running for longer would help resolve this issue.)
+run) can be seen in ilog3-r.png, ilog3-b.png, ilog3-BB.png, and
+ilog3-h1h2h3h4h5.png.  
 
 The results on the test set using iterations 501 to 1500 of the four
 runs are as follows:
@@ -576,20 +579,21 @@ runs are as follows:
 
   Number of test cases: 20000
 
-  Average log probability of targets:    -0.555+-0.005
-  Fraction of guesses that were wrong:    0.2193+-0.0029
-  Average squared error guessing mean:    0.30885+-0.00315
+  Average log probability of targets:    -0.554+-0.005
+  Fraction of guesses that were wrong:    0.2198+-0.0029
+  Average squared error guessing mean:    0.30820+-0.00323
+
+The 22.0% error rate seen here is a considerable improvement over the
+26.6% error rate with the simple convolutional network.
 
 Almost identical results would be obtained using runs only a tenth as
-long.  Using iterations 71 to 150 of each run produces these results:
+long (about two hours).  Using iterations 71 to 150 of each run
+produces these results:
 
   Number of iterations used: 320
 
   Number of test cases: 20000
 
-  Average log probability of targets:    -0.559+-0.005
-  Fraction of guesses that were wrong:    0.2192+-0.0029
-  Average squared error guessing mean:    0.31069+-0.00310
-
-The 21.9% error rate seen here is a considerable improvement over the
-26.5% error rate with the simple convolutional network.
+  Average log probability of targets:    -0.556+-0.006
+  Fraction of guesses that were wrong:    0.2178+-0.0029
+  Average squared error guessing mean:    0.30891+-0.00324

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+net-plt t r ilog1.net? | graph -n -p1 -Tpng >ilog1-r.png
+net-plt t b ilog1.net? | graph -n -p1 -Tpng >ilog1-b.png
+net-plt t B ilog1.net? | graph -n -p1 -Tpng >ilog1-BB.png
+net-plt t h1h2h3 ilog1.net1 | graph -n -p1 -ly -Tpng >ilog1-h1h2h3.png
+
+net-plt t r ilog2.net? | graph -n -p1 -Tpng >ilog2-r.png
+net-plt t b ilog2.net? | graph -n -p1 -Tpng >ilog2-b.png
+net-plt t B ilog2.net? | graph -n -p1 -Tpng >ilog2-BB.png
+net-plt t h1h2h3 ilog2.net1 | graph -n -p1 -ly -Tpng >ilog2-h1h2h3.png
+
+net-plt t r ilog3.net? | graph -n -p1 -Tpng >ilog3-r.png
+net-plt t b ilog3.net? | graph -n -p1 -Tpng >ilog3-b.png
+net-plt t B ilog3.net? | graph -n -p1 -Tpng >ilog3-BB.png
+net-plt t h1h2h3h4h5 ilog3.net1 | graph -n -p1 -ly -Tpng >ilog3-h1h2h3h4h5.png

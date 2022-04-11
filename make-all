@@ -14,7 +14,7 @@ set -e   # Exit on any error
 # Determine what floating point precision to use (where both implemented),
 # and whether to compile GPU versions of the programs.
 
-NET_PRECISION=double   # The default, may be either 'float' or 'double'
+NET_PRECISION=float   # The default, may be either 'float' or 'double'
 
 if [ x$3 != x ]; then
   echo 'Usage:  make-all [ "flt" | "dbl" ] [ "gpu" ]'

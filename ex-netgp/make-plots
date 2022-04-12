@@ -1,0 +1,21 @@
+#!/bin/bash
+
+head -100 rdata \
+  | graph -n -p2 -Tpng >rdata-train.png
+
+head -100 odata \
+  | graph -n -p2 -Tpng >odata-train.png
+
+( head -300 bdata | grep "0$" | sed "s/.$//" 
+  echo " " 
+  head -300 bdata | grep "1$" | sed "s/.$//") \
+  | graph -n -p2 -Tpng >bdata-train.png
+
+( head -400 cdata | grep "0$" | sed "s/...................$//" 
+  echo " " 
+  head -400 cdata | grep "1$" | sed "s/...................$//" 
+  echo " " 
+  head -400 cdata | grep "2$" | sed "s/...................$//") \
+  | graph -n -p2 -Tpng >cdata-train-x1x2.png
+
+net-plt t h1@ clog.net | graph -n -Tpng >cplt-h1.png

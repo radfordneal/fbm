@@ -8,10 +8,16 @@ model-spec rlog.netsp real 0.05:0.5
 data-spec rlog.netsp 1 1 / rdata@1:100 . rdata@101: .
 
 net-gen rlog.netsp fix 0.5
-mc-spec rlog.netsp repeat 10 sample-noise heatbath hybrid 100:10 0.1
+mc-spec rlog.netsp repeat 20 sample-noise heatbath hybrid 100:10 0.2
 net-mc rlog.netsp 1
 
-mc-spec rlog.netsp sample-sigmas heatbath hybrid 1000:10 0.35
-net-mc rlog.netsp 20000
+mc-spec rlog.netsp sample-sigmas heatbath hybrid 2000:10 0.5
+net-mc rlog.netsp 1000
 
-net-pred npa rlog.netsp 201:%10
+echo " "; echo "Predictions using iterations 101 to 1000:"
+net-pred npa rlog.netsp 101:
+
+net-mc rlog.netsp 10000
+
+echo " "; echo "Predictions using iterations 101 to 10000:"
+net-pred npa rlog.netsp 101:

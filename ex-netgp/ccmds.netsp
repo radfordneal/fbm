@@ -1,5 +1,6 @@
 
 # Commands to apply Bayesian neural network to a 3-way classification problem.
+# This version uses the softplus activation function.
 
 net-spec clog.netsp 4 8 softplus 3 \
           / ih=x0.2:0.5:1 bh=0.05:0.5 ho=x0.05:0.5 bo=0.05:0.5 

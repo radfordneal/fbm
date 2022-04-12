@@ -1,0 +1,23 @@
+
+# Commands to apply a Bayesian neural network to the simple regression problem.
+# This version uses the softplus0 activation function.
+
+net-spec rlog.netsp0 1 8 softplus0 1 / ih=0.07:1.5 bh=0.07:1.5 ho=x1:5 bo=100 
+model-spec rlog.netsp0 real 0.05:0.5
+
+data-spec rlog.netsp0 1 1 / rdata@1:100 . rdata@101: .
+
+net-gen rlog.netsp0 fix 0.5
+mc-spec rlog.netsp0 repeat 20 sample-noise heatbath hybrid 100:10 0.2
+net-mc rlog.netsp0 1
+
+mc-spec rlog.netsp0 sample-sigmas heatbath hybrid 2000:10 0.5
+net-mc rlog.netsp0 1000
+
+echo " "; echo "Predictions using iterations 101 to 1000:"
+net-pred npa rlog.netsp0 101:
+
+net-mc rlog.netsp0 10000
+
+echo " "; echo "Predictions using iterations 101 to 10000:"
+net-pred npa rlog.netsp0 101:

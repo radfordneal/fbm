@@ -1,0 +1,99 @@
+nohup: ignoring input
+Number of training cases: 1152
+Number of training cases: 1152
+Number of training cases: 1152
+Number of training cases: 1152
+Number of test cases: 384
+Number of test cases: 384
+Number of test cases: 384
+Number of test cases: 384
+RUN 1 PERFORMANCE ON ITS VALIDATION SET:
+
+Number of iterations used: 1000
+
+Number of test cases: 384
+
+Average log probability of targets:    -0.801+-0.056
+Fraction of guesses that were wrong:    0.2682+-0.0226
+Average squared error guessing mean:    0.41591+-0.02700
+
+RUN 1 PERFORMANCE ON TEST SET:
+
+Number of iterations used: 1000
+
+Number of test cases: 20000
+
+Average log probability of targets:    -0.782+-0.008
+Fraction of guesses that were wrong:    0.2781+-0.0032
+Average squared error guessing mean:    0.41054+-0.00363
+
+RUN 2 PERFORMANCE ON ITS VALIDATION SET:
+
+Number of iterations used: 1000
+
+Number of test cases: 384
+
+Average log probability of targets:    -0.798+-0.054
+Fraction of guesses that were wrong:    0.2917+-0.0232
+Average squared error guessing mean:    0.41214+-0.02420
+
+RUN 2 PERFORMANCE ON TEST SET:
+
+Number of iterations used: 1000
+
+Number of test cases: 20000
+
+Average log probability of targets:    -0.801+-0.007
+Fraction of guesses that were wrong:    0.2866+-0.0032
+Average squared error guessing mean:    0.42231+-0.00355
+
+RUN 3 PERFORMANCE ON ITS VALIDATION SET:
+
+Number of iterations used: 1000
+
+Number of test cases: 384
+
+Average log probability of targets:    -0.742+-0.046
+Fraction of guesses that were wrong:    0.2656+-0.0226
+Average squared error guessing mean:    0.39578+-0.02330
+
+RUN 3 PERFORMANCE ON TEST SET:
+
+Number of iterations used: 1000
+
+Number of test cases: 20000
+
+Average log probability of targets:    -0.773+-0.007
+Fraction of guesses that were wrong:    0.2819+-0.0032
+Average squared error guessing mean:    0.41304+-0.00341
+
+RUN 4 PERFORMANCE ON ITS VALIDATION SET:
+
+Number of iterations used: 1000
+
+Number of test cases: 384
+
+Average log probability of targets:    -0.718+-0.039
+Fraction of guesses that were wrong:    0.2682+-0.0226
+Average squared error guessing mean:    0.38796+-0.02199
+
+RUN 4 PERFORMANCE ON TEST SET:
+
+Number of iterations used: 1000
+
+Number of test cases: 20000
+
+Average log probability of targets:    -0.760+-0.006
+Fraction of guesses that were wrong:    0.2798+-0.0032
+Average squared error guessing mean:    0.41262+-0.00316
+
+PERFORMANCE ON TEST SET USING ALL RUNS:
+
+Number of iterations used: 4000
+
+Number of test cases: 20000
+
+Average log probability of targets:    -0.731+-0.006
+Fraction of guesses that were wrong:    0.2661+-0.0031
+Average squared error guessing mean:    0.39534+-0.00321
+

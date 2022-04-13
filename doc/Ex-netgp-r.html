@@ -309,18 +309,18 @@ this command.
 
 By looking at plots of the hyperparameters and quantities such as the
 squared error on the training set ('b'), one can get an idea of when
-the simulation has reached equilibrium.  Networks from that point on
-can then be used to make predictions for test case using the
-'net-pred' program.  Often, it will not be completely clear that
-equilibrium has been reached until the simulation has been allowed to
-proceed for quite a long time, but predictions based on shorter runs
-may nevertheless be quite good.
+the simulation has reached equilibrium.  For this run, a plot of the
+'b' quantity can be seen in <A HREF="rlog-b.png">rlog-b.png</A>, and for the three
+hyperparameters (on a log scale) in <A HREF="rlog-h1h2h3.png">rlog-h1h2h3.png</A>.  
 
-For this problem, let's assume that we have decided to discard the
-first 100 iterations as perhaps not coming from the equilibrium
-distribution.  The following command will use the networks from the
-remaining 900 iterations to produce predictions for all test cases, and
-report the average squared error:
+Networks from a point where equilibrium seems to have been reached can
+then be used to make predictions for test cases using the 'net-pred'
+program.  From the plots above, it seems that equilibrium has been
+reached after the first 100 iterations.  So we could discard the first
+100 iterations as perhaps not coming from the equilibrium
+distribution, and use the following command to use the networks from
+the remaining 900 iterations to produce predictions for all test
+cases, and report the average squared error:
 
     &gt; net-pred itn rlog.net 101: 
 

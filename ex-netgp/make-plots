@@ -18,4 +18,8 @@ head -100 odata \
   head -400 cdata | grep "2$" | sed "s/...................$//") \
   | graph -n -p2 -Tpng >cdata-train-x1x2.png
 
+net-plt t b rlog.net :1000 | graph -n -p1 -Tpng >rlog-b.png
+net-plt t h1h2h3 rlog.net :1000 | graph -n -ly -Tpng >rlog-h1h2h3.png
+
 net-plt t h1@ clog.net | graph -n -Tpng >cplt-h1.png
+

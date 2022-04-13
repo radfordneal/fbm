@@ -2,14 +2,14 @@
 
 INTRODUCTION TO THE EXAMPLES
 
-The following sections how the software can be used on several toy
-problems.  These examples are meant to illustrate the features of the
-software.  You should note that the models and Markov chain methods
-used are not necessarily appropriate for other problems.  To gain a
-full understanding of the various possibilities, and their advantages
-and disadvantages, you will need to read both the pertinent references
-(see Facilities.doc), and the detailed documentation on the various
-commands.
+The following sections demonstrate how the software can be used on
+several toy problems.  These examples are meant to illustrate the
+features of the software.  You should note that the models and Markov
+chain methods used are not necessarily appropriate for other problems.
+To gain a full understanding of the various possibilities, and their
+advantages and disadvantages, you will need to read both the pertinent
+references (see Facilities.doc), and the detailed documentation on the
+various commands.
 
 The output shown for these examples was obtained by running the
 software one machine, with ">" at the start of a line indicating a
@@ -51,6 +51,6 @@ for examples in my papers.
 
 Computation times are given for many of the examples.  These are all
 for the current version of the software, run on the system described
-in Ex-test-system.doc.  Note in particular that double precision
-arithmetic is used for all the examples.  The neural network examples
-would be faster if done using single-precision arithmetic.
+in Ex-test-system.doc.  For neural network examples, single-precision
+arithmetic is used, as is the default.  (Other modules always use
+double-precision arithmetic.)

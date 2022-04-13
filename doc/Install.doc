@@ -81,9 +81,9 @@ Here are some reasons that you might need to customize things:
      as explained in make.include. 
 
   5) You might want to change the default for whether floating-point
-     arithmetic (in some modules) is performed in 32-bit (float) or
-     64-bit (double) precision, by modifying the default in make-all
-     (initially set to double).
+     arithmetic (in some neural network modules) is performed in
+     32-bit (float) or 64-bit (double) precision, by modifying the
+     default in make-all (initially set to float).
 
   6) The 'util' directory contains a file of 100,000 natural random
      bytes, which are used in combination with pseudo-random numbers
@@ -113,10 +113,11 @@ it.  You might want to start by looking at the make-all shell script.
 You can pass one or two arguments to make-all.  A first argument of
 "dbl" or "flt" specifies the precision used for arithmetic (in some
 modules) for the version of the programs compiled.  The default with
-no arguments is "dbl".  A second argument of "gpu" causes versions of
-some programs that make use of a GPU to be compiled (in addition to
-the versions that use only the CPU).  This requires that a suitable
-GPU be present, and that suitable software be installed.
+no arguments is "flt" (if you haven't changed the default).  A second
+argument of "gpu" causes versions of some programs that make use of a
+GPU to be compiled (in addition to the versions that use only the
+CPU).  This requires that a suitable GPU be present, and that suitable
+software be installed.
 
 
 Using the programs.

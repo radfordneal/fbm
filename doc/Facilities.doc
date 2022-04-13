@@ -38,9 +38,10 @@ commands issued to the command interpreter (shell).  No particular
 window system or other GUI is required, but a plotting program will be
 very useful.  My version of the 'graph' program, available from
 https://github.com/radfordneal/plotutils, is suitable.  I previously
-used the xgraph plot program, written by David Harrison, which allows
-plots to be produced by just piping data from one of the commands; it
-can be obtained from my web page at www.cs.utoronto.ca/~radford.
+used the xgraph plot program, written by David Harrison, which can be
+obtained from my web page at www.cs.utoronto.ca/~radford.  Both of
+these programs allow plots to be produced by just piping data from one
+of the plotting commands provided by this software.
 
 
 Markov chain Monte Carlo facilities.
@@ -49,8 +50,9 @@ All the Bayesian models are implemented using Markov chains to sample
 from the posterior distribution.  For the elaborate models based on
 neural networks, Gaussian processes, mixtures, and Dirichlet diffusion
 trees, this is done by combining general-purpose Markov chain sampling
-procedures with special modules written in C.  Other models could be
-implemented in the same way, but this is a fairly major project.
+procedures with special modules written in C.  Special modules for
+other models could also be implemented, but this is a fairly major
+project.
 
 To allow people to play around with the various Markov chain methods
 more easily, a facility is provided for defining distributions (on
@@ -65,7 +67,7 @@ each of the cases (which are assumed to be independent).
 A long review paper of mine on "Probabilistic Inference Using Markov
 Chain Monte Carlo Methods" can be obtained from my web page, at
 www.cs.utoronto.ca/~radford.  This review discusses methods based on
-Hamiltonian dynamics, including the hybrid Monte Carlo" method.
+Hamiltonian dynamics, including the "hybrid Monte Carlo" method.
 Hamiltonian (hybrid) Monte Carlo is also discussed in my review on
 "MCMC using Hamiltonian dynamics", and in my book on "Bayesian
 Learning for Neural Networks" (based on my PhD thesis).  My web page
@@ -80,21 +82,24 @@ Neural network and Gaussian process models.
 
 The neural network models are described in my thesis, "Bayesian
 Learning for Neural Networks", now published by Springer-Verlag (ISBN
-0-387-94724-8).  The neural network models implemented are essentially
-as described in the Appendix of that book.  The Gaussian process
-models are in many ways analogous to the network models.  The Gaussian
-process models implemented in this software, and computational methods
-that used, are described in my technical report entitled "Monte Carlo
-implementation of Gaussian process models for Bayesian regression and
-classification", available from my web page, and in my Valencia
-conference paper on "Regression and classification using Gaussian
-process priors", in Bayesian Statistics 6.  The Gaussian process
-regression models are similar to those evaluated in Carl Rasmussen's
-thesis, "Evaluation of Gaussian Processes and other Methods for
-Non-Linear Regression" (mlg.eng.cam.ac.uk/pub/pdf/Ras96b.pdf); he also
-talks about neural network models.  To understand how to use the
-software implementing these models, it is essential for you to have
-read at least one of these references, or similar material.
+0-387-94724-8).  The neural network models implemented are extensions
+of those described in the Appendix of that book.  The models currently
+implemented are described in net-models.PDF.
+
+The Gaussian process models are in many ways analogous to the network
+models.  The Gaussian process models implemented in this software, and
+computational methods that used, are described in my technical report
+entitled "Monte Carlo implementation of Gaussian process models for
+Bayesian regression and classification", available from my web page,
+and in my Valencia conference paper on "Regression and classification
+using Gaussian process priors", in Bayesian Statistics 6.  The
+Gaussian process regression models are similar to those that were
+evaluated in Carl Rasmussen's thesis, "Evaluation of Gaussian
+Processes and other Methods for Non-Linear Regression"
+(mlg.eng.cam.ac.uk/pub/pdf/Ras96b.pdf); he also talks about neural
+network models.  To understand how to use the software implementing
+these models, it is essential for you to have read at least one of
+these references, or similar material.
 
 The neural network software supports Bayesian learning for regression
 problems, classification problems, and survival analysis, using models
@@ -126,9 +131,10 @@ on a modern personal computer.  Moreover, quite good results,
 competitive with other methods, are often obtained with less training.
 The time required to train the Gaussian process models depends a lot
 on the number of training cases.  For 100 cases, these models may take
-only a few minutes to train (again, to the point where one can be
-reasonably sure that convergence to the correct answer has occurred).
-For 1000 cases, however, training might well take hours.
+only a few seconds or minutes to train (again, to the point where one
+can be reasonably sure that convergence to the correct answer has
+occurred).  For thousands of cases, however, training might well take
+hours.
 
 The software also implements neural network training using early
 stopping, as described in my paper on "Assessing relevance
@@ -146,8 +152,8 @@ components.  The countably infinite mixture models are equivalent to
 Dirichlet process mixture models.  The sampling methods that I have
 implemented for these models are described in my technical report on
 "Markov chain sampling methods for Dirichlet process mixture models",
-which can be obtained from web page. see also my technical report on
-"Bayesian mixture modeling by Monte Carlo simulation".
+which can be obtained from my web page.  See also my technical report
+on "Bayesian mixture modeling by Monte Carlo simulation".
 
 The software also implements models based on Dirichlet diffusion
 trees, described in my technical report on "Defining priors for
@@ -272,3 +278,22 @@ the numbers can be examined directly.  The 'xxx-tbl' programs output
 the same information in a different format, which is useful when
 plotting or analysing data with R, since this format is convenient for
 the R read.table command.
+
+
+Reproducibility of the results.
+
+The results of running any of the programs should be reproducible if
+the program is run again, with the same random number seed, on the
+same machine, with the software compiled with the same options, using
+the same versions of the compiler and standard library routines, using
+the same CPU, or using the same GPU with the same driver software.
+
+As soon as any of these things change, differences in results may
+become possible.  For example, roundoff errors from floating-point
+summation may change depending on summation order, which may differ
+for code written to use various SIMD facilities (such as SSE2, versus
+AVX, versus AVX2, for Intel/AMD processors).  Different system
+libraries for mathematical functions (such as tanh) may produce
+slightly different results.  Any small differences may subsequently be
+amplified by chaotic dynamics, or by a small difference changing
+whether or not a proposal is accepted.

@@ -176,7 +176,8 @@ networks and data models supported are as described in my book,
 Bayesian Learning for Neural Networks, with the addition of
 experimental models for survival analysis, and of facilities for
 defining custom network architectures, such as for convolutional
-networks.
+networks.  See net-models.PDF for details of the currently-supported
+models.
 
 A network training run is started with the 'net-spec' program, which
 creates a log file to which it writes specifications for the network

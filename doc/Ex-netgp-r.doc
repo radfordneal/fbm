@@ -13,10 +13,10 @@ standard deviation 0.1 and mean given by
 
          0.3 + 0.4*x + 0.5*sin(2.7*x) + 1.1/(1+x^2)
 
-I generated 200 cases in total, stored in the file 'rdata'.  Each case
-consists of a line containing first the input value and then the
+I generated 1100 cases in total, stored in the file 'rdata'.  Each
+case consists of a line containing first the input value and then the
 target value.  The first 100 of these cases are meant for training,
-and the second 100 for testing.  The training cases are plotted in
+and the remaining 1000 for testing.  The training cases are plotted in
 rdata-train.png and the test caes are plotted in rdata-test.png.
 
 
@@ -56,8 +56,8 @@ hidden-to-output weights, and the output bias.
 In general, the prior specifications used in the net-spec command
 consist of a "width" value followed by up to three "alpha" values,
 with perhaps an option character tacked on to the front.  For the full
-details, see Appendix A of my thesis and prior.doc.  Here, I will just
-comment on the particular priors used above.
+details, see net-models.PDF and prior.doc.  Here, I will just comment
+on the particular priors used above.
 
 The prior specification used for the output bias is simply "100",
 which means that the bias has a Gaussian prior with mean zero and

@@ -1,25 +1,38 @@
 #!/bin/bash
 
 head -100 rdata \
-  | graph -n -p2 -Tpng >rdata-train.png
+  | graph -n -p2 -Tpng -L "Training data for regression task" >rdata-train.png
+
+tail -1000 rdata \
+  | graph -n -p2 -Tpng -L "Test data for regression task" >rdata-test.png
 
 head -100 odata \
-  | graph -n -p2 -Tpng >odata-train.png
+  | graph -n -p2 -Tpng "Training data for regression with outliers" \
+     >odata-train.png
+
+tail -1000 odata \
+  | graph -n -p2 -Tpng -L "Test data for regression with outliers" \
+     >odata-test.png
 
 ( head -300 bdata | grep "0$" | sed "s/.$//" 
   echo " " 
   head -300 bdata | grep "1$" | sed "s/.$//") \
-  | graph -n -p2 -Tpng >bdata-train.png
+  | graph -n -p2 -Tpng -L "Training data for binary classification task" \
+     >bdata-train.png
 
 ( head -400 cdata | grep "0$" | sed "s/...................$//" 
   echo " " 
   head -400 cdata | grep "1$" | sed "s/...................$//" 
   echo " " 
   head -400 cdata | grep "2$" | sed "s/...................$//") \
-  | graph -n -p2 -Tpng >cdata-train-x1x2.png
+  | graph -n -p2 -Tpng -L "Training data for three-way classification task" \
+     >cdata-train-x1x2.png
 
-net-plt t b rlog.net :1000 | graph -n -p1 -Tpng >rlog-b.png
-net-plt t h1h2h3 rlog.net :1000 | graph -n -ly -Tpng >rlog-h1h2h3.png
+net-plt t b rlog.net :1000 \
+  | graph -n -p1 -Tpng -L "Average squared error on training set" >rlog-b.png
+net-plt t h1h2h3 rlog.net :1000 \
+  | graph -n -ly -Tpng -L "Hyperparameters: ih(red), bh(green), ho(blue)" \
+      >rlog-h1h2h3.png
 
 net-plt t h1@ clog.net | graph -n -Tpng >cplt-h1.png
 

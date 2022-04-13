@@ -1,0 +1,11 @@
+nohup: ignoring input
+Number of training cases: 400
+Number of test cases: 1000
+
+Number of iterations used: 16
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.476+-0.022
+Fraction of guesses that were wrong:    0.2020+-0.0127
+

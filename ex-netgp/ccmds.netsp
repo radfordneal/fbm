@@ -14,6 +14,6 @@ net-mc clog.netsp 1
 
 mc-spec clog.netsp repeat 10 sample-sigmas heatbath 0.95 \
                                            hybrid 100:10 0.3 negate
-net-mc clog.netsp 1000
+net-mc clog.netsp 200
 
-net-pred mpa clog.netsp 201:
+net-pred mpa clog.netsp 51:

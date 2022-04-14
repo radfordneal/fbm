@@ -50,7 +50,7 @@ net-plt t h1h2h3 rlog.net \
 
 ( net-pred inb rlog.net 101:1000 / "%grid -3:3%0.01"
   echo " "
-  net-pred inb rlog.net 1001:3000 / "%grid -3:3%0.01"
+  net-pred inb rlog.net 1051:3000 / "%grid -3:3%0.01"
 ) | graph -n -Tpng >rlog-2-pred.png
 
 net-plt t h1@ clog.net | graph -n -Tpng >cplt-h1.png

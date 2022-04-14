@@ -13,12 +13,12 @@ Average squared error guessing mean:    0.01033+-0.00048
  
 Predictions using iterations 1051 to 3000:
 
-Number of iterations used: 2000
+Number of iterations used: 1950
 
 Number of test cases: 1000
 
-Average log probability of targets:     0.811+-0.025
-Average squared error guessing mean:    0.02007+-0.00382
+Average log probability of targets:     0.805+-0.027
+Average squared error guessing mean:    0.02016+-0.00385
 
  
 Predictions using iterations 101 to 50000:

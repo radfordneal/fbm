@@ -18,7 +18,7 @@ net-pred npa rlog.net 101:
 
 net-mc rlog.net 3000
 
-echo " "; echo "Predictions using iterations 1001 to 3000:"
+echo " "; echo "Predictions using iterations 1051 to 3000:"
 net-pred npa rlog.net 1001:
 
 net-mc rlog.net 50000

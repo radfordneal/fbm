@@ -2,9 +2,11 @@
 
 A SIMPLE REGRESSION PROBLEM
 
-As a first example, we will look at a simple regression problem, 
-in which there is one real-valued input for each case, and one
-real-valued target, whose value is to be predicted.
+As a first example, we will look at a simple regression problem, in
+which there is one real-valued input for each case, and one
+real-valued target, whose value is to be predicted.  This example will
+also illustrate some important issues with usage of Markov chain Monte
+Carlo.
 
 I generated synthetic data of this type in which the input variable,
 x, for each case had a standard Gaussian distribution and the
@@ -446,14 +448,34 @@ iterations when making predictions.  This gives results as follows:
 We see that performance is actually a bit worse than using iterations
 from 101 to 1000.
 
-We could run for even longer, as follows:
+We might decide to run for even longer, as follows:
 
     > net-mc rlog.net 50000
 
 Plot of squared error on training cases and hyperparameter values for
-this long run are in rlog-b-50000.png and rlog-h1h2h3-50000.png.
+this long run are in rlog-b-50000.png and rlog-h1h2h3-50000.png.  We
+now see that the posterior distribution is multimodal.  Only one mode
+was seen in iterations from 101 to 1000.  After iteration 1000, we see
+the only other mode up through iteration 3000.  But in the run for
+50000 iterations, we see movement back and forth etween the two modes,
+though more time is spent in one of the modes than in the other.
+Which mode was seen first will have been due to the particular random
+initialization done.  A different random initialization, or even
+slightly different roundoff errors if a different computer system had
+been used, might have led to the other mode being seen first.
 
-rlog-2-pred.png
+Networks from the two modes make different predictions, as we can see
+using the following command:
+
+    > ( net-pred inb rlog.net 101:1000 / "%grid -3:3%0.01"
+    >   echo " "
+    >   net-pred inb rlog.net 1001:3000 / "%grid -3:3%0.01"
+    > ) | plot
+
+This finds the predictions for a grid of inputs from -3 to 3 using
+first the iterations from 101 to 1000 (sampling from the first mode)
+and then those from iterations 1001 to 3000 (sampling the second
+mode).  The result can be seen in rlog-2-pred.png.
 
     > net-pred inqQ rlog.net 101:1000 / "%echo -3; echo 0; echo 3"
     

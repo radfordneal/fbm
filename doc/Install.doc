@@ -112,12 +112,12 @@ it.  You might want to start by looking at the make-all shell script.
 
 You can pass one or two arguments to make-all.  A first argument of
 "dbl" or "flt" specifies the precision used for arithmetic (in some
-modules) for the version of the programs compiled.  The default with
-no arguments is "flt" (if you haven't changed the default).  A second
-argument of "gpu" causes versions of some programs that make use of a
-GPU to be compiled (in addition to the versions that use only the
-CPU).  This requires that a suitable GPU be present, and that suitable
-software be installed.
+modules, currently only neural networks) for the version of the
+programs compiled.  The default with no arguments is "flt" (if you
+haven't changed the default).  A second argument of "gpu" causes
+versions of some programs that make use of a GPU to be compiled (in
+addition to the versions that use only the CPU).  This requires that a
+suitable GPU be present, and that suitable software be installed.
 
 
 Using the programs.

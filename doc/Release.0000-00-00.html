@@ -14,9 +14,16 @@ Documentation changes in this version.
    chain methods used are now listed in <A HREF="References.html">References.doc</A>.
 
 2) All the tutorial examples have been updated, with timing results
-   now given for a modern processor.  There is a new example of image
-   classification with neural network models.  The examples are now
-   accompanied by some plots, supplied as PNG files.
+   now given for a modern processor.  The examples are now accompanied
+   by some plots, supplied as PNG files.
+
+3) The neural network examples for a simple regression model, in
+   <A HREF="Ex-netgp-r.html">Ex-netgp-r.doc</A>, have been extended to illustrate some general
+   issues with Markov chain Monte Carlo methods and Bayesian
+   inference.
+
+4) There is a new example of image classification with neural network
+   models, including use of a convolutational layer, in <A HREF="Ex-image.html">Ex-image.doc</A>.
 
 Feature changes in the version:
 
@@ -123,9 +130,11 @@ Performance changes in this version:
 
 3) The precisons for parameter and unit values in neural network
    models may now be either double-precision (FP64), as previously, or
-   single-precision (float, FP32).  The default is single-precision.
-   Using lower precision typically speeds up the computations (but
-   with some effect on the results).
+   single-precision (float, FP32).  The default is single-precision,
+   unless this is changed in the make-all script.  Using lower
+   precision typically speeds up the computations (but with some
+   effect on the results).  Note that for models other than neural
+   networks arithmetic is still always done in double precision.
 
 4) Computations for neural network models may now be (partially) done
    on a GPU (one that support CUDA with compute capability 3.5 or

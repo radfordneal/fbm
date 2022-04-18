@@ -3822,7 +3822,101 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
     else if (a->layer_type[l]==Softplus0_type)
     {
-#     if 1
+#     if FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
+      { __m256d MINUS_LOG2 = _mm256_set1_pd(-LOG2);
+        __m256d ONE = _mm256_set1_pd(1.0);
+        i = 3;
+        while (i<N_hidden)
+        { __m256d E = sleef_expd4 (_mm256_sub_pd (MINUS_LOG2,
+                                                  _mm256_loadu_pd(vh+i-3)));
+          _mm256_storeu_pd (dh+i-3, _mm256_mul_pd (_mm256_loadu_pd(dh+i-3),
+                                                   _mm256_sub_pd(ONE,E)));
+          i += 4;
+        }
+        i -= 2;
+        if (i<N_hidden)
+        { __m128d E = sleef_expd2 (_mm_sub_pd (cast128d(MINUS_LOG2),
+                                               _mm_loadu_pd(vh+i-1)));
+          _mm_storeu_pd (dh+i-1, _mm_mul_pd (_mm_loadu_pd(dh+i-1),
+                                             _mm_sub_pd(cast128d(ONE),E)));
+          i += 2;
+        }
+        if (i<=N_hidden)
+        { dh[i-1] *= 1 - prec_exp(-LOG2-vh[i-1]);
+        }
+      }
+#     elif FP64 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
+      { __m128d MINUS_LOG2 = _mm_set1_pd(-LOG2);
+        __m128d ONE = _mm_set1_pd(1.0);
+        i = 1;
+        while (i<N_hidden)
+        { __m128d E = sleef_expd2 (_mm_sub_pd (MINUS_LOG2,
+                                               _mm_loadu_pd(vh+i-1)));
+          _mm_storeu_pd (dh+i-1, _mm_mul_pd (_mm_loadu_pd(dh+i-1),
+                                             _mm_sub_pd(ONE,E)));
+          i += 2;
+        }
+        if (i<=N_hidden)
+        { dh[i-1] *= 1 - prec_exp(-LO2-vh[i-1]);
+        }
+      }
+#     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__
+      { __m256 MINUS_LOG2 = _mm256_set1_ps(-LOG2);
+        __m256 ONE = _mm256_set1_ps(1.0f);
+        i = 7;
+        while (i<N_hidden)
+        { __m256 E = sleef_expf8 (_mm256_sub_ps (MINUS_LOG2,
+                                                 _mm256_loadu_ps(vh+i-7)));
+          _mm256_storeu_ps (dh+i-7, _mm256_mul_ps (_mm256_loadu_ps(dh+i-7),
+                                                   _mm256_sub_ps(ONE,E)));
+          i += 8;
+        }
+        i -= 4;
+        if (i<N_hidden)
+        { __m128 E = sleef_expf4 (_mm_sub_ps (cast128f(MINUS_LOG2),
+                                              _mm_loadu_ps(vh+i-3)));
+          _mm_storeu_ps (dh+i-3, _mm_mul_ps (_mm_loadu_ps(dh+i-3),
+                                             _mm_sub_ps(cast128f(ONE),E)));
+          i += 4;
+        }
+        i -= 2;
+        if (i<N_hidden)
+        { __m128 ZERO = _mm_setzero_ps();
+          __m128 E = sleef_expf4 (_mm_sub_ps (cast128f(MINUS_LOG2),
+                                    _mm_loadl_pi(ZERO,(__m64 *)(vh+i-1))));
+          _mm_storel_pi ((__m64 *)(dh+i-1), _mm_mul_ps (_mm_loadu_ps(dh+i-1),
+                                                  _mm_sub_ps(cast128f(ONE),E)));
+          i += 2;
+        }
+        if (i<=N_hidden)
+        { dh[i-1] *= 1 - prec_exp(-LOG2-vh[i-1]);
+        }
+      }
+#     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __SSE2__
+      { __m128 MINUS_LOG2 = _mm_set1_ps(-LOG2);
+        __m128 ONE = _mm_set1_ps(1.0f);
+        i = 3;
+        while (i<N_hidden)
+        { __m128 E = sleef_expf4 (_mm_sub_ps (MINUS_LOG2,
+                                              _mm_loadu_ps(vh+i-3)));
+          _mm_storeu_ps (dh+i-3, _mm_mul_ps (_mm_loadu_ps(dh+i-3),
+                                             _mm_sub_ps(ONE,E)));
+          i += 4;
+        }
+        i -= 2;
+        if (i<N_hidden)
+        { __m128 ZERO = _mm_setzero_ps();
+          __m128 E = sleef_expf4 (_mm_sub_ps (MINUS_LOG2,
+                                         _mm_loadl_pi(ZERO,(__m64 *)(vh+i-1))));
+          _mm_storel_pi ((__m64 *)(dh+i-1), _mm_mul_ps (_mm_loadu_ps(dh+i-1),
+                                                        _mm_sub_ps(ONE,E)));
+          i += 2;
+        }
+        if (i<=N_hidden)
+        { dh[i-1] *= 1 - prec_exp(-LOG2-vh[i-1]);
+        }
+      }
+#     else
       { for (i = 0; i<N_hidden; i++)
         { dh[i] *= 1 - prec_exp(-LOG2-vh[i]);
         }

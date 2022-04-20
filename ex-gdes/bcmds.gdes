@@ -7,8 +7,14 @@ model-spec blog.gdes binary
 
 data-spec blog.gdes 2 1 2 / bdata.train@1:225 . bdata.train@226:300 .
 
-net-gd blog.gdes 100 5 / 0.4 batch
-net-gd blog.gdes 1000 50 / 0.4 batch
-net-gd blog.gdes 20000 500 / 0.4 batch
+net-gd blog.gdes 21000 10 / 0.4 batch
 
-net-plt t L blog.gdes | find-min
+w=`net-plt t L blog.gdes :20000 | find-min`
+
+echo Using iteration $w
+
+net-pred mpa blog.gdes $w / bdata.test .
+net-pred mpa blog.gdes `calc 250+$w` / bdata.test .
+net-pred mpa blog.gdes `calc 500+$w` / bdata.test .
+net-pred mpa blog.gdes `calc 750+$w` / bdata.test .
+net-pred mpa blog.gdes `calc 1000+$w` / bdata.test .

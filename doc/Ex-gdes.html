@@ -31,7 +31,7 @@ The split into estimation and validation sets in this procedure seems
 a bit arbitrary and wasteful.  To alleviate this problem, one can
 train several networks using early stopping, based on different
 splits, and on different random initializations of the weights.
-Predictions for training cases are then be made by averaging the
+Predictions for training cases are then made by averaging the
 predictions from the networks selected from each of these runs, a
 process somewhat analogous to the averaging done when making
 predictions for a Bayesian model based on a sample from the posterior
@@ -93,7 +93,7 @@ The location of the data is specified as for Bayesian networks:
     &gt; data-spec blog.gd 2 1 2 / bdata.train . 
 
 For these examples, the 300 training cases are stored in bdata.train
-(one per line, with the two inputs coming first).  The 200 test cases
+(one per line, with the two inputs coming first).  The 1000 test cases
 are in bdata.test, but this is not mentioned above.  The reason for
 doing things this way (rather than putting all the data in one file)
 will be apparent when we get to the examples using early stopping.
@@ -101,9 +101,9 @@ will be apparent when we get to the examples using early stopping.
 Finally, we can train the network using gradient descent, with the
 command:
 
-    &gt; net-gd blog.gd 100000 1000 / 0.4 batch
+    &gt; net-gd blog.gd 200000 1000 / 0.4 batch
 
-This does 100000 iterations of "batch" gradient descent (ie, with each
+This does 200000 iterations of "batch" gradient descent (ie, with each
 update based on all training cases), with networks being saved in the
 log file every 1000 iterations.  The software also supports "on-line"
 gradient descent, which is often faster to converge initially, but
@@ -115,7 +115,7 @@ sometimes goes up rather than down), the stepsize will have to be
 reduced.  Net-gd does not try to determine relative stepsizes itself,
 but stepsizes for groups of parameters can be set individually.
 
-The above command takes 4.4 seconds on the system used (see
+The above command takes 7.2 seconds on the system used (see
 <A HREF="Ex-test-system.html">Ex-test-system.doc</A>).  While waiting (if you have a slower computer),
 you can monitor progress using net-plt.  For example, the progress of
 the training error can be viewed with the command:
@@ -124,10 +124,11 @@ the training error can be viewed with the command:
 
 Individual networks can be displayed using net-display.  For example,
 
-    &gt; net-display -w blog.gd 1000
+    &gt; net-display -p blog.gd 1000
 
-displays the network at iteration 1000.  The "-w" option suppresses
-the hyperparameter values, which are meaningless with this model.
+displays the network at iteration 1000.  The "-p" option shows the
+parameter values only, suppressing the hyperparameter values, which
+are meaningless with this model.
 
 Once training has finished, we can make predictions based on the last
 network, which should have the lowest training error.  The following
@@ -136,14 +137,14 @@ bdata.test, both in terms of the log probability assigned to the
 correct target value and in terms of the error rate when guessing the
 target:
 
-    &gt; net-pred mpa blog.gd 100000 / bdata.test .
+    &gt; net-pred mpa blog.gd 200000 / bdata.test .
 
     Number of iterations used: 1
 
-    Number of test cases: 200
+    Number of test cases: 1000
 
-    Average log probability of targets:    -0.364+-0.066
-    Fraction of guesses that were wrong:    0.1450+-0.0250
+    Average log probability of targets:    -0.856+-0.102
+    Fraction of guesses that were wrong:    0.1320+-0.0107
 
 Performance is substantially worse than that obtained using Bayesian
 training.  This is due to "overfitting".  The following command
@@ -152,10 +153,10 @@ training error and the error on the test cases:
 
     &gt; net-plt t lL blog.gd / bdata.test . | plot
 
-From this plot, it is clear that we would have been better off to stop
-training earlier than 100000 iterations.  Of course, we can't stop
-training based on the test error plotted above, since (in a real
-application) we don't know the test targets when training.
+From this plot (viewable in <A HREF="blog-lL.png">blog-lL.png</A>), it is clear that we would
+have been better off to stop training earlier than 200000 iterations.
+Of course, we can't stop training based on the test error, since (in a
+real application) we don't know the test targets when training.
 
 
 Gradient descent with early stopping for the binary response problem.
@@ -168,12 +169,8 @@ implemented using the following commands:
 
     &gt; net-spec blog.gdes 2 15 1 / ih=+ bh=+ ho=+ bo=+
     &gt; model-spec blog.gdes binary
-
     &gt; data-spec blog.gdes 2 1 2 / bdata.train@1:225 . bdata.train@226:300 .
-
-    &gt; net-gd blog.gdes 100 5 / 0.4 batch
-    &gt; net-gd blog.gdes 1000 50 / 0.4 batch
-    &gt; net-gd blog.gdes 20000 500 / 0.4 batch
+    &gt; net-gd blog.gdes 20000 10 / 0.4 batch
 
     &gt; net-plt t L blog.gdes | find-min
 
@@ -187,30 +184,25 @@ using the net-plt command, in conjunction with find-min (documented in
 <A HREF="find-min.html">find-min.doc</A>).  Note that to save computer time, one might wish to
 actually stop the training once it becomes apparent that further
 training is unlikely to find a better network, but that is not
-attempted here.
+attempted here.  (Stopping as soon as the validation error goes up
+even a bit is a bad idea, since it might go down again later.)
 
-Three net-gd commands are used above so that networks can be saved to
-the log file more frequently early in training.  It sometimes happens
-that the best network according to validation error is from very early
-in the training process.  We would not wish to miss it as a result of
-saving too few networks in the early stages of training.
-
-The final find-min command above outputs "3000" as the iteration that
+The final find-min command above outputs "1190" as the iteration that
 gives the best validation error.  We can use this network to make
 predictions for test cases, as below:
 
-    &gt; net-pred mpa blog.gdes 3000 / bdata.test .                           
+    &gt; net-pred mpa blog.gdes 1190 / bdata.test .                           
 
     Number of iterations used: 1
 
-    Number of test cases: 200
+    Number of test cases: 1000
 
-    Average log probability of targets:    -0.263+-0.043
-    Fraction of guesses that were wrong:    0.1150+-0.0226
+    Average log probability of targets:    -0.282+-0.020
+    Fraction of guesses that were wrong:    0.1270+-0.0105
 
 As can be seen, performance is considerably better than that obtained
-in the previous section by training for 100000 iterations, though not
-quite as good as with Bayesian training (as shown in <A HREF="Ex-netgp-b.html">Ex-netgp-b.doc</A>).
+in the previous section by training for 200000 iterations, though
+still not as good as with Bayesian training (see <A HREF="Ex-netgp-b.html">Ex-netgp-b.doc</A>).
 
 
 Using an ensemble of networks trained by early stopping.
@@ -229,68 +221,74 @@ choice of initial weights:
     &gt; net-spec blog.gdese1 2 15 1 / ih=+ bh=+ ho=+ bo=+
     &gt; model-spec blog.gdese1 binary
     &gt; data-spec blog.gdese1 2 1 2 / bdata.train@-226:300 . bdata.train@226:300 .
-
     &gt; rand-seed blog.gdese1 1
-
-    &gt; net-gd blog.gdese1 100 5 / 0.4 batch
-    &gt; net-gd blog.gdese1 1000 50 / 0.4 batch
-    &gt; net-gd blog.gdese1 20000 500 / 0.4 batch
+    &gt; net-gd blog.gdese1 20000 10 / 0.4 batch
 
     &gt; net-plt t L blog.gdese1 | find-min
 
     &gt; net-spec blog.gdese2 2 15 1 / ih=+ bh=+ ho=+ bo=+
     &gt; model-spec blog.gdese2 binary
     &gt; data-spec blog.gdese2 2 1 2 / bdata.train@-151:225 . bdata.train@151:225 .
-
     &gt; rand-seed blog.gdese2 2
-
-    &gt; net-gd blog.gdese2 100 5 / 0.4 batch
-    &gt; net-gd blog.gdese2 1000 50 / 0.4 batch
-    &gt; net-gd blog.gdese2 20000 500 / 0.4 batch
+    &gt; net-gd blog.gdese2 20000 10 / 0.4 batch
 
     &gt; net-plt t L blog.gdese2 | find-min
 
     &gt; net-spec blog.gdese3 2 15 1 / ih=+ bh=+ ho=+ bo=+
     &gt; model-spec blog.gdese3 binary
     &gt; data-spec blog.gdese3 2 1 2 / bdata.train@-76:150 . bdata.train@75:150 .
-
     &gt; rand-seed blog.gdese3 3 
-
-    &gt; net-gd blog.gdese3 100 5 / 0.4 batch
-    &gt; net-gd blog.gdese3 1000 50 / 0.4 batch
-    &gt; net-gd blog.gdese3 20000 500 / 0.4 batch
+    &gt; net-gd blog.gdese3 20000 10 / 0.4 batch
 
     &gt; net-plt t L blog.gdese3 | find-min
 
     &gt; net-spec blog.gdese4 2 15 1 / ih=+ bh=+ ho=+ bo=+
     &gt; model-spec blog.gdese4 binary
     &gt; data-spec blog.gdese4 2 1 2 / bdata.train@-1:75 . bdata.train@1:75 .
-
     &gt; rand-seed blog.gdese4 4
-
-    &gt; net-gd blog.gdese4 100 5 / 0.4 batch
-    &gt; net-gd blog.gdese4 1000 50 / 0.4 batch
-    &gt; net-gd blog.gdese4 20000 500 / 0.4 batch
+    &gt; net-gd blog.gdese4 20000 10 / 0.4 batch
 
     &gt; net-plt t L blog.gdese4 | find-min
 
 The networks selected from the four training runs above as having
-lowest validation error are at iterations 3000, 950, 3500, and 11000.
+lowest validation error are at iterations 1190, 880, 1780, and 12720.
 We can now make predictions for test cases using these four networks,
 as follows:
 
-    &gt; net-pred mpa blog.gdese1 3000 blog.gdese2 950 \
-                   blog.gdese3 3500 blog.gdese4 11000 / bdata.test .
+    &gt; net-pred mpa blog.gdese1 1190 blog.gdese2 880 \
+                   blog.gdese3 1780 blog.gdese4 12720 / bdata.test .
 
     Number of iterations used: 4
 
-    Number of test cases: 200
+    Number of test cases: 1000
 
-    Average log probability of targets:    -0.263+-0.040
-    Fraction of guesses that were wrong:    0.1050+-0.0217
+    Average log probability of targets:    -0.266+-0.018
+    Fraction of guesses that were wrong:    0.1210+-0.0103
 
-The resulting classification performance is slightly better than was
-found using just the first of the four networks.
+The resulting classification performance is a bit better than was
+found using just the first of the four networks.  But it's still not
+as good as with Bayesian training.
+
+Interestingly, one can get a bit better results using networks 1000
+later in the run than were chosen based on the validation error, as
+illustrated here:
+
+    &gt; net-pred mpa blog.gdese1 2190 blog.gdese2 1880 \
+                   blog.gdese3 2780 blog.gdese4 13720 / bdata.test .
+
+    Number of iterations used: 4
+
+    Number of test cases: 1000
+
+    Average log probability of targets:    -0.265+-0.020
+    Fraction of guesses that were wrong:    0.1170+-0.0102
+
+This may be because the selection of a single network to use based on
+a validation set isn't necessarily optimal when predictions are
+actually made by an ensemble.  (Though at least for this dataset,
+results using early stopping with just the first split are also a bit
+better when using the network 1000 iterations past the validation
+error minimum.)
 </pre>
 </body>
 </html>

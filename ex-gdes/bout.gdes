@@ -1,0 +1,43 @@
+Number of training cases: 225
+Number of test cases: 75
+Using iteration 1190
+
+Number of iterations used: 1
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.282+-0.020
+Fraction of guesses that were wrong:    0.1270+-0.0105
+
+
+Number of iterations used: 1
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.281+-0.021
+Fraction of guesses that were wrong:    0.1270+-0.0105
+
+
+Number of iterations used: 1
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.280+-0.021
+Fraction of guesses that were wrong:    0.1260+-0.0105
+
+
+Number of iterations used: 1
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.280+-0.022
+Fraction of guesses that were wrong:    0.1240+-0.0104
+
+
+Number of iterations used: 1
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.280+-0.022
+Fraction of guesses that were wrong:    0.1230+-0.0104
+

@@ -8,11 +8,10 @@ data-spec blog.gdese1 2 1 2 / bdata.train@-226:300 . bdata.train@226:300 .
 
 rand-seed blog.gdese1 1
 
-net-gd blog.gdese1 100 5 / 0.4 batch
-net-gd blog.gdese1 1000 50 / 0.4 batch
-net-gd blog.gdese1 20000 500 / 0.4 batch
+net-gd blog.gdese1 21000 10 / 0.4 batch
 
-net-plt t L blog.gdese1 | find-min
+w1=`net-plt t L blog.gdese1 :20000 | find-min`
+echo $w1
 
 net-spec blog.gdese2 2 15 1 / ih=+ bh=+ ho=+ bo=+
 model-spec blog.gdese2 binary
@@ -20,11 +19,10 @@ data-spec blog.gdese2 2 1 2 / bdata.train@-151:225 . bdata.train@151:225 .
 
 rand-seed blog.gdese2 2
 
-net-gd blog.gdese2 100 5 / 0.4 batch
-net-gd blog.gdese2 1000 50 / 0.4 batch
-net-gd blog.gdese2 20000 500 / 0.4 batch
+net-gd blog.gdese2 21000 10 / 0.4 batch
 
-net-plt t L blog.gdese2 | find-min
+w2=`net-plt t L blog.gdese2 :20000 | find-min`
+echo $w2
 
 net-spec blog.gdese3 2 15 1 / ih=+ bh=+ ho=+ bo=+
 model-spec blog.gdese3 binary
@@ -32,11 +30,10 @@ data-spec blog.gdese3 2 1 2 / bdata.train@-76:150 . bdata.train@75:150 .
 
 rand-seed blog.gdese3 3 
 
-net-gd blog.gdese3 100 5 / 0.4 batch
-net-gd blog.gdese3 1000 50 / 0.4 batch
-net-gd blog.gdese3 20000 500 / 0.4 batch
+net-gd blog.gdese3 21000 10 / 0.4 batch
 
-net-plt t L blog.gdese3 | find-min
+w3=`net-plt t L blog.gdese3 :20000 | find-min`
+echo $w3
 
 net-spec blog.gdese4 2 15 1 / ih=+ bh=+ ho=+ bo=+
 model-spec blog.gdese4 binary
@@ -44,8 +41,32 @@ data-spec blog.gdese4 2 1 2 / bdata.train@-1:75 . bdata.train@1:75 .
 
 rand-seed blog.gdese4 4
 
-net-gd blog.gdese4 100 5 / 0.4 batch
-net-gd blog.gdese4 1000 50 / 0.4 batch
-net-gd blog.gdese4 20000 500 / 0.4 batch
+net-gd blog.gdese4 21000 10 / 0.4 batch
 
-net-plt t L blog.gdese4 | find-min
+w4=`net-plt t L blog.gdese4 :20000 | find-min`
+echo $w4
+
+net-pred mpa blog.gdese1 $w1 \
+             blog.gdese2 $w2 \
+             blog.gdese3 $w3 \
+             blog.gdese4 $w4 / bdata.test .
+
+net-pred mpa blog.gdese1 `calc 250+$w1` \
+             blog.gdese2 `calc 250+$w2` \
+             blog.gdese3 `calc 250+$w3` \
+             blog.gdese4 `calc 250+$w4` / bdata.test .
+
+net-pred mpa blog.gdese1 `calc 500+$w1` \
+             blog.gdese2 `calc 500+$w2` \
+             blog.gdese3 `calc 500+$w3` \
+             blog.gdese4 `calc 500+$w4` / bdata.test .
+
+net-pred mpa blog.gdese1 `calc 750+$w1` \
+             blog.gdese2 `calc 750+$w2` \
+             blog.gdese3 `calc 750+$w3` \
+             blog.gdese4 `calc 750+$w4` / bdata.test .
+
+net-pred mpa blog.gdese1 `calc 1000+$w1` \
+             blog.gdese2 `calc 1000+$w2` \
+             blog.gdese3 `calc 1000+$w3` \
+             blog.gdese4 `calc 1000+$w4` / bdata.test .

@@ -7,6 +7,6 @@ model-spec blog.gdol binary
 
 data-spec blog.gdol 2 1 2 / bdata.train . 
 
-net-gd blog.gdol 100000 1000 / 0.4 online
+net-gd blog.gdol 200000 1000 / 0.4 online
 
-net-pred nmpa blog.gdol 100000 / bdata.test .
+net-pred mpa blog.gdol 200000 / bdata.test .

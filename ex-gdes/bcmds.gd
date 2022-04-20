@@ -7,6 +7,6 @@ model-spec blog.gd binary
 
 data-spec blog.gd 2 1 2 / bdata.train . 
 
-net-gd blog.gd 100000 1000 / 0.4 batch
+net-gd blog.gd 200000 1000 / 0.4 batch
 
-net-pred nmpa blog.gd 100000 / bdata.test .
+net-pred mpa blog.gd 200000 / bdata.test .

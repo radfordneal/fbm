@@ -1,0 +1,9 @@
+Number of training cases: 300
+
+Number of iterations used: 1
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.305+-0.024
+Fraction of guesses that were wrong:    0.1220+-0.0104
+

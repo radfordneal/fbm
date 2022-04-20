@@ -13,8 +13,8 @@ was then set to "1" with the following probability:
     exp ( - ((x1-0.4)^2 + (x2+0.3)^2) ^ 2 )
 
 ie, the negative exponential of the fourth power of the distance of
-(x1,x2) from (0.5,-0.3).  I generated 500 cases, and used the first
-300 for training and the remaining 200 for testing.  The 300 training
+(x1,x2) from (0.5,-0.3).  I generated 1300 cases, and used the first
+300 for training and the remaining 1000 for testing.  The 300 training
 cases can be seen in <A HREF="bdata-train.png">bdata-train.png</A> (class 0 red, class 1 green).
 
 
@@ -32,9 +32,9 @@ similar to those used in the regression problem (see <A HREF="Ex-netgp-r.html">E
 
     &gt; net-spec blog.net 2 15 1 / ih=0.05:0.5 bh=0.05:0.5 ho=x0.05:0.5 bo=100 
     &gt; model-spec blog.net binary
-    &gt; data-spec blog.net 2 1 2 / bdata@1:300 . bdata@301:500 .
+    &gt; data-spec blog.net 2 1 2 / bdata@1:300 . bdata@301: .
     Number of training cases: 300
-    Number of test cases: 200
+    Number of test cases: 1000
 
 The data model used is "binary", with no need for a noise level prior.
 
@@ -43,8 +43,8 @@ target.  It also has a third argument of "2" just before the "/",
 which indicates that the target must be an integer with two possible
 values (which are "0" and "1").
 
-The initial phase commands that were used for the simple regression
-problem turn out to be adequate for this problem as well:
+We can use commands for the initial sampling phase similar to those
+used for the simple regression problem:
 
     &gt; net-gen blog.net fix 0.5
     &gt; mc-spec blog.net repeat 10 sample-noise heatbath hybrid 100:10 0.2
@@ -69,8 +69,8 @@ rejection rate must be quite small.  This alternative method has the
 advantage that it allows for more frequent hyperparameter updates
 (with 'sample-sigmas').
 
-The 200 iterations requested above take 10.8 seconds on the system
-used (see <A HREF="Ex-test-system.html">Ex-test-system.doc</A>).  During this time, one can monitor the
+The 200 iterations requested above take 7.0 seconds on the system used
+(see <A HREF="Ex-test-system.html">Ex-test-system.doc</A>).  During this time, one can monitor the
 simulation, for instance with the command:
 
     &gt; net-plt t h1h2h3 blog.net | plot
@@ -97,35 +97,28 @@ right.  We can get such predictions as follows:
 
     Case  Inputs        Targets  Log Prob  Guesses  Wrong?
 
-       1   -1.56   0.90    0.00    -0.001      0       0 
-       2    0.09  -0.13    1.00    -0.058      1       0 
-       3   -0.79   0.85    0.00    -0.003      0       0 
+       1   -0.01  -1.03    1.00    -0.708      0       1 
+       2    0.29  -0.18    1.00    -0.025      1       0 
+       3    0.34   0.63    1.00    -0.851      0       1 
+       4    0.20  -0.16    1.00    -0.029      1       0 
+       5    0.03   0.51    0.00    -0.572      0       0 
+       6   -0.50   0.77    0.00    -0.006      0       0 
 
                      (some lines omitted )
 
-      99    0.14   0.86    1.00    -2.539      0       1 
-     100    0.21   0.18    1.00    -0.104      1       0 
-     101   -1.32  -0.19    0.00    -0.007      0       0 
+    Average log probability of targets:    -0.237+-0.017
+    Fraction of guesses that were wrong:    0.1040+-0.0097
 
-                     (some lines omitted )
-
-     198    1.49   0.70    0.00    -0.026      0       0 
-     199   -2.23  -0.28    0.00    -0.003      0       0 
-     200   -0.91  -0.03    0.00    -0.055      0       0 
-
-    Average log probability of targets:    -0.243+-0.033
-    Fraction of guesses that were wrong:    0.0850+-0.0198
-
-The "itmp" options ask for output listing the inputs, the targets, the
-the guesses based on the mode of the predictive distribution, and the
-log of the probability of the correct target in the predictive
-distribution.  A summary is also printed showing the average log
-probability of the correct target and the fraction of guesses that
-were wrong, along with the standard errors for these as estimates of
-performance on the population of cases.  The average log probability
-is an overall indication of how well the model has done.  The
-classification error rate might be more directly relevant for some
-applications.
+The "itmp" options ask for output that lists the inputs, the targets,
+the the guesses based on the mode of the predictive distribution (and
+whether they are wrong), and the logs of the probabilities of the
+correct targets in the predictive distribution.  A summary is also
+printed showing the average log probability of the correct target and
+the fraction of guesses that were wrong, along with the standard
+errors for these as estimates of performance on the population of
+cases.  The average log probability is an overall indication of how
+well the model has done.  The classification error rate might be more
+directly relevant for some applications.
 
 
 A Gaussian process model for the binary response problem.

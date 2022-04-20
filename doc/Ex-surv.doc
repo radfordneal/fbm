@@ -49,7 +49,7 @@ other models.  Here is one set of commands that work reasonably well:
     > mc-spec clog.net repeat 4 sample-sigmas heatbath hybrid 500:10 0.4
     > net-mc clog.net 100
 
-This takes 10.6 seconds on the system used (see Ex-test-system.doc).
+This takes 8.1 seconds on the system used (see Ex-test-system.doc).
 
 Predictions for test cases can now be made using net-pred.  For
 example, the following command produces the 10% and 90% quantiles of
@@ -63,17 +63,17 @@ of death (the "targets"):
 
     Case  Inputs Targets 10% Qnt 90% Qnt
 
-       1   -0.01    0.29    0.05    1.07
+       1   -0.01    0.29    0.05    1.08
        2   -1.43    0.04    0.02    0.37
-       3   -0.68    0.03    0.03    0.56
-       4    0.47    0.11    0.07    1.60
-       5    0.63    0.97    0.08    1.71
+       3   -0.68    0.03    0.03    0.57
+       4    0.47    0.11    0.07    1.59
+       5    0.63    0.97    0.08    1.73
 
             ( middle lines omitted )
 
-     196    1.39    0.21    0.08    1.84
-     197    0.04    0.07    0.05    1.12
-     198    1.66    0.56    0.08    1.72
+     196    1.39    0.21    0.08    1.83
+     197    0.04    0.07    0.05    1.13
+     198    1.66    0.56    0.08    1.67
      199    1.33    1.48    0.08    1.80
      200   -1.41    0.08    0.02    0.39
 
@@ -168,7 +168,7 @@ The following commands sample from the posterior distribution:
     > mc-spec vlog.net repeat 4 sample-sigmas heatbath hybrid 500:10 0.4
     > net-mc vlog.net 100
 
-This takes 86 seconds on the system used (see Ex-test-system.doc).
+This takes 84 seconds on the system used (see Ex-test-system.doc).
 
 The net-pred command can be used to make predictions for test cases.
 Here is a command to display the median of the predictive distribution
@@ -182,21 +182,21 @@ test cases:
     
     Case  Inputs Targets Medians |Error|
 
-       1    0.00    0.07    0.83  0.7604
-       2   -0.22    0.42    0.75  0.3247
-       3   -2.24    0.04    0.39  0.3516
-       4   -0.81    0.26    0.59  0.3308
-       5    1.02    3.12    1.04  2.0787
+       1    0.00    0.07    0.84  0.7661
+       2   -0.22    0.42    0.76  0.3317
+       3   -2.24    0.04    0.39  0.3485
+       4   -0.81    0.26    0.60  0.3335
+       5    1.02    3.12    1.05  2.0715
  
              ( middle lines omitted )
 
-     296   -0.81    0.28    0.59  0.3148
-     297    1.19    1.60    1.04  0.5612
-     298   -1.53    0.57    0.45  0.1171
-     299    0.99    2.67    1.05  1.6183
-     300    0.28    1.13    0.92  0.2088
+     296   -0.81    0.28    0.59  0.3139
+     297    1.19    1.60    1.05  0.5540
+     298   -1.53    0.57    0.45  0.1161
+     299    0.99    2.67    1.06  1.6090
+     300    0.28    1.13    0.93  0.1987
 
-    Average abs. error guessing median:    0.33012+-0.01655
+    Average abs. error guessing median:     0.32963+-0.01648
 
 The predictive medians can be plotted against the inputs as follows:
 
@@ -213,7 +213,13 @@ smooth function of the input.
 
 These predictions can be compared to the true median time of death for
 individuals with the given covariates, as determined by the way the
-data was generated, which are in the file "vmedians".
+data was generated, which are in the file "vmedians".  Here is a
+command to compare them on the test data:
+
+    > (tail -300 vmedians; echo " "
+    >  net-pred idb vlog.net 25: / vdata@-1:700) | plot-points
+
+The result is in vlog-medians.png.
 
 The log of the true hazard function for this problem is the sum of a
 function of x only and a function of t only - what is called a
@@ -225,10 +231,11 @@ can discover this:
                                    ho1=x0.05:1 ho0=x0.05:1 bo=100 
 
 The input-hidden weights for the two hidden layers have hierarchical
-priors that allow one of them to look at only the time input and the
-other to look at only the covariate.  There are no connections between
-the hidden layers.  Final output can therefore be an additive function
-of time and the covariate, if the hyperparameters are set in this way.
+priors that allow one of them to (mostly) look at only the time input
+and the other to look at only the covariate.  There are no connections
+between the hidden layers.  Final output can therefore be an additive
+function of time and the covariate, if the hyperparameters are set in
+this way.
 
 The remaining commands can be the same as above, except that the
 stepsize needs to be reduced to get a reasonable acceptance rate (the

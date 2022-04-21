@@ -636,7 +636,6 @@ void STATIC_IF_INCLUDED net_func
           v = sleef_logf4(v);
           v = _mm_add_ps (v, _mm_and_ps (a, _mm_cmpgt_ps (a, zero)));
           v = _mm_sub_ps (v, log2);
-          v = _mm_sub_ps (v, log2);
           _mm_storel_pi ((__m64 *)(vh+j-1), v);
           j += 2;
         }

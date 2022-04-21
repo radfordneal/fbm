@@ -3857,7 +3857,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
           i += 2;
         }
         if (i<=N_hidden)
-        { dh[i-1] *= 1 - prec_exp(-LO2-vh[i-1]);
+        { dh[i-1] *= 1 - prec_exp(-LOG2-vh[i-1]);
         }
       }
 #     elif FP32 && USE_SIMD_INTRINSICS && USE_SLEEF && __AVX__

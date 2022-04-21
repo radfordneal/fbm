@@ -1,26 +1,36 @@
+<html>
+<body>
+<pre>
 
-NOTES ON THE VERSION UNDER DEVELOPMENT
+NOTES ON THE VERSION OF 2022-04-21
 
-Note:  Log files produced by earlier versions cannot be read by this
-version of the software.
+This version has some substantial new features for neural network
+models, and some important performance improvements for neural
+networks, including support for computation on GPUs.  The tutorial
+examples for neural network models have also been extended.
+
+Note: Log files produced by earlier versions cannot be read by this
+version of the software.  There are also some incompatible changes in
+command syntax (see feature changes (3), (13), and (14) below).
 
 Documentation changes in this version.
 
-1) Detailed documentation on the neural network models is now provided
-   in doc/net-models.PDF.  Some references to the models and Markov
-   chain methods used are now listed in References.doc.
+1) Detailed documentation on the neural network models and their
+   implementation is now provided in doc/<A HREF="net-models.PDF">net-models.PDF</A>.  Some
+   references to the models and Markov chain methods used are now
+   listed in <A HREF="References.html">References.doc</A>.
 
 2) All the tutorial examples have been updated, with timing results
-   now given for a modern processor.  The examples are now accompanied
-   by some plots, supplied as PNG files.
+   now given for a modern processor.  Some examples are now
+   accompanied by plots, supplied as PNG files.
 
 3) The neural network examples for a simple regression model, in
-   Ex-netgp-r.doc, have been extended to illustrate some general
+   <A HREF="Ex-netgp-r.html">Ex-netgp-r.doc</A>, have been extended to illustrate some general
    issues with Markov chain Monte Carlo methods and Bayesian
    inference.
 
 4) There is a new example of image classification with neural network
-   models, including use of a convolutational layer, in Ex-image.doc.
+   models, including use of a convolutational layer, in <A HREF="Ex-image.html">Ex-image.doc</A>.
 
 Feature changes in the version:
 
@@ -30,9 +40,9 @@ Feature changes in the version:
    biases, may now be set up explicitly, rather than (as previously)
    layers always being fully-connected, without weight sharing.  In
    particular, this allows for specification of models with
-   convolutional layers.  See net-spec.doc, net-config.doc, and
-   net-config-check.doc for details, as well as the tutorial example
-   in Ex-image.doc.
+   convolutional layers.  See <A HREF="net-spec.html">net-spec.doc</A>, <A HREF="net-config.html">net-config.doc</A>, and
+   <A HREF="net-config-check.html">net-config-check.doc</A> for details, as well as the tutorial example
+   in <A HREF="Ex-image.html">Ex-image.doc</A>.
 
 2) Non-sequential hidden layer connections are now supported - ie,
    hidden layers can now connect to later hidden layers other than
@@ -44,12 +54,16 @@ Feature changes in the version:
    by h(u) = log(1+exp(u)), in addition to the previous options of
    'tanh' or 'identity'.  There is also a 'softplus0' activation
    function, which is 'softplus' shifted down to have output zero for
-   input zero.  However, the previous option of 'sin' has been
-   removed, since the implementation no longer saves the summed input
-   to hidden units, before applying the activation function, so the
-   activation function must have a derivative computable from its
-   value (which sin does not).  See net-spec.doc for how to specify
-   the activation function.
+   input zero.  
+
+   However, the previous option of 'sin' as an activation function has
+   been removed, since the implementation no longer saves the summed
+   input to hidden units (before the activation function is applied),
+   so the activation function must have a derivative computable from
+   its value (which sin does not).  
+
+   See <A HREF="net-spec.html">net-spec.doc</A> for how to specify the activation function for a
+   hidden layer.
 
 4) The sample-hyper operation for neural network models can now take
    an argument in order to restrict the updates to the hyperparameters
@@ -65,30 +79,32 @@ Feature changes in the version:
    standard output.  This can be useful in checking that the data
    source is specified correctly.
 
-7) New C0, C1, and Cn for n>1 quantities are now defined, to help assess
+7) New C0, C1, and Cn for n&gt;1 quantities are now defined, to help assess
    how well metropolis and hybrid updates are exploring the distribution.
    (But note that these are masked for mixture models, where they have
    another meaning.)
 
 8) The net-gen program has been extended to allow more flexibility in
    how parameters are set, including from standard input, rather than 
-   to zero, or randomly.  See net-gen.doc for details.
+   to zero, or randomly.  See <A HREF="net-gen.html">net-gen.doc</A> for details.
 
-9) The xxx-tbl commands can now take a -f argument, causes them to
-   continually follow iterations being added to the last log file
+9) The xxx-tbl commands can now take a -f argument, which causes them
+   to continually follow iterations being added to the last log file
    specified, rather than finishing when EOF is encountered.  This is
    useful if the output is piped to a plotting program that is capable
-   of following continuing input, updating the plot in real time.
+   of following continuing input, updating the plot in real time, and
+   also when the output is just shown in a terminal window in order to
+   monitor the run.
 
-10) The net-spec program now has an option for displaying the numbers
-    of parameters in each group.  See net-spec.doc for details.
+10) The net-spec program now has a "sizes" option for displaying the
+    number of parameters in each group.  See <A HREF="net-spec.html">net-spec.doc</A> for details.
 
 11) The xxx-grad-test programs (eg, net-grad-test) can now optionally
     display only the computed gradient, or only the energy, or can be
     restricted to display and check against the result from finite
-    differences only one component of the gradient.  (Useful since
-    checking the full gradient can be very slow for high-dimensional
-    models.)  See xxx-grad-test.doc for details.
+    differences only a single component of the gradient.  (This is
+    useful since checking the full gradient can be very slow for
+    high-dimensional models.)  See <A HREF="xxx-grad-test.html">xxx-grad-test.doc</A> for details.
 
 12) The net-display program now allows for a -P or -H option, for
     displaying unadorned high-precision parameter or hyperparameter
@@ -111,7 +127,7 @@ Feature changes in the version:
 
 17) Specifying use of a symmetric sequence of approximations in a
     leapfrog trajectory specification by giving a negative value for
-    N-approx is now documented in mc-spec.doc.  (It had previously
+    N-approx is now documented in <A HREF="mc-spec.html">mc-spec.doc</A>.  (It had previously
     been implemented but not documented.)
 
 Performance changes in this version:
@@ -135,7 +151,7 @@ Performance changes in this version:
 
 4) Computations for neural network models may now be (partially) done
    on a GPU (one that support CUDA with compute capability 3.5 or
-   later).  See Install.doc for how to do this.  Note that for
+   later).  See <A HREF="Install.html">Install.doc</A> for how to do this.  Note that for
    networks with few parameters, or that are trained on a small data
    set, the GPU version will not necessarily be faster.  Many GPUs are
    also slow at double-precision computations.  Note that GPU
@@ -149,7 +165,7 @@ Bug fixes.
 2) Documentation for the 'plot' mc operation has been corrected.
 
 3) Incorrect prior specification (not matching ccmds.net) corrected in
-   Ex_netgp-c.doc (and Ex_netgp-c.html).
+   Ex_<A HREF="netgp-c.html">netgp-c.doc</A> (and Ex_netgp-c.html).
 
 4) Fixed a bug in which an mc-spec command with no trajectory
    specification would not reset to the default trajectory spec if an
@@ -180,7 +196,6 @@ Known bugs and other deficiencies.
 6) Some Markov chain updates for Dirichlet diffusion tree models in which 
    there is no data model (ie, no noise) are not implemented when some of 
    the data is missing.  An error message is produced in such cases.
-
-7) The times given in the documentation for the examples are for a
-   very old computer.  Typical current (2020) desktop computers will
-   be at least 20 times faster.
+</pre>
+</body>
+</html>

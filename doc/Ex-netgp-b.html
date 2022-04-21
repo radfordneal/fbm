@@ -134,7 +134,7 @@ network model used above are as follows:
 
     &gt; gp-spec blog.gpl 2 1 1 - 0.1 / 0.05:0.5 0.05:0.5
     &gt; model-spec blog.gpl binary
-    &gt; data-spec blog.gpl 2 1 2 / bdata@1:300 . bdata@301:500 .
+    &gt; data-spec blog.gpl 2 1 2 / bdata@1:300 . bdata@301: .
     Number of training cases: 300
     Number of test cases: 200
 
@@ -174,7 +174,7 @@ Metropolis-Hastings updates (the met-values or mh-values operations).
 
 The 50 sampling iterations take 25 seconds on the system used (see
 <A HREF="Ex-test-system.html">Ex-test-system.doc</A>).  While you wait, you can check the progress of
-the hyperparameters using gp-display:
+the hyperparameters using gp-display.  For example, you might see:
 
     &gt; gp-display blog.gpl
 
@@ -192,8 +192,8 @@ the hyperparameters using gp-display:
     
     Exponential parts:
     
-          5.973
-          0.620 :      0.620      0.620
+          5.555
+          0.657 :      0.657      0.657
 
 Note that there are only two variable hyperparameters, since the
 constant and jitter parts are fixed, and the relevance hyperparameters
@@ -210,11 +210,11 @@ classification performance:
 
     Number of iterations used: 30
 
-    Number of test cases: 200
+    Number of test cases: 1000
 
-    Fraction of guesses that were wrong:    0.0900+-0.0203
+    Fraction of guesses that were wrong:    0.1050+-0.0097
 
-This takes 0.35 seconds on the system used (see <A HREF="Ex-test-system.html">Ex-test-system.doc</A>).
+This takes 1.26 seconds on the system used (see <A HREF="Ex-test-system.html">Ex-test-system.doc</A>).
 This is slower than prediction using a network model, since the
 Cholesky decomposition of the covariance matrix must be found for each
 iteration used (saving these would take up lots of disk space).  The

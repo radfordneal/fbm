@@ -1,5 +1,7 @@
 
-FLEXIBLE BAYESIAN MODELLING SOFTWARE (VERSION OF 2022-04-21)
+FLEXIBLE BAYESIAN MODELLING SOFTWARE (VERSION UNDER DEVELOPMENT)
+
+** Use the commit tagged fbm-2022-04-21 for the latest stable version **
 
 This directory and its subdirectories contain software for flexible
 Bayesian learning of regression, classification, density, and other

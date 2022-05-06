@@ -1,0 +1,56 @@
+<html>
+<body>
+<pre>
+
+NOTES ON THE VERSION UNDER DEVELOPMENT
+
+
+Documentation changes in this version.
+
+None yet.
+
+
+Feature changes in the version:
+
+1) New xxx-avewrong and xxx-avesqerr scripts for plotting how error
+   using averaged predictions changes during a run.  (More doc to come.)
+
+
+Performance changes in this version:
+
+None yet.
+
+
+Bug fixes.
+
+None yet.
+
+
+Known bugs and other deficiencies.
+
+1) The facility for plotting quantities using "plot" operations in xxx-mc
+   doesn't always work for the first run of xxx-mc (before any
+   iterations exist in the log file).  A work-around is to do a run of
+   xxx-mc to produce just one iteration before attempting a run of
+   xxx-mc that does any "plot" operations.
+
+2) The CPU time features (eg, the "k" quantity) will not work correctly
+   if a single iteration takes more than about 71 minutes.
+
+3) The latent value update operations for Gaussian processes may recompute 
+   the inverse covariance matrix even when an up-to-date version was 
+   computed for the previous Monte Carlo operation.
+
+4) Covariance matrices are stored in full, even though they are symmetric,
+   which sometimes costs a factor of two in memory usage.
+
+5) Giving net-pred several log files that have different network architectures
+   doesn't work, but an error message is not always produced (the results may
+   just be nonsense).
+
+6) Some Markov chain updates for Dirichlet diffusion tree models in which 
+   there is no data model (ie, no noise) are not implemented when some of 
+   the data is missing.  An error message is produced in such cases.
+</pre>
+</body>
+</html>

@@ -1,0 +1,33 @@
+Bugs:
+
+** k quantity sometimes negative, with very long total run (not long individual
+   iteration).
+
+** net-spec with "sizes" wrong with omit options.
+
+** net-display can crash with some specs.
+
+** See following:
+
+Lenovo: net-tbl -f -h tkmDb full1.log :10
+          t               k               m               D               b     
+ 1.00000000e+00  4.00716667e-01  9.70000000e+01 -1.78699375e+00  8.19171598e-01 
+ 2.00000000e+00  8.00583333e-01  9.80000000e+01 -1.60947983e+00  7.80637409e-01 
+ 3.00000000e+00  1.19713333e+00  9.40000000e+01 -2.42884528e-01  7.68728729e-01 
+ 4.00000000e+00  1.59925000e+00  9.50000000e+01 -6.53782375e-01  7.53733577e-01 
+ 5.00000000e+00  1.99866667e+00  9.80000000e+01 -1.68074275e-01  7.44990501e-01 
+ 6.00000000e+00  2.40255000e+00  9.40000000e+01 -1.61183093e-01  7.35425050e-01 
+ 7.00000000e+00  2.80705000e+00  9.60000000e+01 -5.86882771e-02  7.28323712e-01 
+ 8.00000000e+00  3.21125000e+00  9.40000000e+01 -4.58195910e-03  7.21126419e-01 
+ 9.00000000e+00  3.61556667e+00  9.50000000e+01 -7.66904091e-02  7.13459250e-01 
+ 1.00000000e+01  4.01688333e+00  9.70000000e+01  8.35171471e-02  7.08107434e-01 
+ 1.10000000e+01  6.09696667e+00  4.99000000e+02 -9.24996536e-02  6.57278995e-01 
+
+
+Desirable features:
+
+** More complete output for net-spec with "sizes", giving not just 
+   parameters, but parameter offsets, and total connections.
+
+** Add group numbers to net-spec output.
+

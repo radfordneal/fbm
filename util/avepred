@@ -12,34 +12,37 @@ function usage {
 prog=`echo $0 | sed "s/.*\///"`
 module=`echo $prog | sed "s/-.*//"`
 
-what=$1
+what="$1"
 
-if [ x$what != xn -a x$what != xm -a x$what != xp ]; then usage; fi
+if [ "$what" != n -a "$what" != m -a "$what" != p ]; then usage; fi
 
-log=$2
-start=$3
+log="$2"
+start="$3"
 
-if [ x$7 != x -o x$log == x -o x$start == x ]; then usage; fi
+if [ "$7" != "" -o "$log" == "" -o "$start" == "" ]; then usage; fi
 
-iters=${4:-$start}
-step=${5:-1}
+iters="${4:-$start}"
+step="${5:-1}"
 ll=`log-last $log`
 if [ $? != 0 ]; then
   exit 2
 fi
 lln=`echo $ll | sed "s/.* //"`
-if [ x$lln == xempty ]; then
+if [ "$lln" == empty ]; then
   echo $ll
   exit 2
 fi
-end=${6:-$lln}
+end="${6:-$lln}"
 
-if [ $start -lt 1 -o $iters -lt 1 -o $iters -gt $start -o $step -lt 1 \
-                  -o $end -lt $start ]; then usage; fi
+if [[ ! "$start" =~ ^[0-9]+$ || ! "$iters" =~ ^[0-9]+$ ||
+      ! "$step" =~ ^[0-9]+$  || ! "$end" =~ ^[0-9]+$ ]]; then usage; fi
 
-for i in `seq $start $step $end`; do
-  begin=`calc $i-$iters+1`
-  output=`$module-pred a$what $log $begin:$i`
+if [ "$start" -lt 1 -o "$iters" -lt 1 -o "$iters" -gt "$start" \
+      -o "$step" -lt 1 -o "$end" -lt "$start" ]; then usage; fi
+
+for i in `seq "$start" "$step" "$end"`; do
+  begin=$(( "$i" - "$iters" + 1 ))
+  output=`$module-pred a$what "$log" "$begin":"$i"`
   if [ ! $? ]; then
     exit 3
   fi

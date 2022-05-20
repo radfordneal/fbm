@@ -4,8 +4,8 @@
 # number of iterations.
 
 function usage { 
-  echo "Usage: $module-avesqerr what log start [ iters [ step [ end ] ] ]"
-  echo "        [ / test-inputs test-targets ]"
+  echo Usage: ${module}-avepred '[ "p" | "n" | "m" ] log-file start [ iters [ step [ end ] ] ]'
+  echo "    [ / test-inputs test-targets ]"
   exit 1
 }
 
@@ -19,20 +19,41 @@ if [ "$what" != n -a "$what" != m -a "$what" != p ]; then usage; fi
 log="$2"
 start="$3"
 
-if [ "$7" != "" -o "$log" == "" -o "$start" == "" ]; then usage; fi
+if [ "$log" == "" -o "$start" == "" ]; then usage; fi
 
 iters="${4:-$start}"
-step="${5:-1}"
+step="${5:-$iters}"
 ll=`log-last $log`
 if [ $? != 0 ]; then
   exit 2
 fi
 lln=`echo $ll | sed "s/.* //"`
 if [ "$lln" == empty ]; then
-  echo $ll
+  echo "$ll"
   exit 2
 fi
 end="${6:-$lln}"
+
+if [ "$iters" == / ]; then 
+  shift 3
+  iters="$start"
+  step="$iters"
+  end="$lln"
+elif [ "$step" == / ]; then
+  shift 4
+  step=1
+  end="$lln"
+elif [ "$end" == / ]; then
+  shift 5
+  end="$lln"
+elif [ "$7" == / ]; then
+  shift 6
+fi
+
+testargs=""
+if [ "$1" == / ]; then
+  testargs=$@
+fi
 
 if [[ ! "$start" =~ ^[0-9]+$ || ! "$iters" =~ ^[0-9]+$ ||
       ! "$step" =~ ^[0-9]+$  || ! "$end" =~ ^[0-9]+$ ]]; then usage; fi
@@ -42,7 +63,7 @@ if [ "$start" -lt 1 -o "$iters" -lt 1 -o "$iters" -gt "$start" \
 
 for i in `seq "$start" "$step" "$end"`; do
   begin=$(( "$i" - "$iters" + 1 ))
-  output=`$module-pred a$what "$log" "$begin":"$i"`
+  output=`$module-pred a$what "$log" "$begin":"$i" $testargs`
   if [ ! $? ]; then
     exit 3
   fi

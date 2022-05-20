@@ -1,0 +1,56 @@
+<html>
+<body>
+<pre>
+
+
+XXX-AVEPRED:  Show predive performance using a series of windows of states
+
+There is a version of this program for each application that has an
+xxx-pred program (eg, net-pred), which is called repeatedly by this
+program.
+
+Usage:
+
+    xxx-avepred [ "p" | "n" | "m" ] log-file start [ iters [ step [ end ] ] ]
+                [ / test-inputs test-targets ]
+
+where 'xxx' is the application (eg, 'net').  The "p", "n", or "m"
+argument specifies whether the predictions will be assessed by log
+probability, by squared error based on a mean prediction, or by
+classification error based on the modal prediction.  Some of these
+options are not valid for some applications or models.
+
+The output consists of some number of lines, which each contain an
+iteration number (beginning with 'start') and the performance (by the
+specified measure) of predictions that use a window of iterations from
+the log file ending at that iteration and beginning 'iters' minus one
+iterations before (so if all iterations are present in the log file,
+the predictions will be based on 'iters' iterations).  Succesive
+prediction windows will be offset by 'step', ending when the last
+iteration of the window would be greater than 'end'.
+
+The default for 'iters' is 'start', the default for 'step' is 'iters',
+and the default for 'end' is the last iteration in the log file.
+
+The output is suitable for use by any plot program that would also be
+suitable for use with xxx-plt.
+
+Examples:  
+
+  xxx-avepred n lg 20 5 10 55
+
+    This will output squared errors when using mean predictions, for
+    predictions based on iterations 16-20, 26-30, 36-40, and 46-50
+    from the log file "lg".
+
+  xxx-avepred p lg 10
+
+    This will output the average log probability for targets, when
+    using probabilities averaged over 10 iterations, for windows of
+    iterations starting with iterations 1-10, then iterations 11-20,
+    and so forth, until the end of the log file is reached.
+
+            Copyright (c) 2022 by Radford M. Neal
+</pre>
+</body>
+</html>

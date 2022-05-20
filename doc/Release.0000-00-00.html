@@ -12,8 +12,9 @@ None yet.
 
 Feature changes in the version:
 
-1) New xxx-avepred scripts for plotting how error
-   using averaged predictions changes during a run.  (More doc to come.)
+1) A new xxx-avepred script can be used to plot how error using
+   predictions averaged over a window of iterations changes during a
+   run.  See <A HREF="xxx-avepred.html">xxx-avepred.doc</A>.
 
 
 Performance changes in this version:
@@ -51,6 +52,10 @@ Known bugs and other deficiencies.
 6) Some Markov chain updates for Dirichlet diffusion tree models in which 
    there is no data model (ie, no noise) are not implemented when some of 
    the data is missing.  An error message is produced in such cases.
+
+7) When prediction windows overlap in xxx-avepred, so predictions for
+   some iterations are used in several windows, these predictions are
+   inefficiently recomputed for each use.
 </pre>
 </body>
 </html>

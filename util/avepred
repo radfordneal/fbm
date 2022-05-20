@@ -3,23 +3,23 @@
 # Produce plotting output for predictions using averages over some
 # number of iterations.
 
+function usage { 
+  echo "Usage: $module-avesqerr what log start [ iters [ step [ end ] ] ]"
+  echo "        [ / test-inputs test-targets ]"
+  exit 1
+}
+
 prog=`echo $0 | sed "s/.*\///"`
 module=`echo $prog | sed "s/-.*//"`
 
 what=$1
 
-if [ x$what != xn -a x$what != xm -a x$what != xp ]; then
-  echo Usage: $module-avesqerr what log start [ iters [ step [ end ] ] ]
-  exit 1
-fi
+if [ x$what != xn -a x$what != xm -a x$what != xp ]; then usage; fi
 
 log=$2
 start=$3
 
-if [ x$7 != x -o x$log == x -o x$start == x ]; then
-  echo Usage: $module-avesqerr what log start [ iters [ step [ end ] ] ]
-  exit 1
-fi
+if [ x$7 != x -o x$log == x -o x$start == x ]; then usage; fi
 
 iters=${4:-$start}
 step=${5:-1}
@@ -35,10 +35,7 @@ fi
 end=${6:-$lln}
 
 if [ $start -lt 1 -o $iters -lt 1 -o $iters -gt $start -o $step -lt 1 \
-                  -o $end -lt $start ]; then
-  echo Usage: $module-avesqerr what log start [ iters [ step [ end ] ] ]
-  exit 1
-fi
+                  -o $end -lt $start ]; then usage; fi
 
 for i in `seq $start $step $end`; do
   begin=`calc $i-$iters+1`

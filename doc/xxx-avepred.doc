@@ -29,6 +29,10 @@ iteration of the window would be greater than 'end'.
 The default for 'iters' is 'start', the default for 'step' is 'iters',
 and the default for 'end' is the last iteration in the log file.
 
+The source for the inputs and targets on which performance is assessed
+can be specified after a "/" argument, as for xxx-pred.  The default
+is to use the test cases specified previously with data-spec (if any).
+
 The output is suitable for use by any plot program that would also be
 suitable for use with xxx-plt.
 

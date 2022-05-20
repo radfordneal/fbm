@@ -70,6 +70,8 @@ Generic utility programs [util]:
     xxx-tbl         Write quantities from log files in a tabular form
     xxx-hist        Build a histogram for a quantity using data from log files
 
+    xxx-avepred     Show predive performance using a series of windows of states
+
   * series          Analyse stationary time series data
   * mean            Compute means with standard errors
 

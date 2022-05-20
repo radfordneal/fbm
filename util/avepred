@@ -41,7 +41,7 @@ if [ "$iters" == / ]; then
   end="$lln"
 elif [ "$step" == / ]; then
   shift 4
-  step=1
+  step="$iters"
   end="$lln"
 elif [ "$end" == / ]; then
   shift 5

@@ -17,7 +17,7 @@ Input to Output Weights [1]
 
       10.00: +5.00
 
-Noise levels
+Noise levels [2]
 
    1.00 -  1.00
 
@@ -57,7 +57,7 @@ Input to Output Weights [1]
 
       10.00: +5.00 +50.00 +54.00  -5.00  +1.00
 
-Noise levels
+Noise levels [2]
 
    1.00 -  1.00  1.00  1.00  1.00  1.00
 

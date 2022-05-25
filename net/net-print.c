@@ -45,7 +45,8 @@ void net_print_params
   net_sigmas *s,	/* Network sigmas, null if none to display */
   net_arch *a, 		/* Network architecture */
   net_flags *flgs,	/* Network flags, null if none */
-  model_specification *m /* Data model, may be null */
+  model_specification *m, /* Data model, may be null */
+  int group             /* Group to print, 0 for all */
 )
 {
   int i, j, l, ls, nsqi, g;
@@ -53,10 +54,10 @@ void net_print_params
   char ps[1000];
 
   nsqi = 0;
-  g = 1; 
+  g = 0; 
 
-  if (a->has_ti)
-  { printf("\nInput Offsets [%d]\n\n",g++);
+  if (a->has_ti && (++g==group || group==0))
+  { printf("\nInput Offsets [%d]\n\n",g);
     if (s!=0) printf("%10.2f:",*s->ti_cm);
     print_param_array (w->ti, a->N_inputs, s!=0);
   }
@@ -66,28 +67,30 @@ void net_print_params
     for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
     { if (bits&1)
       { if (ls>=l-1) abort();
-        printf("\nHidden Layer %d to Hidden Layer %d Weights [%d]\n\n",
-                ls,l,g++);
-        if (s!=0) printf("%5.2f",*s->nsq_cm[nsqi]);
-        if (a->nonseq_config[nsqi])
-        { if (s!=0) printf(":     ");
-          print_param_array(w->nsq[nsqi], a->nonseq_config[nsqi]->N_wts, s!=0);
-        }
-        else
-        { for (i = 0; i<a->N_hidden[ls]; i++)
-          { if (i>0) printf("\n");
-            if (s!=0 && i>0) printf("     ");
-            if (s!=0) printf(" %4.2f:",s->nsq[nsqi][i]);
-            print_param_array
-              (w->nsq[nsqi]+a->N_hidden[l]*i, a->N_hidden[l], s!=0);
+        if (++g==group || group==0)
+        { printf("\nHidden Layer %d to Hidden Layer %d Weights [%d]\n\n",
+                 ls,l,g);
+          if (s!=0) printf("%5.2f",*s->nsq_cm[nsqi]);
+          if (a->nonseq_config[nsqi])
+          { if (s!=0) printf(":     ");
+            print_param_array(w->nsq[nsqi],a->nonseq_config[nsqi]->N_wts,s!=0);
+          }
+          else
+          { for (i = 0; i<a->N_hidden[ls]; i++)
+            { if (i>0) printf("\n");
+              if (s!=0 && i>0) printf("     ");
+              if (s!=0) printf(" %4.2f:",s->nsq[nsqi][i]);
+              print_param_array
+                (w->nsq[nsqi]+a->N_hidden[l]*i, a->N_hidden[l], s!=0);
+            }
           }
         }
         nsqi += 1;
       }
     }
 
-    if (l>0 && a->has_hh[l-1])
-    { printf("\nHidden Layer %d to Hidden Layer %d Weights [%d]\n\n",l-1,l,g++);
+    if (l>0 && a->has_hh[l-1] && (++g==group || group==0))
+    { printf("\nHidden Layer %d to Hidden Layer %d Weights [%d]\n\n",l-1,l,g);
       if (s!=0) printf("%5.2f",*s->hh_cm[l-1]);
       if (a->hidden_config[l])
       { if (s!=0) printf(":     ");
@@ -103,8 +106,8 @@ void net_print_params
       }
     }
   
-    if (a->has_ih[l])
-    { printf("\nInput to Hidden Layer %d Weights [%d]",l,g++);
+    if (a->has_ih[l] && (++g==group || group==0))
+    { printf("\nInput to Hidden Layer %d Weights [%d]",l,g);
       if (flgs && list_flags(flgs->omit,a->N_inputs,1<<(l+1),ps)!=0)
       { printf(" (omit%s)",ps);
       }
@@ -129,8 +132,8 @@ void net_print_params
       }
     }
 
-    if (a->has_bh[l])
-    { printf("\nHidden Layer %d Biases [%d]\n\n",l,g++);
+    if (a->has_bh[l] && (++g==group || group==0))
+    { printf("\nHidden Layer %d Biases [%d]\n\n",l,g);
       if (s!=0) printf("%10.2f:",*s->bh_cm[l]);
       if (a->bias_config[l])
       { print_param_array (w->bh[l], a->bias_config[l]->N_wts, s!=0);
@@ -140,26 +143,25 @@ void net_print_params
       }
     }
 
-    if (a->has_ah[l])
+    if (a->has_ah[l] && (++g==group || group==0))
     { if (s!=0)
       { printf("\nHidden Layer %d Adjustments [%d]\n\n",l,g);
         printf("           ");
         print_adjustment_array(s->ah[l],a->N_hidden[l]);
       }
-      g += 1;
     }
   
-    if (a->has_th[l])
-    { printf("\nHidden Layer %d Offsets [%d]\n\n",l,g++);
+    if (a->has_th[l] && (++g==group || group==0))
+    { printf("\nHidden Layer %d Offsets [%d]\n\n",l,g);
       if (s!=0) printf("%10.2f:",*s->th_cm[l]);
       print_param_array (w->th[l], a->N_hidden[l], s!=0);
     }
   }
 
   for (l = a->N_layers-1; l>=0; l--)
-  { if (a->has_ho[l])
+  { if (a->has_ho[l] && (++g==group || group==0))
     { int k = 2*a->N_layers-1-l;
-      printf("\nHidden Layer %d to Output Weights [%d]\n\n",l,g++);
+      printf("\nHidden Layer %d to Output Weights [%d]\n\n",l,g);
       if (s!=0) printf("%5.2f",*s->ho_cm[l]);
       if (a->hidden_config[k])
       { if (s!=0) printf(":     ");
@@ -176,8 +178,8 @@ void net_print_params
     }
   }
 
-  if (a->has_io)
-  { printf("\nInput to Output Weights [%d]",g++);
+  if (a->has_io && (++g==group || group==0))
+  { printf("\nInput to Output Weights [%d]",g);
     if (flgs && list_flags(flgs->omit,a->N_inputs,1,ps)!=0)
     { printf(" (omit%s)",ps);
     }
@@ -202,8 +204,8 @@ void net_print_params
     }
   }
 
-  if (a->has_bo)
-  { printf("\nOutput Biases [%d]\n\n",g++);
+  if (a->has_bo && (++g==group || group==0))
+  { printf("\nOutput Biases [%d]\n\n",g);
     if (s!=0) printf("%10.2f:",*s->bo_cm);
     if (a->bias_config[a->N_layers])
     { print_param_array (w->bo, a->bias_config[a->N_layers]->N_wts, s!=0);
@@ -213,19 +215,22 @@ void net_print_params
     }
   }
 
-  if (a->has_ao)
+  if (a->has_ao && (++g==group || group==0))
   { if (s!=0)
     { printf("\nOutput Adjustments [%d]\n\n",g);
       printf("           ");
       print_adjustment_array(s->ao,a->N_outputs);
     }
-    g += 1;
   }
 
-  if (m!=0 && m->type=='R' && s!=0)
-  { printf("\nNoise levels\n\n");
+  if (m!=0 && m->type=='R' && s!=0 && (++g==group || group==0))
+  { printf("\nNoise levels [%d]\n\n",g);
     printf("%7.2f - ",*s->noise_cm);
     print_sigma_array(s->noise,a->N_outputs);
+  }
+
+  if (group && g<group)
+  { printf("\nThere is no group %d\n",group);
   }
 }
 
@@ -236,17 +241,18 @@ void net_print_sigmas
 ( net_sigmas *s,	/* Network sigmas, null if none to display */
   net_arch *a, 		/* Network architecture */
   net_flags *flgs,	/* Network flags, null if none */
-  model_specification *m /* Data model, may be null */
+  model_specification *m, /* Data model, may be null */
+  int group             /* Group to print, 0 for all */
 )
 {
   int l, ls, nsqi, g;
   unsigned bits;
 
   nsqi = 0;
-  g = 1;
+  g = 0;
 
-  if (a->has_ti)
-  { printf("\nInput Offsets [%d]\n\n",g++);
+  if (a->has_ti && (++g==group || group==0))
+  { printf("\nInput Offsets [%d]\n\n",g);
     printf("%7.2f\n",*s->ti_cm);
   }
 
@@ -255,74 +261,80 @@ void net_print_sigmas
     for (ls = 0, bits = a->has_nsq[l]; bits!=0; ls++, bits>>=1)
     { if (bits&1)
       { if (ls>=l-1) abort();
-        printf("\nHidden Layer %d to Hidden Layer %d Weights [%d]\n\n",
-                ls,l,g++);
-        printf("%7.2f - ",*s->nsq_cm[nsqi]);
-        print_sigma_array(s->nsq[nsqi],a->N_hidden[ls]);
+        if (++g==group || group==0)
+        { printf("\nHidden Layer %d to Hidden Layer %d Weights [%d]\n\n",
+                  ls,l,g);
+          printf("%7.2f - ",*s->nsq_cm[nsqi]);
+          print_sigma_array(s->nsq[nsqi],a->N_hidden[ls]);
+        }
         nsqi += 1;
       }
     }
 
-    if (l>0 && a->has_hh[l-1])
-    { printf("\nHidden Layer %d to Hidden Layer %d Weights [%d]\n\n",l-1,l,g++);
+    if (l>0 && a->has_hh[l-1] && (++g==group || group==0))
+    { printf("\nHidden Layer %d to Hidden Layer %d Weights [%d]\n\n",l-1,l,g);
       printf("%7.2f - ",*s->hh_cm[l-1]);
       print_sigma_array(s->hh[l-1],a->N_hidden[l-1]);
     }
   
-    if (a->has_ih[l])
-    { printf("\nInput to Hidden Layer %d Weights [%d]\n\n",l,g++);
+    if (a->has_ih[l] && (++g==group || group==0))
+    { printf("\nInput to Hidden Layer %d Weights [%d]\n\n",l,g);
       printf("%7.2f - ",*s->ih_cm[l]);
       print_sigma_array(s->ih[l],
         not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1)));
     }
 
-    if (a->has_bh[l])
-    { printf("\nHidden Layer %d Biases [%d]\n\n",l,g++);
+    if (a->has_bh[l] && (++g==group || group==0))
+    { printf("\nHidden Layer %d Biases [%d]\n\n",l,g);
       printf("%7.2f\n",*s->bh_cm[l]);
     }
 
-    if (a->has_ah[l])
-    { printf("\nHidden Layer %d Adjustments [%d]\n\n",l,g++);
+    if (a->has_ah[l] && (++g==group || group==0))
+    { printf("\nHidden Layer %d Adjustments [%d]\n\n",l,g);
       printf("          ");
       print_sigma_array(s->ah[l],a->N_hidden[l]);
     }
   
-    if (a->has_th[l])
-    { printf("\nHidden Layer %d Offsets [%d]\n\n",l,g++);
+    if (a->has_th[l] && (++g==group || group==0))
+    { printf("\nHidden Layer %d Offsets [%d]\n\n",l,g);
       printf("%7.2f\n",*s->th_cm[l]);
     }
   }
 
   for (l = a->N_layers-1; l>=0; l--)
-  { if (a->has_ho[l])
-    { printf("\nHidden Layer %d to Output Weights [%d]\n\n",l,g++);
+  { if (a->has_ho[l] && (++g==group || group==0))
+    { printf("\nHidden Layer %d to Output Weights [%d]\n\n",l,g);
       printf("%7.2f - ",*s->ho_cm[l]);
       print_sigma_array(s->ho[l],a->N_hidden[l]);
     }
   }
 
-  if (a->has_io)
-  { printf("\nInput to Output Weights [%d]\n\n",g++);
+  if (a->has_io && (++g==group || group==0))
+  { printf("\nInput to Output Weights [%d]\n\n",g);
     printf("%7.2f - ",*s->io_cm);
     print_sigma_array(s->io,
         not_omitted(flgs?flgs->omit:0,a->N_inputs,1));
   }
 
-  if (a->has_bo)
-  { printf("\nOutput Biases [%d]\n\n",g++);
+  if (a->has_bo && (++g==group || group==0))
+  { printf("\nOutput Biases [%d]\n\n",g);
     printf("%7.2f\n",*s->bo_cm);
   }
 
-  if (a->has_ao)
-  { printf("\nOutput Adjustments [%d]\n\n",g++);
+  if (a->has_ao && (++g==group || group==0))
+  { printf("\nOutput Adjustments [%d]\n\n",g);
     printf("          ");
     print_sigma_array(s->ao,a->N_outputs);
   }
 
-  if (m!=0 && m->type=='R')
-  { printf("\nNoise levels\n\n");
+  if (m!=0 && m->type=='R' && (++g==group || group==0))
+  { printf("\nNoise levels [%d]\n\n",g);
     printf("%7.2f - ",*s->noise_cm);
     print_sigma_array(s->noise,a->N_outputs);
+  }
+
+  if (group && g<group)
+  { printf("\nThere is no group %d\n",group);
   }
 }
 

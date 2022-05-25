@@ -47,7 +47,7 @@ int main
   int params_only;
   int dump_params;
   int dump_sigmas;
-  int index;
+  int index, group;
 
   /* Look at arguments. */
 
@@ -55,6 +55,7 @@ int main
   params_only = 0;
   dump_params = 0;
   dump_sigmas = 0;
+  group = 0;  /* all */
 
   if (argc>1 && (strcmp(argv[1],"-p")==0 || strcmp(argv[1],"-w")==0))
   { params_only = 1;
@@ -77,12 +78,19 @@ int main
     argc -= 1;
   }
 
+  char junk; int g;
+  if (argc>1 && sscanf(argv[1],"%d%c",&g,&junk) == 1 && g>0)
+  { group = g;
+    argv += 1;
+    argc -= 1;
+  }
+
   index = -1;
 
   if (argc!=2 && argc!=3 
    || argc>2 && (index = atoi(argv[2]))<=0 && strcmp(argv[2],"0")!=0) 
   { fprintf (stderr,
-             "Usage: net-display [ -p | -h | -P | -H ] log-file [ index ]\n");
+     "Usage: net-display [ -p | -h | -P | -H ] [ group ] log-file [ index ]\n");
     exit(1);
   }
 
@@ -161,33 +169,67 @@ int main
 
   if (dump_params)
   { int i;
-    for (i = 0; i<w->total_params; i++)
-    { printf("%.16g\n",w->param_block[i]);
+    if (group)
+    { int offset, number, source, configured;
+      if (net_setup_param_group (a, flgs, group, 
+                                 &offset, &number, &source, &configured))
+      { for (i = offset; i<offset+number; i++)
+        { printf("%.16g\n",w->param_block[i]);
+        }
+      }
+    }
+    else
+    { for (i = 0; i<w->total_params; i++)
+      { printf("%.16g\n",w->param_block[i]);
+      }
     }
     exit(0);
   }
 
   if (dump_sigmas)
   { int i;
-    for (i = 0; i<s->total_sigmas; i++)
-    { printf("%.16g\n",s->sigma_block[i]);
+    if (group)
+    { int offset, number, adj;
+      if (net_setup_hyper_group (a, flgs, group, 
+                                 &offset, &number, &adj))
+      { for (i = offset; i<offset+number; i++)
+        { printf("%.16g\n",s->sigma_block[i]);
+        }
+      }
+      else if (m && m->type=='R') /* check if it's the group for noise sigmas */
+      { offset = 0; number = 0;
+        if (group==1 || net_setup_hyper_group (a, flgs, group-1, 
+                                               &offset, &number, &adj))
+        { for (i = offset+number; i<s->total_sigmas; i++)
+          { printf("%.16g\n",s->sigma_block[i]);
+          }
+        }
+      }
+    }
+    else
+    { for (i = 0; i<s->total_sigmas; i++)
+      { printf("%.16g\n",s->sigma_block[i]);
+      }
     }
     exit(0);
   }
 
   /* Print values of the parameters and/or hyperparameters. */
 
-  printf("\nNetwork in file \"%s\" with index %d%s\n", logf.file_name, index,
-    sigmas_only ? " (sigmas only)" : params_only ? " (parameters only)" : "");
+  printf("\nNetwork in file \"%s\" with index %d", logf.file_name, index);
+  if (sigmas_only) printf(", sigmas only");
+  if (params_only) printf(", parameters only");
+  if (group) printf(", group %d only",group);
+  printf("\n");
 
   if (params_only)
-  { net_print_params(w,0,a,flgs,m);
+  { net_print_params(w,0,a,flgs,m,group);
   }
   else if (sigmas_only)
-  { net_print_sigmas(s,a,flgs,m);
+  { net_print_sigmas(s,a,flgs,m,group);
   }
   else
-  { net_print_params(w,s,a,flgs,m);
+  { net_print_params(w,s,a,flgs,m,group);
   }
 
   printf("\n");

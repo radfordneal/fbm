@@ -619,9 +619,9 @@ void net_prior_max_second (net_params *, net_sigmas *, net_arch *, net_flags *,
                            net_priors *);
 
 void net_print_params (net_params *, net_sigmas *, net_arch *, net_flags *,
-                       model_specification *);
+                       model_specification *, int);
 void net_print_sigmas (net_sigmas *, net_arch *, net_flags *,
-                       model_specification *);
+                       model_specification *, int);
 
 void net_record_sizes        (log_gobbled *);
 void net_check_specs_present (net_arch *, net_priors *, int,

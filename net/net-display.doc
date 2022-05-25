@@ -7,18 +7,24 @@ and/or the hyperparameters (sigmas) of the network.
 
 Usage:
 
-    net-display [ -p | -h | -P | -H ] log-file [ index ]
+    net-display [ -p | -h | -P | -H ] [ group ] log-file [ index ]
 
 If no index is specified, the last network in the log file is
-displayed.  By default, the parameters and hyperparameters are both
-displayed.  The -p option (or -w option) causes only the parameters
-(weights) to be displayed (to higher precision).  The -h option (or -s
-option) causes only the hyperparameters (sigmas) to be displayed.  The
--P option causes only parameters to be printed, in a raw format
-without headers, one per line, in high precision.  Similarly, the -H
-option causes hyperparameters to be printed in a raw format (including
-any hyperparameters that are exactly tied to a higher-level
+displayed.  
+
+By default, the parameters and hyperparameters are both displayed.
+The -p option (or -w option) causes only the parameters (weights) to
+be displayed (to higher precision).  The -h option (or -s option)
+causes only the hyperparameters (sigmas) to be displayed.  The -P
+option causes only parameters to be printed, in a raw format without
+headers, one per line, in high precision.  Similarly, the -H option
+causes hyperparameters to be printed in a raw format (including any
+hyperparameters that are exactly tied to a higher-level
 hyperparameter).
+
+If a 'group' argument (a positive integer) is specified, only the
+parameters and/or hyperparameters in the group with that index (see
+below) are displayed.
 
 The output of the program (except when -P or -H is specified) consists
 of one section for each type of parameter, plus a section for noise

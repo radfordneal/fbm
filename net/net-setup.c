@@ -817,9 +817,10 @@ done:
 
 
 /* LOCATE GROUP OF PARAMETERS.  Finds the offset, number, and dimension of 
-   for a group of parameters.  Groups are identified by integers 
-   from one on up.  Zero is returned if the group index is too big,
-   or refers to an adjustment group (having no parameters in it). */
+   source for a group of parameters, plus whether the group is configured.
+   Groups are identified by integers from one on up.  Zero is returned if 
+   the group index is too big, or refers to an adjustment group (having no 
+   parameters in it). */
 
 int net_setup_param_group
 ( net_arch *a,		/* Network architecture */

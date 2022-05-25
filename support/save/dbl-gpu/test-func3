@@ -9,7 +9,7 @@ Input to Output Weights [1]
 
  2.00 2.00:+10.00
 
-Noise levels
+Noise levels [2]
 
    1.00 -  1.00
 
@@ -40,7 +40,7 @@ Output Biases [2]
 
       2.00: +2.00
 
-Noise levels
+Noise levels [3]
 
    1.00 -  1.00
 
@@ -72,7 +72,7 @@ Output Biases [2]
 
       2.00: +2.00
 
-Noise levels
+Noise levels [3]
 
    1.00 -  1.00
 
@@ -104,7 +104,7 @@ Output Biases [2]
 
       2.00: +2.00
 
-Noise levels
+Noise levels [3]
 
    1.00 -  1.00
 
@@ -138,7 +138,7 @@ Output Biases [2]
 
       2.00: +2.00  +1.00
 
-Noise levels
+Noise levels [3]
 
    1.00 -  1.00  1.00
 
@@ -178,7 +178,7 @@ Output Biases [2]
 
       2.00: +2.00  +1.00
 
-Noise levels
+Noise levels [3]
 
    1.00 -  1.00  1.00
 
@@ -218,7 +218,7 @@ Output Biases [2]
 
       2.00: +2.00  +1.00
 
-Noise levels
+Noise levels [3]
 
    1.00 -  1.00  1.00
 
@@ -405,7 +405,7 @@ Output Biases [9]
 
       4.00: +7.00  +4.00
 
-Noise levels
+Noise levels [10]
 
    1.00 -  1.00  1.00
 
@@ -828,7 +828,7 @@ Output Biases [4]
 
       1.00: -1.00
 
-Noise levels
+Noise levels [5]
 
    1.00 -  1.00
 

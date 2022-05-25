@@ -31,7 +31,7 @@ Prior Specifications:
 
 Number of training cases: 2
 
-Network in file "log" with index 0 (sigmas only)
+Network in file "log" with index 0, sigmas only
 
 Input to Hidden Layer 0 Weights [1]
 
@@ -49,12 +49,12 @@ Hidden Layer 2 to Output Weights [4]
 
    4.00 -  4.00  4.00
 
-Noise levels
+Noise levels [5]
 
    1.00 -  1.00
 
 
-Network in file "log" with index 0 (parameters only)
+Network in file "log" with index 0, parameters only
 
 Input to Hidden Layer 0 Weights [1]
 
@@ -99,7 +99,7 @@ Hidden Layer 2 to Output Weights [4]
 
       4.00: +2.00
 
-Noise levels
+Noise levels [5]
 
    1.00 -  1.00
 
@@ -157,7 +157,7 @@ Prior Specifications:
 
 Number of training cases: 2
 
-Network in file "log" with index 0 (sigmas only)
+Network in file "log" with index 0, sigmas only
 
 Input to Hidden Layer 0 Weights [1]
 
@@ -179,12 +179,12 @@ Hidden Layer 2 to Output Weights [5]
 
    4.00 -  4.00  4.00
 
-Noise levels
+Noise levels [6]
 
    1.00 -  1.00
 
 
-Network in file "log" with index 0 (parameters only)
+Network in file "log" with index 0, parameters only
 
 Input to Hidden Layer 0 Weights [1]
 
@@ -237,7 +237,7 @@ Hidden Layer 2 to Output Weights [5]
 
       4.00: +2.00
 
-Noise levels
+Noise levels [6]
 
    1.00 -  1.00
 
@@ -304,7 +304,7 @@ Hidden layer 2 hidden weight configuration
 
 Number of training cases: 2
 
-Network in file "log" with index 0 (sigmas only)
+Network in file "log" with index 0, sigmas only
 
 Input to Hidden Layer 0 Weights [1]
 
@@ -326,12 +326,12 @@ Hidden Layer 2 to Output Weights [5]
 
    4.00 -  4.00  4.00
 
-Noise levels
+Noise levels [6]
 
    1.00 -  1.00
 
 
-Network in file "log" with index 0 (parameters only)
+Network in file "log" with index 0, parameters only
 
 Input to Hidden Layer 0 Weights [1]
 
@@ -384,7 +384,7 @@ Hidden Layer 2 to Output Weights [5]
 
       4.00: +2.00
 
-Noise levels
+Noise levels [6]
 
    1.00 -  1.00
 
@@ -450,7 +450,7 @@ Hidden layer 2 hidden0 weight configuration
 
 Number of training cases: 2
 
-Network in file "log" with index 0 (sigmas only)
+Network in file "log" with index 0, sigmas only
 
 Input to Hidden Layer 0 Weights [1]
 
@@ -472,12 +472,12 @@ Hidden Layer 2 to Output Weights [5]
 
    4.00 -  4.00  4.00
 
-Noise levels
+Noise levels [6]
 
    1.00 -  1.00
 
 
-Network in file "log" with index 0 (parameters only)
+Network in file "log" with index 0, parameters only
 
 Input to Hidden Layer 0 Weights [1]
 
@@ -526,7 +526,7 @@ Hidden Layer 2 to Output Weights [5]
 
       4.00: +2.00
 
-Noise levels
+Noise levels [6]
 
    1.00 -  1.00
 
@@ -590,7 +590,7 @@ Hidden layer 2 hidden0 weight configuration
 
 Number of training cases: 4
 
-Network in file "log" with index 0 (sigmas only)
+Network in file "log" with index 0, sigmas only
 
 Input to Hidden Layer 0 Weights [1]
 
@@ -612,12 +612,12 @@ Hidden Layer 2 to Output Weights [5]
 
    4.00 -  4.00  4.00
 
-Noise levels
+Noise levels [6]
 
    1.00 -  1.00
 
 
-Network in file "log" with index 0 (parameters only)
+Network in file "log" with index 0, parameters only
 
 Input to Hidden Layer 0 Weights [1]
 
@@ -666,7 +666,7 @@ Hidden Layer 2 to Output Weights [5]
 
       4.00: +2.00
 
-Noise levels
+Noise levels [6]
 
    1.00 -  1.00
 
@@ -730,7 +730,7 @@ Hidden layer 2 hidden0 weight configuration
 
 Number of training cases: 4
 
-Network in file "log" with index 0 (sigmas only)
+Network in file "log" with index 0, sigmas only
 
 Input to Hidden Layer 0 Weights [1]
 
@@ -752,12 +752,12 @@ Hidden Layer 2 to Output Weights [5]
 
    4.00 -  4.00  4.00
 
-Noise levels
+Noise levels [6]
 
    1.00 -  1.00
 
 
-Network in file "log" with index 0 (parameters only)
+Network in file "log" with index 0, parameters only
 
 Input to Hidden Layer 0 Weights [1]
 
@@ -806,7 +806,7 @@ Hidden Layer 2 to Output Weights [5]
 
       4.00: +2.00
 
-Noise levels
+Noise levels [6]
 
    1.00 -  1.00
 
@@ -855,7 +855,7 @@ Hidden Layer 2 to Output Weights [5]
 
       2.97: +1.79
 
-Noise levels
+Noise levels [6]
 
    1.00 -  1.00
 
@@ -893,7 +893,7 @@ Prior Specifications:
 
 Number of training cases: 4
 
-Network in file "log" with index 0 (sigmas only)
+Network in file "log" with index 0, sigmas only
 
 Input to Hidden Layer 0 Weights [1]
 
@@ -915,12 +915,12 @@ Hidden Layer 2 to Output Weights [5]
 
    4.00 -  4.00  4.00
 
-Noise levels
+Noise levels [6]
 
    1.00 -  1.00
 
 
-Network in file "log" with index 0 (parameters only)
+Network in file "log" with index 0, parameters only
 
 Input to Hidden Layer 0 Weights [1]
 
@@ -973,7 +973,7 @@ Hidden Layer 2 to Output Weights [5]
 
       4.00: +2.00
 
-Noise levels
+Noise levels [6]
 
    1.00 -  1.00
 
@@ -1027,7 +1027,7 @@ Hidden Layer 2 to Output Weights [5]
 
       2.37: +1.36
 
-Noise levels
+Noise levels [6]
 
    1.00 -  1.00
 

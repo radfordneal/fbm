@@ -13,6 +13,9 @@ Feature changes in the version:
    predictions averaged over a window of iterations changes during a
    run.  See xxx-avepred.doc.
 
+2) The net-display program can now display parameters or hyperparameters
+   in only a single group.  See net-display.doc for details.
+
 
 Performance changes in this version:
 

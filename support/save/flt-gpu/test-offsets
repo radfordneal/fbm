@@ -19,7 +19,7 @@ Input to Output Weights [2] (omit:3)
 
       3.00: -1.13
 
-Noise levels
+Noise levels [3]
 
    4.00 -  4.00
 
@@ -63,7 +63,7 @@ Hidden Layer 0 to Output Weights [3]
 
  5.00 5.00: +3.00
 
-Noise levels
+Noise levels [4]
 
    6.00 -  6.00
 
@@ -99,7 +99,7 @@ Hidden Layer 0 to Output Weights [3]
 
  5.00 5.00: +3.00
 
-Noise levels
+Noise levels [4]
 
    6.00 -  6.00
 

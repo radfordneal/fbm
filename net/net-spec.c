@@ -195,6 +195,9 @@ int main
         }
         printf("\n");
       }
+      if (a->has_ah[l])
+      { printf("  Hidden Adjustments:         %.2f\n",p->ah[l]);
+      }
       if (a->has_th[l]) 
       { printf("  Hidden Offsets:         %s\n", prior_show(ps,p->th[l]));
       }
@@ -234,24 +237,8 @@ int main
       printf("\n");
     }
 
-    for (l = 0; l<a->N_layers && !a->has_ah[l]; l++) ;
-
-    if (l<a->N_layers || a->has_ao)
-    {
-      if (a->N_layers>0 && l<a->N_layers)
-      { printf("\n  Hidden adjustments: ");
-        for (l = 0; l<a->N_layers; l++)
-        { if (p->ah[l]==0) printf(" -");
-          else             printf(" %.2f",p->ah[l]);
-        }
-      }
-
-      if (a->has_ao)
-      { printf("\n  Output adjustments: ");
-        if (p->ao==0) printf(" -");
-        else          printf(" %.2f",p->ao);
-      }
-      printf("\n");
+    if (a->has_ao)
+    { printf("  Output Adjustments:         %.2f\n",p->ao);
     }
   
     printf("\n");

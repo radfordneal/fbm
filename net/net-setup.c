@@ -770,7 +770,7 @@ int net_setup_hyper_group
     }
 
     if (a->has_ah[l]) 
-    { *offset = i-1;  /* Pretend that there is a high-level one before */ 
+    { *offset = i;
       i += a->N_hidden[l]; 
       if (--grp==0) { *adj = 1; goto done; }
     }
@@ -803,7 +803,7 @@ int net_setup_hyper_group
   }
 
   if (a->has_ao) 
-  { *offset = i-1;  /* Pretend that there is a high-level one before */
+  { *offset = i;
     i += a->N_outputs; 
     if (--grp==0) { *adj = 1; goto done; }
   }

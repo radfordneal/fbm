@@ -643,7 +643,8 @@ void net_evaluate
           }
           else
           { for (i = low; i<=high; i++)
-            { qh->value[v][i-low] = sigmas.sigma_block[o+i+1];
+            { qh->value[v][i-low] = sigmas.sigma_block[o+i+1-s];
+                /* Note: for adjustments (s==1), no top-level value to skip */
             }
           }
  

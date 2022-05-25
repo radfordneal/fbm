@@ -279,7 +279,8 @@ int main
         if (a->has_ih[l]) 
         { sprintf(t, "Input-Hidden%d Weights:", l);
           printf("  %-27s%6d\n", t, a->input_config[l] ?
-             a->input_config[l]->N_wts : a->N_inputs*a->N_hidden[l]);
+           a->input_config[l]->N_wts : 
+           not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1))*a->N_hidden[l]);
         }
         if (a->has_bh[l]) 
         { sprintf(t, "Hidden%d Biases:", l);
@@ -303,7 +304,7 @@ int main
 
       if (a->has_io) 
       { printf("  %-27s%6d\n", "Input-Output Weights:", 
-                a->N_inputs*a->N_outputs);
+                not_omitted(flgs?flgs->omit:0,a->N_inputs,1)*a->N_outputs);
       }
 
       if (a->has_bo) 

@@ -145,6 +145,16 @@ Letters have the value zero before any assignment, and may be assigned
 more than once - for example, a=3 a=a+1 is allowed, and leaves a with
 the value 4.
 
+The value stored for a letter may be changed by dividing by a positive
+value (truncating any remainder), using an assignment with '/' rather
+than '='.  For example,
+
+    x=17  x/x-14
+
+will set x to 5 (since x-14 is 3, and 17 divided by 3 is 5, discarding
+the remainder).  It is an error for the divisor to be zero or
+negative.
+
 Finally, an item of "@" (not in the middle of a triplet) will print 
 
     n @ s d w
@@ -173,6 +183,7 @@ double quotes for parts written literally:
                     | [<number>]"{" { <part> } "}"
                     | [<number>]"[" { <part> } "]"
                     | <letter>=<number>
+                    | <letter>/<number>
                     | "@"
 
     <triplet>       : <index> <index> <index>

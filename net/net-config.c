@@ -45,8 +45,11 @@ static void net_config_sort (net_config *cf, int);
 
 #define Max_items 1000000
 
-static char **read_items (char *file)
+static char **read_items (char *file0)
 { 
+  char *file = chk_alloc (strlen(file0)+1, 1);  /* Copy so don't modify arg */
+  strcpy (file, file0);
+
   char **item = (char **) chk_alloc (Max_items+1, sizeof *item);
   FILE *fp;
   int n = 0;
@@ -257,6 +260,19 @@ static char **do_items
     if (l>2 && it[1]=='=' && strchr(letters,it[0]))
     { 
       varval [strchr(letters,it[0]) - letters] = convert_item(it+2,0,0);
+      item += 1;
+      continue;
+    }
+
+    if (l>2 && it[1]=='/' && strchr(letters,it[0]))
+    { 
+      int div = convert_item(it+2,0,0);
+      if (div<=0)
+      { fprintf (stderr, 
+                 "Non-positive divisor in file: %s, %s, %d\n", file, it, div);
+        exit(2);
+      }
+      varval [strchr(letters,it[0]) - letters] /= div;
       item += 1;
       continue;
     }

@@ -1,4 +1,4 @@
-Commit: 2431b75d02a7590c84b61062fe0ca6c6a01dd3b7
+Commit: ba6dc1c6e5ec924cea67ef1cc9d7d97e1c6c3666
 
 Running exi1b with flt:
 
@@ -10,9 +10,9 @@ Number of iterations used: 2
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.032+-0.075
-Fraction of guesses that were wrong:    0.3900+-0.0490
-Average squared error guessing mean:    0.56243+-0.03976
+Average log probability of targets:    -1.067+-0.078
+Fraction of guesses that were wrong:    0.4600+-0.0501
+Average squared error guessing mean:    0.57944+-0.04020
 
-elapsed 17.06s
-1b3976de34e919263acbeca15b496ae1ab81474e  -
+elapsed 16.84s
+58f69a872187792241418e40b0be7267748d71b5  -

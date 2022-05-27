@@ -1,4 +1,4 @@
-Commit: 2431b75d02a7590c84b61062fe0ca6c6a01dd3b7
+Commit: ba6dc1c6e5ec924cea67ef1cc9d7d97e1c6c3666
 
 Running exi3 with flt:
 
@@ -10,9 +10,9 @@ Number of iterations used: 6
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.335+-0.019
-Fraction of guesses that were wrong:    0.6600+-0.0476
-Average squared error guessing mean:    0.72532+-0.00968
+Average log probability of targets:    -1.376+-0.005
+Fraction of guesses that were wrong:    0.7400+-0.0441
+Average squared error guessing mean:    0.74504+-0.00271
 
-elapsed 29.03s
-db692ea8e85410002229152805c12e5a3507b5b8  -
+elapsed 29.91s
+2c6993be317d12d9a89403e30cfdaf053fbf849d  -

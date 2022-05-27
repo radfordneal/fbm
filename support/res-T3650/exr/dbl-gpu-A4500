@@ -1,0 +1,32 @@
+Commit: ba6dc1c6e5ec924cea67ef1cc9d7d97e1c6c3666
+
+Running exr with dbl-gpu on A4500:
+
+Number of training cases: 100
+Number of test cases: 1000
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+NVIDIA RTX A4500, Compute Capability 8.6, 56 SM processors, 18.5 GBytes ECC
+Using 32 cases per block, 8 threads per case, max 500 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 102400, blks per SM: 16
+Desired blks per SM: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:8:0,8 T 24
+With 100 cases, need 1 launches, max 4 blocks/launch
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+NVIDIA RTX A4500, Compute Capability 8.6, 56 SM processors, 18.5 GBytes ECC
+Using 32 cases per block, 8 threads per case, max 500 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 102400, blks per SM: 16
+Desired blks per SM: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:8:0,8 T 24
+With 100 cases, need 1 launches, max 4 blocks/launch
+ 
+Predictions after running for 1000 iterations:
+
+Number of iterations used: 80
+
+Number of test cases: 1000
+
+Average log probability of targets:     0.840+-0.021
+Average squared error guessing mean:    0.01712+-0.00283
+
+elapsed 3.16s
+f6e7d544ec72400de160c7772c30aa7121c7030e  -

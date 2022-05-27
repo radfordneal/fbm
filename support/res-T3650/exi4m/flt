@@ -1,4 +1,4 @@
-Commit: 2431b75d02a7590c84b61062fe0ca6c6a01dd3b7
+Commit: ba6dc1c6e5ec924cea67ef1cc9d7d97e1c6c3666
 
 Running exi4m with flt:
 
@@ -9,9 +9,9 @@ Number of iterations used: 1
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.383+-0.012
-Fraction of guesses that were wrong:    0.7000+-0.0461
-Average squared error guessing mean:    0.74808+-0.00596
+Average log probability of targets:    -1.380+-0.010
+Fraction of guesses that were wrong:    0.7200+-0.0451
+Average squared error guessing mean:    0.74700+-0.00493
 
-elapsed 15.90s
-e5217ba2b054f55c896e675204cdb7ac802c26c1  -
+elapsed 16.62s
+28f7586a53fe05188516b358868c94386f3dd1e1  -

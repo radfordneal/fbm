@@ -1,0 +1,30 @@
+Commit: ba6dc1c6e5ec924cea67ef1cc9d7d97e1c6c3666
+
+Running exi3 with flt-gpu on A4500:
+
+Number of training cases: 499
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+NVIDIA RTX A4500, Compute Capability 8.6, 56 SM processors, 18.5 GBytes ECC
+Using 32 cases per block, 8 threads per case, max 500 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 102400, blks per SM: 16
+Desired blks per SM: 2, allowed shared mem per case: 1536 bytes, 384 values
+Hid layer shrd mem: 0:20:0,100 1:20:100,20 2:20:20,80 3:20:80,40 4:20:40,60 5:10:70,120 T 136
+With 499 cases, need 1 launches, max 16 blocks/launch
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+NVIDIA RTX A4500, Compute Capability 8.6, 56 SM processors, 18.5 GBytes ECC
+Using 32 cases per block, 8 threads per case, max 500 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 102400, blks per SM: 16
+Desired blks per SM: 2, allowed shared mem per case: 1536 bytes, 384 values
+Hid layer shrd mem: 0:20:0,100 1:20:100,20 2:20:20,80 3:20:80,40 4:20:40,60 5:10:70,120 T 136
+With 499 cases, need 1 launches, max 16 blocks/launch
+
+Number of iterations used: 6
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.380+-0.003
+Fraction of guesses that were wrong:    0.6500+-0.0479
+Average squared error guessing mean:    0.74666+-0.00172
+
+elapsed 7.46s
+d8fa2b8ddbe109cca8853792242f5b6a2a9fdd8f  -

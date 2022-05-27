@@ -1,0 +1,38 @@
+Commit: ba6dc1c6e5ec924cea67ef1cc9d7d97e1c6c3666
+
+Running exi1c with dbl-gpu on A4500:
+
+Number of training cases: 4999
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+NVIDIA RTX A4500, Compute Capability 8.6, 56 SM processors, 18.5 GBytes ECC
+Using 32 cases per block, 8 threads per case, max 75 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 102400, blks per SM: 16
+Desired blks per SM: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:80:0,80 T 168
+With 4999 cases, need 3 launches, max 53 blocks/launch
+With 1666 cases, need 1 launches, max 53 blocks/launch
+With 1667 cases, need 1 launches, max 53 blocks/launch
+With 3333 cases, need 2 launches, max 53 blocks/launch
+With 3332 cases, need 2 launches, max 53 blocks/launch
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+NVIDIA RTX A4500, Compute Capability 8.6, 56 SM processors, 18.5 GBytes ECC
+Using 32 cases per block, 8 threads per case, max 75 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 102400, blks per SM: 16
+Desired blks per SM: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:80:0,80 T 168
+With 4999 cases, need 3 launches, max 53 blocks/launch
+With 1666 cases, need 1 launches, max 53 blocks/launch
+With 1667 cases, need 1 launches, max 53 blocks/launch
+With 3333 cases, need 2 launches, max 53 blocks/launch
+With 3332 cases, need 2 launches, max 53 blocks/launch
+
+Number of iterations used: 2
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.062+-0.080
+Fraction of guesses that were wrong:    0.4400+-0.0499
+Average squared error guessing mean:    0.57778+-0.04052
+
+elapsed 5.22s
+92f8daefbe5ecb7db475f5831b6e8afe7e744b3a  -

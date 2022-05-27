@@ -1,0 +1,30 @@
+Commit: ba6dc1c6e5ec924cea67ef1cc9d7d97e1c6c3666
+
+Running exi4 with dbl-gpu on A4500:
+
+Number of training cases: 2500
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+NVIDIA RTX A4500, Compute Capability 8.6, 56 SM processors, 18.5 GBytes ECC
+Using 32 cases per block, 8 threads per case, max 500 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 102400, blks per SM: 16
+Desired blks per SM: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:64:0,80 1:16:128,64 T 152
+With 2500 cases, need 1 launches, max 79 blocks/launch
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+NVIDIA RTX A4500, Compute Capability 8.6, 56 SM processors, 18.5 GBytes ECC
+Using 32 cases per block, 8 threads per case, max 500 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 102400, blks per SM: 16
+Desired blks per SM: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:64:0,80 1:16:128,64 T 152
+With 2500 cases, need 1 launches, max 79 blocks/launch
+
+Number of iterations used: 2
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.115+-0.073
+Fraction of guesses that were wrong:    0.4900+-0.0502
+Average squared error guessing mean:    0.61600+-0.03636
+
+elapsed 3.44s
+7794b4e1d15b4d6363fa71f9dfc7f6e22268bb8a  -

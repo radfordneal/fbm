@@ -1,4 +1,4 @@
-Commit: 2431b75d02a7590c84b61062fe0ca6c6a01dd3b7
+Commit: ba6dc1c6e5ec924cea67ef1cc9d7d97e1c6c3666
 
 Running exi4 with dbl:
 
@@ -10,9 +10,9 @@ Number of iterations used: 2
 
 Number of test cases: 100
 
-Average log probability of targets:    -1.164+-0.083
+Average log probability of targets:    -1.115+-0.073
 Fraction of guesses that were wrong:    0.4900+-0.0502
-Average squared error guessing mean:    0.61709+-0.03923
+Average squared error guessing mean:    0.61600+-0.03636
 
-elapsed 21.05s
-3397bc7d356ddd68d41372772406c266d57799f4  -
+elapsed 21.29s
+68a6231a886b091bb0fd756a1b7ec71f1c0afd27  -

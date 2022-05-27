@@ -1,0 +1,23 @@
+Commit: ba6dc1c6e5ec924cea67ef1cc9d7d97e1c6c3666
+
+Running exi4m with flt-gpu on A4500:
+
+Number of training cases: 1500
+Precision: FP32, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+NVIDIA RTX A4500, Compute Capability 8.6, 56 SM processors, 18.5 GBytes ECC
+Using 32 cases per block, 8 threads per case, max 500 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 102400, blks per SM: 16
+Desired blks per SM: 2, allowed shared mem per case: 1536 bytes, 384 values
+Hid layer shrd mem: 0:64:0,80 1:16:128,64 T 152
+With 1500 cases, need 1 launches, max 47 blocks/launch
+
+Number of iterations used: 1
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.380+-0.010
+Fraction of guesses that were wrong:    0.7200+-0.0451
+Average squared error guessing mean:    0.74700+-0.00493
+
+elapsed 1.22s
+5030045f78906b4700e0054d1dd86a85fa1162a5  -

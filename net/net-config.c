@@ -46,40 +46,82 @@ static void net_config_sort (net_config *cf, int);
 #define Max_items 1000000
 
 static char **read_items (char *file)
-{ FILE *fp = file[0]=='%' ? popen(file+1,"r") : fopen(file,"r");
-  if (fp==NULL)
-  { fprintf(stderr,"Can't open weight configuration file: %s\n",file);
-    exit(2);
-  }
+{ 
   char **item = (char **) chk_alloc (Max_items+1, sizeof *item);
+  FILE *fp;
   int n = 0;
   char s[1002]; 
   s[1001] = 0;
-  while (fscanf(fp,"%1001s",s)==1)
-  { if (strlen(s)>1000)
-    { fprintf (stderr, "Line in configuration file is too long (max 1000)\n");
-      exit(2);
+
+  while (*file)
+  {
+    char *comma = strchr(file,',');
+    if (comma) *comma = 0;
+
+    int literal = *file!='%' && 
+                    (strchr(file,' ')!=NULL || strchr(file,'=')!=NULL);
+
+    if (literal)
+    { while (file[0]==' ') file += 1;
+      char *p = file+strlen(file);
+      while (p>file && *(p-1)==' ') *--p = 0;
     }
-    char *h = strchr(s,'#');
-    if (h)
-    { char c;
-      *h = 0;
-      do { c = fgetc(fp); } while (c!=EOF && c!='\n');
-      if (h==s) continue;
+    else
+    { fp = file[0]=='%' ? popen(file+1,"r") : fopen(file,"r");
+      if (fp==NULL)
+      { fprintf(stderr,"Can't open weight configuration file: %s\n",file);
+        exit(2);
+      }
     }
-    if (n==Max_items)
-    { fprintf (stderr, 
-               "Too many items in configuration file: %s\n",
-               file);
-      exit(2);
+
+    for (;;)
+    { if (literal)
+      { if (*file==0) 
+        { break;
+        }
+        char *sp = strchr(file,' ');
+        if (sp) *sp = 0;
+        strncpy(s,file,1001);
+        file = sp ? sp+1 : ""; 
+      }
+      else
+      { if (fscanf(fp,"%1001s",s)!=1)
+        { break;
+        }
+      }
+      if (strlen(s)>1000)
+      { fprintf (stderr, "Line in configuration file is too long (max 1000)\n");
+        exit(2);
+      }
+      char *h = strchr(s,'#');
+      if (h)
+      { char c;
+        if (!literal) do { c = fgetc(fp); } while (c!=EOF && c!='\n');
+        *h = 0;
+        if (h==s)
+        { continue;
+        }
+      }
+      if (n==Max_items)
+      { fprintf (stderr, 
+                 "Too many items in configuration file: %s\n",
+                 file);
+        exit(2);
+      }
+      item[n] = (char *) chk_alloc(strlen(s)+1,1);
+      strcpy(item[n],s);
+      n += 1;
     }
-    item[n] = (char *) chk_alloc(strlen(s)+1,1);
-    strcpy(item[n],s);
-    n += 1;
+
+    if (!literal)
+    { fclose(fp);
+      (void) fopen("/dev/null","r");  /* Kludge to bypass macOS bug */
+    }
+
+    file = comma ? comma+1 : "";
   }
+
   item[n] = NULL;
-  fclose(fp);
-  (void) fopen("/dev/null","r");  /* Kludge to bypass macOS bug */
   return item;
 }
 

@@ -73,7 +73,14 @@ hidden-hidden, or hidden-output connections, or for hidden or output
 biases may have the configuration of connections for the weights or
 biases (with possible sharing) specified with an argument of the form:
 
-    config:&lt;file&gt;
+    config:&lt;file&gt;{,&lt;file&gt;}
+
+If more than one file is specified, they are concatenated to form the
+final configuration file.  If &lt;file&gt; starts with '%', the remainder is
+a shell command whose output is used.  If &lt;file&gt; contains a space or
+'=', and does not start with '%', it is taken to be a literal string
+to be used as the configuration (perhaps concatenated with other
+parts).
 
 This may not be combined with an "omit" specification.  It is also not
 allowed if the prior used specifies a value for Alpha-sub-group (see
@@ -86,9 +93,7 @@ destination layer
 See <A HREF="net-config.html">net-config.doc</A> for documentation on how a configuration is
 specified in a file.  The named configuration files do not need to
 exist when the configuration is specified; they are read (and checked
-for errors) only when needed later.  A configuration file may be
-specified with an initial "%", in which case the remainder is a
-command that is run to output the "file" contents.
+for errors) only when needed later.
 
 Groups of parameters are identified by name, sometimes with a hidden
 layer number (from 0), as follows:

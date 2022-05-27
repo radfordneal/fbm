@@ -126,11 +126,10 @@ int main
         fprintf(stderr,"\n");
       }
       fprintf (stderr, "Connections per weight: ");
-      if (minw==maxw) fprintf(stderr,"%d\n",minw);
-      else fprintf(stderr,"%d to %d\n",minw,maxw);
+      if (minw==maxw) fprintf(stderr,"%d\n\n",minw);
+      else fprintf(stderr,"%d to %d\n\n",minw,maxw);
       if (i_option>1)
-      { fprintf(stderr,"\n");
-        for (i = 0; i<cf->N_wts; i++)
+      { for (i = 0; i<cf->N_wts; i++)
         { fprintf(stderr,"%6d %6d\n",i+1,wcnt[i]);
         }
         fprintf(stderr,"\n");

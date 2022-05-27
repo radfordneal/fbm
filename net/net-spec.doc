@@ -90,7 +90,8 @@ destination layer
 See net-config.doc for documentation on how a configuration is
 specified in a file.  The named configuration files do not need to
 exist when the configuration is specified; they are read (and checked
-for errors) only when needed later.
+for errors) only when needed later.  See also net-config-check.doc for
+documentation on a command for checking and displaying configurations.
 
 Groups of parameters are identified by name, sometimes with a hidden
 layer number (from 0), as follows:

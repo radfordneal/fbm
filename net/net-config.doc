@@ -14,6 +14,8 @@ The net-config-check command can be used to check for errors and
 display information regarding a configuration file, as described in
 net-config-check.doc.
 
+The 'configs' directory contains example configuration files.
+
 Configuration files can be written in various ways, as given by the
 detailed syntax at the end of this document.  The simplest form, as a
 sequence of source-destination-weight triplets, is presented first
@@ -162,6 +164,10 @@ the remainder).  It is an error for the divisor to be zero or
 negative.  Note that '*' and '/' are not allowed as operators outside
 this type of assignment.
 
+An assignment with '?=' is done only if the variable is currently
+zero.  This is useful for setting defaults, since variables are
+initialized to zero.
+
 Finally, an item of "@" (not in the middle of a triplet) will print 
 
     n @ s d w
@@ -194,6 +200,7 @@ double quotes for parts written literally:
                     | <letter>-=<number>
                     | <letter>*=<number>
                     | <letter>/=<number>
+                    | <letter>?=<number>
                     | "@"
 
     <triplet>       : <index> <index> <index>
@@ -228,4 +235,4 @@ is replaced by <doublet>, defined as
 
     <doublet>: <index> <index>
 
-            Copyright (c) 2021 by Radford M. Neal
+            Copyright (c) 2021-2022 by Radford M. Neal

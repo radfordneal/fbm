@@ -264,8 +264,9 @@ static char **do_items
       continue;
     }
 
-    if (l>3 && (it[1]=='+' || it[1]=='-' || it[1]=='/' || it[1]=='*') 
-            && it[2]=='=' && strchr(letters,it[0]))
+    if (l>3 
+        && (it[1]=='+' || it[1]=='-' || it[1]=='/' || it[1]=='*' || it[1]=='?')
+        && it[2]=='=' && strchr(letters,it[0]))
     { 
       int op = convert_item(it+3,0,0);
       if (it[1]=='/' && op<=0)
@@ -282,8 +283,13 @@ static char **do_items
       else if (it[1]=='/')
       { varval [strchr(letters,it[0]) - letters] /= op;
       }
-      else
+      else if (it[1]=='*')
       { varval [strchr(letters,it[0]) - letters] *= op;
+      }
+      else
+      { if (varval [strchr(letters,it[0]) - letters] == 0)
+        { varval [strchr(letters,it[0]) - letters] = op;
+        }
       }
       item += 1;
       continue;

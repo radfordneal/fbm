@@ -1,0 +1,68 @@
+# Configuration file for weights for a 2D convolutional layer.  
+#
+# Convolution with filter patches is done only for patch positions that 
+# completely fit with in the 2D image, with no zero padding, or wrapping.
+#
+# The filter weights are shared for all filter positions over the image, 
+# but weights are different for different input channels and output filters.
+#
+# The following variables should be set before this file is used:
+#
+#    X    Dimension of the source image in the X (faster varying) direction
+#    Y    Dimension of the source image in the Y (slower varying) direction
+#    D    Dimension of filter patches (always square)
+#    C    Number of channels (eg, RGB, or previous filters) in source image
+#    F    Number of convolutional filters to produce (ie, output channels)
+#    S    Points to skip in moving a patch to next position (ie, the stride 
+#         minus 1), the same for the X and Y directions.  Note that this 
+#         will default to 0 (stride of 1) if not set.
+#
+# The X dimension of the output is (X-D+S+1)/(S+1), which should usually be
+# an integer (if not, it is truncated).  Similarly, the Y dimension of the
+# output is (Y-D+S+1)/(S+1).
+#    
+# The input and output are formatted with the channel/filter varying fastest, 
+# then the X dimension, and finally the Y dimension (slowest).  Similarly,
+# the weights are arranged with the channel/filter varying fastest, then the
+# X dimension of the patch, then the Y dimension.
+#
+# The source unit indexes, destination unit indexes, and weight indexes 
+# start after their current values (which by default will start at zero).
+# Afterwards, they will point to the beginning of the of the destination
+# units used, and after the source units and weights used, which is 
+# appropriate for applying another convolution using later source units
+# and weights.
+
+x=X-D+S+1 x/=S+1      # Output dimension in x direction
+y=Y-D+S+1 y/=S+1      # Output dimension in y direction
+
+w=D w*=D w*=C         # Number of weights for one filter
+
+y(                    # Loop over outputs in y direction
+  x(                    # Loop over outputs in x direction
+    D(                    # Loop over y direction in filter patch
+      D(                    # Loop over x direction in filter patch
+        C(                    # Loop over input channels
+          [ + = = ]             # Move to next pixel/channel
+          F(                    # Loop over filter outputs
+            = + +                 # Connection for next weight and destination
+          )
+          [ = -F = ]            # Move destination back 
+        )
+      )
+      C[ +X-D = = ]         # Move to next patch pixel in y direction
+    )
+    C[ D[ -X = = ] ]      # Move patch to next position in x direction
+    C[ +S+1 = = ]
+    [ = +F = ]            # Move to next group of filter outputs
+    F[ = = -w ]           # Move back to start of weights for all filters
+  )
+  C[ S+1[ +X = = ] ]    # Move patch to next position in y direction
+  C[ x[ -S-1 = = ] ]
+)
+
+x[ y[ = -F = ] ]      # Move back to start of destination units
+F[ = = +w ]           # Move past weights for all filters
+y[ S+1[ X[ -C = = ] ] ]  # Move to beginning of source units
+Y[ X[ +C = = ] ]         # ... and then past all the source units
+

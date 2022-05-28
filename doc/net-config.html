@@ -193,8 +193,10 @@ double quotes for parts written literally:
                     | [&lt;number&gt;]"{" { &lt;part&gt; } "}"
                     | [&lt;number&gt;]"[" { &lt;part&gt; } "]"
                     | &lt;letter&gt;=&lt;number&gt;
-                    | &lt;letter&gt;*&lt;number&gt;
-                    | &lt;letter&gt;/&lt;number&gt;
+                    | &lt;letter&gt;+=&lt;number&gt;
+                    | &lt;letter&gt;-=&lt;number&gt;
+                    | &lt;letter&gt;*=&lt;number&gt;
+                    | &lt;letter&gt;/=&lt;number&gt;
                     | "@"
 
     &lt;triplet&gt;       : &lt;index&gt; &lt;index&gt; &lt;index&gt;
@@ -205,9 +207,11 @@ double quotes for parts written literally:
 
     &lt;term&gt;          : &lt;digits&gt; | &lt;letter&gt;
 
+    &lt;sign&gt;          : "+" | "-"
+
     &lt;digits&gt;        : &lt;digit&gt;{&lt;digit&gt;}
 
-    &lt;digits&gt;        : "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+    &lt;digit&gt;         : "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
 
     &lt;letter&gt;        : "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i"
                     | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r"

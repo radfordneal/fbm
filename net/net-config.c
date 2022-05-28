@@ -247,7 +247,7 @@ static char **do_items
          || nparen=='[' && **item!=']'
          || nparen=='{' && **item!='}')
         { fprintf (stderr,
-                  "Mis-matched bracket type in weigth configuration file: %s\n",
+                  "Mis-matched bracket type in weight configuration file: %s\n",
                    file);
           exit(2);
         }
@@ -264,15 +264,20 @@ static char **do_items
       continue;
     }
 
-    if (l>2 && it[1]=='/' && strchr(letters,it[0]))
+    if (l>2 && (it[1]=='/' || it[1]=='*') && strchr(letters,it[0]))
     { 
-      int div = convert_item(it+2,0,0);
-      if (div<=0)
+      int fac = convert_item(it+2,0,0);
+      if (it[1]=='/' && fac<=0)
       { fprintf (stderr, 
-                 "Non-positive divisor in file: %s, %s, %d\n", file, it, div);
+                 "Non-positive divisor in file: %s, %s, %d\n", file, it, fac);
         exit(2);
       }
-      varval [strchr(letters,it[0]) - letters] /= div;
+      if (it[1]=='/')
+      { varval [strchr(letters,it[0]) - letters] /= fac;
+      }
+      else
+      { varval [strchr(letters,it[0]) - letters] *= fac;
+      }
       item += 1;
       continue;
     }

@@ -148,9 +148,14 @@ Letters have the value zero before any assignment, and may be assigned
 more than once - for example, a=3 a=a+1 is allowed, and leaves a with
 the value 4.
 
-The value stored for a letter may be changed by dividing by a positive
-value (truncating any remainder), using an assignment with '/' rather
-than '='.  For example,
+The value stored for a letter may be changed by multiplying by a
+value, using an assignment with '*' rather than '='.  For example,
+
+    x=4  x*3
+
+will set x to 12.  The value stored for a letter may also be changed
+by dividing by a positive value (truncating any remainder), using an
+assignment with '/' rather than '='.  For example,
 
     x=17  x/x-14
 
@@ -186,6 +191,7 @@ double quotes for parts written literally:
                     | [&lt;number&gt;]"{" { &lt;part&gt; } "}"
                     | [&lt;number&gt;]"[" { &lt;part&gt; } "]"
                     | &lt;letter&gt;=&lt;number&gt;
+                    | &lt;letter&gt;*&lt;number&gt;
                     | &lt;letter&gt;/&lt;number&gt;
                     | "@"
 

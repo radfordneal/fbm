@@ -20,8 +20,9 @@ Feature changes in the version:
    of several files, with names separated by commas, or by literal strings
    in such a specification.  See net-spec.doc for details.
 
-4) A Variable in a configuration file can now be changed by division using
-   an item such as X/2 (to divide X by 2).  See net-config.doc for details.
+4) A variable in a configuration file can now be changed by
+   multiplication or division using an item such as X/2 (to divide X
+   by 2) or X*3 (to multiply X by 3).  See net-config.doc for details.
 
 5) The way net-spec displays hidden and output unit adjustments has
    changed - they are now displayed separately in order with other

@@ -146,22 +146,24 @@ written as
 
 Letters have the value zero before any assignment, and may be assigned
 more than once - for example, a=3 a=a+1 is allowed, and leaves a with
-the value 4.
+the value 4.  The assignment operators '+=' and '-=' are allowed, with
+a+=3, for example, being the same as a=a+3.
 
 The value stored for a letter may be changed by multiplying by a
-value, using an assignment with '*' rather than '='.  For example,
+value, using an assignment with '*=' rather than '='.  For example,
 
-    x=4  x*3
+    x=4  x*=3
 
 will set x to 12.  The value stored for a letter may also be changed
 by dividing by a positive value (truncating any remainder), using an
-assignment with '/' rather than '='.  For example,
+assignment with '/=' rather than '='.  For example,
 
-    x=17  x/x-14
+    x=17  x/=x-14
 
 will set x to 5 (since x-14 is 3, and 17 divided by 3 is 5, discarding
 the remainder).  It is an error for the divisor to be zero or
-negative.
+negative.  Note that '*' and '/' are not allowed as operators outside
+this type of assignment.
 
 Finally, an item of "@" (not in the middle of a triplet) will print 
 

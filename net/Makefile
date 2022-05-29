@@ -54,6 +54,8 @@ include ../mc/mc.make
 
 net-config.o:	net-config.c	misc.h log.h prior.h model.h net.h data.h \
 				cuda-use.h
+	$(CC) $(CFLAGS) -DCONFIG_DIR=\"`pwd`/../configs/\" -c net-config.c
+
 net-data.o:	net-data.c	misc.h log.h prior.h model.h net.h data.h \
 				net-data.h numin.h cuda-use.h
 net-func.o:	net-func.c	misc.h log.h prior.h model.h net.h data.h \

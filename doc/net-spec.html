@@ -80,7 +80,12 @@ final configuration file.  If &lt;file&gt; starts with '%', the remainder is
 a shell command whose output is used.  If &lt;file&gt; contains a space or
 '=', and does not start with '%', it is taken to be a literal string
 to be used as the configuration (perhaps concatenated with other
-parts).
+parts).  Note that as a consequence of these rules, configuration file
+names must not contain any space, ",", "=" characters, or start with
+the "%" character
+
+If a configuration file cannot be opened, it is looked for in the
+'configs' subdirectory of the main FBM directory.
 
 This may not be combined with an "omit" specification.  It is also not
 allowed if the prior used specifies a value for Alpha-sub-group (see

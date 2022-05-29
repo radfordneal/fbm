@@ -27,12 +27,12 @@
 # the weights are arranged with the channel/filter varying fastest, then the
 # X dimension of the patch, then the Y dimension.
 #
-# The source unit indexes, destination unit indexes, and weight indexes 
-# start after their current values (which by default will start at zero).
-# Afterwards, they will point to the beginning of the of the destination
-# units used, and after the source units and weights used, which is 
-# appropriate for applying another convolution using later source units
-# and weights.
+# The source unit indexes, destination unit indexes, and weight
+# indexes start after their current values (which by default will
+# start at zero).  Afterwards, they will point to the beginning of the
+# destination units used, and after the source units and weights used,
+# which is appropriate for applying another convolution using later
+# source units and weights.
 
 C?=1 F?=1 S?=1        # Set defaults
 

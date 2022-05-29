@@ -47,7 +47,8 @@ static void net_config_sort (net_config *cf, int);
 
 static char **read_items (char *file0)
 { 
-  char *file = chk_alloc (strlen(file0)+1, 1);  /* Copy so don't modify arg */
+  char *file =   /* Copy so we don't modify the argument, and can prepend dir */
+          chk_alloc (strlen(file0)+1, 1);
   strcpy (file, file0);
 
   char **item = (char **) chk_alloc (Max_items+1, sizeof *item);
@@ -70,7 +71,18 @@ static char **read_items (char *file0)
       while (p>file && *(p-1)==' ') *--p = 0;
     }
     else
-    { fp = file[0]=='%' ? popen(file+1,"r") : fopen(file,"r");
+    { if (file[0]=='%')
+      { fp = popen(file+1,"r");
+      }
+      else
+      { fp = fopen(file,"r");
+        if (fp==NULL)
+        { char *fn = chk_alloc (strlen(file)+strlen(CONFIG_DIR)+1, 1);
+          strcpy(fn,CONFIG_DIR);
+          strcat(fn,file);
+          fp = fopen(fn,"r");
+        }
+      }
       if (fp==NULL)
       { fprintf(stderr,"Can't open weight configuration file: %s\n",file);
         exit(2);

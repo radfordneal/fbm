@@ -1,0 +1,41 @@
+# Configuration file for biases for a 2D convolutional layer.  
+#
+# Convolution with filter patches is done only for patch positions that 
+# completely fit with in the 2D image, with no zero padding, or wrapping.
+#
+# The filter biases are shared for all filter positions over the image, 
+# but are different for different output filters (channels).
+#
+# The following variables should be set before this file is used:
+#
+#    X    Dimension of the source image in the X (faster varying) direction
+#    Y    Dimension of the source image in the Y (slower varying) direction
+#    D    Dimension of filter patches (always square)
+#    F    Number of convolutional filters to produce (ie, output channels)
+#         Default is 1
+#    S    Stride for moving a patch to next position, the same for the X 
+#         and Y directions.  Default is 1.
+#
+# The X dimension of the output is (X-D+S)/S, which should usually be
+# an integer (if not, it is truncated).  Similarly, the Y dimension of
+# the output is (Y-D+S)/S.
+#
+# The output units are formatted with the channel/filter varying fastest, 
+# then the X dimension, and finally the Y dimension (slowest).
+#
+# The destination unit indexes, and bias indexes start after their
+# current values (which by default will start at zero).
+
+F?=1 S?=1             # Set defaults
+
+x=X-D+S x/=S          # Output dimension in x direction
+y=Y-D+S y/=S          # Output dimension in y direction
+
+y(                    # Loop over outputs in y direction
+  x(                    # Loop over outputs in x direction
+    F(                    # Loop over filter outputs
+      + +                   # Connection for next bias and destination
+    )
+    [ = -F ]              # Move bias back 
+  )
+)

@@ -125,7 +125,7 @@ int main
         }
         fprintf(stderr,"\n");
       }
-      fprintf (stderr, "Connections per weight: ");
+      fprintf (stderr, "Connections per %s: ", ns<0 ? "bias" : "weight");
       if (minw==maxw) fprintf(stderr,"%d\n\n",minw);
       else fprintf(stderr,"%d to %d\n\n",minw,maxw);
       if (i_option>1)

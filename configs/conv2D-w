@@ -61,11 +61,10 @@ y(                    # Loop over outputs in y direction
     F[ = = -w ]           # Move back to start of weights for all filters
   )
   C[ S[ +X = = ] ]      # Move patch to next position in y direction
-  C[ x[ -S-1 = = ] ]
+  C[ x[ -S = = ] ]
 )
 
 x[ y[ = -F = ] ]      # Move back to start of destination units
 F[ = = +w ]           # Move past weights for all filters
 y[ S[ X[ -C = = ] ] ] # Move to beginning of source units
 Y[ X[ +C = = ] ]      # ... and then past all the source units
-

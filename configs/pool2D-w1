@@ -1,9 +1,10 @@
-# Configuration file for weights for a 2D pooling layer.  
+# Configuration file for weights for a 2D pooling layer, same for all channels.
 #
-# A pooling layer is like a convolutional layer with the same number of
-# input and output channels, except that the weights are the same for all 
-# positions within a patch, though different for each channel, and the
-# output for each channel is found from the input for that channel only.
+# A pooling layer is like a convolutional layer with the same number
+# of input and output channels, except that the weights are the same
+# for all positions within a patch, and in this version also the same
+# for each channel, and the output for each channel is found from the 
+# input for that channel only.
 #
 # The following variables should be set before this file is used:
 #
@@ -21,25 +22,27 @@
 #
 # The input and output are formatted with the channel/filter varying fastest, 
 # then the X dimension, and finally the Y dimension (slowest).  There is
-# one weight for each channel.
+# only one weight.
 #
-# The source unit indexes, destination unit indexes, and weight
-# indexes start after their current values (which by default will
-# start at zero).  Afterwards, they will point to before the
-# destination units used, and to the last of the source units and
-# weights used, which is appropriate for applying another pooling
-# operation using later source units and weights.
+# The source unit indexes, destination unit indexes, and weight index
+# start after their current values (which by default will start at
+# zero).  Afterwards, they will point to before the destination units
+# used, and to the last of the source units, and to the weight used,
+# which is appropriate for applying another pooling operation using
+# later source units and weights.
 
 C?=1 S?=1             # Set defaults
 
 x=X-D+S x/=S          # Output dimension in x direction
 y=Y-D+S y/=S          # Output dimension in y direction
 
+[ = = + ]             # Move forward to weight to use
+
 y(                    # Loop over outputs in y direction
   x(                    # Loop over outputs in x direction
     D(                    # Loop over y direction in filter patch
       D(                    # Loop over x direction in filter patch
-        C{ + + + }
+        C{ + + = }
         [ +C = = ]            # Move to next patch pixel in x direction
       )
       C[ +X-D = = ]         # Move to next patch pixel in y direction
@@ -53,6 +56,5 @@ y(                    # Loop over outputs in y direction
 )
 
 x[ y[ = -C = ] ]      # Move back to before destination units
-[ = = +C ]            # Move to last weight
 y[ S[ X[ -C = = ] ] ] # Move to before source units
-Y[ X[ +C = = ] ]      # ... and then to last of the source units
+Y[ X[ +C = = ] ]      # ... and then to last source unit

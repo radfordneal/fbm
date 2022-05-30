@@ -29,10 +29,10 @@
 #
 # The source unit indexes, destination unit indexes, and weight
 # indexes start after their current values (which by default will
-# start at zero).  Afterwards, they will point to the beginning of the
-# destination units used, and after the source units and weights used,
-# which is appropriate for applying another convolution using later
-# source units and weights.
+# start at zero).  Afterwards, they will point to before the
+# destination units used, and to the last of the source units and
+# weights used, which is appropriate for applying another convolution
+# using later source units and weights.
 
 C?=1 F?=1 S?=1        # Set defaults
 
@@ -64,7 +64,7 @@ y(                    # Loop over outputs in y direction
   C[ x[ -S = = ] ]
 )
 
-x[ y[ = -F = ] ]      # Move back to start of destination units
-F[ = = +w ]           # Move past weights for all filters
-y[ S[ X[ -C = = ] ] ] # Move to beginning of source units
-Y[ X[ +C = = ] ]      # ... and then past all the source units
+x[ y[ = -F = ] ]      # Move back to before destination units
+F[ = = +w ]           # Move to last of weights 
+y[ S[ X[ -C = = ] ] ] # Move to before source units
+Y[ X[ +C = = ] ]      # ... and then to last of the source units

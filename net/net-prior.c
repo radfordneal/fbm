@@ -238,7 +238,16 @@ static void pick_unit_params
 
   for (i = 0; i<n; i++)
   { 
-    if (param_opt==0)
+    if (param_opt==1 || pr.one_or_two_point)
+    { unit_sigma = prior_pick_sigma (*sd_cm, pr.alpha[1]);
+      *wt = unit_sigma * (pr.one_or_two_point==1 ? 1 
+                           : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
+                           : rand_gaussian());
+      if (adj!=0) 
+      { *wt *= adj[i];
+      }
+    }
+    else if (param_opt==0)
     { *wt = 0;
     }
     else if (param_opt==2)
@@ -248,15 +257,6 @@ static void pick_unit_params
         exit(3);
       }
       *wt = d;
-    }
-    else
-    { unit_sigma = prior_pick_sigma (*sd_cm, pr.alpha[1]);
-      *wt = unit_sigma * (pr.one_or_two_point==1 ? 1 
-                           : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
-                           : rand_gaussian());
-      if (adj!=0) 
-      { *wt *= adj[i];
-      }
     }
     wt += 1;
   }
@@ -283,7 +283,13 @@ static void pick_unit_params_config
 
   for (i = 0; i<n; i++)
   { 
-    if (param_opt==0)
+    if (param_opt==1 || pr.one_or_two_point)
+    { unit_sigma = prior_pick_sigma (*sd_cm, pr.alpha[1]);
+      *wt = unit_sigma * (pr.one_or_two_point==1 ? 1 
+                           : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
+                           : rand_gaussian());
+    }
+    else if (param_opt==0)
     { *wt = 0;
     }
     else if (param_opt==2)
@@ -293,12 +299,6 @@ static void pick_unit_params_config
         exit(3);
       }
       *wt = d;
-    }
-    else
-    { unit_sigma = prior_pick_sigma (*sd_cm, pr.alpha[1]);
-      *wt = unit_sigma * (pr.one_or_two_point==1 ? 1 
-                           : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
-                           : rand_gaussian());
     }
 
     wt += 1;
@@ -336,7 +336,16 @@ static void pick_weights
 
     for (j = 0; j<nd; j++)
     { 
-      if (param_opt==0)
+      if (param_opt==1 || pr.one_or_two_point)
+      { weight_sigma = prior_pick_sigma (sd[i], pr.alpha[2]);
+        *wt = weight_sigma * (pr.one_or_two_point==1 ? 1 
+                               : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
+                               : rand_gaussian());
+        if (adj!=0) 
+        { *wt *= adj[j];
+        }
+      }
+      else if (param_opt==0)
       { *wt = 0;
       }
       else if (param_opt==2)
@@ -346,15 +355,6 @@ static void pick_weights
           exit(3);
         }
         *wt = d;
-      }
-      else
-      { weight_sigma = prior_pick_sigma (sd[i], pr.alpha[2]);
-        *wt = weight_sigma * (pr.one_or_two_point==1 ? 1 
-                               : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
-                               : rand_gaussian());
-        if (adj!=0) 
-        { *wt *= adj[j];
-        }
       }
       wt += 1;
     }
@@ -390,7 +390,13 @@ static void pick_weights_config
 
   for (j = 0; j<nw; j++)
   { 
-    if (param_opt==0)
+    if (param_opt==1 || pr.one_or_two_point)
+    { weight_sigma = prior_pick_sigma (*sd_cm, pr.alpha[2]);
+      *wt = weight_sigma * (pr.one_or_two_point==1 ? 1 
+                             : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
+                             : rand_gaussian());
+    }
+    else if (param_opt==0)
     { *wt = 0;
     }
     else if (param_opt==2)
@@ -400,12 +406,6 @@ static void pick_weights_config
         exit(3);
       }
       *wt = d;
-    }
-    else
-    { weight_sigma = prior_pick_sigma (*sd_cm, pr.alpha[2]);
-      *wt = weight_sigma * (pr.one_or_two_point==1 ? 1 
-                             : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
-                             : rand_gaussian());
     }
 
     wt += 1;

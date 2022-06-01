@@ -43,6 +43,11 @@ of this form is given, it applies to parameters on connections to the
 outputs; if no such argument is given, these connections are treated
 the same as the others.
 
+For groups with a prior specification ending in "!" or "!!" (see
+<A HREF="prior.html">prior.doc</A>), generation is always as for the "rand" option, which for
+"!" is not actually random, but always sets the parameter to the
+corresponding sigma value.
+
 No data model is required to use net-gen, but if a model is specified,
 the hyperparameters with it are generated as well (with any "fix"
 option ignored for these hyperparameters).

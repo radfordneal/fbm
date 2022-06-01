@@ -12,28 +12,39 @@ None yet.
 
 Feature changes in the version:
 
-1) A new xxx-avepred script can be used to plot how error using
+1) Priors for groups of parameters in network models can now specify
+   that the parameteris fixed at the sigma value, or at plus or minus
+   the sigma value, by appending "!" or "!!" to the prior
+   specification.  (The latter options was available before with "!",
+   in a limited way.)  Initialization respects such priors, and
+   stepsizes for such parameters are forced to zero, so that MCMC
+   operations will not set them to values contrary to their prior.
+
+   This is useful for setting up average pooling layers, for which the
+   weights between the layers should be fixed.
+
+2) A new xxx-avepred script can be used to plot how error using
    predictions averaged over a window of iterations changes during a
    run.  See <A HREF="xxx-avepred.html">xxx-avepred.doc</A>.
 
-2) The net-display program can now display parameters or hyperparameters
+3) The net-display program can now display parameters or hyperparameters
    in only a single group.  See <A HREF="net-display.html">net-display.doc</A> for details.
 
-3) A network configuration "file" can now be specified as the concatenation
+4) A network configuration "file" can now be specified as the concatenation
    of several files, with names separated by commas, or by literal strings
    in such a specification.  See <A HREF="net-spec.html">net-spec.doc</A> for details.
 
-4) A variable in a configuration file can now be changed by
+5) A variable in a configuration file can now be changed by
    multiplication or division using an item such as X/2 (to divide X
    by 2) or X*3 (to multiply X by 3).  The += and -= operators are
    also now implemented.  A ?= operator assigns conditional on the
    variable currently being zero.  See <A HREF="net-config.html">net-config.doc</A> for details.
 
-5) The directory 'configs' now contains some pre-defined configuration
+6) The directory 'configs' now contains some pre-defined configuration
    files (eg, for convolution).  This directory is looked in if a
    configuration file cannot be opened directly.
 
-6) The way net-spec displays hidden and output unit adjustments has
+7) The way net-spec displays hidden and output unit adjustments has
    changed - they are now displayed separately in order with other
    groups.
 

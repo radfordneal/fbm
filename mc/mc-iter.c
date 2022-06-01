@@ -1,6 +1,6 @@
 /* MC-ITER.C - Procedures for performing Markov chain Monte Carlo iterations. */
 
-/* Copyright (c) 1995-2019 by Radford M. Neal
+/* Copyright (c) 1995-2022 by Radford M. Neal
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -354,6 +354,7 @@ static void do_group
       { mc_app_stepsizes (ds);
         have_ss = 1;
       }
+      mc_app_stepsizes_constrain (ds);
     }
 
     /* Do the next operation. */
@@ -373,6 +374,7 @@ static void do_group
       { int firsti, lasti;
         if (!have_ss)
         { mc_app_stepsizes (ds);
+          mc_app_stepsizes_constrain (ds);
           have_ss = 1;
         }
         firsti = ops->op[i].firsti;

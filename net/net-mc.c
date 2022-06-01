@@ -3630,11 +3630,14 @@ void mc_app_stepsizes
   double inv_temp, w;
   int i, j, k, l, ls, nsqi;
   unsigned bits;
-  int debug = 0;
 
-  if (getenv("DEBUG_STEPSIZES") && strcmp(getenv("DEBUG_STEPSIZES"),"1")==0)
-  { debug = 1;
-    printf("\nDebugging stepsizes\n");
+  static int debug = -1;
+  if (debug == -1)
+  { debug = 0;
+    if (getenv("DEBUG_STEPSIZES") && strcmp(getenv("DEBUG_STEPSIZES"),"1")==0)
+    { debug = 1;
+      printf("\nDebugging stepsizes\n");
+    }
   }
 
   if (debug && N_train>0)    
@@ -4123,6 +4126,139 @@ void mc_app_stepsizes
 
   for (k = 0; k<ds->dim; k++)
   { ds->stepsize[k] = 1/sqrt(ds->stepsize[k]);
+  }
+}
+
+void mc_app_stepsizes_constrain (mc_dynamic_state *ds)
+{
+  int i, j, k, l, ls, nsqi;
+  unsigned bits;
+
+  /* Set stepsizes to zero for parameters with one or two point priors. */
+
+  if (arch->has_ti && priors->ti.one_or_two_point)
+  { for (i = 0; i<arch->N_inputs; i++)
+    { stepsizes.ti[i] += 0;
+    }
+  }
+
+  nsqi = 0;
+  for (l = 0; l<arch->N_layers; l++)
+  {
+    if (arch->has_th[l] && priors->th[l].one_or_two_point)
+    { for (i = 0; i<arch->N_hidden[l]; i++)
+      { stepsizes.th[l][i] = 0;
+      }
+    }
+
+    if (arch->has_bh[l] && priors->bh[l].one_or_two_point)
+    { if (arch->bias_config[l])
+      { for (k = 0; k<arch->bias_config[l]->N_wts; k++)
+        { stepsizes.bh[l][k] = 0;
+        }
+      }
+      else
+      { for (j = 0; j<arch->N_hidden[l]; j++)
+        { stepsizes.bh[l][j] = 0;
+        }
+      }
+    }
+
+    if (arch->has_ih[l] && priors->ih[l].one_or_two_point)
+    { if (arch->input_config[l])
+      { for (k = 0; k<arch->input_config[l]->N_wts; k++)
+        { stepsizes.ih[l][k] = 0;
+        }
+      }
+      else
+      { k = 0;
+        for (i = 0; i<arch->N_inputs; i++)
+        { if (flgs==0 || (flgs->omit[i]&(1<<(l+1)))==0)
+          { for (j = 0; j<arch->N_hidden[l]; j++)
+            { stepsizes.ih [l] [k*arch->N_hidden[l] + j] = 0;
+            }
+            k += 1;
+          }
+        }
+      }
+    }
+
+    for (ls = 0, bits = arch->has_nsq[l]; bits!=0; ls++, bits>>=1)
+    { if (bits&1)
+      { if (ls>=l-1) abort();
+        if (priors->nsq[nsqi].one_or_two_point)
+        { if (arch->nonseq_config[nsqi])
+          { for (k = 0; k<arch->nonseq_config[nsqi]->N_wts; k++)
+            { stepsizes.nsq[nsqi][k] = 0;
+            }
+          }
+          else
+          { for (i = 0; i<arch->N_hidden[ls]; i++)
+            { for (j = 0; j<arch->N_hidden[l]; j++)
+              { stepsizes.nsq[nsqi][i*arch->N_hidden[l] + j] = 0;
+              }
+            }
+          }
+        }
+        nsqi += 1;
+      }
+    }
+ 
+    if (l<arch->N_layers-1 && arch->has_hh[l] && priors->hh[l].one_or_two_point)
+    { if (arch->hidden_config[l+1])
+      { for (k = 0; k<arch->hidden_config[l+1]->N_wts; k++)
+        { stepsizes.hh[l][k] = 0;
+        }
+      }
+      else
+      { for (i = 0; i<arch->N_hidden[l]; i++)
+        { for (j = 0; j<arch->N_hidden[l+1]; j++)
+          { stepsizes.hh[l][i*arch->N_hidden[l+1] + j] = 0;
+          }
+        }
+      }
+    }
+
+    if (arch->has_ho[l] && priors->ho[l].one_or_two_point)
+    { int kk = 2*arch->N_layers-1-l;
+      if (arch->hidden_config[kk])
+      { for (k = 0; k<arch->hidden_config[kk]->N_wts; k++)
+        { stepsizes.ho[l][k] = 0;
+        }
+      }
+      else
+      { for (i = 0; i<arch->N_hidden[l]; i++)
+        { for (j = 0; j<arch->N_outputs; j++)
+          { stepsizes.ho[l][i*arch->N_outputs + j] = 0;
+          }
+        }
+      }
+    }
+  }
+
+  if (arch->has_io && priors->io.one_or_two_point)
+  { if (arch->input_config[arch->N_layers])
+    { for (k = 0; k<arch->input_config[arch->N_layers]->N_wts; k++)
+      { stepsizes.io [k] = 0;
+      }
+    }
+    else
+    { k = 0;
+      for (i = 0; i<arch->N_inputs; i++)
+      { if (flgs==0 || (flgs->omit[i]&1)==0)
+        { for (j = 0; j<arch->N_outputs; j++)
+          { stepsizes.io [k*arch->N_outputs + j] = 0;
+          }
+          k += 1;
+        }
+      }
+    }
+  }
+
+  if (arch->has_bo && priors->bo.one_or_two_point)
+  { for (j = 0; j<arch->N_outputs; j++)
+    { stepsizes.bo[j] = 0;
+    }
   }
 }
 

@@ -684,6 +684,12 @@ void mc_app_stepsizes
 { 
 }
 
+void mc_app_stepsizes_constrain
+( mc_dynamic_state *ds	/* Current dynamical state */
+)
+{ 
+}
+
 
 /* CREATE TREE STRUCTURES. */
 

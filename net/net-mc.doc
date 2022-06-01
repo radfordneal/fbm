@@ -87,7 +87,10 @@ exactly coalesced.
 
 Default stepsizes for updates of parameters (weights, biases, etc.) by
 the generic Markov chain operations are set by a heuristic procedure
-that is described in net-models.PDF.
+that is described in net-models.PDF.  Parameters with one or two point
+priors (specified with "!" or "!!" as described in prior.doc) have
+their stepsizes forced to zero, since they cannot be changed (or not
+by a continuous operation, for two-point priors).
 
 Tempering methods and Annealed Importance sampling are supported.  The
 effect of running at an inverse temperature other than one is to

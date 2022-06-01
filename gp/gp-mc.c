@@ -1,6 +1,6 @@
 /* GP-MC.C - Interface between Gaussian process and Markov chain modules. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -1171,6 +1171,8 @@ void mc_app_stepsizes
     }
   }
 }
+
+void mc_app_stepsizes_constrain (mc_dynamic_state *ds) { }
 
 
 /* LOG PROBABILITY FUNCTION USED IN SCAN-VALUES AND JITTER-VALUES.  Computes

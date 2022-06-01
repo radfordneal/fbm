@@ -290,6 +290,7 @@ extern void mc_app_energy (mc_dynamic_state *, int, int, double *, mc_value *);
 extern int mc_app_zero_gen (mc_dynamic_state *);
 
 extern void mc_app_stepsizes (mc_dynamic_state *);
+extern void mc_app_stepsizes_constrain (mc_dynamic_state *);
 
 extern int (*mc_app_set_range_ptr) (mc_dynamic_state *, int *, int *);
 

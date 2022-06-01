@@ -1,6 +1,6 @@
 /* NET-PRIOR.C - Routines dealing with priors for networks. */
 
-/* Copyright (c) 1995-2021 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -251,7 +251,9 @@ static void pick_unit_params
     }
     else
     { unit_sigma = prior_pick_sigma (*sd_cm, pr.alpha[1]);
-      *wt = unit_sigma * (pr.two_point ? 2*rand_int(2)-1 : rand_gaussian());
+      *wt = unit_sigma * (pr.one_or_two_point==1 ? 1 
+                           : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
+                           : rand_gaussian());
       if (adj!=0) 
       { *wt *= adj[i];
       }
@@ -294,7 +296,9 @@ static void pick_unit_params_config
     }
     else
     { unit_sigma = prior_pick_sigma (*sd_cm, pr.alpha[1]);
-      *wt = unit_sigma * (pr.two_point ? 2*rand_int(2)-1 : rand_gaussian());
+      *wt = unit_sigma * (pr.one_or_two_point==1 ? 1 
+                           : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
+                           : rand_gaussian());
     }
 
     wt += 1;
@@ -345,7 +349,9 @@ static void pick_weights
       }
       else
       { weight_sigma = prior_pick_sigma (sd[i], pr.alpha[2]);
-        *wt = weight_sigma * (pr.two_point ? 2*rand_int(2)-1 : rand_gaussian());
+        *wt = weight_sigma * (pr.one_or_two_point==1 ? 1 
+                               : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
+                               : rand_gaussian());
         if (adj!=0) 
         { *wt *= adj[j];
         }
@@ -397,7 +403,9 @@ static void pick_weights_config
     }
     else
     { weight_sigma = prior_pick_sigma (*sd_cm, pr.alpha[2]);
-      *wt = weight_sigma * (pr.two_point ? 2*rand_int(2)-1 : rand_gaussian());
+      *wt = weight_sigma * (pr.one_or_two_point==1 ? 1 
+                             : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
+                             : rand_gaussian());
     }
 
     wt += 1;

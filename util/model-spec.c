@@ -1,6 +1,6 @@
 /* MODEL-SPEC.C - Program to specify a data model. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -186,7 +186,7 @@ int main
       argc -= 1;
     }
     if (*++ap==0 || !prior_parse(&m->noise,*ap)) usage();
-    if (m->noise.scale || m->noise.two_point)
+    if (m->noise.scale || m->noise.one_or_two_point)
     { fprintf(stderr,"Illegal prior for noise level\n");
       exit(1);
     }

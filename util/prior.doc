@@ -28,7 +28,7 @@ are similar, but go down only two levels.
 
 These priors are specified using the following syntax:
  
-     [x]Width[:[Alpha-group][:[Alpha-sub-group][:[Alpha-parameter]]]][!]
+  [x]Width[:[Alpha-group][:[Alpha-sub-group][:[Alpha-parameter]]]][!|!!]
 
 The Width part of the specification is used to specify the mean of the
 precision at the top level, as described below.  The Alpha parts gives
@@ -64,11 +64,18 @@ infinity (but it may not work when both Alpha-sub-group and
 Alpha-parameter are finite).  For Alpha >= 2, convergence is to a
 Gaussian process, for Alpha < 2, to a stable process of index Alpha.
 
-If the prior specification ends with "!", the lowest-level
-distribution is concentrated at the two standard deviation points,
-rather than being Gaussian.  This is primarily a debugging tool - it
-makes it easy to see whether each parameter was derived from the
-correct hyperparameter.
+If the prior specification ends with "!", then rather than being
+Gaussian, the lowest-level distribution is concentrated on the single
+point equal to the standard deviation.  If the prior specification
+ends with "!!", the lowest-level distribution is concentrated on the
+two points equal to plus or minus the standard deviation.  (Note that
+the shell may interpret "!!", so it may have to be quoted with single
+quotes.)
+
+These specifications are useful for debugging, as they make it easy to
+see whether each parameter was derived from the correct
+hyperparameter.  They may also be useful for setting up some models.
+Currently, these facilities are used only for network models.
 
 The width part can be just a plus sign ("+"), rather than a number, in
 which case the value used is 1e10 (infinity for most purposes).  This
@@ -103,4 +110,4 @@ of the square root of the inverse of the precision (a 'sigma' value),
 not in terms of the precisions themselves, even though those are the
 values in terms of which the priors are mathematically expressed.
 
-            Copyright (c) 1995-2004 by Radford M. Neal
+            Copyright (c) 1995-2022 by Radford M. Neal

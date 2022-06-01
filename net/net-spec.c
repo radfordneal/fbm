@@ -1021,13 +1021,13 @@ static void usage(void)
    "   or: net-spec log-file [ \"sizes\" ] [ \"config\" ]  (display specifications)\n");
 
   fprintf(stderr,
-   " config-spec: config:<file>          omit-spec: omit:[-]<input>{,<input>}\n");
+   " config-spec: config:<file>{,<file>} omit-spec: omit:[-]<input>{,<input>}\n");
 
   fprintf(stderr,
    " act-fun: tanh softplus[0] identity  group: ti ih# bh# th# h#h# h#o io bo ah# ao\n");
 
   fprintf(stderr,
-   " prior: [x]Width[:[Alpha-type][:[Alpha-unit][:[Alpha-weight]]]]\n");
+   " prior: [x]Width[:[Alpha-type][:[Alpha-unit][:[Alpha-weight]]]][!|!!]\n");
 
   exit(1);
 }

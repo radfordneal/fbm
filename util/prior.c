@@ -1,6 +1,6 @@
 /* PRIOR.C - Routines dealing with hierarchical priors specifications. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -31,10 +31,12 @@ int prior_parse
   char *s		/* String to parse */
 )
 { 
-  int i;
+  int i, l;
 
-  pr->two_point = *s!=0 && s[strlen(s)-1]=='!';
-
+  l = strlen(s);
+  pr->one_or_two_point = l>2 && s[l-1]=='!' && s[l-2]=='!' ? 2
+                       : l>1 && s[l-1]=='!' ? 1
+                       : 0;
   pr->scale = 0;
   if (*s=='x')
   { pr->scale = 1;
@@ -82,7 +84,7 @@ char *prior_show
 
   for (i = Max_alphas-1; i>=0 && pr.alpha[i]==0; i--) ;
 
-  strcpy (s2, pr.two_point ? "!" : "");
+  strcpy(s2, pr.one_or_two_point==2 ? "!!" : pr.one_or_two_point==1 ? "!" : "");
 
   for ( ; i>=0; i--)
   {

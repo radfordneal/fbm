@@ -347,7 +347,7 @@ Hidden Layer 0 to Hidden Layer 2 Weights [3]
 
  +2.000  +1.000
 
-Hidden Layer 1 to Hidden Layer 2 Weights [4]
+Hidden Layer 1 to Hidden Layer 2 Weights (configured) [4]
 
  -1.000
 
@@ -374,7 +374,7 @@ Hidden Layer 0 to Hidden Layer 2 Weights [3]
 
       7.00: +2.00  +1.00
 
-Hidden Layer 1 to Hidden Layer 2 Weights [4]
+Hidden Layer 1 to Hidden Layer 2 Weights (configured) [4]
 
  3.00:      -1.00
 
@@ -487,7 +487,7 @@ Input to Hidden Layer 1 Weights [2]
 
  +3.000
 
-Hidden Layer 0 to Hidden Layer 2 Weights [3]
+Hidden Layer 0 to Hidden Layer 2 Weights (configured) [3]
 
  +1.500
 
@@ -512,7 +512,7 @@ Input to Hidden Layer 1 Weights [2]
 
  2.00 2.00: +3.00
 
-Hidden Layer 0 to Hidden Layer 2 Weights [3]
+Hidden Layer 0 to Hidden Layer 2 Weights (configured) [3]
 
  7.00:      +1.50
 
@@ -627,7 +627,7 @@ Input to Hidden Layer 1 Weights [2]
 
  +3.000
 
-Hidden Layer 0 to Hidden Layer 2 Weights [3]
+Hidden Layer 0 to Hidden Layer 2 Weights (configured) [3]
 
  +1.500
 
@@ -652,7 +652,7 @@ Input to Hidden Layer 1 Weights [2]
 
  2.00 2.00: +3.00
 
-Hidden Layer 0 to Hidden Layer 2 Weights [3]
+Hidden Layer 0 to Hidden Layer 2 Weights (configured) [3]
 
  7.00:      +1.50
 
@@ -767,7 +767,7 @@ Input to Hidden Layer 1 Weights [2]
 
  +3.000
 
-Hidden Layer 0 to Hidden Layer 2 Weights [3]
+Hidden Layer 0 to Hidden Layer 2 Weights (configured) [3]
 
  +1.500
 
@@ -792,7 +792,7 @@ Input to Hidden Layer 1 Weights [2]
 
  2.00 2.00: +3.00
 
-Hidden Layer 0 to Hidden Layer 2 Weights [3]
+Hidden Layer 0 to Hidden Layer 2 Weights (configured) [3]
 
  7.00:      +1.50
 
@@ -841,7 +841,7 @@ Input to Hidden Layer 1 Weights [2]
 
  2.80 3.85: +2.87
 
-Hidden Layer 0 to Hidden Layer 2 Weights [3]
+Hidden Layer 0 to Hidden Layer 2 Weights (configured) [3]
 
  6.50:      +1.91
 

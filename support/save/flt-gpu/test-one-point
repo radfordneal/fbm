@@ -1,0 +1,134 @@
+ 
+--- A
+ 
+
+Network Architecture:
+
+  Input layer:     size 2
+  Hidden layer 0:  size 2    tanh
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    3.000:4.00:5.00
+
+         Output Layer
+
+  Hidden0-Output Weights:  3.100!
+  Output Biases:           4.000
+
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 2.68 2.61: -4.35  +2.99
+
+      6.03: -7.20  -1.13
+
+Hidden Layer 0 to Output Weights [2]
+
+ 3.10 3.10: +3.10
+
+      3.10: +3.10
+
+Output Biases [3]
+
+      4.00: -1.50
+
+Noise levels [4]
+
+   1.00 -  1.00
+
+
+Network in file "log" with index 1
+
+Input to Hidden Layer 0 Weights [1]
+
+ 2.68 2.61: -4.59  +2.80
+
+      6.03: -7.28  -1.01
+
+Hidden Layer 0 to Output Weights [2]
+
+ 3.10 3.10: +3.10
+
+      3.10: +3.10
+
+Output Biases [3]
+
+      4.00: +0.53
+
+Noise levels [4]
+
+   1.00 -  1.00
+
+ 
+--- B
+ 
+
+Network Architecture:
+
+  Input layer:     size 2
+  Hidden layer 0:  size 2    tanh
+  Output layer:    size 1
+
+
+Prior Specifications:
+
+         Hidden Layer 0
+
+  Input-Hidden Weights:    3.000:4.00:5.00
+
+         Output Layer
+
+  Hidden0-Output Weights:  3.100!  config:1 1 1  2 1 1
+  Output Biases:           4.000
+
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+ 2.68 2.61: -4.35  +2.99
+
+      6.03: -7.20  -1.13
+
+Hidden Layer 0 to Output Weights (configured) [2]
+
+ 3.10:      +3.10
+
+Output Biases [3]
+
+      4.00: -1.50
+
+Noise levels [4]
+
+   1.00 -  1.00
+
+
+Network in file "log" with index 1
+
+Input to Hidden Layer 0 Weights [1]
+
+ 2.68 2.61: -4.59  +2.80
+
+      6.03: -7.28  -1.01
+
+Hidden Layer 0 to Output Weights (configured) [2]
+
+ 3.10:      +3.10
+
+Output Biases [3]
+
+      4.00: -1.51
+
+Noise levels [4]
+
+   1.00 -  1.00
+

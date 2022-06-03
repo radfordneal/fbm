@@ -1,0 +1,25 @@
+#!/bin/bash
+
+echo " "; echo "--- A"; echo " "
+
+net-spec log 2 2 1 / ih=3:4:5 ho=3.1! bo=4
+net-spec log
+model-spec log real 1
+data-spec log 2 1 / "%echo 1.5 2.3" "%echo -0.1"
+net-gen log
+net-display log 0
+mc-spec log dynamic 10 0.1
+net-mc log 1
+net-display log
+
+echo " "; echo "--- B"; echo " "
+
+net-spec log 2 2 1 / ih=3:4:5 ho=3.1! config:"1 1 1  2 1 1" bo=4
+net-spec log
+model-spec log real 1
+data-spec log 2 1 / "%echo 1.5 2.3" "%echo -0.1"
+net-gen log
+net-display log 0
+mc-spec log dynamic 10 0.1
+net-mc log 1
+net-display log

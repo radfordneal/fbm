@@ -98,6 +98,7 @@ static char **read_items (char *file0)
         if (sp) *sp = 0;
         strncpy(s,file,1001);
         file = sp ? sp+1 : ""; 
+        while (file[0]==' ') file += 1;
       }
       else
       { if (fscanf(fp,"%1001s",s)!=1)
@@ -347,8 +348,11 @@ static char **do_items
     {
       if (s<1 || d<1 || w<1 || s>ns || d>nd || w<1)
       { fprintf (stderr, 
-         "Out of range index in weight configuration: %s, %d, %d %d %d\n",
-          file, p->N_conn+1, s, d, w);
+         "Out of range %s index in weight configuration: %s\n", 
+          s<1 || s>ns ? "source" : d<1 || d>nd ? "destination" : "weight", 
+          file);
+        fprintf (stderr, 
+         "conn idx %d, %d %d %d\n", p->N_conn+1, s, d, w);
         exit(2);
       }
 

@@ -68,8 +68,8 @@ void net_print_params
     { if (bits&1)
       { if (ls>=l-1) abort();
         if (++g==group || group==0)
-        { printf("\nHidden Layer %d to Hidden Layer %d Weights [%d]\n\n",
-                 ls,l,g);
+        { printf("\nHidden Layer %d to Hidden Layer %d Weights%s [%d]\n\n",
+                 ls, l, a->nonseq_config[nsqi] ? " (configured)" : "", g);
           if (s!=0) printf("%5.2f",*s->nsq_cm[nsqi]);
           if (a->nonseq_config[nsqi])
           { if (s!=0) printf(":     ");
@@ -90,7 +90,8 @@ void net_print_params
     }
 
     if (l>0 && a->has_hh[l-1] && (++g==group || group==0))
-    { printf("\nHidden Layer %d to Hidden Layer %d Weights [%d]\n\n",l-1,l,g);
+    { printf("\nHidden Layer %d to Hidden Layer %d Weights%s [%d]\n\n",
+             l-1, l, a->hidden_config[l] ? " (configured)" : "", g);
       if (s!=0) printf("%5.2f",*s->hh_cm[l-1]);
       if (a->hidden_config[l])
       { if (s!=0) printf(":     ");
@@ -107,7 +108,8 @@ void net_print_params
     }
   
     if (a->has_ih[l] && (++g==group || group==0))
-    { printf("\nInput to Hidden Layer %d Weights [%d]",l,g);
+    { printf("\nInput to Hidden Layer %d Weights%s [%d]",
+             l, a->input_config[l] ? " (configured)" : "", g);
       if (flgs && list_flags(flgs->omit,a->N_inputs,1<<(l+1),ps)!=0)
       { printf(" (omit%s)",ps);
       }
@@ -133,7 +135,8 @@ void net_print_params
     }
 
     if (a->has_bh[l] && (++g==group || group==0))
-    { printf("\nHidden Layer %d Biases [%d]\n\n",l,g);
+    { printf("\nHidden Layer %d Biases%s [%d]\n\n",
+             l, a->bias_config[l] ? " (configured)" : "", g);
       if (s!=0) printf("%10.2f:",*s->bh_cm[l]);
       if (a->bias_config[l])
       { print_param_array (w->bh[l], a->bias_config[l]->N_wts, s!=0);
@@ -161,7 +164,8 @@ void net_print_params
   for (l = a->N_layers-1; l>=0; l--)
   { if (a->has_ho[l] && (++g==group || group==0))
     { int k = 2*a->N_layers-1-l;
-      printf("\nHidden Layer %d to Output Weights [%d]\n\n",l,g);
+      printf("\nHidden Layer %d to Output Weights%s [%d]\n\n",
+             l, a->hidden_config[k] ? " (configured)" : "", g);
       if (s!=0) printf("%5.2f",*s->ho_cm[l]);
       if (a->hidden_config[k])
       { if (s!=0) printf(":     ");
@@ -179,7 +183,8 @@ void net_print_params
   }
 
   if (a->has_io && (++g==group || group==0))
-  { printf("\nInput to Output Weights [%d]",g);
+  { printf("\nInput to Output Weights%s [%d]",
+           a->input_config[a->N_layers] ? " (configured)" : "", g);
     if (flgs && list_flags(flgs->omit,a->N_inputs,1,ps)!=0)
     { printf(" (omit%s)",ps);
     }
@@ -205,7 +210,8 @@ void net_print_params
   }
 
   if (a->has_bo && (++g==group || group==0))
-  { printf("\nOutput Biases [%d]\n\n",g);
+  { printf("\nOutput Biases%s [%d]\n\n",
+           a->bias_config[a->N_layers] ? " (configured)" : "", g);
     if (s!=0) printf("%10.2f:",*s->bo_cm);
     if (a->bias_config[a->N_layers])
     { print_param_array (w->bo, a->bias_config[a->N_layers]->N_wts, s!=0);

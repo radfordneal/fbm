@@ -3453,6 +3453,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
   net_values const*v,	/* Values for units in network */
   net_values *restrict d,/* Has output derivatives, storage for other derivs */
   net_arch const*a,	/* Network architecture */
+  net_priors const*p,	/* Priors for parameters */
   net_flags const*flgs,	/* Network flags, null if none */
   int sparse            /* Might source unit values often be zero? */
 )
@@ -3463,7 +3464,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
      with respect to hidden or input unit values - only on inputs and hidden
      unit values, and on derivatives with respect to outputs, */
 
-  if (a->has_bo)
+  if (a->has_bo && !p->bo.one_or_two_point)
   { if (a->bias_config[a->N_layers])
     { add_grad1_config (g->bo, d->o, a->bias_config[a->N_layers]);
     }
@@ -3472,7 +3473,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
     }
   }
 
-  if (a->has_io)
+  if (a->has_io && !p->io.one_or_two_point)
   { if (a->input_config[a->N_layers])
     { add_grad2_config (g->io, v->i, a->has_ti ? params.ti : 0, d->o,
                         a->input_config[a->N_layers]);
@@ -3487,7 +3488,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
   for (l = 0; l<a->N_layers; l++)
   {
-    if (a->has_ho[l])
+    if (a->has_ho[l] && !p->ho[l].one_or_two_point)
     { int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { add_grad2_config (g->ho[l], v->h[l], a->has_th[l] ? params.th[l] : 0,
@@ -3595,7 +3596,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
        derivatives with respect to the summed input, prior to the activation
        function). */
 
-    if (a->has_th[l])
+    if (a->has_th[l] && !p->th[l].one_or_two_point)
     { add_grad1 (g->th[l], dh, N_hidden);
     }
 
@@ -3937,7 +3938,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
     /* Add to gradients for that depend on the derivatives with respect to
        the inputs of units in this hidden layer. */
 
-    if (a->has_bh[l])
+    if (a->has_bh[l] && !p->bh[l].one_or_two_point)
     { if (a->bias_config[l])
       { add_grad1_config (g->bh[l], dh, a->bias_config[l]);
       }
@@ -3946,7 +3947,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
       }
     }
 
-    if (a->has_ih[l])
+    if (a->has_ih[l] && !p->ih[l].one_or_two_point)
     { if (a->input_config[l])
       { add_grad2_config (g->ih[l], v->i, a->has_ti ? params.ti : 0, dh,
                           a->input_config[l]);
@@ -3962,14 +3963,14 @@ void STATIC_IF_INCLUDED net_back_add_grad
     for (ls = 0; ls<l; ls++)
     { net_config *cf; net_param *gh;
       if (ls==l-1)
-      { if (!a->has_hh[ls]) break;
+      { if (!a->has_hh[ls] || p->hh[ls].one_or_two_point) break;
         cf = a->hidden_config[l];
         gh = g->hh[ls];
       }
       else
       { if (!a->has_nsq[l]) continue;
         int nsqi = pre.nonseq[ls][l];
-        if (nsqi<0) continue;
+        if (nsqi<0 || p->nsq[nsqi].one_or_two_point) continue;
         cf = a->nonseq_config[nsqi];
         gh = g->nsq[nsqi];
       }
@@ -4003,7 +4004,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
   /* Add to gradients for input offsets, now that derivatives with respect
      to inputs have been computed. */
 
-  if (a->has_ti)
+  if (a->has_ti && !p->ti.one_or_two_point)
   { add_grad1 (g->ti, d->i, a->N_inputs);
   }
 }
@@ -4027,7 +4028,9 @@ void STATIC_IF_INCLUDED net_back_add_grad
    may be used instead to hold values for some or all hidden units,
    and/or derivatives with respect to hidden units.
 
-   The gradient due to the cases in the group is stored in 'g'. */
+   The gradient due to the cases in the group is stored in 'g', except
+   that components of the gradient for parameters with one or two point
+   priors are not stored. */
 
 /* Dispatch functions.  Comparisons with GROUP_SIZE are redundant, but may 
    let the compiler eliminate some comparisons at compile time.  Note that
@@ -4145,6 +4148,7 @@ __device__ static void store_grad2_config
 
 #define A const_arch
 #define PRE const_pre
+#define PRIORS const_priors
 #define FLGS const_flgs
 #define W const_params
 #define WT const_params_trans
@@ -4165,7 +4169,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
      with respect to hidden or input unit values - only on inputs and hidden
      unit values, and on derivatives with respect to outputs, */
 
-  if (A.has_bo)
+  if (A.has_bo && !PRIORS.bo.one_or_two_point)
   { if (A.bias_config[A.N_layers])
     { store_grad1_config (thrg, gsz, g->bo, d[0].o, d[1].o-d[0].o,
                           A.bias_config[A.N_layers]);
@@ -4175,7 +4179,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
     }
   }
 
-  if (A.has_io)
+  if (A.has_io && !PRIORS.io.one_or_two_point)
   { if (A.input_config[A.N_layers])
     { store_grad2_config (thrg, gsz, g->io, 
                           v[0].i, v[1].i-v[0].i,
@@ -4195,7 +4199,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
 
   for (l = 0; l<A.N_layers; l++)
   {
-    if (A.has_ho[l])
+    if (A.has_ho[l] && !PRIORS.ho[l].one_or_two_point)
     { 
       net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,l,0);
       int us = fw_hidden_stride(&PRE,l);
@@ -4344,7 +4348,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
        derivatives with respect to the summed input, prior to the activation
        function). */
 
-    if (A.has_th[l])
+    if (A.has_th[l] && !PRIORS.th[l].one_or_two_point)
     { 
       __syncthreads();
 
@@ -4412,7 +4416,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
     net_value *restrict c0 = bw_hidden_loc_grad(&PRE,d,l,0);
     int cs = bw_hidden_stride(&PRE,l);
 
-    if (A.has_bh[l])
+    if (A.has_bh[l] && !PRIORS.bh[l].one_or_two_point)
     { if (A.bias_config[l])
       { store_grad1_config (thrg, gsz, g->bh[l], c0, cs, A.bias_config[l]);
       }
@@ -4421,7 +4425,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
       }
     }
 
-    if (A.has_ih[l])
+    if (A.has_ih[l] && !PRIORS.ih[l].one_or_two_point)
     { if (A.input_config[l])
       { store_grad2_config (thrg, gsz, g->ih[l], 
                             v[0].i, A.N_inputs,
@@ -4440,14 +4444,14 @@ __device__ __forceinline__ static void net_back_grad_gpu
     for (ls = 0; ls<l; ls++)
     { net_config *cf; net_param *gh;
       if (ls==l-1)
-      { if (!A.has_hh[ls]) break;
+      { if (!A.has_hh[ls] || PRIORS.hh[ls].one_or_two_point) break;
         cf = A.hidden_config[l];
         gh = g->hh[ls];
       }
       else
       { if (!A.has_nsq[l]) continue;
         int nsqi = PRE.nonseq[ls][l];
-        if (nsqi<0) continue;
+        if (nsqi<0 || PRIORS.nsq[nsqi].one_or_two_point) continue;
         cf = A.nonseq_config[nsqi];
         gh = g->nsq[nsqi];
       }
@@ -4468,11 +4472,9 @@ __device__ __forceinline__ static void net_back_grad_gpu
   /* Add to gradients for input offsets, now that derivatives with respect
      to inputs have been computed. */
 
-  if (A.has_ti)
+  if (A.has_ti && !PRIORS.ti.one_or_two_point)
   { 
-    if (A.N_layers==0)  /* otherwise done at end of loop above */
-    { __syncthreads();
-    }
+    __syncthreads();
 
     store_grad1 (thrg, gsz, g->ti, d[0].i, d[1].i-d[0].i, A.N_inputs);
   }

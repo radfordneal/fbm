@@ -83,6 +83,36 @@ static char *info_for_n;		/* Flags for whether info regarding
 #endif
 
 
+#if __CUDACC__
+
+/* SET GPU MEMORY TO ZERO.  Needed because parameters with one
+   or two point priors don't have their gradient computed, but their
+   gradient is accessed, then multiplied by zero, which would be a
+   problem if the gradient was garbage that happened to be Inf or NaN. */
+
+__global__ void zero_kernel  /* Can launch with any # of blocks / threads */
+( net_param *mem,	/* Memory to zero (of parameter precision) */
+  int n			/* Number of elements to zero */
+)
+{ int s = blockDim.x * gridDim.x;
+  int i;
+  for (i = blockIdx.x * blockDim.x + threadIdx.x; i<n; i+=s)
+  { mem[i] = 0;
+  }
+}
+
+static void zero_gpu_memory 
+( net_param *mem,	/* Memory to zero (of parameter precision) */
+  int n			/* Number of elements to zero */
+)
+{ zero_kernel <<<2,64>>> (mem, n);
+  check_cuda_error (cudaDeviceSynchronize(),
+                    "Synchronizing after zero_kernel");
+}
+
+#endif
+
+
 /* FORWARD DECLARATIONS OF CUDA KERNELS. */
 
 #if __CUDACC__
@@ -270,6 +300,7 @@ __constant__ unsigned const_grad_aligned_total;  /* Copy in constant memory */
 
 __constant__ net_arch const_arch;  /* Copy of dev_arch in constant memory */
 __constant__ net_precomputed const_pre;  /* Copy of pre in constant memory */
+__constant__ net_priors const_priors;  /* Copy of priors in constant memory */
 __constant__ net_flags const_flgs; /* Copy of flgs in constant memory */
 
 __constant__ int const_sparse;     /* Copy of sparse in constant memory */
@@ -1284,6 +1315,9 @@ void mc_app_initialize
       cudaMemcpyToSymbol (const_sparse, &sparse, sizeof sparse);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_sparse");
+      cudaMemcpyToSymbol (const_priors, priors, sizeof *priors);
+      check_cuda_error (cudaGetLastError(), 
+                        "After copying to const_priors");
       cudaMemcpyToSymbol (const_flgs, flgs, sizeof *flgs);
       check_cuda_error (cudaGetLastError(), 
                         "After copying to const_flgs");
@@ -2525,7 +2559,8 @@ void net_training_cases
             { deriv->o[k] *= gr_weight;
             }
           }
-          net_back_add_grad (grd, &train_values[i], deriv, arch, flgs, sparse);
+          net_back_add_grad (grd, &train_values[i], deriv, 
+                             arch, priors, flgs, sparse);
         }
     
         if (ot<=t1) break;
@@ -2579,7 +2614,8 @@ void net_training_cases
           { deriv->o[k] *= gr_weight;
           }
         }
-        net_back_add_grad (grd, train_vals_i, deriv, arch, flgs, sparse);
+        net_back_add_grad (grd, train_vals_i, deriv, 
+                           arch, priors, flgs, sparse);
       }
     }
 
@@ -2615,7 +2651,7 @@ void net_training_cases
 
    GPU memory is also allocated here to store computed gradients. The
    GPU stores the total gradient for each block in const_block_grad,
-   which is copied to block_grad on the CPU, and the added by the CPU
+   which is copied to block_grad on the CPU, and then added by the CPU
    to the final gradient accumulator.
 
    Gradients are computed for a group of cases of size GROUP_SIZE
@@ -2684,7 +2720,8 @@ void cuda_setup
   { 
     net_params *tmp_grad;
 
-    /* Create block_grad array on CPU and on GPU. */
+    /* Create block_grad array on CPU and on GPU, and also group_grad 
+       array on GPU (unless only one group). */
 
     block_grad = (net_params *) 
         chk_alloc (max_blocks_per_launch, sizeof *block_grad);
@@ -2701,8 +2738,6 @@ void cuda_setup
                    sizeof *block_grad->param_block);
 #   endif
 
-    /* Create group_grad array on GPU (unless only one group). */
-
     if (GROUPS_PER_BLOCK>1)
     { tmp_grad = (net_params *) chk_alloc (n_grad_accum, sizeof *tmp_grad);
       tmp_grad->total_params = grad.total_params;
@@ -2710,6 +2745,8 @@ void cuda_setup
          (&tmp_grad->param_block, n_grad_accum * grad_aligned_total
                                    * sizeof *tmp_grad->param_block),
        "alloc tmp_grad param block for group_grad");
+      zero_gpu_memory (tmp_grad->param_block, 
+                       n_grad_accum * grad_aligned_total);
       net_setup_gradients (tmp_grad, n_grad_accum, ILV,
                            arch, flgs, grad_aligned_total);
       check_cuda_error (CUDAMALLOC (&group_grad,
@@ -2736,6 +2773,8 @@ void cuda_setup
        (&dev_block_grad_params, max_blocks_per_launch * grad_aligned_total
                                  * sizeof *tmp_grad->param_block),
      "alloc for dev_block_grad_params");
+    zero_gpu_memory (dev_block_grad_params, 
+                     max_blocks_per_launch * grad_aligned_total);
     tmp_grad->param_block = dev_block_grad_params;
     net_setup_param_pointers (tmp_grad, arch, flgs);
     net_replicate_param_pointers(tmp_grad, arch, max_blocks_per_launch,

@@ -404,7 +404,7 @@ typedef struct
    Stored in log files under type 'S'.  Changes may invalidate old log files. */
 
 #ifndef net_sigma         /* May be defined by a compiler option */
-typedef double net_sigma;   /* Precision of sigma values */
+# define net_sigma double    /* Precision of sigma values */
 #endif
 
 typedef struct
@@ -450,7 +450,7 @@ typedef struct
    Stored in log files under type 'W'.  Changes may invalidate old log files. */
 
 #ifndef net_param       /* May be defined by a compiler option */
-typedef double net_param;  /* Precision of weights, baises, and offsets */
+# define net_param double  /* Precision of weights, baises, and offsets */
 #endif
 
 typedef struct
@@ -480,7 +480,7 @@ typedef struct
    in whenever the value is used. */
 
 #ifndef net_value       /* May be defined by a compiler option */
-typedef double net_value;  /* Precision of unit values */
+# define net_value double  /* Precision of unit values */
 #endif
 
 typedef struct

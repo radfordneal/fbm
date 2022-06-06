@@ -13,15 +13,15 @@ None yet.
 Feature changes in the version:
 
 1) Priors for groups of parameters in network models can now specify
-   that the parameteris fixed at the sigma value, or at plus or minus
+   that the parameter is fixed at the sigma value, or at plus or minus
    the sigma value, by appending "!" or "!!" to the prior
-   specification.  (The latter options was available before with "!",
+   specification.  (The latter option was available before with "!",
    in a limited way.)  Initialization respects such priors, and
    stepsizes for such parameters are forced to zero, so that MCMC
    operations will not set them to values contrary to their prior.
 
-   This is useful for setting up average pooling layers, for which the
-   weights between the layers should be fixed.
+   The "!" option is useful for setting up average pooling layers, for
+   which the weights between the layers should be fixed.
 
 2) A new xxx-avepred script can be used to plot how error using
    predictions averaged over a window of iterations changes during a
@@ -44,7 +44,11 @@ Feature changes in the version:
    files (eg, for convolution).  This directory is looked in if a
    configuration file cannot be opened directly.
 
-7) The way net-spec displays hidden and output unit adjustments has
+7) The net-spec command with "sizes" option now displays the number
+   of connections in each group as well as the number of parameters
+   (which may differ for configured groups).
+
+8) The way net-spec displays hidden and output unit adjustments has
    changed - they are now displayed separately in order with other
    groups.
 

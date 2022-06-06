@@ -20,11 +20,13 @@ or:
 The first form above is for specifying a network archicture. 
 
 The second form is for displaying the network architecture stored in
-the specified log file.  If the optional "sizes" argument is
-specified, the numbers of parameters for each group are output.  The
-optional "config" argument causes the detailed configurations fro
-"config" specifications to be display, in fully-expanded form (as
-individual triplets or pairs).
+the specified log file.  The optional "config" argument causes the
+detailed configurations from "config" specifications to be displayed,
+in fully-expanded form (as individual triplets or pairs).  If the
+optional "sizes" argument is specified, the numbers of parameters and
+connections for each group are output, along with the totals.  (The
+number of connections will equal the number of parameters except when
+the group has a "config" specification.)
 
 
 Specifying layer sizes and activation functions.

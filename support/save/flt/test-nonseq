@@ -5,9 +5,9 @@
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 2    tanh
-  Hidden layer 1:  size 1    tanh
-  Hidden layer 2:  size 2    tanh
+  Hidden layer 0:  size 2     tanh
+  Hidden layer 1:  size 1     tanh
+  Hidden layer 2:  size 2     tanh
   Output layer:    size 1
 
 
@@ -15,19 +15,19 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    1.000
+   1. Input-Hidden Weights:    1.000
 
          Hidden Layer 1
 
-  Hidden-Hidden Weights:   2.000
+   2. Hidden-Hidden Weights:   2.000
 
          Hidden Layer 2
 
-  Hidden-Hidden Weights:   3.000
+   3. Hidden-Hidden Weights:   3.000
 
          Output Layer
 
-  Hidden2-Output Weights:  4.000
+   4. Hidden2-Output Weights:  4.000
 
 Number of training cases: 2
 
@@ -130,9 +130,9 @@ Largest absolute log ratio: 0.0096
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 2    tanh
-  Hidden layer 1:  size 1    tanh
-  Hidden layer 2:  size 2    tanh
+  Hidden layer 0:  size 2     tanh
+  Hidden layer 1:  size 1     tanh
+  Hidden layer 2:  size 2     tanh
   Output layer:    size 1
 
 
@@ -140,20 +140,20 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    1.000
+   1. Input-Hidden Weights:    1.000
 
          Hidden Layer 1
 
-  Input-Hidden Weights:    2.000
+   2. Input-Hidden Weights:    2.000
 
          Hidden Layer 2
 
-  Hidden0-Hidden Weights:  7.000
-  Hidden-Hidden Weights:   3.000
+   3. Hidden0-Hidden Weights:  7.000
+   4. Hidden-Hidden Weights:   3.000
 
          Output Layer
 
-  Hidden2-Output Weights:  4.000
+   5. Hidden2-Output Weights:  4.000
 
 Number of training cases: 2
 
@@ -271,9 +271,9 @@ Largest absolute log ratio: 0.0026
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 2    tanh
-  Hidden layer 1:  size 1    tanh
-  Hidden layer 2:  size 2    tanh
+  Hidden layer 0:  size 2     tanh
+  Hidden layer 1:  size 1     tanh
+  Hidden layer 2:  size 2     tanh
   Output layer:    size 1
 
 
@@ -281,20 +281,20 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    1.000
+   1. Input-Hidden Weights:    1.000
 
          Hidden Layer 1
 
-  Input-Hidden Weights:    2.000
+   2. Input-Hidden Weights:    2.000
 
          Hidden Layer 2
 
-  Hidden0-Hidden Weights:  7.000
-  Hidden-Hidden Weights:   3.000  config:%echo 1 1 1
+   3. Hidden0-Hidden Weights:  7.000
+   4. Hidden-Hidden Weights:   3.000  config:%echo 1 1 1
 
          Output Layer
 
-  Hidden2-Output Weights:  4.000
+   5. Hidden2-Output Weights:  4.000
 
 Hidden layer 2 hidden weight configuration
 
@@ -417,9 +417,9 @@ Largest absolute log ratio: 0.0119
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 2    tanh
-  Hidden layer 1:  size 1    tanh
-  Hidden layer 2:  size 2    tanh
+  Hidden layer 0:  size 2     tanh
+  Hidden layer 1:  size 1     tanh
+  Hidden layer 2:  size 2     tanh
   Output layer:    size 1
 
 
@@ -427,20 +427,20 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    1.000
+   1. Input-Hidden Weights:    1.000
 
          Hidden Layer 1
 
-  Input-Hidden Weights:    2.000
+   2. Input-Hidden Weights:    2.000
 
          Hidden Layer 2
 
-  Hidden0-Hidden Weights:  7.000  config:%echo 1 1 1
-  Hidden-Hidden Weights:   3.000
+   3. Hidden0-Hidden Weights:  7.000  config:%echo 1 1 1
+   4. Hidden-Hidden Weights:   3.000
 
          Output Layer
 
-  Hidden2-Output Weights:  4.000
+   5. Hidden2-Output Weights:  4.000
 
 Hidden layer 2 hidden0 weight configuration
 
@@ -557,9 +557,9 @@ Largest absolute log ratio: 0.0029
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 2    tanh
-  Hidden layer 1:  size 1    tanh
-  Hidden layer 2:  size 2    tanh
+  Hidden layer 0:  size 2     tanh
+  Hidden layer 1:  size 1     tanh
+  Hidden layer 2:  size 2     tanh
   Output layer:    size 1
 
 
@@ -567,20 +567,20 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    1.000
+   1. Input-Hidden Weights:    1.000
 
          Hidden Layer 1
 
-  Input-Hidden Weights:    2.000
+   2. Input-Hidden Weights:    2.000
 
          Hidden Layer 2
 
-  Hidden0-Hidden Weights:  7.000  config:%echo 1 1 1
-  Hidden-Hidden Weights:   3.000
+   3. Hidden0-Hidden Weights:  7.000  config:%echo 1 1 1
+   4. Hidden-Hidden Weights:   3.000
 
          Output Layer
 
-  Hidden2-Output Weights:  4.000
+   5. Hidden2-Output Weights:  4.000
 
 Hidden layer 2 hidden0 weight configuration
 
@@ -697,9 +697,9 @@ Largest absolute log ratio: 0.0004
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 2    tanh
-  Hidden layer 1:  size 1    tanh
-  Hidden layer 2:  size 2    tanh
+  Hidden layer 0:  size 2     tanh
+  Hidden layer 1:  size 1     tanh
+  Hidden layer 2:  size 2     tanh
   Output layer:    size 1
 
 
@@ -707,20 +707,20 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    1.000:1.00:2.00
+   1. Input-Hidden Weights:    1.000:1.00:2.00
 
          Hidden Layer 1
 
-  Input-Hidden Weights:    2.000:1.00:2.00
+   2. Input-Hidden Weights:    2.000:1.00:2.00
 
          Hidden Layer 2
 
-  Hidden0-Hidden Weights:  7.000:1.00  config:%echo 1 1 1
-  Hidden-Hidden Weights:   3.000:1.00
+   3. Hidden0-Hidden Weights:  7.000:1.00  config:%echo 1 1 1
+   4. Hidden-Hidden Weights:   3.000:1.00
 
          Output Layer
 
-  Hidden2-Output Weights:  4.000:1.00:2.00
+   5. Hidden2-Output Weights:  4.000:1.00:2.00
 
 Hidden layer 2 hidden0 weight configuration
 
@@ -866,9 +866,9 @@ Noise levels [6]
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 2    tanh
-  Hidden layer 1:  size 1    tanh
-  Hidden layer 2:  size 2    tanh
+  Hidden layer 0:  size 2     tanh
+  Hidden layer 1:  size 1     tanh
+  Hidden layer 2:  size 2     tanh
   Output layer:    size 1
 
 
@@ -876,20 +876,20 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    1.000:1.00:2.00
+   1. Input-Hidden Weights:    1.000:1.00:2.00
 
          Hidden Layer 1
 
-  Input-Hidden Weights:    2.000:1.00:2.00
+   2. Input-Hidden Weights:    2.000:1.00:2.00
 
          Hidden Layer 2
 
-  Hidden0-Hidden Weights:  7.000:1.00:2.00
-  Hidden-Hidden Weights:   3.000:1.00
+   3. Hidden0-Hidden Weights:  7.000:1.00:2.00
+   4. Hidden-Hidden Weights:   3.000:1.00
 
          Output Layer
 
-  Hidden2-Output Weights:  4.000:1.00:2.00
+   5. Hidden2-Output Weights:  4.000:1.00:2.00
 
 Number of training cases: 4
 

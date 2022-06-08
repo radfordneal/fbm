@@ -5,8 +5,8 @@
 Network Architecture:
 
   Input layer:     size 5
-  Hidden layer 0:  size 4    tanh
-  Hidden layer 1:  size 3    tanh
+  Hidden layer 0:  size 4     tanh
+  Hidden layer 1:  size 3     tanh
   Output layer:    size 1
 
 
@@ -14,15 +14,15 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    7.000  config:%echo 3 1 1  4 2 1  1 1 2
+   1. Input-Hidden Weights:    7.000  config:%echo 3 1 1  4 2 1  1 1 2
 
          Hidden Layer 1
 
-  Hidden-Hidden Weights:   8.000  config:%echo 1 2 1  2 1 1
+   2. Hidden-Hidden Weights:   8.000  config:%echo 1 2 1  2 1 1
 
          Output Layer
 
-  Hidden1-Output Weights:  9.000
+   3. Hidden1-Output Weights:  9.000
 
 Hidden layer 0 input weight configuration
 
@@ -89,8 +89,8 @@ Largest absolute log ratio: 0.0000
 Network Architecture:
 
   Input layer:     size 5
-  Hidden layer 0:  size 4    tanh
-  Hidden layer 1:  size 3    tanh
+  Hidden layer 0:  size 4     tanh
+  Hidden layer 1:  size 3     tanh
   Output layer:    size 1
 
 
@@ -98,15 +98,15 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    7.000  config:%echo 3 1 1  + + 1  1 1 +
+   1. Input-Hidden Weights:    7.000  config:%echo 3 1 1  + + 1  1 1 +
 
          Hidden Layer 1
 
-  Hidden-Hidden Weights:   8.000  config:%echo 1 2 1  +1 -1 1
+   2. Hidden-Hidden Weights:   8.000  config:%echo 1 2 1  +1 -1 1
 
          Output Layer
 
-  Hidden1-Output Weights:  9.000
+   3. Hidden1-Output Weights:  9.000
 
 Hidden layer 0 input weight configuration
 
@@ -127,7 +127,7 @@ Hidden layer 1 hidden weight configuration
 Network Architecture:
 
   Input layer:     size 2
-  Hidden layer 0:  size 3    tanh
+  Hidden layer 0:  size 3     tanh
   Output layer:    size 1
 
 
@@ -135,11 +135,11 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    2.000  config:%echo + + 1 = + + + -1 = 1 +2 -
+   1. Input-Hidden Weights:    2.000  config:%echo + + 1 = + + + -1 = 1 +2 -
 
          Output Layer
 
-  Hidden0-Output Weights:  3.000
+   2. Hidden0-Output Weights:  3.000
 
 Hidden layer 0 input weight configuration
 
@@ -158,8 +158,8 @@ Hidden layer 0 input weight configuration
 Network Architecture:
 
   Input layer:     size 2
-  Hidden layer 0:  size 2    tanh
-  Hidden layer 1:  size 2    tanh
+  Hidden layer 0:  size 2     tanh
+  Hidden layer 1:  size 2     tanh
   Output layer:    size 1
 
 
@@ -167,16 +167,16 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    3.000
+   1. Input-Hidden Weights:    3.000
 
          Hidden Layer 1
 
-  Hidden-Hidden Weights:   4.000
+   2. Hidden-Hidden Weights:   4.000
 
          Output Layer
 
-  Hidden1-Output Weights:  5.000
-  Output Biases:           10.000
+   3. Hidden1-Output Weights:  5.000
+   4. Output Biases:           10.000
 
 Number of training cases: 1
 
@@ -284,8 +284,8 @@ Noise levels [5]
 Network Architecture:
 
   Input layer:     size 2
-  Hidden layer 0:  size 2    tanh
-  Hidden layer 1:  size 2    tanh
+  Hidden layer 0:  size 2     tanh
+  Hidden layer 1:  size 2     tanh
   Output layer:    size 1
 
 
@@ -293,16 +293,16 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    3.000  config:%echo 1 1 1  1 2 2  2 1 3  2 2 4
+   1. Input-Hidden Weights:    3.000  config:%echo 1 1 1  1 2 2  2 1 3  2 2 4
 
          Hidden Layer 1
 
-  Hidden-Hidden Weights:   4.000  config:%echo 1 1 1  1 2 2  2 1 3  2 2 4
+   2. Hidden-Hidden Weights:   4.000  config:%echo 1 1 1  1 2 2  2 1 3  2 2 4
 
          Output Layer
 
-  Hidden1-Output Weights:  5.000
-  Output Biases:           10.000
+   3. Hidden1-Output Weights:  5.000
+   4. Output Biases:           10.000
 
 Hidden layer 0 input weight configuration
 
@@ -423,8 +423,8 @@ Noise levels [5]
 Network Architecture:
 
   Input layer:     size 2
-  Hidden layer 0:  size 2    tanh
-  Hidden layer 1:  size 2    tanh
+  Hidden layer 0:  size 2     tanh
+  Hidden layer 1:  size 2     tanh
   Output layer:    size 1
 
 
@@ -432,16 +432,16 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    3.000:2.00
+   1. Input-Hidden Weights:    3.000:2.00
 
          Hidden Layer 1
 
-  Hidden-Hidden Weights:   4.000:2.00
+   2. Hidden-Hidden Weights:   4.000:2.00
 
          Output Layer
 
-  Hidden1-Output Weights:  5.000
-  Output Biases:           10.000
+   3. Hidden1-Output Weights:  5.000
+   4. Output Biases:           10.000
 
 Number of training cases: 1
 
@@ -549,8 +549,8 @@ Noise levels [5]
 Network Architecture:
 
   Input layer:     size 2
-  Hidden layer 0:  size 2    tanh
-  Hidden layer 1:  size 2    tanh
+  Hidden layer 0:  size 2     tanh
+  Hidden layer 1:  size 2     tanh
   Output layer:    size 1
 
 
@@ -558,16 +558,16 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    3.000:2.00  config:%echo 1 1 1  1 2 2  2 1 3  2 2 4
+   1. Input-Hidden Weights:    3.000:2.00  config:%echo 1 1 1  1 2 2  2 1 3  2 2 4
 
          Hidden Layer 1
 
-  Hidden-Hidden Weights:   4.000:2.00  config:%echo 1 1 1  1 2 2  2 1 3  2 2 4
+   2. Hidden-Hidden Weights:   4.000:2.00  config:%echo 1 1 1  1 2 2  2 1 3  2 2 4
 
          Output Layer
 
-  Hidden1-Output Weights:  5.000
-  Output Biases:           10.000
+   3. Hidden1-Output Weights:  5.000
+   4. Output Biases:           10.000
 
 Hidden layer 0 input weight configuration
 
@@ -686,7 +686,7 @@ Noise levels [5]
 Network Architecture:
 
   Input layer:     size 10
-  Hidden layer 0:  size 8    identity
+  Hidden layer 0:  size 8     identity
   Output layer:    size 1
 
 
@@ -694,12 +694,12 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    1.000  config:filter1
+   1. Input-Hidden Weights:    1.000  config:filter1
 
          Output Layer
 
-  Hidden0-Output Weights:  1.000
-  Output Biases:           1.000
+   2. Hidden0-Output Weights:  1.000
+   3. Output Biases:           1.000
 
 Hidden layer 0 input weight configuration
 
@@ -763,7 +763,7 @@ Output Biases [3]
 Network Architecture:
 
   Input layer:     size 10
-  Hidden layer 0:  size 8    identity
+  Hidden layer 0:  size 8     identity
   Output layer:    size 1
 
 
@@ -771,12 +771,12 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    1.000  config:filter2
+   1. Input-Hidden Weights:    1.000  config:filter2
 
          Output Layer
 
-  Hidden0-Output Weights:  1.000
-  Output Biases:           1.000
+   2. Hidden0-Output Weights:  1.000
+   3. Output Biases:           1.000
 
 Hidden layer 0 input weight configuration
 
@@ -840,7 +840,7 @@ Output Biases [3]
 Network Architecture:
 
   Input layer:     size 10
-  Hidden layer 0:  size 8    identity
+  Hidden layer 0:  size 8     identity
   Output layer:    size 1
 
 
@@ -848,12 +848,12 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    1.000  config:filter3
+   1. Input-Hidden Weights:    1.000  config:filter3
 
          Output Layer
 
-  Hidden0-Output Weights:  1.000
-  Output Biases:           1.000
+   2. Hidden0-Output Weights:  1.000
+   3. Output Biases:           1.000
 
 Hidden layer 0 input weight configuration
 
@@ -917,7 +917,7 @@ Output Biases [3]
 Network Architecture:
 
   Input layer:     size 10
-  Hidden layer 0:  size 8    identity
+  Hidden layer 0:  size 8     identity
   Output layer:    size 1
 
 
@@ -925,12 +925,12 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    1.000  config:filter4
+   1. Input-Hidden Weights:    1.000  config:filter4
 
          Output Layer
 
-  Hidden0-Output Weights:  1.000
-  Output Biases:           1.000
+   2. Hidden0-Output Weights:  1.000
+   3. Output Biases:           1.000
 
 Hidden layer 0 input weight configuration
 
@@ -994,7 +994,7 @@ Output Biases [3]
 Network Architecture:
 
   Input layer:     size 10
-  Hidden layer 0:  size 8    identity
+  Hidden layer 0:  size 8     identity
   Output layer:    size 1
 
 
@@ -1002,12 +1002,12 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    1.000  config:filter5
+   1. Input-Hidden Weights:    1.000  config:filter5
 
          Output Layer
 
-  Hidden0-Output Weights:  1.000
-  Output Biases:           1.000
+   2. Hidden0-Output Weights:  1.000
+   3. Output Biases:           1.000
 
 Hidden layer 0 input weight configuration
 
@@ -1071,7 +1071,7 @@ Output Biases [3]
 Network Architecture:
 
   Input layer:     size 10
-  Hidden layer 0:  size 8    identity
+  Hidden layer 0:  size 8     identity
   Output layer:    size 1
 
 
@@ -1079,12 +1079,12 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    1.000  config:filter6
+   1. Input-Hidden Weights:    1.000  config:filter6
 
          Output Layer
 
-  Hidden0-Output Weights:  1.000
-  Output Biases:           1.000
+   2. Hidden0-Output Weights:  1.000
+   3. Output Biases:           1.000
 
 Hidden layer 0 input weight configuration
 
@@ -1151,8 +1151,8 @@ Output Biases [3]
 Network Architecture:
 
   Input layer:     size 5
-  Hidden layer 0:  size 4    tanh
-  Hidden layer 1:  size 3    tanh
+  Hidden layer 0:  size 4     tanh
+  Hidden layer 1:  size 3     tanh
   Output layer:    size 1
 
 
@@ -1160,15 +1160,15 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    7.000  config:%echo  2+1 1 1  5-1 2 1  +102-106+1 1 2
+   1. Input-Hidden Weights:    7.000  config:%echo  2+1 1 1  5-1 2 1  +102-106+1 1 2
 
          Hidden Layer 1
 
-  Hidden-Hidden Weights:   8.000  config:%echo 1 2 1  -477+478 1 1
+   2. Hidden-Hidden Weights:   8.000  config:%echo 1 2 1  -477+478 1 1
 
          Output Layer
 
-  Hidden1-Output Weights:  9.000
+   3. Hidden1-Output Weights:  9.000
 
 Hidden layer 0 input weight configuration
 
@@ -1192,7 +1192,7 @@ Hidden layer 1 hidden weight configuration
 Network Architecture:
 
   Input layer:     size 5
-  Hidden layer 0:  size 4    tanh
+  Hidden layer 0:  size 4     tanh
   Output layer:    size 1
 
 
@@ -1200,7 +1200,7 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    7.000  config:%echo  + + 1  = + +  + -1 =  1 +2 -
+   1. Input-Hidden Weights:    7.000  config:%echo  + + 1  = + +  + -1 =  1 +2 -
 
          Output Layer
 
@@ -1218,7 +1218,7 @@ Hidden layer 0 input weight configuration
 Network Architecture:
 
   Input layer:     size 5
-  Hidden layer 0:  size 4    tanh
+  Hidden layer 0:  size 4     tanh
   Output layer:    size 1
 
 
@@ -1226,7 +1226,7 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    7.000  config:%echo  + + 1  = + +  + -1 =  7-6 +102-100 -
+   1. Input-Hidden Weights:    7.000  config:%echo  + + 1  = + +  + -1 =  7-6 +102-100 -
 
          Output Layer
 
@@ -1244,7 +1244,7 @@ Hidden layer 0 input weight configuration
 Network Architecture:
 
   Input layer:     size 5
-  Hidden layer 0:  size 4    tanh
+  Hidden layer 0:  size 4     tanh
   Output layer:    size 1
 
 
@@ -1252,7 +1252,7 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    7.000  config:%echo  + + 1  = + +  + -1 =  1 +20+30-48 -10+9
+   1. Input-Hidden Weights:    7.000  config:%echo  + + 1  = + +  + -1 =  1 +20+30-48 -10+9
 
          Output Layer
 
@@ -1273,7 +1273,7 @@ Hidden layer 0 input weight configuration
 Network Architecture:
 
   Input layer:     size 5
-  Hidden layer 0:  size 5    identity
+  Hidden layer 0:  size 5     identity
   Output layer:    size 1
 
 
@@ -1281,11 +1281,11 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Hidden Biases:           3.000  config:%echo  3 1   = +   1 =  + +  + +
+   1. Hidden Biases:           3.000  config:%echo  3 1   = +   1 =  + +  + +
 
          Output Layer
 
-  Hidden0-Output Weights:  9.000
+   2. Hidden0-Output Weights:  9.000
 
 Hidden layer 0 bias configuration
 
@@ -1352,7 +1352,7 @@ Largest absolute log ratio: 0.0000
 Network Architecture:
 
   Input layer:     size 5
-  Hidden layer 0:  size 5    tanh
+  Hidden layer 0:  size 5     tanh
   Output layer:    size 1
 
 
@@ -1360,11 +1360,11 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Hidden Biases:           3.000  config:%echo  3 1   = +   1 =  + +  +3 +3
+   1. Hidden Biases:           3.000  config:%echo  3 1   = +   1 =  + +  +3 +3
 
          Output Layer
 
-  Hidden0-Output Weights:  9.000
+   2. Hidden0-Output Weights:  9.000
 
 Hidden layer 0 bias configuration
 
@@ -1440,7 +1440,7 @@ Prior Specifications:
 
          Output Layer
 
-  Output Biases:           3.000  config:%echo  3 1   = +   1 =  + +  +3 +3
+   1. Output Biases:           3.000  config:%echo  3 1   = +   1 =  + +  +3 +3
 
 Output layer bias configuration
 
@@ -1497,7 +1497,7 @@ Prior Specifications:
 
          Output Layer
 
-  Input-Output Weights:    3.000  config:%echo  2 3 1  4 1 2  5 2 1  1 1 3
+   1. Input-Output Weights:    3.000  config:%echo  2 3 1  4 1 2  5 2 1  1 1 3
 
 Output layer input weight configuration
 
@@ -1543,7 +1543,7 @@ Largest absolute log ratio: 0.0000
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 5    identity
+  Hidden layer 0:  size 5     identity
   Output layer:    size 1
 
 
@@ -1551,11 +1551,11 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    3.000
+   1. Input-Hidden Weights:    3.000
 
          Output Layer
 
-  Hidden0-Output Weights:  4.000  config:%echo  1 1 1  5 1 1  2 1 2
+   2. Hidden0-Output Weights:  4.000  config:%echo  1 1 1  5 1 1  2 1 2
 
 Output layer hidden weight configuration
 
@@ -1608,8 +1608,8 @@ Largest absolute log ratio: 0.0000
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 5    identity
-  Hidden layer 1:  size 4    identity
+  Hidden layer 0:  size 5     identity
+  Hidden layer 1:  size 4     identity
   Output layer:    size 1
 
 
@@ -1617,16 +1617,16 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    3.000  config:%echo 1 3 1
+   1. Input-Hidden Weights:    3.000  config:%echo 1 3 1
 
          Hidden Layer 1
 
-  Hidden-Hidden Weights:   2.000  config:%echo 3 2 1
+   2. Hidden-Hidden Weights:   2.000  config:%echo 3 2 1
 
          Output Layer
 
-  Hidden1-Output Weights:  5.000  config:%echo 2 1 1
-  Hidden0-Output Weights:  4.000  config:%echo 3 1 1
+   3. Hidden1-Output Weights:  5.000  config:%echo 2 1 1
+   4. Hidden0-Output Weights:  4.000  config:%echo 3 1 1
 
 Hidden layer 0 input weight configuration
 
@@ -1700,7 +1700,7 @@ Largest absolute log ratio: 0.0000
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 20   identity
+  Hidden layer 0:  size 20    identity
   Output layer:    size 1
 
 
@@ -1708,11 +1708,11 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Hidden Biases:           1.000  config:cfg-b
+   1. Hidden Biases:           1.000  config:cfg-b
 
          Output Layer
 
-  Hidden0-Output Weights:  1.000
+   2. Hidden0-Output Weights:  1.000
 
 Hidden layer 0 bias configuration
 
@@ -1857,7 +1857,7 @@ Largest absolute log ratio: 0.0000
 Network Architecture:
 
   Input layer:     size 1
-  Hidden layer 0:  size 20   identity
+  Hidden layer 0:  size 20    identity
   Output layer:    size 1
 
 
@@ -1865,11 +1865,11 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    1.000  config:cfg-i
+   1. Input-Hidden Weights:    1.000  config:cfg-i
 
          Output Layer
 
-  Hidden0-Output Weights:  1.000
+   2. Hidden0-Output Weights:  1.000
 
 Hidden layer 0 input weight configuration
 

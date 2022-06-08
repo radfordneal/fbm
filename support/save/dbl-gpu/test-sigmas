@@ -5,7 +5,7 @@
 Network Architecture:
 
   Input layer:     size 2
-  Hidden layer 0:  size 2    tanh
+  Hidden layer 0:  size 2     tanh
   Output layer:    size 1
 
 
@@ -13,7 +13,7 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    3.000:2.00:1.00
+   1. Input-Hidden Weights:    3.000:2.00:1.00
 
          Output Layer
 
@@ -50,7 +50,7 @@ Standard deviation: 1.427040
 Network Architecture:
 
   Input layer:     size 2
-  Hidden layer 0:  size 2    tanh
+  Hidden layer 0:  size 2     tanh
   Output layer:    size 1
 
 
@@ -58,7 +58,7 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    3.000:2.00::1.00
+   1. Input-Hidden Weights:    3.000:2.00::1.00
 
          Output Layer
 
@@ -95,7 +95,7 @@ Standard deviation: 1.293516
 Network Architecture:
 
   Input layer:     size 2
-  Hidden layer 0:  size 2    tanh
+  Hidden layer 0:  size 2     tanh
   Output layer:    size 1
 
 
@@ -103,7 +103,7 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    3.000:2.00::1.00  config:% echo 1 1 1  1 2 2  2 1 3  2 2 4
+   1. Input-Hidden Weights:    3.000:2.00::1.00  config:% echo 1 1 1  1 2 2  2 1 3  2 2 4
 
          Output Layer
 
@@ -147,7 +147,7 @@ Standard deviation: 1.293516
 Network Architecture:
 
   Input layer:     size 3
-  Hidden layer 0:  size 2    tanh
+  Hidden layer 0:  size 2     tanh
   Output layer:    size 1
 
 
@@ -155,7 +155,7 @@ Prior Specifications:
 
          Hidden Layer 0
 
-  Input-Hidden Weights:    3.000:2.00::1.00  config:% echo 1 1 1  1 2 2  3 1 3  3 2 4
+   1. Input-Hidden Weights:    3.000:2.00::1.00  config:% echo 1 1 1  1 2 2  3 1 3  3 2 4
 
          Output Layer
 

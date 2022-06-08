@@ -253,15 +253,15 @@ int main
     if (show_sizes)
     { 
       printf("\nNumbers of parameters and connections in each group:\n\n");
-      printf("  %-27sparameters  connections\n\n","");
+      printf(" %-27s  offset  parameters  connections\n\n","");
 
-      int cn, conns = 0;  
+      int pa, cn, offset=0, conns = 0;  
       char t[100];
         
       if (a->has_ti) 
-      { printf("  %-27s%6d    %9d\n","Input Offsets:", 
-               a->N_inputs, cn = a->N_inputs);
-        conns += cn;
+      { pa = a->N_inputs, cn = pa;
+        printf("  %-27s%7d  %7d    %9d\n","Input Offsets:", offset, pa, cn);
+        offset += pa; conns += cn;
       }
     
       nsqi = 0;
@@ -270,118 +270,111 @@ int main
         for (lp = 0; lp<l; lp++)
         { if ((a->has_nsq[l]>>lp) & 1)
           { sprintf(t, "Hidden%d-Hidden%d Weights:", lp, l);
-            printf("  %-27s", t);
             if (a->nonseq_config[nsqi])
-            { printf("%6d    %9d\n", 
-                a->hidden_config[nsqi]->N_wts,
-                cn = a->hidden_config[nsqi]->N_conn);
+            { pa = a->hidden_config[nsqi]->N_wts;
+              cn = a->hidden_config[nsqi]->N_conn;
             }
             else
-            { printf("%6d    %9d\n",
-                a->N_hidden[lp]*a->N_hidden[lp],
-                cn = a->N_hidden[lp]*a->N_hidden[lp]);
+            { pa = a->N_hidden[lp]*a->N_hidden[lp];
+              cn = pa;
             }
+            printf("  %-27s%7d  %7d    %9d\n", t, offset, pa, cn);
+            offset += pa; conns += cn;
             nsqi += 1;
-            conns += cn;
           }
         }
         if (l>0 && a->has_hh[l-1])
         { sprintf(t, "Hidden%d-Hidden%d Weights:", l-1, l);
-          printf("  %-27s", t);
           if (a->hidden_config[l])
-          { printf("%6d    %9d\n", 
-              a->hidden_config[l]->N_wts,
-              cn = a->hidden_config[l]->N_conn);
+          { pa = a->hidden_config[l]->N_wts;
+            cn = a->hidden_config[l]->N_conn;
           }
           else
-          { printf("%6d    %9d\n",
-              a->N_hidden[l-1]*a->N_hidden[l],
-              cn = a->N_hidden[l-1]*a->N_hidden[l]);
+          { pa = a->N_hidden[l-1]*a->N_hidden[l];
+            cn = pa;
           }
-          conns += cn;
+          printf("  %-27s%7d  %7d    %9d\n", t, offset, pa, cn);
+          offset += pa; conns += cn;
         }
         if (a->has_ih[l]) 
         { sprintf(t, "Input-Hidden%d Weights:", l);
-          printf("  %-27s", t);
           if (a->input_config[l])
-          { printf("%6d    %9d\n", 
-              a->input_config[l]->N_wts,
-              cn = a->input_config[l]->N_conn);
+          { pa = a->input_config[l]->N_wts;
+            cn = a->input_config[l]->N_conn;
           }
           else
-          { printf("%6d    %9d\n",
-             not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1))*a->N_hidden[l],
-             cn = 
-              not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1))*a->N_hidden[l]
-            );
+          { pa = 
+             not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1))*a->N_hidden[l];
+            cn = pa;
           }
-          conns += cn;
+          printf("  %-27s%7d  %7d    %9d\n", t, offset, pa, cn);
+          offset += pa; conns += cn;
         }
         if (a->has_bh[l]) 
         { sprintf(t, "Hidden%d Biases:", l);
-          printf("  %-27s", t);
           if (a->bias_config[l])
-          { printf("%6d    %9d\n", 
-              a->bias_config[l]->N_wts,
-              cn = a->bias_config[l]->N_conn);
+          { pa = a->bias_config[l]->N_wts;
+            cn = a->bias_config[l]->N_conn;
           }
           else
-          { printf("%6d    %9d\n", a->N_hidden[l], cn = a->N_hidden[l]);
+          { pa = a->N_hidden[l];
+            cn = pa;
           }
-          conns += cn;
+          printf("  %-27s%7d  %7d    %9d\n", t, offset, pa, cn);
+          offset += pa; conns += cn;
         }
         if (a->has_th[l]) 
         { sprintf(t, "Hidden%d Offsets:", l);
-          printf("  %-27s%6d    %9d", t, a->N_hidden[l], cn = a->N_hidden[l]);
-          conns += cn;
+          pa = a->N_hidden[l]; cn = pa;
+          printf("  %-27s%7d  %7d    %9d\n", t, offset, pa, cn);
+          offset += pa; conns += cn;
         }
       }
 
       for (l = a->N_layers-1; l>=0; l--)
       { if (a->has_ho[l]) 
         { sprintf(t, "Hidden%d-Output Weights:", l);
-          printf("  %-27s", t);
           if (a->hidden_config[2*a->N_layers-l-1])
-          { printf("%6d    %9d\n",
-              a->hidden_config[2*a->N_layers-l-1]->N_wts,
-              cn = a->hidden_config[2*a->N_layers-l-1]->N_conn);
+          { pa = a->hidden_config[2*a->N_layers-l-1]->N_wts;
+            cn = a->hidden_config[2*a->N_layers-l-1]->N_conn;
           }
           else
-          { printf("%6d    %9d\n", 
-              a->N_hidden[l]*a->N_outputs, cn = a->N_hidden[l]*a->N_outputs);
+          { pa = a->N_hidden[l]*a->N_outputs;
+            cn = pa;
           }
-          conns += cn;
+          printf("  %-27s%7d  %7d    %9d\n", t, offset, pa, cn);
+          offset += pa; conns += cn;
         }
       }
 
       if (a->has_io) 
-      { printf("  %-27s", "Input-Output Weights:");
-        if (a->input_config[a->N_layers])
-        { printf("%6d    %9d\n", a->input_config[a->N_layers]->N_wts,
-                                 cn = a->input_config[a->N_layers]->N_conn);
+      { if (a->input_config[a->N_layers])
+        { pa = a->input_config[a->N_layers]->N_wts;
+          cn = a->input_config[a->N_layers]->N_conn;
         }
         else
-        { printf("%6d    %9d\n", 
-             not_omitted(flgs?flgs->omit:0,a->N_inputs,1) * a->N_outputs,
-             cn = not_omitted(flgs?flgs->omit:0,a->N_inputs,1) * a->N_outputs);
+        { pa = not_omitted(flgs?flgs->omit:0,a->N_inputs,1) * a->N_outputs;
+          cn = pa;
         }
-        conns += cn;
+        printf("  %-27s%7d  %7d    %9d\n", "Input-Output Weights:",
+               offset, pa, cn);
+        offset += pa; conns += cn;
       }
 
       if (a->has_bo) 
-      { printf("  %-27s", "Output Biases:");
-        if (a->bias_config[a->N_layers])
-        { printf("%6d    %9d\n", a->bias_config[a->N_layers]->N_wts,
-                                 cn = a->bias_config[a->N_layers]->N_conn);
+      { if (a->bias_config[a->N_layers])
+        { pa = a->bias_config[a->N_layers]->N_wts;
+          cn = a->bias_config[a->N_layers]->N_conn;
         }
         else
-        { printf("%6d    %9d\n", a->N_outputs, cn = a->N_outputs);
+        { pa = a->N_outputs;
+          cn = pa;
         }
-        conns += cn;
+        printf("  %-27s%7d  %7d    %9d\n", "Output Biases:", offset, pa, cn);
+        offset += pa; conns += cn;
       }
 
-      printf("\n  %-27s%6d    %9d", "Total:", total, conns);
-      printf("\n");
+      printf("\n  %-27s%7s  %7d    %9d\n", "Total:", "", total, conns);
     }
 
     nsqi = 0;

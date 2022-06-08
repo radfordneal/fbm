@@ -64,7 +64,7 @@ static int show_info;	/* Whether to display info (INFO env var set to 1) */
 
 #if __CUDACC__
 
-static int maxblks = DEFAULT_MAXBLKS;	/* Max number of blocks per kernel */
+static int maxblks;			/* Max number of blocks per kernel */
 
 static int n_launches;			/* Number of launches needed to 
                                            handle all training cases */
@@ -689,6 +689,9 @@ void mc_app_initialize
 
 #   if __CUDACC__
     {
+      check_cuda_error (cudaGetDeviceProperties(&cuda_prop,0),
+                        "Get properties");
+
       if (BLKCASES<1 || (BLKCASES&GROUP_MASK)!=0)
       { fprintf(stderr,"BLKCASES must be a multiple of gradient groups size\n");
         exit(1);
@@ -704,9 +707,11 @@ void mc_app_initialize
           exit(1);
         }
       }
-
-      check_cuda_error (cudaGetDeviceProperties(&cuda_prop,0),
-                        "Get properties");
+      else
+      { maxblks = DEFAULT_MAXBLKS!=0 ? DEFAULT_MAXBLKS 
+                   : cuda_prop.multiProcessorCount 
+                      * cuda_prop.maxBlocksPerMultiProcessor;
+      }
 
       int needed_blocks = BLOCKS_PER_SM;
       if (needed_blocks > maxblks)

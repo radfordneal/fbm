@@ -138,7 +138,8 @@
                                    section that could lead to threads diverging?
                                    Note: for performance, not correctness. */
 
-#define DEFAULT_MAXBLKS	500  /* Default, if not set by MAXBLKS env var */
+#define DEFAULT_MAXBLKS	0      /* Default, if not set by MAXBLKS env var.  If
+                                  zero, default is derived from GPU properies */
 
 #define USE_FAST_SHARED_MEM 1  /* Use fast shared GPU memory for unit values and
                                   derivatives (if not ruled out by split)? */

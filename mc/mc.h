@@ -95,7 +95,10 @@ typedef struct
 
     float app_param2;	  /* Second application-specific parameter */
 
-    int reserved[4];      /* Reserved for future use */
+    int reserved[3];      /* Reserved for future use */
+
+    int options;          /* Option bits:
+                               1 for -D in dynamic operation */
 
     char appl[101];	  /* Name of application-specific procedure */
 

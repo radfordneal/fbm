@@ -225,13 +225,15 @@ Dynamical operations:
 
         Negate the momentum variables.
 
-    dynamic steps [ stepsize-adjust[:stepsize-alpha] ] 
+    dynamic [ -D ] steps [ stepsize-adjust[:stepsize-alpha] ] 
 
         Follow a dynamical trajectory for the given number of steps, 
         always accepting the result (hence does not leave distribution 
-        exactly invariant).
+        exactly invariant).  The -D option causes the change in total
+        energy to be recorded (accessible via the 'D' quantitity), with
+        a possible additional compuational cost.
 
-    permuted-dynamic steps [ stepsize-adjust[:stepsize-alpha] ] 
+    permuted-dynamic [ -D ] steps [ stepsize-adjust[:stepsize-alpha] ] 
 
         Like 'dynamic', but the order of approximations is randomly
         permuted.

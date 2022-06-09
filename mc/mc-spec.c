@@ -425,21 +425,25 @@ int main
     }
 
     else if (strcmp(*ap,"dynamic")==0 || strcmp(*ap,"permuted-dynamic")==0
-          || strcmp(*ap,"slice-inside")==0 || strcmp(*ap,"slice-outside")==0
-#if 0
-          || strcmp(*ap,"therm-dynamic")==0
-#endif
-    )
+          || strcmp(*ap,"slice-inside")==0 || strcmp(*ap,"slice-outside")==0)
     {
       ops->op[o].type = strcmp(*ap,"dynamic")==0 ? 'D' 
                       : strcmp(*ap,"permuted-dynamic")==0 ? 'P'
                       : strcmp(*ap,"slice-inside")==0 ? 'i' 
-                      : strcmp(*ap,"slice-outside")==0 ? 'o' : 'h';
+                      : strcmp(*ap,"slice-outside")==0 ? 'o' : 0;
 
       ops->op[o].stepsize_adjust = 1;
       ops->op[o].stepsize_alpha = 0;
+      ops->op[o].options = 0;
 
       ap += 1;
+
+      if (ops->op[o].type=='D' || ops->op[o].type=='P')
+      { if (*ap && strcmp(*ap,"-D")==0)
+        { ops->op[o].options |= 1;
+          ap += 1;
+        }
+      }
 
       if (!*ap || !strchr("0123456789+-.",**ap)) usage();
 
@@ -1088,12 +1092,14 @@ static void display_specs
           break;
         }
   
-        case 'D': case 'P': case 'i': case 'o': case 'h':
+        case 'D': case 'P': case 'i': case 'o':
         { printf (" %s", ops->op[o].type=='D' ? "dynamic" 
                        : ops->op[o].type=='P' ? "permuted-dynamic"
                        : ops->op[o].type=='i' ? "slice-inside" 
-                       : ops->op[o].type=='o' ? "slice-outside" 
-                       :                        "therm-dynamic");
+                       : ops->op[o].type=='o' ? "slice-outside" : NULL);
+          if (ops->op[o].options & 1)
+          { printf(" -D");
+          }
           printf (" %d", ops->op[o].steps);
           if (ops->op[o].type=='o' && ops->op[o].in_steps!=ops->op[o].steps)
           { printf ("/%d", ops->op[o].in_steps);

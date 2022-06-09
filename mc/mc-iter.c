@@ -450,23 +450,31 @@ static void do_group
         break;
       }
 
-      case 'D':
-      { mc_traj_init(tj,it,0,ds->dim-1);
-        mc_trajectory(ds,ops->op[i].steps,0);
-        break;
-      }
-#if 0
-      case 'h':
-      { mc_therm_present(ds);
-        mc_traj_init(tj,it,0,ds->dim-1);
-        mc_therm_trajectory(ds,ops->op[i].steps,0);
-        break;
-      }
-#endif
-      case 'P':
-      { mc_traj_init(tj,it,0,ds->dim-1);
-        mc_traj_permute();
-        mc_trajectory(ds,ops->op[i].steps,0);
+      case 'D': case 'P':
+      { double old_pot_energy, old_kinetic_energy;
+        mc_traj_init (tj, it, 0, ds->dim-1);
+        if (ops->op[i].options&1)
+        { if (!ds->know_pot)
+          { mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
+            ds->know_pot = 1;
+          }
+          if (!ds->know_kinetic)
+          { ds->kinetic_energy = mc_kinetic_energy(ds);
+            ds->know_kinetic = 1;
+          }
+          old_pot_energy = ds->pot_energy;
+          old_kinetic_energy = ds->kinetic_energy;
+        }
+        if (type=='P') mc_traj_permute();
+        mc_trajectory (ds, ops->op[i].steps, ops->op[i].options&1);
+        if (ops->op[i].options&1)
+        { if (!ds->know_kinetic)
+          { ds->kinetic_energy = mc_kinetic_energy(ds);
+            ds->know_kinetic = 1;
+          }
+          it->delta = (ds->kinetic_energy + ds->pot_energy)
+                    - (old_kinetic_energy + old_pot_energy);
+        }
         break;
       }
 

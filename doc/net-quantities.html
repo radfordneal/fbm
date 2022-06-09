@@ -30,6 +30,18 @@ available.
     tn   Same as zn, except n must not be omitted
     Tn   Same as Zn, except n must not be omitted
 
+    un   If n&lt;100: As an array, average absolute value of units in
+         hidden layer n (from 0) for training cases.  As a scalar, the
+         average over training cases of this average.
+
+         if n&gt;=100: As an array, the value of unit n div 100 (ie, n
+         with last two digits removed), from 1, of hidden layer n mod
+         100 (ie, last two digits of n), from 0.  As a scalar, the
+         average over training cases of the absolute value of unit n
+         div 100 of hidden layer n mod 100.
+
+    Un   Same as for un, except for test cases.
+
     P    Log prior probability of the network parameters with current 
          hyperparameter values
 
@@ -136,7 +148,7 @@ arguments of the form
 as the last arguments of the command that accesses these quantities
 (eg, net-plt).
 
-            Copyright (c) 1995-2004 by Radford M. Neal
+            Copyright (c) 1995-2022 by Radford M. Neal
 </pre>
 </body>
 </html>

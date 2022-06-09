@@ -44,12 +44,16 @@ Feature changes in the version:
    files (eg, for convolution).  This directory is looked in if a
    configuration file cannot be opened directly.
 
-7) The net-spec command with "sizes" option now displays the number
+7) New u and U network quantities allow display of hidden unit values
+   in training or test cases, or of averages of the absolute values
+   of these units.
+
+8) The net-spec command with "sizes" option now displays the number
    of connections in each group as well as the number of parameters
    (which may differ for configured groups).  It also displays the
    offset of each parameter group within the full set of parameters.
 
-8) The way net-spec displays hidden and output unit adjustments has
+9) The way net-spec displays hidden and output unit adjustments has
    changed - they are now displayed separately in order with other
    groups.  Group numbers are now also displayed.
 

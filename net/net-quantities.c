@@ -1,6 +1,6 @@
 /* NET-QUANTITIES.C - Module defining quantities for neural networks. */
 
-/* Copyright (c) 1995-2021 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -172,8 +172,8 @@ void net_available
     if (letter && qd[v].available==0 && (strchr("iItT",letter)==0 || mod!=-1)
                && !((letter=='c' || letter=='C') && mod!=-1))
     {
-      int want_train = strchr("ixoygzlcbav",letter)!=0 || letter=='t'&&mod!=-1;
-      int want_test = strchr("IXOYGTZLCBAV",letter)!=0;
+      int want_train = strchr("ixoygzlcbauv",letter)!=0 || letter=='t'&&mod!=-1;
+      int want_test = strchr("IXOYGTZLCBAUV",letter)!=0;
       int want_test_targets = strchr("TZLBA",letter)!=0;
 
       if (want_train && !have_train_data
@@ -187,16 +187,15 @@ void net_available
       { net_data_read (want_train, want_test, arch, model, surv);
       }
 
-# if 0 /* Disable these */
-      if (strchr("uU",letter)!=0)
-      { qd[v].available = 1;
-      }
-# endif
       if (strchr("xXiI",letter)!=0)
       { qd[v].available = mod<arch->N_inputs ? 1 : -1; 
       }
       else if (strchr("oOyYgGzZtT",letter)!=0)
       { qd[v].available = mod<arch->N_outputs ? 1 : -1; 
+      }
+      else if (strchr("uU",letter)!=0)
+      { qd[v].available = mod%100 < arch->N_layers
+                           && mod/100 <= arch->N_hidden[mod%100] ? 1 : -1;
       }
       else if (strchr("bBaA",letter)!=0)
       { qd[v].available = mod<arch->N_outputs ? 1 : -1;
@@ -338,7 +337,7 @@ void net_evaluate
   int N_cases;
   int ev_train, ev_test;
   char letter;
-  int v, i, j;
+  int v, i;
 
   if (logg->data['S']==0 || logg->index['S']!=logg->last_index
    || logg->data['W']==0 || logg->index['W']!=logg->last_index) 
@@ -369,7 +368,7 @@ void net_evaluate
       }
 
       if (!ev_train 
-      && (strchr("uoyglbacv",letter)!=0 || letter=='n' && model_type=='C'))
+      && (strchr("oyglbacuv",letter)!=0 || letter=='n' && model_type=='C'))
       { if (!have_train_data) abort();
         for (i = 0; i<N_train; i++)
         { net_func (&train_values[i], arch, &pre, flgs, &params, 1);
@@ -378,7 +377,7 @@ void net_evaluate
       }
 
       if (!ev_test 
-      && (strchr("OYGLBACV",letter)!=0 || letter=='N' && model_type=='C'))
+      && (strchr("OYGLBACUV",letter)!=0 || letter=='N' && model_type=='C'))
       { if (!have_test_data) abort();
         for (i = 0; i<N_test; i++)
         { net_func (&test_values[i], arch, &pre, flgs, &params, 1);
@@ -401,6 +400,43 @@ void net_evaluate
         case 'o': case 'O':
         { for (i = low; i<=high; i++)
           { qh->value[v][i-low] = cases[i].o[mod];
+          }
+          qh->updated[v] = 1;
+          break;
+        }
+
+        case 'u': case 'U':
+        { double s = 0;
+          int l = mod%100;
+          int j = mod/100-1;
+          if (low==-1)
+          { if (j<0)
+            { for (i = 0; i<N_cases; i++)
+              { for (j = 0; j<arch->N_hidden[l]; j++)
+                { s += fabs (cases[i].h[l][j]);
+                }
+              }
+              *qh->value[v] = s / (N_cases*arch->N_hidden[l]);
+            }
+            else
+            { for (i = 0; i<N_cases; i++)
+              { s += fabs (cases[i].h[l][j]);
+              }
+              *qh->value[v] = s / N_cases;
+            }
+          }
+          else
+          { for (i = low; i<=high; i++)
+            { if (j<0)
+              { for (j = 0; j<arch->N_hidden[l]; j++)
+                { s += fabs (cases[i].h[l][j]);
+                }
+                qh->value[v][i-low] = s / arch->N_hidden[l];
+              }
+              else
+              { qh->value[v][i-low] = cases[i].h[l][j];
+              }
+            }
           }
           qh->updated[v] = 1;
           break;
@@ -744,6 +780,7 @@ void net_evaluate
         case 'v': case 'V':
         { 
           double tv, m, q, h;
+          int j;
  
           if (low==-1) tv = 0;
 
@@ -781,7 +818,7 @@ void net_evaluate
         case 'M':
         {
           double sorted[1000], t;
-          int i, j;
+          int j;
 
           for (i = 0; i<arch->N_hidden[arch->N_layers-1]; i++)
           { t = params.ho[arch->N_layers-1][i*arch->N_outputs+mod];

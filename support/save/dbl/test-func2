@@ -44,6 +44,12 @@ Noise levels [5]
        o0@0     
  4.86920000e+06 
 4.8692E+06
+         u0            u100            u200     
+ 7.78250000e+04  1.59000000e+03  1.54060000e+05 
+       u0@0          u100@0          u200@0     
+ 7.78250000e+04  1.59000000e+03  1.54060000e+05 
+1590
+154060
 
 Computed energy and gradient, compared with that from finite differences
 

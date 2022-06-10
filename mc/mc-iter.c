@@ -463,8 +463,11 @@ static void do_group
       }
 
       case 'D': case 'P':
-      { double old_pot_energy, old_kinetic_energy;
+      { 
+        double old_pot_energy, old_kinetic_energy;
+
         mc_traj_init (tj, it, 0, ds->dim-1);
+
         if (ops->op[i].options&1)
         { if (!ds->know_pot)
           { mc_app_energy (ds, 1, 1, &ds->pot_energy, 0);
@@ -477,16 +480,29 @@ static void do_group
           old_pot_energy = ds->pot_energy;
           old_kinetic_energy = ds->kinetic_energy;
         }
+
         if (type=='P') mc_traj_permute();
         mc_trajectory (ds, ops->op[i].steps, ops->op[i].options&1);
+
         if (ops->op[i].options&1)
-        { if (!ds->know_kinetic)
+        { 
+          if (!ds->know_kinetic)
           { ds->kinetic_energy = mc_kinetic_energy(ds);
             ds->know_kinetic = 1;
           }
           it->delta = (ds->kinetic_energy + ds->pot_energy)
                     - (old_kinetic_energy + old_pot_energy);
+
+          if (ops->op[i].options&2)
+          { double l = ops->op[i].adapt_rate;
+            if (it->delta>=0)
+            { double frac = ops->op[i].adapt_target;
+              l = -l * frac / (1-frac);
+            }
+            it->adaptive_factor *= exp(l);
+          }
         }
+
         break;
       }
 

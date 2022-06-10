@@ -340,6 +340,13 @@ static void do_group
       it->stepsize_factor = 
         stepsize_adjust>0 ? stepsize_adjust : -stepsize_adjust;
 
+      if (stepsize_adjust>0 && ops->op[i].options&2)
+      { if (it->adaptive_factor==0)
+        { it->adaptive_factor = 1;
+        }
+        it->stepsize_factor *= it->adaptive_factor;
+      }
+
       if (alpha!=0) 
       { it->stepsize_factor *= 
           alpha>0 ? 1 / sqrt (rand_gamma(alpha/2) / (alpha/2))
@@ -447,6 +454,11 @@ static void do_group
       case '1':
       { mc_binary_gibbs(ds,it,ops->op[i].firsti,ops->op[i].lasti,
                         ops->op[i].r_update);
+        break;
+      }
+
+      case '&':
+      { it->adaptive_factor = ops->op[i].adapt_set_value;
         break;
       }
 

@@ -454,6 +454,7 @@ int main
           }
           ops->op[o].adapt_target = a;
           ops->op[o].adapt_rate = b;
+          ops->op[o].options |= 1;  /* implies -D */
           ops->op[o].options |= 2;  /* implies ^ for stepsize */
           ap += 1;
         }

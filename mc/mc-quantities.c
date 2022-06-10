@@ -103,6 +103,10 @@ void mc_available
       if (letter=='p')
       { qd[i].available = low==-1 && mod>=0 && mod<ds.dim ? 1 : -1;
       }
+
+      if (letter=='^')
+      { qd[i].available = low==-1 && mod==-1 ? 1 : -1;
+      }
     }
   }
 }
@@ -442,6 +446,13 @@ void mc_evaluate
           qh->updated[i] = 1;
           break;
         }
+
+        case '^':
+        { if (it==0 || logg->index['i']!=logg->last_index) break;
+          *qh->value[i] = it->adaptive_factor==0 ? 1 : it->adaptive_factor;
+          qh->updated[i] = 1;
+          break;
+	}
       }
     }
   }

@@ -95,10 +95,17 @@ typedef struct
 
     float app_param2;	  /* Second application-specific parameter */
 
-    int reserved[3];      /* Reserved for future use */
+    int reserved;         /* Reserved for future use */
+
+    float adapt_rate;     /* Adaptation rate in -a option */
+    float adapt_target;   /* Fraction of negative 'D' values aiming for in -a */
+
+#   define adapt_set_value adapt_target  /* Value in set-adaptive-factor,
+                                            overlaps adapt_target */
 
     int options;          /* Option bits:
-                               1 for -D in dynamic operation */
+                               1 for -D in dynamic operation 
+                               2 for ^ before stepsize */
 
     char appl[101];	  /* Name of application-specific procedure */
 
@@ -209,7 +216,9 @@ typedef struct
   float temperature;	/* Temperature used during this iteration */
   float decay;		/* Heatbath decay used during this iteration */
 
-  char reserved[96];	/* Reserved for future use */
+  char reserved[92];	/* Reserved for future use */
+
+  float adaptive_factor;   /* Adaptive factor for adjusting stepsizes */
 
   int consecutive_accepts; /* Length of run of acceptances at end of iteration;
                               negated for immediately following rejection; zero

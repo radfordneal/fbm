@@ -439,8 +439,22 @@ int main
       ap += 1;
 
       if (ops->op[o].type=='D' || ops->op[o].type=='P')
-      { if (*ap && strcmp(*ap,"-D")==0)
+      { ops->op[o].adapt_target = ops->op[o].adapt_rate = 0;
+        if (*ap && strcmp(*ap,"-D")==0)
         { ops->op[o].options |= 1;
+          ap += 1;
+        }
+        else if (*ap && (*ap)[0]=='-' && (*ap)[1]=='a')
+        { float a = 0.25, b = 0.01;
+          char junk;
+          if ((*ap)[2]!=0 && sscanf(*ap+2,"%f%c",&a,&junk)!=1
+                          && sscanf(*ap+2,"%f/%f%c",&a,&b,&junk)!=2
+                || a<=0 || a>=0.5 || b<=0)
+          { usage();
+          }
+          ops->op[o].adapt_target = a;
+          ops->op[o].adapt_rate = b;
+          ops->op[o].options |= 2;  /* implies ^ for stepsize */
           ap += 1;
         }
       }
@@ -456,11 +470,21 @@ int main
            || ops->op[o].in_steps>ops->op[o].steps) usage();
         }
       }
-
       ap += 1;
 
-      if (*ap && strchr("0123456789+-.",**ap))
-      { if ((ops->op[o].stepsize_adjust = atof(*ap))==0) usage();
+      if (*ap && strchr("0123456789+-.^",**ap))
+      { if (**ap=='^' && (ops->op[o].type=='D' || ops->op[o].type=='P'))
+        { ops->op[o].options |= 2;
+          if ((*ap)[1]==0 || (*ap)[1]==':')
+          { ops->op[o].stepsize_adjust = 1;
+          }
+          else
+          { if ((ops->op[o].stepsize_adjust = atof(*ap+1))==0) usage();
+          }
+        }
+        else
+        { if ((ops->op[o].stepsize_adjust = atof(*ap))==0) usage();
+        }
         if (strchr(*ap,':')!=0)
         { if ((ops->op[o].stepsize_alpha = atof(strchr(*ap,':')+1))==0) usage();
         }
@@ -528,8 +552,20 @@ int main
       } 
       ap += 1;
 
-      if (*ap && strchr("0123456789+-.",**ap))
-      { if ((ops->op[o].stepsize_adjust = atof(*ap))==0) usage();
+      if (*ap && strchr("0123456789+-.^",**ap))
+      { if (**ap=='^' && ops->op[o].type=='H')
+        { ops->op[o].options |= 2;
+          if ((*ap)[1]==0 || (*ap)[1]==':')
+          { ops->op[o].stepsize_adjust = 1;
+          }
+          else
+          { if ((ops->op[o].stepsize_adjust = atof(*ap+1))==0) usage();
+          }
+        }
+        else
+        { ops->op[o].options &= ~2;
+          if ((ops->op[o].stepsize_adjust = atof(*ap))==0) usage();
+        }
         if (strchr(*ap,':')!=0)
         { if ((ops->op[o].stepsize_alpha = atof(strchr(*ap,':')+1))==0) usage();
         }
@@ -590,6 +626,16 @@ int main
       if ((ops->op[o].repeat_count = atoi(*ap++))<=0) usage();
 
       depth += 1;
+    }
+
+    else if (strcmp(*ap,"set-adaptive-factor")==0)
+    {
+      ops->op[o].type = '&';
+
+      ap += 1;
+
+      if (*ap==0 || (ops->op[o].adapt_set_value = atof(*ap)) <= 0) usage();
+      ap += 1;
     }
 
     else if (strcmp(*ap,"multiply-stepsizes")==0)
@@ -995,11 +1041,11 @@ static void display_specs
           { printf(" -b");
           }
           if (ops->op[o].stepsize_alpha!=0)
-          { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
-                                  ops->op[o].stepsize_alpha);
+          { printf(" %.4f:%.4f", ops->op[o].stepsize_adjust,
+                                 ops->op[o].stepsize_alpha);
           }
           else if (ops->op[o].stepsize_adjust!=1)
-          { printf(" %.4f",ops->op[o].stepsize_adjust);
+          { printf(" %.4f", ops->op[o].stepsize_adjust);
           }
           printf("\n");
           break;
@@ -1017,11 +1063,11 @@ static void display_specs
           { printf(" -???");
           }
           if (ops->op[o].stepsize_alpha!=0)
-          { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
-                                  ops->op[o].stepsize_alpha);
+          { printf(" %.4f:%.4f", ops->op[o].stepsize_adjust,
+                                 ops->op[o].stepsize_alpha);
           }
           else if (ops->op[o].stepsize_adjust!=1)
-          { printf(" %.4f",ops->op[o].stepsize_adjust);
+          { printf(" %.4f", ops->op[o].stepsize_adjust);
           }
           printf("\n");
           break;
@@ -1036,11 +1082,11 @@ static void display_specs
           { printf(" -???");
           }
           if (ops->op[o].stepsize_alpha!=0)
-          { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
-                                  ops->op[o].stepsize_alpha);
+          { printf(" %.4f:%.4f", ops->op[o].stepsize_adjust,
+                                 ops->op[o].stepsize_alpha);
           }
           else if (ops->op[o].stepsize_adjust!=1)
-          { printf(" %.4f",ops->op[o].stepsize_adjust);
+          { printf(" %.4f", ops->op[o].stepsize_adjust);
           }
           printf("\n");
           break;
@@ -1055,11 +1101,11 @@ static void display_specs
           { printf(" -r");
           }
           if (ops->op[o].stepsize_alpha!=0)
-          { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
-                                  ops->op[o].stepsize_alpha);
+          { printf(" %.4f:%.4f", ops->op[o].stepsize_adjust,
+                                 ops->op[o].stepsize_alpha);
           }
           else if (ops->op[o].stepsize_adjust!=1 || ops->op[o].firsti!=-1)
-          { printf(" %.4f",ops->op[o].stepsize_adjust);
+          { printf(" %.4f", ops->op[o].stepsize_adjust);
           }
           if (ops->op[o].firsti>=0)
           { printf(" %d",ops->op[o].firsti);
@@ -1100,17 +1146,22 @@ static void display_specs
           if (ops->op[o].options & 1)
           { printf(" -D");
           }
+          if (ops->op[o].adapt_target!=0)
+          { printf(" -a%.2f/%.3f", ops->op[o].adapt_target, 
+                                   ops->op[o].adapt_rate);
+          }
           printf (" %d", ops->op[o].steps);
           if (ops->op[o].type=='o' && ops->op[o].in_steps!=ops->op[o].steps)
           { printf ("/%d", ops->op[o].in_steps);
           }
 
+          printf(" %s", ops->op[o].options&2 ? "^" : "");
           if (ops->op[o].stepsize_alpha!=0)
-          { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
-                                  ops->op[o].stepsize_alpha);
+          { printf("%.4f:%.4f", ops->op[o].stepsize_adjust,
+                                ops->op[o].stepsize_alpha);
           }
           else if (ops->op[o].stepsize_adjust!=1)
-          { printf(" %.4f",ops->op[o].stepsize_adjust);
+          { printf("%.4f", ops->op[o].stepsize_adjust);
           }
           printf("\n");
           break;
@@ -1129,12 +1180,13 @@ static void display_specs
           if (ops->op[o].jump!=1)
           { printf(":%d",ops->op[o].jump);
           }
+          printf(" %s", ops->op[o].options&2 ? "^" : "");
           if (ops->op[o].stepsize_alpha!=0)
-          { printf(" %.4f:%.4f",ops->op[o].stepsize_adjust,
+          { printf("%.4f:%.4f", ops->op[o].stepsize_adjust,
                                 ops->op[o].stepsize_alpha);
           }
           else if (ops->op[o].stepsize_adjust!=1 || ops->op[o].firsti!=-1)
-          { printf(" %.4f",ops->op[o].stepsize_adjust);
+          { printf("%.4f",ops->op[o].stepsize_adjust);
           }
           if (ops->op[o].firsti>=0)
           { printf(" %d",ops->op[o].firsti);
@@ -1284,6 +1336,12 @@ static void display_specs
         { printf(" repeat %d",ops->op[o].repeat_count);
           printf("\n");
           depth += 1;
+          break;
+        }
+
+        case '&':
+        { printf(" set-adaptive-factor %f",ops->op[o].adapt_set_value);
+          printf("\n");
           break;
         }
 

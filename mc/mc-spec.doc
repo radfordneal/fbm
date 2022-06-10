@@ -43,14 +43,25 @@ described below:
     [ stepsize-adjust[:stepsize-alpha] ]
 
         Specifies a stepsize to use, or a distribution of stepsizes to
-        randomly select from.  A minus sign before a stepsize-adjust
-        value results in the adjustment being applied to uniform
-        stepsizes of one; otherwise, the adjustment is applied to the
-        application-specific stepsizes (which may be non-uniform).  
+        randomly select from.  
+
+        An "^" before a stepsize-adjust value means it is multiplied
+        by an adaptively set value (see the documentation below for
+        the dynamic operation).  If only "^" is present, the adaptive
+        value is used without multiplication (ie, the default for the
+        following number is one).  This feature is allowed only for
+        the 'dynamic', 'permuted-dynamic', and 'hybrid' operations.
+
+        A minus sign before a stepsize-adjust value results in the
+        adjustment being applied to uniform stepsizes of one;
+        otherwise, the adjustment is to the application-specific
+        stepsizes (which may be non-uniform).  
+
         A minus sign in front of stepsize-alpha means that instead of
-        the usual Gamma-based distribution for stepsizes, a distribution
-        over 'alpha' orders of magnitude, uniform in the log domain,
-        centred at the value found using stepsize-adjust, is used.
+        the usual Gamma-based distribution for stepsizes, a
+        distribution over 'alpha' orders of magnitude, uniform in the
+        log domain, centred at the value found using stepsize-adjust,
+        is used.
 
         The Gamma-based stepsize distribution uses a Gamma distribution
         with shape alpha/2 and scale 1/(alpha/2), with stepsize-adjust
@@ -93,6 +104,12 @@ General operations:
         output suitable for the xgraph plot program), unless no
         quantities are specified.
 
+    set-adaptive-factor value
+
+        Set the adaptive stepsize factor the the given value (which must
+        be positive).  The default initial adaptive stepsize factor if
+        it is not set is one.
+
     multiply-stepsizes factor [ first[:last] ] ]
 
         Multiplies the stepsizes for coordinates in the given range by the 
@@ -105,6 +122,9 @@ General operations:
         If a multiply-stepsizes operation is inside a "repeat", it will 
         be done repeatedly.  In particular, if factor is less than one, 
         the stepsizes will be successively smaller for each repetition.
+
+        Note that this modification of stepsizes is separate from the
+        adaptive stepsize factor.
 
     slevel [ move [ random ] ] 
 
@@ -225,13 +245,27 @@ Dynamical operations:
 
         Negate the momentum variables.
 
-    dynamic [ -D ] steps [ stepsize-adjust[:stepsize-alpha] ] 
+    dynamic [ -D | -a[frac[/f]] ] steps [ stepsize-adjust[:stepsize-alpha] ] 
 
-        Follow a dynamical trajectory for the given number of steps, 
-        always accepting the result (hence does not leave distribution 
-        exactly invariant).  The -D option causes the change in total
-        energy to be recorded (accessible via the 'D' quantitity), with
-        a possible additional compuational cost.
+        Follow a dynamical trajectory for the given number of steps,
+        always accepting the result.  (It hence does not leave the
+        distribution exactly invariant.)
+
+        The -D option causes the change in total energy to be recorded
+        (accessible via the 'D' quantitity), with a possible
+        additional compuational cost.
+
+        The -a option specifies that the adaptive stepsize factor
+        should be updated based on the change in total energy (the 'D'
+        quantity) for the trajectory.  It implies the -D option, and
+        implies the presence of "^" at the start of stepsize-adjust
+        (even it is not explicitly written).  The 'frac' value given
+        (default 0.25) is the desired fraction of negative 'D' values,
+        which should be less than 0.5.  The 'f' value (default 0.01,
+        must be positive) is the log of the factor by which the
+        adaptive factor should be multiplied if 'D' is negative; when
+        'D' is positive, the adaptive factor is instead divided by
+        exp(f*frac/(1-frac)).
 
     permuted-dynamic [ -D ] steps [ stepsize-adjust[:stepsize-alpha] ] 
 

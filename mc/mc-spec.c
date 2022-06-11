@@ -450,6 +450,7 @@ int main
             char junk;
             if ((*ap)[2]!=0 && sscanf(*ap+2,"%f%c",&t,&junk)!=1
                             && sscanf(*ap+2,"%f%%%f%c",&t,&f,&junk)!=2
+                            && sscanf(*ap+2,"%f/%f%c",&t,&d,&junk)!=2
                             && sscanf(*ap+2,"%f%%%f/%f%c",&t,&f,&d,&junk)!=3
                   || t<=0 || f<=0 || d<=0)
             { usage();

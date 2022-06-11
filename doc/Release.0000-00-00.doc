@@ -58,6 +58,11 @@ Feature changes in the version:
     -D option, which causes the change in energy to be recorded (at
     possible extra computational cost).
 
+11) The dynamic and permuted-dynamic operations can now update an
+    adaptive factor for stepsizes, that can be used by dynamic,
+    permuted-dynamic, and hybird operations.  See mc-spec.doc for
+    details.
+
 
 Performance changes in this version:
 

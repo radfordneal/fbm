@@ -485,21 +485,28 @@ static void do_group
         mc_trajectory (ds, ops->op[i].steps, ops->op[i].options&1);
 
         if (ops->op[i].options&1)
-        { 
-          if (!ds->know_kinetic)
+        { if (!ds->know_kinetic)
           { ds->kinetic_energy = mc_kinetic_energy(ds);
             ds->know_kinetic = 1;
           }
           it->delta = (ds->kinetic_energy + ds->pot_energy)
                     - (old_kinetic_energy + old_pot_energy);
+        }
 
-          if (ops->op[i].options&2)
-          { double l = ops->op[i].adapt_rate;
-            if (it->delta>=0)
-            { double frac = ops->op[i].adapt_target;
-              l = -l * frac / (1-frac);
-            }
-            it->adaptive_factor *= exp(l);
+        if (ops->op[i].adapt_target!=0)
+        { 
+          if (!ds->know_kinetic)
+          { ds->kinetic_energy = mc_kinetic_energy(ds);
+            ds->know_kinetic = 1;
+          }
+          
+          double l = ops->op[i].adapt_rate;
+          double t = 1+ops->op[i].adapt_target;
+          double a = 2*ds->kinetic_energy/ds->dim;
+          it->adaptive_factor *= exp(l*(t-a));
+
+          if (it->delta>ops->op[i].adapt_delta_trigger)
+          { it->adaptive_factor *= 0.9;
           }
         }
 

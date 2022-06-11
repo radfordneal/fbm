@@ -95,10 +95,11 @@ typedef struct
 
     float app_param2;	  /* Second application-specific parameter */
 
-    int reserved;         /* Reserved for future use */
-
     float adapt_rate;     /* Adaptation rate in -a option */
-    float adapt_target;   /* Fraction of negative 'D' values aiming for in -a */
+    float adapt_target;   /* Fraction above true mean of kinetic energy
+                             that adaptation aims for */
+    float adapt_delta_trigger;  /* Value for delta above which adaptation
+                                   by multiplying by 0.9 is done */
 
 #   define adapt_set_value adapt_target  /* Value in set-adaptive-factor,
                                             overlaps adapt_target */

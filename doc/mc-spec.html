@@ -248,7 +248,7 @@ Dynamical operations:
 
         Negate the momentum variables.
 
-    dynamic [ -D | -a[frac[/f]] ] steps [ stepsize-adjust[:stepsize-alpha] ] 
+    dynamic [ -D ] [ -a[t[%f][/d] ] steps [ stepsize-adjust[:stepsize-alpha] ] 
 
         Follow a dynamical trajectory for the given number of steps,
         always accepting the result.  (It hence does not leave the
@@ -259,16 +259,19 @@ Dynamical operations:
         additional compuational cost.
 
         The -a option specifies that the adaptive stepsize factor
-        should be updated based on the change in total energy (the 'D'
-        quantity) for the trajectory.  It implies the -D option, and
-        implies the presence of "^" at the start of stepsize-adjust
-        (even it is not explicitly written).  The 'frac' value given
-        (default 0.25) is the desired fraction of negative 'D' values,
-        which should be less than 0.5.  The 'f' value (default 0.01,
-        must be positive) is the log of the factor by which the
-        adaptive factor should be multiplied if 'D' is negative; when
-        'D' is positive, the adaptive factor is instead divided by
-        exp(f*frac/(1-frac)).
+        should be updated based on the magnitude of the kinetic energy
+        at the end of the trajectory and the change in total energy
+        over the trajectory.  It implies the -D option, and the
+        presence of "^" at the start of stepsize-adjust (even that is
+        not explicitly written).  The 't' value (default 0.001) gives
+        the desired fraction by which the mean kinetic energy should
+        exceed the correct mean (equal to half the dimensionality).
+        The 'f' value (default 0.001) is the constant for adjusting
+        the log of the adaptive stepsize factor according to the
+        difference of the kinetic energy from this target.  The 'd'
+        value (default 10) is the threshold for the change in total
+        energy above which the adaptive stepsize factor is multiplied
+        by 0.9, to avoid instability.
 
     permuted-dynamic [ -D ] steps [ stepsize-adjust[:stepsize-alpha] ] 
 

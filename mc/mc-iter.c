@@ -503,9 +503,10 @@ static void do_group
           double l = ops->op[i].adapt_rate;
           double t = 1+ops->op[i].adapt_target;
           double a = 2*ds->kinetic_energy/ds->dim;
+
           it->adaptive_factor *= exp(l*(t-a));
 
-          if (it->delta>ops->op[i].adapt_delta_trigger)
+          if (it->delta > ops->op[i].adapt_delta_trigger)
           { it->adaptive_factor *= 0.9;
           }
         }
@@ -519,6 +520,20 @@ static void do_group
                     tj, ops->op[i].steps, ops->op[i].window, 
                     ops->op[i].jump, type=='H' ? 0.0 : ops->op[i].temper_factor,
                     N_quantities, q_save, p_save, q_asv, p_asv, q_rsv, p_rsv);
+
+          if (ops->op[i].adapt_target!=0)
+          { 
+            double l = ops->op[i].adapt_rate;
+            double t = ops->op[i].adapt_target;
+            double D = it->delta;
+            double r = D<0 ? 0 : 1-exp(-D);
+
+            it->adaptive_factor *= exp(l*(t-r));
+  
+            if (D > ops->op[i].adapt_delta_trigger)
+            { it->adaptive_factor *= 0.9;
+            }
+          }
         }
         else
         { mc_hybrid2 (ds, it, ops->op[i].firsti, ops->op[i].lasti,

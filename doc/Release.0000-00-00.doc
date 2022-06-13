@@ -60,8 +60,9 @@ Feature changes in the version:
 
 11) The dynamic and permuted-dynamic operations can now update an
     adaptive factor for stepsizes, that can be used by dynamic,
-    permuted-dynamic, and hybrid operations.  See mc-spec.doc for
-    details.
+    permuted-dynamic, and hybrid operations. One form of the hybrid
+    operation also allows adaptation, using a different criterion.
+    See mc-spec.doc for details. 
 
 
 Performance changes in this version:

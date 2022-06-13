@@ -439,7 +439,9 @@ int main
       ap += 1;
 
       if (ops->op[o].type=='D' || ops->op[o].type=='P')
-      { ops->op[o].adapt_target = ops->op[o].adapt_rate = 0;
+      { ops->op[o].adapt_target = 0;
+        ops->op[o].adapt_rate = 0;
+        ops->op[o].adapt_delta_trigger = 0;
         for (;;)
         { if (*ap && strcmp(*ap,"-D")==0)
           { ops->op[o].options |= 1;
@@ -529,11 +531,43 @@ int main
 
       ap += 1;
 
+      if (ops->op[o].type=='H')
+      { ops->op[o].adapt_target = 0;
+        ops->op[o].adapt_rate = 0;
+        ops->op[o].adapt_delta_trigger = 0;
+        for (;;)
+        { if (*ap && strcmp(*ap,"-D")==0)
+          { ops->op[o].options |= 1;
+            ap += 1;
+          }
+          else if (*ap && (*ap)[0]=='-' && (*ap)[1]=='a')
+          { float t = 0.1, f = 0.01, d = 10.0;  /* defaults */
+            char junk;
+            if ((*ap)[2]!=0 && sscanf(*ap+2,"%f%c",&t,&junk)!=1
+                            && sscanf(*ap+2,"%f%%%f%c",&t,&f,&junk)!=2
+                            && sscanf(*ap+2,"%f/%f%c",&t,&d,&junk)!=2
+                            && sscanf(*ap+2,"%f%%%f/%f%c",&t,&f,&d,&junk)!=3
+                  || t<=0 || f<=0 || d<=0)
+            { usage();
+            }
+            ops->op[o].adapt_target = t;
+            ops->op[o].adapt_rate = f;
+            ops->op[o].adapt_delta_trigger = d;
+            ops->op[o].options |= 2;  /* implies ^ for stepsize */
+            ap += 1;
+          }
+          else
+          { break;
+          }
+        }
+      }
+
       if (!*ap || !strchr("0123456789+-.",**ap)) usage();
 
       if ((ops->op[o].steps = atoi(*ap))<=0) usage();
       if (strchr(*ap,'/')!=0)
       { s = strchr(*ap,'/')+1;
+        if (ops->op[o].type=='H' && ops->op[o].adapt_target==0) usage();
         if ((ops->op[o].in_steps = atoi(s))<=0) usage();
         if (strchr(s,':')!=0)
         { if ((ops->op[o].jump = atoi(strchr(s,':')+1))<=0) usage();
@@ -1177,7 +1211,12 @@ static void display_specs
         }
   
         case 'H': 
-        { printf(" hybrid %d",ops->op[o].steps);
+        { printf(" hybrid");
+          if (ops->op[o].adapt_target!=0)
+          { printf(" -a%.4f%%%.4f/%.1f", ops->op[o].adapt_target, 
+                    ops->op[o].adapt_rate, ops->op[o].adapt_delta_trigger);
+          }
+          printf(" %d",ops->op[o].steps);
           if (ops->op[o].in_steps!=0)
           { printf("/%d",ops->op[o].in_steps);
           }

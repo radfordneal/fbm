@@ -50,10 +50,11 @@ described below:
 
         An "^" before a stepsize-adjust value means it is multiplied
         by an adaptively set value (see the documentation below for
-        the dynamic operation).  If only "^" is present, the adaptive
-        value is used without multiplication (ie, the default for the
-        following number is one).  This feature is allowed only for
-        the 'dynamic', 'permuted-dynamic', and 'hybrid' operations.
+        the 'dynamic' and 'hybrid' operations).  If only "^" is
+        present, the adaptive value is used without multiplication
+        (ie, the default for the following number is one).  This
+        feature is allowed only for the 'dynamic', 'permuted-dynamic',
+        and 'hybrid' operations.
 
         A minus sign before a stepsize-adjust value results in the
         adjustment being applied to uniform stepsizes of one;
@@ -262,9 +263,9 @@ Dynamical operations:
         should be updated based on the magnitude of the kinetic energy
         at the end of the trajectory and the change in total energy
         over the trajectory.  It implies the -D option, and the
-        presence of "^" at the start of stepsize-adjust (even that is
-        not explicitly written).  The 't' value (default 0.001) gives
-        the desired fraction by which the mean kinetic energy should
+        presence of "^" at the start of stepsize-adjust (even if not
+        explicitly written).  The 't' value (default 0.001) gives the
+        desired fraction by which the mean kinetic energy should
         exceed the correct mean (equal to half the dimensionality).
         The 'f' value (default 0.001) is the constant for adjusting
         the log of the adaptive stepsize factor according to the
@@ -278,7 +279,7 @@ Dynamical operations:
         Like 'dynamic', but the order of approximations is randomly
         permuted.
 
-    hybrid steps[:window[:jump]] 
+    hybrid -a[t[%f][/d] steps[:window[:jump]] 
            [ stepsize-adjust[:stepsize-alpha] [ first[:last] ] ] 
    
         OR
@@ -309,6 +310,22 @@ Dynamical operations:
         The first:last option restricts the update to only the specified
         range of coordinates (numbered from 0), same as if the others
         had a stepsize of zero.
+
+        A -a option is allowed for the first form, and specifies how
+        the adaptive stepsize factor is updated based on the
+        acceptance probability (whether the trajectory is actually
+        accepted is irrelevant).  It implies the presence of "^" at
+        the start of stepsize-adjust (even if not explicitly written).
+        The 't' value (default 0.1) gives the target rejection
+        probability.  The 'f' value (default 0.01) is the constant for
+        adjusting the log of the adaptive stepsize factor according to
+        the difference of the acceptance probability from the target.
+        The 'd' value (default 10) is the threshold for minus the log
+        acceptance probability above which the adaptive stepsize
+        factor is multiplied by 0.9 (to correct drastically large
+        stepsizes).  Note that when a -a option is used, the hybrid
+        operation will not leave the correct distribution exactly
+        invariant.
 
     tempered-hybrid temper-factor steps[:window[:jump]] 
                     [ stepsize-adjust[:stepsize-alpha] [ first[:last] ] ] 

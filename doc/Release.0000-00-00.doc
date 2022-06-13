@@ -60,7 +60,7 @@ Feature changes in the version:
 
 11) The dynamic and permuted-dynamic operations can now update an
     adaptive factor for stepsizes, that can be used by dynamic,
-    permuted-dynamic, and hybird operations.  See mc-spec.doc for
+    permuted-dynamic, and hybrid operations.  See mc-spec.doc for
     details.
 
 
@@ -74,6 +74,9 @@ Bug fixes.
 1) Fixed bug in net-spec concerning display of sizes of weights from
    inputs when there was an omit option.
 
+2) Fixed overflow problem when recording compute time.  Should now be
+   OK for runs of no more than 24.85 days.
+
 
 Known bugs and other deficiencies.
 
@@ -83,8 +86,9 @@ Known bugs and other deficiencies.
    xxx-mc to produce just one iteration before attempting a run of
    xxx-mc that does any "plot" operations.
 
-2) The CPU time features (eg, the "k" quantity) will not work correctly
-   if a single iteration takes more than about 71 minutes.
+2) Giving net-pred several log files that have different network architectures
+   doesn't work, but an error message is not always produced (the results may
+   just be nonsense).
 
 3) The latent value update operations for Gaussian processes may recompute 
    the inverse covariance matrix even when an up-to-date version was 
@@ -93,14 +97,10 @@ Known bugs and other deficiencies.
 4) Covariance matrices are stored in full, even though they are symmetric,
    which sometimes costs a factor of two in memory usage.
 
-5) Giving net-pred several log files that have different network architectures
-   doesn't work, but an error message is not always produced (the results may
-   just be nonsense).
-
-6) Some Markov chain updates for Dirichlet diffusion tree models in which 
+5) Some Markov chain updates for Dirichlet diffusion tree models in which 
    there is no data model (ie, no noise) are not implemented when some of 
    the data is missing.  An error message is produced in such cases.
 
-7) When prediction windows overlap in xxx-avepred, so predictions for
+6) When prediction windows overlap in xxx-avepred, so predictions for
    some iterations are used in several windows, these predictions are
    inefficiently recomputed for each use.

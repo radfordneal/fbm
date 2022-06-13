@@ -1,6 +1,6 @@
 /* MC-MIS.C - Skeleton of program for Metropolis importance sampling. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -341,8 +341,7 @@ int main
         /* See how long it took to create this state. */
     
         new_clock = clock(); 
-        it->time += (int) (0.5 + 
-               (1000.0 * (unsigned) (new_clock - old_clock)) / CLOCKS_PER_SEC);
+        it->time += (int) (0.5 + (1000.0*(new_clock-old_clock))/CLOCKS_PER_SEC);
         old_clock = new_clock;
 
         /* Write records to log file. */

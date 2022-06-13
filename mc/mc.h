@@ -234,7 +234,7 @@ typedef struct
   int proposals;	/* Number of proposals in this iteration */
   int slice_calls;	/* Number of calls of slice sampling procedures */
   int slice_evals;	/* Number of energy evaluations in slice calls */
-  int time;             /* Cumulative cpu-usage in ms, -1000 if copied */
+  int time;             /* Cumulative cpu-usage in ms, negative if copied */
 
   float log_weight;	/* Log of weight for importance sampling */
   float log_tt_weight;	/* Log of weight from last tempered transition */

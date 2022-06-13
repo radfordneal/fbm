@@ -374,8 +374,7 @@ int main
         /* See how long it took to create this state. */
     
         new_clock = clock(); 
-        it->time += (int) (0.5 + 
-               (1000.0 * (unsigned) (new_clock - old_clock)) / CLOCKS_PER_SEC);
+        it->time += (int) (0.5 + (1000.0*(new_clock-old_clock))/CLOCKS_PER_SEC);
         old_clock = new_clock;
 
         /* Write records to log file. */

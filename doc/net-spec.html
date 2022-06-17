@@ -40,16 +40,42 @@ Specifying layer sizes and activation functions.
 
 N-inputs and N-outputs are the numbers of units in the input and
 output layers.  The sizes of zero or more hidden layers are specified
-between these, with the activation function used for units in the
-layer following the size.  Possible activation functions are:
+between these, with the activation function used to compute the output
+of a unit in the layer from its input following the size.
 
-    tanh  softplus  softplus0  identity
+Possible activation functions are:
 
-The default is tanh, the hyperbolic tangent function.  The softplus
-activation function is h(u) = log(1+exp(u)).  The softplus0 function
-is similar, h(u) = log(1+exp(u))-log(2), which has value zero when the
-input is zero.  For the identity activation function, the output of a
-hidden unit is identical to its summed input.
+    tanh  softplus  softplus0  identity  normalize[/channels]
+
+The default is 'tanh', the hyperbolic tangent function.  
+
+The 'softplus' activation function is h(u) = log(1+exp(u)).  The
+'softplus0' function is similar, h(u) = log(1+exp(u))-log(2), which
+has value zero when the input is zero.
+
+For the 'identity' activation function, the output of a hidden unit is
+identical to its summed input.
+
+For the 'normalize' activation function, the output of a unit is its
+input divided by the square root of the average squared value of the
+inputs for all units in the layer.  (Hence, the output of a hidden
+unit depends on the inputs for all the units, not just the input for
+that unit.)  To avoid undefined or unstable results when the inputs
+are all close to zero, the average squared value of the inputs is
+defined as (1/N) (0.01 + SUM x_i^2), where N is the number of units
+and x_i^2 is the square of the input for the i'th unit.  The addition
+of 0.01 ensures that the average will not be zero.
+
+The normalize computation may be done separately for some number of
+channels, which must be a divisor of the number of units in the layer.
+For example, if there are 40 units, 'normalize/4' will normalize the
+units separately for 4 channels, each consisting of 10 units.  The
+default is one channel - ie, the normalization is done for all units,
+as described above.  When there are K channels, the first units for
+each channel come first, followed by the second units for each
+channel, etc.  So the first channel consists of units 1, K+1, 2K+1,
+..., the second channel consists of units 2, K+2, 2K+2, ..., and so
+forth.
 
 
 Specifying layer connections and priors.

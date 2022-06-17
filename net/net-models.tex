@@ -184,6 +184,21 @@ The following activation functions are supported:\vspace{-22pt}
 \end{tabbing}
 \end{quotation}
 
+Alternatively, a layer, $\ell$, may compute its values, $v^{\ell}_i$
+from its summed inputs, $u^{\ell}_i$, in a manner that does not
+decompose into computation of $v^{\ell}_i$ from $u^{\ell}_i$
+separately for each $i$.  Currently, the only computation of this
+sort is normalization, defined by\vspace{-5pt}
+\beq
+ s^{\ell} & = & \textstyle 
+   \sqrt{\,0.01\,+\,\sum\nolimits_i [u^{\ell}_i]^2\,/\,n^{\ell}\,} 
+   \label{defs}\\[3pt]
+ v^{\ell}_i & = & u^{\ell}_i\,/\,s
+\eeq
+where $n^{\ell}$ is the number of units in layer $\ell$.  Normalization
+may alternatively be done separately for each ``channel'' (a subset of
+units).
+
 Connections from an input layer to a hidden or output layer may not be
 fully connected, but can instead be configured by specifying a set,
 $C^{I,\ell}$ of triplets, $(i,j,k)$, indicating that unit $i$ in the
@@ -677,22 +692,15 @@ then the inputs (if required):\beq
     \sum_j w^{\ell,\ell+1}_{i,j} {\partial L\ \over \partial u^{\ell+1}_j\! }
     \\[3pt]
   {\partial L \over \partial u^{\ell}_{i\ }\!} & = & 
-   a'^{\ell}\big(u^{\ell}_i\big) {\partial L \over \partial v^{\ell}_i } \\[3pt]
+   a'^{\ell}\big(u^{\ell}_i\big) {\partial L \over \partial v^{\ell}_i } 
+   \label{aderiv}\\[3pt]
   {\partial L \over \partial v^I_{i\ }\!} & = & 
     \sum_j w^{I,O}_{i,j} {\partial L \over \partial v^O_j}\ +\
     \sum_{\ell} \sum_j w^{I,\ell}_{i,j} {\partial L \over \partial u^{\ell}_j }
 \eeq%
 The second term in the first equation above is omitted for the last
 hidden layer; additional terms of this sort will be present when there
-are non-sequential connections between hidden layers.  In the second
-equation, $a'^{\ell}(u^{\ell}_i)$ is the derivative of the activation
-function, evaluated at $u^{\ell}_i$.  For computational reasons, it is
-convenient to express this derivative in terms of $v^{\ell}_i$, which is
-possible since all the activation functions used are strictly monotonic.
-For the $\tanh$ activation function, the derivative of $L$ is $1 -
-\big[v^{\ell}_i\big]^2\!$.  For the softplus activation function, it
-is $1 - \exp(-v^{\ell}_i)$, and for softplus0, it is $1 -
-\exp(-v^{\ell}_i-\log(2)))$.
+are non-sequential connections between hidden layers.  
 
 When the connections from a hidden layer to the next hidden layer are
 configured, the first equation above is modified as follows:\beq
@@ -713,6 +721,28 @@ configured, the last equation above is modified as follows:\beq
 The obvious modifications to the above are made when some of the 
 hidden layers are fully-connected to the inputs and some have
 configured connections to the inputs.
+
+In equation~(\ref{aderiv}), $a'^{\ell}(u^{\ell}_i)$ is the derivative of
+the activation function, evaluated at $u^{\ell}_i$.  For computational
+reasons, it is convenient to express this derivative in terms of
+$v^{\ell}_i$, which is possible since all the activation functions
+used are strictly monotonic.  For the $\tanh$ activation function, the
+derivative of $L$ is $1 - \big[v^{\ell}_i\big]^2\!$.  For the softplus
+activation function, it is $1 - \exp(-v^{\ell}_i)$, and for softplus0,
+it is $1 - \exp(-v^{\ell}_i-\log(2)))$.
+
+For a normalization layer, equation~(\ref{aderiv}) is replaced by
+\beq
+ t^{\ell} & = & 
+   \sum_j {\partial L \over \partial v^{\ell}_{j\ }\!}\,v^{\ell}_j\,/\,n^{\ell}
+   \\[3pt]
+ {\partial L \over \partial u^{\ell}_{i\ }\!} & = & 
+   {1 \over s^{\ell}} \Big( {\partial L \over \partial v^{\ell}_{j\ }\!}
+     \ -\ v^{\ell}_k t^{\ell} \Big)
+\eeq 
+where $s^{\ell}$ is defined by equation~(\ref{defs}).  This is modified 
+in the obvious way when normalization is done separately
+for each channel.
 
 \subsubsection*{Derivatives of the log likelihood with respect to parameters}
 
@@ -817,9 +847,14 @@ The first approximation assumes that since the first term may be either
 positive or negative, its effects will (optimistically) cancel when
 averaged over the training set.  Since $u$ is not known, the second
 approximation above takes the maximum with respect to $u$.  
-For the currently-used activation functions --- $\tanh$, softplus, 
+For the currently-used unit-by-unit activation functions --- $\tanh$, softplus, 
 softplus0, and identity --- $\max[a'(u)^2] = 1$, so nothing need actually
-be done for this.
+be done for this.  For normalization layers, the partial derivative of
+a unit's output with respect to its input is no more than $1/s^{\ell}$,
+where $s^{\ell}$ is defined by equation~(\ref{defs}). An estimate for
+$[1/s^{\ell}]^2 = 1/(0.01\,+\,\sum\nolimits_i [u^{\ell}_i]^2\,/\,n^{\ell})$
+is therefore needed.  This requires an estimate for a typical value of
+$[u^{\ell}_i]^2$, which is discussed below.
 
 Note that the backward propagation ignores any interactions between
 multiple connections from a unit.
@@ -873,7 +908,7 @@ typical squared values of the units connecting to this unit (one for a
 bias connection) multipled by the prior variance of the weight (or
 bias) on that connection, as given by the controlling hyperparameter.
 (For parameters with t distributions, the variance is capped at what
-it would be if the degrees of freedom were three.)
+it would be if the degrees of freedom were three.) 
 
 For a layer of tanh hidden units, the typical squared value for the
 unit's input found in this way is reduced to one if it exceeds one,
@@ -882,7 +917,13 @@ activation function, if the typical squared value of the unit's input
 is less than $\log(2)^2$, the value is increased to $\log(2)^2$, which
 is the value when the inputs are zero. For units with the softplus0
 activation function, the typical squared input value is used
-unchanged, as for the identity activation function.
+unchanged, as for the identity activation function.  For normalization
+layers, all units are taken to have typical squared values for their
+outputs of one, which is the maximum possible.
+
+The typical squared value for the input to a unit, $[u^{\ell}_i]^2$,
+found as above, is also used for estimating $d^2L/du^2$ for a
+normalization layer, as discussed earlier.
 
 Second derivatives with respect to biases are simply equal to the
 second derivatives with respect to the associated summed input to the

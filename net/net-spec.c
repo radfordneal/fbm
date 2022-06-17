@@ -510,6 +510,11 @@ int main
                      "Invalid number of channels for 'normalize' layer\n");
             exit(1);
           }
+          if (c>100)
+          { fprintf (stderr,
+                     "Too many channels in 'normalize' layer (max 100)\n");
+            exit(1);
+          }
           type = Normalize_base + c;
         }
       }

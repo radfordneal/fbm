@@ -659,8 +659,23 @@ void STATIC_IF_INCLUDED net_func
 #     endif
     }
 
-    else /* identity */
+    else if (a->layer_type[l]==Identity_type)
     { /* nothing to do */
+    }
+
+    else  /* Normalize layer */
+    { int c = a->layer_type[l] - Normalize_base;
+      int k;
+      for (k = 0; k<c; k++)
+      { net_value s = Normalize_epsilon;
+        for (j = k; j<N_hidden; j+=c)
+        { s += vh[j] * vh[j];
+        }
+        s = 1/sqrt(s);
+        for (j = k; j<N_hidden; j+=c)
+        { vh[j] *= s;
+        }
+      }
     }
 
     if (CHECK_NAN)

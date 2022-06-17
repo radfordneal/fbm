@@ -501,3 +501,56 @@ Log file: log  Index: 0  Delta: 0.003000  Energy: 6.77
 
 Largest absolute log ratio: 0.0020
 
+ 
+--- I
+ 
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+10.00 10.00: -1.00  +1.00  +3.00  +2.00
+
+Hidden Layer 0 to Output Weights [2]
+
+25.00 25.00: +1.00
+
+      25.00:+10.00
+
+      25.00:+20.00
+
+      25.00: +2.00
+
+Noise levels [3]
+
+  10.00 - 10.00
+
+       o0@0     
+ 1.88422394e+01 
+18.8422
+Number of training cases: 1
+
+Network in file "log" with index 0
+
+Input to Hidden Layer 0 Weights [1]
+
+10.00 10.00: -1.00  +1.00  +3.00  +2.00
+
+Hidden Layer 0 to Output Weights [2]
+
+25.00 25.00: +1.00
+
+      25.00:+10.00
+
+      25.00:+20.00
+
+      25.00: +2.00
+
+Noise levels [3]
+
+  10.00 - 10.00
+
+       o0@0     
+ 2.49028549e+01 
+24.9029

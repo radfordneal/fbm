@@ -133,6 +133,15 @@ int main
       else if (a->layer_type[l]==Softplus_type)   printf("  softplus");
       else if (a->layer_type[l]==Softplus0_type)  printf("  softplus0");
       else if (a->layer_type[l]==Identity_type)   printf("  identity");
+      else if (a->layer_type[l]>Normalize_base)
+      { int c = a->layer_type[l]-Normalize_base;
+        if (c==1)
+        { printf("  normalize");
+        }
+        else
+        { printf("  normalize/%d",c);
+        }
+      }
       else                                        printf("  UNKNOWN TYPE!");
       printf("\n");
     }
@@ -463,8 +472,7 @@ int main
 
   while (*ap!=0 && strcmp(*ap,"/")!=0)
   { 
-    double size;
-    int type;
+    int size, type;
     int i;
 
     if ((size = atoi(*ap++))<=0) usage();
@@ -489,6 +497,21 @@ int main
       else if (strcmp(*ap,"softplus0")==0)
       { if (type>=0) usage();
         type = Softplus0_type;
+      }
+      else if (strncmp(*ap,"normalize",9)==0)
+      { if (strcmp(*ap,"normalize")==0)
+        { type = Normalize_base + 1;
+        }
+        else
+        { int c; char junk;
+          if (sscanf(*ap,"normalize/%d%c",&c,&junk)!=1) usage();
+          if (c<=0 || size%c!=0)
+          { fprintf (stderr,
+                     "Invalid number of channels for 'normalize' layer\n");
+            exit(1);
+          }
+          type = Normalize_base + c;
+        }
       }
       else
       { usage();

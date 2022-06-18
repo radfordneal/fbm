@@ -491,7 +491,11 @@ typedef struct
 typedef struct
 { 
   net_value *i;			/* Values of input units */
-  net_value *h[Max_layers];	/* Values of hidden units */ 
+
+  net_value *h[Max_layers];	/* Values of hidden units.  For normalize
+                                   layers, also has inverse sqrt of sums of 
+                                   squared values for each channel, at end */ 
+
   net_value *o;			/* Values of output units */
 
 } net_values;

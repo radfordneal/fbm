@@ -134,7 +134,7 @@ int main
       else if (a->layer_type[l]==Softplus0_type)  printf("  softplus0");
       else if (a->layer_type[l]==Identity_type)   printf("  identity");
       else if (a->layer_type[l]>Normalize_base)
-      { int c = a->layer_type[l]-Normalize_base;
+      { int c = a->layer_type[l] - Normalize_base;
         if (c==1)
         { printf("  normalize");
         }

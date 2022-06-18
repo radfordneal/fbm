@@ -3925,8 +3925,24 @@ void STATIC_IF_INCLUDED net_back_add_grad
 #     endif
     }
 
-    else /* identity */
+    else if (a->layer_type[l]==Identity_type)
     { /* nothing to do */
+    }
+
+    else  /* Normalize layer */
+    { int c = a->layer_type[l] - Normalize_base;
+      int k;
+      for (k = 0; k<c; k++)
+      { net_value s = vh[N_hidden+k];
+        net_value t = 0;
+        for (i = k; i<N_hidden; i+=c)
+        { t += dh[i] * vh[i];
+        }
+        t = (t*c)/N_hidden;
+        for (i = k; i<N_hidden; i+=c)
+        { dh[i] = s * (dh[i] - vh[i]*t);
+        }
+      }
     }
 
     if (CHECK_NAN)
@@ -3935,7 +3951,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
       }
     }
 
-    /* Add to gradients for that depend on the derivatives with respect to
+    /* Add to gradients that depend on the derivatives with respect to
        the inputs of units in this hidden layer. */
 
     if (a->has_bh[l] && !p->bh[l].one_or_two_point)

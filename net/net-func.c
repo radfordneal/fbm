@@ -667,11 +667,13 @@ void STATIC_IF_INCLUDED net_func
     { int c = a->layer_type[l] - Normalize_base;
       int k;
       for (k = 0; k<c; k++)
-      { net_value s = Normalize_epsilon;
+      { net_value s = 0;
         for (j = k; j<N_hidden; j+=c)
         { s += vh[j] * vh[j];
         }
+        s = (s*c)/N_hidden + Normalize_epsilon;
         s = 1/sqrt(s);
+        vh[N_hidden+k] = s;  /* saved for use later in backprop */
         for (j = k; j<N_hidden; j+=c)
         { vh[j] *= s;
         }

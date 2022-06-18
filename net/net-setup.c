@@ -1,6 +1,6 @@
 /* NET-SETUP.C - Procedures for setting up network data structures. */
 
-/* Copyright (c) 1995-2021 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -257,12 +257,17 @@ unsigned net_setup_value_count_aligned
   if (include_inputs) 
   { count += ALIGN(a->N_inputs,align);
   }
-  if (include_outputs)
-  { count += ALIGN(a->N_outputs,align);
-  }
 
   for (l = 0; l<a->N_layers; l++)
-  { count += ALIGN(a->N_hidden[l],align);
+  { int n = a->N_hidden[l];
+    if (a->layer_type[l] > Normalize_base)
+    { n += a->layer_type[l] - Normalize_base;
+    } 
+    count += ALIGN(n,align);
+  }
+
+  if (include_outputs)
+  { count += ALIGN(a->N_outputs,align);
   }
 
   return count;
@@ -692,8 +697,12 @@ void net_setup_value_pointers_aligned
   }
 
   for (l = 0; l<a->N_layers; l++)
-  { v->h[l] = b;
-    b += ALIGN(a->N_hidden[l],align);
+  { int n = a->N_hidden[l];
+    if (a->layer_type[l] > Normalize_base)
+    { n += a->layer_type[l] - Normalize_base;
+    } 
+    v->h[l] = b;
+    b += ALIGN(n,align);
   }
 
   if (outputs)

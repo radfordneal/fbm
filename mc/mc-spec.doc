@@ -246,7 +246,7 @@ Dynamical operations:
 
         Negate the momentum variables.
 
-    dynamic [ -D ] [ -a[t[%f][/d] ] steps [ stepsize-adjust[:stepsize-alpha] ] 
+    dynamic [ -D ] [ -a[t][%f][/d] ] steps [ stepsize-adjust[:stepsize-alpha] ] 
 
         Follow a dynamical trajectory for the given number of steps,
         always accepting the result.  (It hence does not leave the
@@ -261,11 +261,11 @@ Dynamical operations:
         at the end of the trajectory and the change in total energy
         over the trajectory.  It implies the -D option, and the
         presence of "^" at the start of stepsize-adjust (even if not
-        explicitly written).  The 't' value (default 0.001) gives the
+        explicitly written).  The 't' value (default 0.01) gives the
         desired fraction by which the mean kinetic energy should
         exceed the correct mean (equal to half the dimensionality).
-        The 'f' value (default 0.001) is the constant for adjusting
-        the log of the adaptive stepsize factor according to the
+        The 'f' value (default 0.01) is the constant for adjusting the
+        log of the adaptive stepsize factor according to the
         difference of the kinetic energy from this target.  The 'd'
         value (default 10) is the threshold for the change in total
         energy above which the adaptive stepsize factor is multiplied
@@ -276,7 +276,7 @@ Dynamical operations:
         Like 'dynamic', but the order of approximations is randomly
         permuted.
 
-    hybrid -a[t[%f][/d] steps[:window[:jump]] 
+    hybrid [ -a[t][%f][/d] ] steps[:window[:jump]] 
            [ stepsize-adjust[:stepsize-alpha] [ first[:last] ] ] 
    
         OR

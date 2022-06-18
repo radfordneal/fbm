@@ -448,12 +448,15 @@ int main
             ap += 1;
           }
           else if (*ap && (*ap)[0]=='-' && (*ap)[1]=='a')
-          { float t = 0.001, f = 0.001, d = 10.0;  /* defaults */
+          { float t = 0.01, f = 0.01, d = 10.0;  /* defaults */
             char junk;
             if ((*ap)[2]!=0 && sscanf(*ap+2,"%f%c",&t,&junk)!=1
                             && sscanf(*ap+2,"%f%%%f%c",&t,&f,&junk)!=2
                             && sscanf(*ap+2,"%f/%f%c",&t,&d,&junk)!=2
                             && sscanf(*ap+2,"%f%%%f/%f%c",&t,&f,&d,&junk)!=3
+                            && sscanf(*ap+2,"%%%f%c",&f,&junk)!=1
+                            && sscanf(*ap+2,"/%f%c",&d,&junk)!=1
+                            && sscanf(*ap+2,"%%%f/%f%c",&f,&d,&junk)!=2
                   || t<=0 || f<=0 || d<=0)
             { usage();
             }
@@ -547,6 +550,9 @@ int main
                             && sscanf(*ap+2,"%f%%%f%c",&t,&f,&junk)!=2
                             && sscanf(*ap+2,"%f/%f%c",&t,&d,&junk)!=2
                             && sscanf(*ap+2,"%f%%%f/%f%c",&t,&f,&d,&junk)!=3
+                            && sscanf(*ap+2,"%%%f%c",&f,&junk)!=1
+                            && sscanf(*ap+2,"/%f%c",&d,&junk)!=1
+                            && sscanf(*ap+2,"%%%f/%f%c",&f,&d,&junk)!=2
                   || t<=0 || f<=0 || d<=0)
             { usage();
             }

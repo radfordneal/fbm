@@ -918,8 +918,9 @@ is less than $\log(2)^2$, the value is increased to $\log(2)^2$, which
 is the value when the inputs are zero. For units with the softplus0
 activation function, the typical squared input value is used
 unchanged, as for the identity activation function.  For normalization
-layers, all units are taken to have typical squared values for their
-outputs of one, which is the maximum possible.
+layers, units are taken to have a typical squared value for their
+output equal to the number of units in their channel (the maximum
+possible).
 
 The typical squared value for the input to a unit, $[u^{\ell}_i]^2$,
 found as above, is also used for estimating $d^2L/du^2$ for a

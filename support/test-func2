@@ -154,6 +154,7 @@ calc s="Sqrt(0.01+((-1)^2+1^2+3^2+2^2)/4)" "3/s"
 calc s="Sqrt(0.01+((-1)^2+1^2+3^2+2^2)/4)" "2/s"
 calc s="Sqrt(0.01+((-1)^2+1^2+3^2+2^2)/4)" "1*(-1)/s+10*1/s+20*3/s+2*2/s"
 net-grad-test log 0 0.001
+net-stepsizes log 0 0.001
 
 net-spec log 1 4 normalize/2 1 / ih=10 ho=25
 data-spec log 1 1 / "%echo 1 1" .
@@ -172,3 +173,4 @@ calc s1="Sqrt(0.01+((-1)^2+3^2)/2)" s2="Sqrt(0.01+(1^2+2^2)/2)" "2/s2"
 calc s1="Sqrt(0.01+((-1)^2+3^2)/2)" s2="Sqrt(0.01+(1^2+2^2)/2)" \
      "1*(-1)/s1+10*1/s2+20*3/s1+2*2/s2"
 net-grad-test log 0 0.001
+net-stepsizes log 0 0.001

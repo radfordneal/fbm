@@ -3698,13 +3698,16 @@ void mc_app_stepsizes
 
   nsqi = 0;
   for (l = 0; l<arch->N_layers; l++)
-  { net_value *typl = typical.h[l];
+  { 
+    net_value *typl = typical.h[l];
     double alpha, var_adj;
+
     if (TYPICAL_VALUES_ALL_ONE || N_train==0)
     { for (j = 0; j<arch->N_hidden[l]; j++)
       { typl[j] = 1;
       }
     }
+
     else
     { for (j = 0; j<arch->N_hidden[l]; j++)
       { typl[j] = 0;
@@ -3797,10 +3800,10 @@ void mc_app_stepsizes
         { typl[j] *= sq (sigmas.ah[l][j]);
         }
       }
-    }
 
-    if (!TYPICAL_VALUES_ALL_ONE)
-    { if (arch->layer_type[l]==Tanh_type)
+      /* Adjustments based on activation function. */
+
+      if (arch->layer_type[l]==Tanh_type)
       { for (j = 0; j<arch->N_hidden[l]; j++)
         { if (typl[j]>1)
           { typl[j] = 1;
@@ -3812,6 +3815,22 @@ void mc_app_stepsizes
         { if (typl[j]<LOG2*LOG2)
           { typl[j] = LOG2*LOG2;
           }
+        }
+      }
+      else if (arch->layer_type[l]>Normalize_base)
+      { int c = arch->layer_type[l] - Normalize_base;
+        int cn = arch->N_hidden[l] / c;
+        int k;
+        for (k = 0; k<c; k++)
+        { double s = 0;
+          for (j = k; j<arch->N_hidden[l]; j+=c)
+          { s += typl[j];
+          }
+          s = 1 / (s/cn + Normalize_epsilon);
+          typl[arch->N_hidden[l]+k] = s;
+        }
+        for (j = 0; j<arch->N_hidden[l]; j++)
+        { typl[j] = cn;
         }
       }
     }
@@ -3927,10 +3946,16 @@ void mc_app_stepsizes
       }
     }
 
-    /* With current activation functions, their effects on second derivatives
-       are all nil, same as for the identity, so nothing is done here. */
-
-    if (0)
+    if (arch->layer_type[l] > Normalize_base)
+    { int c = arch->layer_type[l] - Normalize_base;
+      int k;
+      for (k = 0; k<c; k++)
+      { for (i = k; i<arch->N_hidden[l]; i+=c)
+        { seconds.h[l][i] *= seconds.h[l][arch->N_hidden[l]+k];
+        }
+      }
+    }
+    else if (0)  /* nothing need be done for current activation functions */
     { for (i = 0; i<arch->N_hidden[l]; i++)
       { net_value s = seconds.h[l][i];
         switch (arch->layer_type[l])

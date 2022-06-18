@@ -4396,8 +4396,23 @@ __device__ __forceinline__ static void net_back_grad_gpu
         { dh[i] *= 1 - prec_exp(-LOG2-vh[i]);
         }
       }
-      else /* identity */
+      else if (A.layer_type[l]==Identity_type)
       { /* nothing to do */
+      }
+      else /* normalize layer */
+      { int c = A.layer_type[l] - Normalize_base;
+        int k;
+        for (k = thrb; k<c; k+=NTH)
+        { net_value s = vth->h[l][N_hidden+k];
+          net_value t = 0;
+          for (i = k; i<N_hidden; i+=c)
+          { t += dh[i] * vh[i];
+          }
+          t = (t*c)/N_hidden;
+          for (i = k; i<N_hidden; i+=c)
+          { dh[i] = s * (dh[i] - vh[i]*t);
+          }
+        }
       }
 
       if (CHECK_NAN)

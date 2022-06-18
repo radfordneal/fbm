@@ -1987,8 +1987,25 @@ __device__ __forceinline__ static void net_func_gpu
       }
       if (SYNC_AFTER && N_hidden % NTH != 0) __syncwarp(syncmask);
     }
-    else /* identity */ 
+    else if (A.layer_type[l]==Identity_type)
     { /* nothing to do */
+    }
+    else /* normalize layer */
+    { int c = A.layer_type[l] - Normalize_base;
+      int k;
+      for (k = th; k<c; k+=NTH)
+      { net_value s = 0;
+        for (j = k; j<N_hidden; j+=c)
+        { s += vh[j] * vh[j];
+        }
+        s = (s*c)/N_hidden + Normalize_epsilon;
+        s = 1/sqrt(s);
+        v->h[l][N_hidden+k] = s;  /* saved for use later in backprop */
+        for (j = k; j<N_hidden; j+=c)
+        { vh[j] *= s;
+        }
+      }
+      if (SYNC_AFTER && N_hidden % NTH != 0) __syncwarp(syncmask);
     }
 
     /* Synchronize threads so that up-to-date values computed for this

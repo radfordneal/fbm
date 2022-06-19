@@ -156,6 +156,10 @@ void mc_iter_init
     { need_save = 1;
     }
 
+    if ((type=='D' || type=='P') && (ops->op[i].options & 4) /* -r */) 
+    { need_save = 1;
+    }
+
     if (type=='H' || type=='T' || type=='@' || type=='^')
     { need_arsv = 1;
     }
@@ -481,6 +485,12 @@ static void do_group
           old_kinetic_energy = ds->kinetic_energy;
         }
 
+        if (ops->op[i].options&4) /* -r */
+        { it->proposals += 1;
+          mc_value_copy (q_save, ds->q, ds->dim);
+          mc_value_copy (p_save, ds->p, ds->dim);
+        }
+
         if (type=='P') mc_traj_permute();
         mc_trajectory (ds, ops->op[i].steps, ops->op[i].options&1);
 
@@ -508,6 +518,16 @@ static void do_group
 
           if (it->delta > ops->op[i].adapt_delta_trigger)
           { it->adaptive_factor *= 0.9;
+          }
+        }
+
+        if (ops->op[i].options&4)  /* -r */
+        { if (it->delta > ops->op[i].dyn_rej_threshold)
+          { it->rejects += 1;
+            mc_value_copy (ds->q, q_save, ds->dim);
+            mc_value_copy (ds->p, p_save, ds->dim);
+            ds->kinetic_energy = old_kinetic_energy;
+            ds->pot_energy = old_pot_energy;
           }
         }
 

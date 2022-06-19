@@ -106,7 +106,12 @@ typedef struct
 
     int options;          /* Option bits:
                                1 for -D in dynamic operation 
-                               2 for ^ before stepsize */
+                               2 for ^ before stepsize 
+                               4 for -r in dynamic operation */
+
+#   define dyn_rej_threshold app_param2  /* Rejection threshold for delta 
+                                            in -r option for 'dynamic',
+                                            overlaps app_param2 */
 
     char appl[101];	  /* Name of application-specific procedure */
 

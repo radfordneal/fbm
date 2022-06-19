@@ -467,6 +467,17 @@ int main
             ops->op[o].options |= 2;  /* implies ^ for stepsize */
             ap += 1;
           }
+          else if (*ap && (*ap)[0]=='-' && (*ap)[1]=='r')
+          { float d = 10;
+            char junk;
+            if ((*ap)[2]!=0 && sscanf(*ap+2,"%f%c",&d,&junk)!=1 || d<=0) 
+            { usage();
+            }
+            ops->op[o].dyn_rej_threshold = d;
+            ops->op[o].options |= 1;  /* implies -D */
+            ops->op[o].options |= 4;
+            ap += 1;
+          }
           else
           { break;
           }
@@ -1194,6 +1205,9 @@ static void display_specs
                        : ops->op[o].type=='o' ? "slice-outside" : NULL);
           if (ops->op[o].options & 1)
           { printf(" -D");
+          }
+          if (ops->op[o].options & 4)
+          { printf(" -r%.1f", ops->op[o].dyn_rej_threshold);
           }
           if (ops->op[o].adapt_target!=0)
           { printf(" -a%.4f%%%.4f/%.1f", ops->op[o].adapt_target, 

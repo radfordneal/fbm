@@ -56,15 +56,19 @@ Feature changes in the version:
 
 10) The dynamic and permuted-dynamic operations now take an optional
     -D option, which causes the change in energy to be recorded (at
-    possible extra computational cost).
+    possible extra computational cost).  See mc-spec.doc for details.
 
-11) The dynamic and permuted-dynamic operations can now update an
+11) The dynamic and permuted-dynamic operations now take an optional
+    -r option, which can be used to prevent unstable behaviour. See
+    mc-spec.doc for details.
+
+12) The dynamic and permuted-dynamic operations can now update an
     adaptive factor for stepsizes, that can be used by dynamic,
     permuted-dynamic, and hybrid operations. One form of the hybrid
     operation also allows adaptation, using a different criterion.
     See mc-spec.doc for details. 
 
-12) A type of normalization layer is now implemented, similar to one
+13) A type of normalization layer is now implemented, similar to one
     component of the Filter Response Normalization (FRN) scheme of
     Saurabh Singh and Shankar Krishnan.  See net-spec.doc for details.
 

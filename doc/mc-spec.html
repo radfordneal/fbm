@@ -249,7 +249,8 @@ Dynamical operations:
 
         Negate the momentum variables.
 
-    dynamic [ -D ] [ -a[t][%f][/d] ] steps [ stepsize-adjust[:stepsize-alpha] ] 
+    dynamic [ -D ] [ -r[D] ] [ -a[t][%f][/d] ]
+            steps [ stepsize-adjust[:stepsize-alpha] ] 
 
         Follow a dynamical trajectory for the given number of steps,
         always accepting the result.  (It hence does not leave the
@@ -257,7 +258,16 @@ Dynamical operations:
 
         The -D option causes the change in total energy to be recorded
         (accessible via the 'D' quantitity), with a possible
-        additional compuational cost.
+        additional computational cost.
+
+        The -r option implies -D, and causes the trajectory to be
+        rejected, with the original state restored, if the change in
+        total energy is greater than D (default 10).  This has a
+        memory and speed impact, since it requires that the original
+        state be saved, for possible restoration.  Note that these
+        rejections do not make this operation leave the correct
+        distribution exactly invariant - they're just intended to
+        prevent highly unstable behaviour.
 
         The -a option specifies that the adaptive stepsize factor
         should be updated based on the magnitude of the kinetic energy
@@ -274,7 +284,8 @@ Dynamical operations:
         energy above which the adaptive stepsize factor is multiplied
         by 0.9, to avoid instability.
 
-    permuted-dynamic [ -D ] steps [ stepsize-adjust[:stepsize-alpha] ] 
+    permuted-dynamic [ -D ] [ -r[D] ] [ -a[t][%f][/d] ]
+                     steps [ stepsize-adjust[:stepsize-alpha] ] 
 
         Like 'dynamic', but the order of approximations is randomly
         permuted.

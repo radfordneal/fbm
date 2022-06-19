@@ -44,4 +44,4 @@ network (or generated target value) that is displayed, without any
 transformation.  Hidden unit values are after application of the
 activation function.
 
-            Copyright (c) 1995-2004 by Radford M. Neal
+            Copyright (c) 1995-2021 by Radford M. Neal

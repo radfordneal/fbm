@@ -1,6 +1,6 @@
 /* NET-PRINT.C - Procedures to print network parameters and hyperprameters. */
 
-/* Copyright (c) 1995-2021 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -37,6 +37,8 @@ static void print_param_array (net_param *, int, int);
 static void print_adjustment_array (net_sigma *, int);
 static void print_sigma_array (net_sigma *, int);
 
+static int per_line, per_section;
+
 
 /* PRINT PARAMETERS, OPTIONALLY ACCOMPANIED BY HYPERPARAMETERS. */
 
@@ -46,12 +48,17 @@ void net_print_params
   net_arch *a, 		/* Network architecture */
   net_flags *flgs,	/* Network flags, null if none */
   model_specification *m, /* Data model, may be null */
-  int group             /* Group to print, 0 for all */
+  int group,            /* Group to print, 0 for all */
+  int per_line0,        /* Parameters to print per line */
+  int per_section0      /* Parameters per section, -1 if no sectioning */
 )
 {
   int i, j, l, ls, nsqi, g;
   unsigned bits;
   char ps[1000];
+
+  per_line = per_line0;
+  per_section= per_section0;
 
   nsqi = 0;
   g = 0; 
@@ -345,9 +352,11 @@ void net_print_sigmas
 }
 
 
-/* PRINT ARRAY OF PARAMETERS.  The array may have to extend over several
-   lines.  If op is non-zero, each new line (but not the first) is preceded 
-   by eleven spaces. */
+/* PRINT ARRAY OF PARAMETERS.  The array may have to extend over
+   several lines, with lines broken after per_line items, and a blank
+   line printed between sections of per_section items.  If op is
+   non-zero, each new line (but not the first) is preceded by eleven
+   spaces. */
 
 static void print_param_array
 ( net_param *p,
@@ -355,18 +364,24 @@ static void print_param_array
   int op
 )
 { 
-  int i;
+  int i, j;
 
+  j = 0;
   for (i = 0; i<n; i++)
   { if (i!=0)
-    { if (i%10==0) 
+    { if (j%per_line==0 || j==per_section) 
       { printf("\n");
+        if (j==per_section)
+        { printf("\n");
+          j = 0;
+        }
         if (op) printf("           ");
       }
       else printf(" ");
     }
     if (op) printf("%+6.2f",p[i]);
     else    printf("%+7.3f",p[i]);
+    j += 1;
   }
 
   printf("\n");

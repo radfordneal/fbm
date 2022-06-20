@@ -25,6 +25,13 @@
 #include "model.h"
 #include "net.h"
 
+static void usage(void)
+{ fprintf (stderr,
+   "Usage: net-display [ -p | -h | -P | -H ] [ -lN ] [ -sN ] [ group ]\n");
+  fprintf (stderr,
+   "                   log-file [ index ]\n");
+  exit(1);
+}
 
 /* MAIN PROGRAM. */
 
@@ -48,6 +55,10 @@ int main
   int dump_params;
   int dump_sigmas;
   int index, group;
+  int per_line, per_section;
+
+  char junk;
+  int g;
 
   /* Look at arguments. */
 
@@ -56,29 +67,45 @@ int main
   dump_params = 0;
   dump_sigmas = 0;
   group = 0;  /* all */
+  per_line = 10;
+  per_section= -1;  /* no sections */
 
-  if (argc>1 && (strcmp(argv[1],"-p")==0 || strcmp(argv[1],"-w")==0))
-  { params_only = 1;
-    argv += 1;
-    argc -= 1;
-  }
-  else if (argc>1 && (strcmp(argv[1],"-h")==0 || strcmp(argv[1],"-s")==0))
-  { sigmas_only = 1;
-    argv += 1;
-    argc -= 1;
-  }
-  else if (argc>1 && strcmp(argv[1],"-P")==0)
-  { dump_params = 1;
-    argv += 1;
-    argc -= 1;
-  }
-  else if (argc>1 && strcmp(argv[1],"-H")==0)
-  { dump_sigmas = 1;
-    argv += 1;
-    argc -= 1;
+  for (;;)
+  { if (argc>1 && (strcmp(argv[1],"-p")==0 || strcmp(argv[1],"-w")==0))
+    { params_only = 1;
+      argv += 1;
+      argc -= 1;
+    }
+    else if (argc>1 && (strcmp(argv[1],"-h")==0 || strcmp(argv[1],"-s")==0))
+    { sigmas_only = 1;
+      argv += 1;
+      argc -= 1;
+    }
+    else if (argc>1 && strcmp(argv[1],"-P")==0)
+    { dump_params = 1;
+      argv += 1;
+      argc -= 1;
+    }
+    else if (argc>1 && strcmp(argv[1],"-H")==0)
+    { dump_sigmas = 1;
+      argv += 1;
+      argc -= 1;
+    }
+    else if (argc>1 && argv[1][0]=='-' && argv[1][1]=='l')
+    { if (sscanf(argv[1]+2,"%d%c",&per_line,&junk)!=1) usage();
+      argv += 1;
+      argc -= 1;
+    }
+    else if (argc>1 && argv[1][0]=='-' && argv[1][1]=='s')
+    { if (sscanf(argv[1]+2,"%d%c",&per_section,&junk)!=1) usage();
+      argv += 1;
+      argc -= 1;
+    }
+    else
+    { break;
+    }
   }
 
-  char junk; int g;
   if (argc>1 && sscanf(argv[1],"%d%c",&g,&junk) == 1 && g>0)
   { group = g;
     argv += 1;
@@ -89,9 +116,7 @@ int main
 
   if (argc!=2 && argc!=3 
    || argc>2 && (index = atoi(argv[2]))<=0 && strcmp(argv[2],"0")!=0) 
-  { fprintf (stderr,
-     "Usage: net-display [ -p | -h | -P | -H ] [ group ] log-file [ index ]\n");
-    exit(1);
+  { usage();
   }
 
   logf.file_name = argv[1];
@@ -223,13 +248,13 @@ int main
   printf("\n");
 
   if (params_only)
-  { net_print_params(w,0,a,flgs,m,group);
+  { net_print_params(w,0,a,flgs,m,group,per_line,per_section);
   }
   else if (sigmas_only)
   { net_print_sigmas(s,a,flgs,m,group);
   }
   else
-  { net_print_params(w,s,a,flgs,m,group);
+  { net_print_params(w,s,a,flgs,m,group,per_line,per_section);
   }
 
   printf("\n");

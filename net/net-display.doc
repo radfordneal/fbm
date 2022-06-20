@@ -7,31 +7,40 @@ and/or the hyperparameters (sigmas) of the network.
 
 Usage:
 
-    net-display [ -p | -h | -P | -H ] [ group ] log-file [ index ]
+    net-display [ -p ] | -h | -P | -H ] [ -lN ] [ -sN ] [ group ] 
+                log-file [ index ]
 
 If no index is specified, the last network in the log file is
 displayed.  
 
 By default, the parameters and hyperparameters are both displayed.
+
 The -p option (or -w option) causes only the parameters (weights) to
 be displayed (to higher precision).  The -h option (or -s option)
-causes only the hyperparameters (sigmas) to be displayed.  The -P
-option causes only parameters to be printed, in a raw format without
-headers, one per line, in high precision.  Similarly, the -H option
-causes hyperparameters to be printed in a raw format (including any
-hyperparameters that are exactly tied to a higher-level
+causes only the hyperparameters (sigmas) to be displayed.
+
+The -P option causes only parameters to be printed, in a plain format
+without headers, one per line, in high precision.  Similarly, the -H
+option causes hyperparameters to be printed in a plain format
+(including hyperparameters that are exactly tied to a higher-level
 hyperparameter).
+
+The -l option specifies the number of parameters displayed per line
+(default 10).  The -s option specifies the number of parameters in a
+section, with sections separated by blank lines (default is no
+sections).  These options are ignored if the -h, -H, or -P option
+is given.
 
 If a 'group' argument (a positive integer) is specified, only the
 parameters and/or hyperparameters in the group with that index (see
 below) are displayed.
 
 The output of the program (except when -P or -H is specified) consists
-of one section for each type of parameter, plus a section for noise
+of one group for each type of parameter, plus a group for noise
 levels, if a regression data model is being used.  The format of a
-section is best described by looking at the section for the weights
-from input units to output units, which is as follows, for a net with
-three input units and four output units, when no option is specified.
+group is best described by looking at the group for the weights from
+input units to output units, which is as follows, for a net with three
+input units and four output units, when no option is specified.
 
   Input to Output Weights [1]
 

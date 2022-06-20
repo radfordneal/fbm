@@ -25,7 +25,8 @@ Feature changes in the version:
    run.  See xxx-avepred.doc.
 
 3) The net-display program can now display parameters or hyperparameters
-   in only a single group.  See net-display.doc for details.
+   in only a single group.  The output format for parameters can be
+   controlled with -l and -s options.  See net-display.doc for details.
 
 4) A network configuration "file" can now be specified as the concatenation
    of several files, with names separated by commas, or by literal strings

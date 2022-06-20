@@ -628,7 +628,7 @@ void net_prior_max_second (net_params *, net_sigmas *, net_arch *, net_flags *,
                            net_priors *);
 
 void net_print_params (net_params *, net_sigmas *, net_arch *, net_flags *,
-                       model_specification *, int);
+                       model_specification *, int, int, int);
 void net_print_sigmas (net_sigmas *, net_arch *, net_flags *,
                        model_specification *, int);
 

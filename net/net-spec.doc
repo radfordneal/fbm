@@ -42,7 +42,7 @@ of a unit in the layer from its input following the size.
 
 Possible activation functions are:
 
-    tanh  softplus  softplus0  identity  normalize[/channels]
+    tanh  softplus  softplus0  identity  normalize[%channels]
 
 The default is 'tanh', the hyperbolic tangent function.  
 
@@ -65,7 +65,7 @@ of 0.01 ensures that the average will not be zero.
 
 The normalize computation may be done separately for some number of
 channels, which must be a divisor of the number of units in the layer.
-For example, if there are 40 units, 'normalize/4' will normalize the
+For example, if there are 40 units, 'normalize%4' will normalize the
 units separately for 4 channels, each consisting of 10 units.  The
 default is one channel - ie, the normalization is done for all units,
 as described above.  When there are K channels, the first units for

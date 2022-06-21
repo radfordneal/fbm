@@ -139,7 +139,7 @@ int main
         { printf("  normalize");
         }
         else
-        { printf("  normalize/%d",c);
+        { printf("  normalize%%%d",c);
         }
       }
       else                                        printf("  UNKNOWN TYPE!");
@@ -504,7 +504,7 @@ int main
         }
         else
         { int c; char junk;
-          if (sscanf(*ap,"normalize/%d%c",&c,&junk)!=1) usage();
+          if (sscanf(*ap,"normalize%%%d%c",&c,&junk)!=1) usage();
           if (c<=0 || size%c!=0)
           { fprintf (stderr,
                      "Invalid number of channels for 'normalize' layer\n");

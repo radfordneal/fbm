@@ -42,7 +42,7 @@ of a unit in the layer from its input following the size.
 
 Possible activation functions are:
 
-    tanh  softplus  softplus0  identity  normalize[%channels]
+    tanh  softplus  softplus0  identity  normalize[%channels|/channels]
 
 The default is 'tanh', the hyperbolic tangent function.  
 
@@ -63,17 +63,25 @@ defined as (1/N) (0.01 + SUM x_i^2), where N is the number of units
 and x_i^2 is the square of the input for the i'th unit.  The addition
 of 0.01 ensures that the average will not be zero.
 
-The normalize computation may be done separately for some number of
-channels, which must be a divisor of the number of units in the layer.
+The normalize computation may be done separately for groups of units
+defined according to the number of "channels", which must be a divisor
+of the number of units in the layer.  This can be done in two ways.
+If units are numbered from zero, then for normalize%n, units i and j
+are in the same group if i%n equals j%n, whereas for normalize/n,
+units i and j are in the same group if i/n equals j/n (with truncated
+integer division).
+
 For example, if there are 40 units, 'normalize%4' will normalize the
 units separately for 4 channels, each consisting of 10 units.  The
 default is one channel - ie, the normalization is done for all units,
 as described above.  When there are K channels, the first units for
 each channel come first, followed by the second units for each
-channel, etc.  So the first channel consists of units 1, K+1, 2K+1,
-..., the second channel consists of units 2, K+2, 2K+2, ..., and so
-forth.
-
+channel, etc.  So the first group consists of units 0, K, 2K, ...,
+the second group consists of units 1, K+1, 2K+1, ..., and so forth.
+On the other hand, 'normalize/4' will normalize 10 groups of 4 units,
+with each group containing one unit from each channel.  So the first
+group consists of units 0, 1, 2, and 4, the second group consists of
+units 5, 6, 7, and 8, and so forth.
 
 Specifying layer connections and priors.
 

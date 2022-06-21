@@ -196,8 +196,7 @@ sort is normalization, defined by\vspace{-5pt}
  v^{\ell}_i & = & u^{\ell}_i\,/\,s
 \eeq
 where $n^{\ell}$ is the number of units in layer $\ell$.  Normalization
-may alternatively be done separately for each ``channel'' (a subset of
-units).
+may alternatively be done separately for sub-groups of units.
 
 Connections from an input layer to a hidden or output layer may not be
 fully connected, but can instead be configured by specifying a set,
@@ -741,8 +740,7 @@ For a normalization layer, equation~(\ref{aderiv}) is replaced by
      \ -\ v^{\ell}_k t^{\ell} \Big)
 \eeq 
 where $s^{\ell}$ is defined by equation~(\ref{defs}).  This is modified 
-in the obvious way when normalization is done separately
-for each channel.
+in the obvious way when normalization is done separately for sub-groups.
 
 \subsubsection*{Derivatives of the log likelihood with respect to parameters}
 

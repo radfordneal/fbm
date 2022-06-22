@@ -664,7 +664,7 @@ void STATIC_IF_INCLUDED net_func
     }
 
     else  /* Normalize layer */
-    { int c = a->layer_type[l] - Normalize_base;
+    { int c = a->N_channels[l];
       int k;
       for (k = 0; k<c; k++)
       { net_value s = 0;
@@ -1991,7 +1991,7 @@ __device__ __forceinline__ static void net_func_gpu
     { /* nothing to do */
     }
     else /* normalize layer */
-    { int c = A.layer_type[l] - Normalize_base;
+    { int c = A.N_channels[l];
       int k;
       for (k = th; k<c; k+=NTH)
       { net_value s = 0;

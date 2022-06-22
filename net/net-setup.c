@@ -260,8 +260,8 @@ unsigned net_setup_value_count_aligned
 
   for (l = 0; l<a->N_layers; l++)
   { int n = a->N_hidden[l];
-    if (a->layer_type[l] > Normalize_base)
-    { n += a->layer_type[l] - Normalize_base;
+    if (a->layer_type[l] == Normalize_type)
+    { n += a->N_channels[l];
     } 
     count += ALIGN(n,align);
   }
@@ -698,8 +698,8 @@ void net_setup_value_pointers_aligned
 
   for (l = 0; l<a->N_layers; l++)
   { int n = a->N_hidden[l];
-    if (a->layer_type[l] > Normalize_base)
-    { n += a->layer_type[l] - Normalize_base;
+    if (a->layer_type[l] == Normalize_type)
+    { n += a->N_channels[l];
     } 
     v->h[l] = b;
     b += ALIGN(n,align);

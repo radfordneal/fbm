@@ -3930,7 +3930,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
     }
 
     else  /* Normalize layer */
-    { int c = a->layer_type[l] - Normalize_base;
+    { int c = a->N_channels[l];
       int k;
       for (k = 0; k<c; k++)
       { net_value s = vh[N_hidden+k];
@@ -4400,7 +4400,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
       { /* nothing to do */
       }
       else /* normalize layer */
-      { int c = A.layer_type[l] - Normalize_base;
+      { int c = A.N_channels[l];
         int k;
         for (k = thrb; k<c; k+=NTH)
         { net_value s = vth->h[l][N_hidden+k];

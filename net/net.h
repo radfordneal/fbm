@@ -287,9 +287,7 @@ typedef struct
 #define Identity_type 1		/* Identity units */
 #define Softplus_type 3		/* Softplus units */
 #define Softplus0_type 4	/* Softplus0 units (softplus - log(2)) */
-#define Normalize_base 10	/* Start of 'normalize' types: 
-                                     normalize%n -> Normalize_base + n
-                                     normalize/n -> Normalize_base + 100 + n */
+#define Normalize_type 5	/* Normalize layer */
 
 #define Normalize_epsilon 0.01	/* Constant added to sum of squared values 
                                    for normalization */
@@ -298,8 +296,11 @@ typedef struct
   int N_inputs;			/* Number of input units */
   int N_layers;			/* Number of layers of hidden units */
   int N_hidden[Max_layers];	/* Number of hidden units in each layer */
-  unsigned char layer_type[Max_layers];  /* Type of hidden units in layer */
   int N_outputs;		/* Number of output units */
+
+  char layer_type[Max_layers];  /* Type (act. fun.) of hidden units in layer */
+  short N_channels[Max_layers]; /* Number of channels for normalize layers,
+                                   positive for %channels, neg. for /channels */
 
   char any_omitted[Max_layers+1]; /* Whether any inputs omitted for layer, with
                                      any_omitted[N_layers] for output layer -

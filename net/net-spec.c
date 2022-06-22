@@ -133,14 +133,11 @@ int main
       else if (a->layer_type[l]==Softplus_type)   printf("  softplus");
       else if (a->layer_type[l]==Softplus0_type)  printf("  softplus0");
       else if (a->layer_type[l]==Identity_type)   printf("  identity");
-      else if (a->layer_type[l]>Normalize_base)
-      { int c = a->layer_type[l] - Normalize_base;
-        if (c==1)
-        { printf("  normalize");
-        }
-        else
-        { printf("  normalize%%%d",c);
-        }
+      else if (a->layer_type[l]==Normalize_type)
+      { int c = a->N_channels[l];
+        if (c==1)                                 printf("  normalize");
+        else if (c>0)                             printf("  normalize%%%d",c);
+        else                                      printf("  normalize/%d",-c);
       }
       else                                        printf("  UNKNOWN TYPE!");
       printf("\n");
@@ -472,7 +469,7 @@ int main
 
   while (*ap!=0 && strcmp(*ap,"/")!=0)
   { 
-    int size, type;
+    int size, type, channels;
     int i;
 
     if ((size = atoi(*ap++))<=0) usage();
@@ -480,6 +477,7 @@ int main
     if (*ap==0) usage();
 
     type = -1;
+    channels = 0;
 
     while (*ap!=0 && (*ap)[0]>='a' && (*ap)[0]<='z')
     { if (strcmp(*ap,"tanh")==0)
@@ -499,23 +497,30 @@ int main
         type = Softplus0_type;
       }
       else if (strncmp(*ap,"normalize",9)==0)
-      { if (strcmp(*ap,"normalize")==0)
-        { type = Normalize_base + 1;
+      { type = Normalize_type;
+        if (strcmp(*ap,"normalize")==0)
+        { channels = 1;
         }
         else
         { int c; char junk;
-          if (sscanf(*ap,"normalize%%%d%c",&c,&junk)!=1) usage();
+          if (sscanf(*ap,"normalize%%%d%c",&c,&junk)==1)
+          { channels = c;
+          }
+          else if (sscanf(*ap,"normalize/%d%c",&c,&junk)==1)
+          { channels = -c;
+          }
+          else 
+          { usage();
+          }
           if (c<=0 || size%c!=0)
           { fprintf (stderr,
                      "Invalid number of channels for 'normalize' layer\n");
             exit(1);
           }
-          if (c>100)
-          { fprintf (stderr,
-                     "Too many channels in 'normalize' layer (max 100)\n");
+          if (c>=1<<15)
+          { fprintf (stderr, "Too many channels in 'normalize' layer\n");
             exit(1);
           }
-          type = Normalize_base + c;
         }
       }
       else
@@ -533,6 +538,7 @@ int main
       }
       a->N_hidden[a->N_layers] = size;
       a->layer_type[a->N_layers] = type==-1 ? Tanh_type : type;
+      a->N_channels[a->N_layers] = channels;
       a->N_layers += 1;
     }
 
@@ -1110,22 +1116,29 @@ static void print_config (net_config *cf, int biases)
 static void usage(void)
 {
   fprintf(stderr,
-   "Usage: net-spec log-file N-inputs { N-hidden [ act-func ] } N-outputs\n");
+  "Usage: net-spec log-file N-inputs { N-hidden [ activation-func ] } N-outputs\n"
+  );
 
   fprintf(stderr,
-   "                / { group=prior [ config-spec | omit-spec ] }\n");
+  "                / { group=prior [ config-spec | omit-spec ] }\n");
 
   fprintf(stderr,
-   "   or: net-spec log-file [ \"sizes\" ] [ \"config\" ]  (display specifications)\n");
+  "   or: net-spec log-file [ \"sizes\" ] [ \"config\" ]  (display specifications)\n"
+  );
 
   fprintf(stderr,
-   " config-spec: config:<file>{,<file>} omit-spec: omit:[-]<input>{,<input>}\n");
+  " config-spec: config:<file>{,<file>}  omit-spec: omit:[-]<input>{,<input>}\n"
+  );
 
   fprintf(stderr,
-   " act-fun: tanh softplus[0] identity  group: ti ih# bh# th# h#h# h#o io bo ah# ao\n");
+ " activation-func: identity tanh softplus[0] normalize[%%channels|/channels]\n"
+  );
 
   fprintf(stderr,
-   " prior: [x]Width[:[Alpha-type][:[Alpha-unit][:[Alpha-weight]]]][!|!!]\n");
+  " group: ti ih# bh# th# h#h# h#o io bo ah# ao\n");
+
+  fprintf(stderr,
+  " prior: [x]Width[:[Alpha-type][:[Alpha-unit][:[Alpha-weight]]]][!|!!]\n");
 
   exit(1);
 }

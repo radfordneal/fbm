@@ -3817,8 +3817,8 @@ void mc_app_stepsizes
           }
         }
       }
-      else if (arch->layer_type[l]>Normalize_base)
-      { int c = arch->layer_type[l] - Normalize_base;
+      else if (arch->layer_type[l]==Normalize_type)
+      { int c = arch->N_channels[l];
         int cn = arch->N_hidden[l] / c;
         int k;
         for (k = 0; k<c; k++)
@@ -3946,8 +3946,8 @@ void mc_app_stepsizes
       }
     }
 
-    if (arch->layer_type[l] > Normalize_base)
-    { int c = arch->layer_type[l] - Normalize_base;
+    if (arch->layer_type[l] == Normalize_type)
+    { int c = arch->N_channels[l];
       int k;
       for (k = 0; k<c; k++)
       { for (i = k; i<arch->N_hidden[l]; i+=c)

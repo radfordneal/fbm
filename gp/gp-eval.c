@@ -1,6 +1,6 @@
 /* GP-EVAL.C - Program to evaluate functions drawn from Gaussian processes. */
 
-/* Copyright (c) 1995-2004 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -91,12 +91,6 @@ int main
 
   gen_targets = 0;
   no_latent = 0;
-
-  if (argc>1 && strcmp(argv[argc-1],"targets")==0)
-  { gen_targets = 2;
-    argc -= 1;
-    argv[argc] = 0;
-  }
   
   for (;;)
   { if (argc>1 && strcmp(argv[1],"-l")==0)
@@ -131,25 +125,25 @@ int main
 
   N = 1;
 
-  if (*ap!=0 && (*(ap+1)!=0 || gen_targets==2) && strcmp(*ap,"/")!=0)
+  if (*ap!=0 && strcmp(*ap,"/")!=0)
   { if ((N = atoi(*ap))==0) usage();
     ap += 1;
   }
 
-  if (*ap==0 && gen_targets==2)
-  { 
-    gen_targets = 0;
-    fname = "targets";
-  }
-  else if (argv+argc-ap==1)
+  if (*ap==0 || strcmp(*ap,"/")!=0) usage();
+  ap += 1;
+  if (*ap==0) usage();
+
+  if (*(ap+1)==0)
   { 
     fname = ap[0];
   }
   else
   {
     fname = 0;
+    ap -= 1;
 
-    if (*ap==0 || (argv+argc-ap)%4!=0) usage();
+    if ((argv+argc-ap)%4!=0) usage();
 
     ng = 0;
 
@@ -531,13 +525,9 @@ int main
 static void usage(void)
 {
   fprintf (stderr, 
-    "Usage: gp-eval [ -l ] [ -t ] log-file range [ [-]N ]\n");
+    "Usage: gp-eval [ -l ] [ -t ] log-file range [ [-]N ] / data-file\n");
   fprintf (stderr, 
-    "                             data-file [ \"targets\" ]\n");
-  fprintf (stderr, 
-    "   or: gp-eval [ -l ] [ -t ] log-file range [ [-]N ]\n");
-  fprintf (stderr, 
-    "                             { / low high grid-size } [ \"targets\" ]\n");
+    "   or: gp-eval [ -l ] [ -t ] log-file range [ [-]N ] { / low high grid-size }\n");
 
   exit(1);
 }

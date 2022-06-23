@@ -23,13 +23,11 @@ program is also related, and in some respects is more general.
 
 Usage:
 
-   gp-eval [ -l ] [ -t ] log-file range [ [-]N ] 
-                         data-file [ "targets" ]
+   gp-eval [ -l ] [ -t ] log-file range [ [-]N ] / data-file 
 
 or:
 
-   gp-eval [ -l ] [ -t ] log-file range [ [-]N ] 
-                         { / low high grid-size } [ "targets" ]
+   gp-eval [ -l ] [ -t ] log-file range [ [-]N ] { / low high sz }
 
 N functions (default 1) are generated based on each iteration in the
 named log-file, within the specified range.  The range has the usual
@@ -48,10 +46,9 @@ described in <A HREF="numin.html">numin.doc</A>), in the same way (and with the 
 transformations) as training data is read.  In the second form each
 group of the remaining arguments describes the grid along one input
 dimension, with 'low' and 'high' being the range of the grid along
-that dimension, and grid-size + 1 being the number of grid points
-spread across that range.  The number of such argument groups must be
-the same as the number of input dimensions, and currently cannot be
-more than two.
+that dimension, and sz+1 being the number of grid points spread across
+that range.  The number of such argument groups must be the same as
+the number of input dimensions, and currently cannot be more than two.
 
 The Gaussian process model in the log file must have only one output
 value.
@@ -60,7 +57,7 @@ The output consists of a section for each function drawn, with
 sections separated by blank lines.  Each section contains as many
 lines as are in the data file, or as there are grid points.  If the
 inputs are from a grid, each line contains the input values followed
-by the output values.  If the inputs come from a file, eachh line
+by the output values.  If the inputs come from a file, each line
 contains only the output values.  When a grid is used for more than
 one input variable, a blank line is output between groups of points
 where all but the last variable are the same.  There must be only one
@@ -73,8 +70,7 @@ option is included, the functions are drawn from the conditional
 distribution given the target values.  Note, however, that this is
 possible only for regression models (ie, for "real" models).
 
-If the -t option is included, or the final argument is "targets" (this
-for backward compatibility), then rather than writing the function
+If the -t option is included, then rather than writing the function
 values themselves, the program instead generates target values from
 these outputs, as defined by the data model.  This option is currently
 allowed only for real targets values.  The noise for these target
@@ -83,11 +79,11 @@ specifies, the generation of these values will be affected by
 autocorrelation in the noise for the training cases (if any).
 
 If the covariance does not include a jitter part, and there is no
-noise added (ie, "targets" is not specified for a regression model),
-then gp-eval will add a small amount (1e-6) to the diagonal of the
+noise added (ie, "-t" is not specified for a regression model),
+gp-eval will add a small amount (1e-6) to the diagonal of the
 covariance to try to prevent numerical problems.  Round off error may
 still make the covariance matrix appear to not be positive definite,
-however, in which case a message about not being able to find the 
+however, in which case a message about not being able to find the
 Cholesky decomposition will appear.
 
 Note that the grid gives the actual values for the inputs.  Any
@@ -108,7 +104,7 @@ and then use the following gnuplot commands:
 
 The viewpoint can be changed with the "set view" and "replot" commands.
 
-            Copyright (c) 1995-2004 by Radford M. Neal
+            Copyright (c) 1995-2022 by Radford M. Neal
 </pre>
 </body>
 </html>

@@ -3818,18 +3818,28 @@ void mc_app_stepsizes
         }
       }
       else if (arch->layer_type[l]==Normalize_type)
-      { int c = arch->N_channels[l];
-        int cn = arch->N_hidden[l] / c;
+      { int N_hidden = arch->N_hidden[l];
+        int cc = arch->N_channels[l];
+        int c = cc>0 ? cc : N_hidden/(-cc);
+        int cn = N_hidden / c;
         int k;
         for (k = 0; k<c; k++)
         { double s = 0;
-          for (j = k; j<arch->N_hidden[l]; j+=c)
-          { s += typl[j];
+          if (cc>0)  /* normalize%... */
+          { for (j = k; j<N_hidden; j+=c)
+            { s += typl[j];
+            }
+          }
+          else  /* normalize/... */
+          { int kk = -cc*k;
+            for (j = 0; j<c; j++)
+            { s += typl[kk+j];
+            }
           }
           s = 1 / (s/cn + Normalize_epsilon);
-          typl[arch->N_hidden[l]+k] = s;
+          typl[N_hidden+k] = s;
         }
-        for (j = 0; j<arch->N_hidden[l]; j++)
+        for (j = 0; j<N_hidden; j++)
         { typl[j] = cn;
         }
       }
@@ -3947,11 +3957,22 @@ void mc_app_stepsizes
     }
 
     if (arch->layer_type[l] == Normalize_type)
-    { int c = arch->N_channels[l];
+    { int N_hidden = arch->N_hidden[l];
+      int cc = arch->N_channels[l];
+      int c = cc>0 ? cc : N_hidden/(-cc);
       int k;
       for (k = 0; k<c; k++)
-      { for (i = k; i<arch->N_hidden[l]; i+=c)
-        { seconds.h[l][i] *= seconds.h[l][arch->N_hidden[l]+k];
+      { double sh = seconds.h[l][N_hidden+k];
+        if (cc>0)  /* normalize%... */
+        { for (i = k; i<N_hidden; i+=c)
+          { seconds.h[l][i] *= sh;
+          }
+        }
+        else  /* normalize/... */
+        { int kk = -cc*k;
+          for (i = 0; i<c; i++)
+          { seconds.h[l][kk+i] *= sh;
+          }
         }
       }
     }

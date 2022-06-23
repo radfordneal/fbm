@@ -664,18 +664,35 @@ void STATIC_IF_INCLUDED net_func
     }
 
     else  /* Normalize layer */
-    { int c = a->N_channels[l];
+    { int cc = a->N_channels[l];
+      int c = cc>0 ? cc : N_hidden/(-cc);
       int k;
       for (k = 0; k<c; k++)
       { net_value s = 0;
-        for (j = k; j<N_hidden; j+=c)
-        { s += vh[j] * vh[j];
+        if (cc>0)  /* normalize%... */
+        { for (j = k; j<N_hidden; j+=c)
+          { s += vh[j] * vh[j];
+          }
+        }
+        else  /* normalize/... */
+        { int kk = -cc*k;
+          for (j = 0; j<c; j++)
+          { s += vh[kk+j] * vh[kk+j];
+          }
         }
         s = (s*c)/N_hidden + Normalize_epsilon;
         s = 1/sqrt(s);
         vh[N_hidden+k] = s;  /* saved for use later in backprop */
-        for (j = k; j<N_hidden; j+=c)
-        { vh[j] *= s;
+        if (cc>0)  /* normalize%... */
+        { for (j = k; j<N_hidden; j+=c)
+          { vh[j] *= s;
+          }
+        }
+        else  /* normalize/... */
+        { int kk = -cc*k;
+          for (j = 0; j<c; j++)
+          { vh[kk+j] *= s;
+          }
         }
       }
     }
@@ -1991,18 +2008,35 @@ __device__ __forceinline__ static void net_func_gpu
     { /* nothing to do */
     }
     else /* normalize layer */
-    { int c = A.N_channels[l];
+    { int cc = A.N_channels[l];
+      int c = cc>0 ? cc : N_hidden/(-cc);
       int k;
       for (k = th; k<c; k+=NTH)
       { net_value s = 0;
-        for (j = k; j<N_hidden; j+=c)
-        { s += vh[j] * vh[j];
+        if (cc>0)  /* normalize%... */
+        { for (j = k; j<N_hidden; j+=c)
+          { s += vh[j] * vh[j];
+          }
+        }
+        else  /* normalize/... */
+        { int kk = -cc*k;
+          for (j = 0; j<c; j++)
+          { s += vh[kk+j] * vh[kk+j];
+          }
         }
         s = (s*c)/N_hidden + Normalize_epsilon;
         s = 1/sqrt(s);
         v->h[l][N_hidden+k] = s;  /* saved for use later in backprop */
-        for (j = k; j<N_hidden; j+=c)
-        { vh[j] *= s;
+        if (cc>0)  /* normalize%... */
+        { for (j = k; j<N_hidden; j+=c)
+          { vh[j] *= s;
+          }
+        }
+        else  /* normalize/... */
+        { int kk = -cc*k;
+          for (j = 0; j<c; j++)
+          { vh[kk+j] *= s;
+          }
         }
       }
       if (SYNC_AFTER && N_hidden % NTH != 0) __syncwarp(syncmask);

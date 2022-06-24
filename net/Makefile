@@ -36,8 +36,7 @@ programs:	net-spec net-gen net-rej net-eval net-display net-pred net-mc \
 		net-gd net-plt net-tbl net-hist net-dvar net-config-check \
 		net-grad-test net-stepsizes net-genp net-approx net-his
 
-# GPU versions of some programs.  Note that the GPU version of net-eval 
-# is primarily for testing.  It is probably slower than the CPU version.
+# GPU versions of some programs.
 
 gpu:		net-mc-gpu net-gd-gpu net-grad-test-gpu
 
@@ -100,15 +99,16 @@ net-rej:	net-rej.o	net-util.o net-config.o prior.o \
 net-rej.o:	net-rej.c	misc.h prior.h model.h net.h data.h log.h rand.h
 
 net-eval:	net-eval.o	net-util.o net-config.o prior.o net-prior.o \
-				net-setup.o \
+				net-setup.o net-data.o \
 				net-func.o net-model.o model.o misc.o \
-				log.o rand.o ars.o
+				log.o rand.o ars.o numin.o data-trans.o
 		$(CC) $(LFLAGS) net-eval.o net-util.o net-config.o prior.o \
-		  net-prior.o \
+		  net-prior.o net-data.o \
 		  net-setup.o net-func.o net-model.o model.o misc.o \
-		  log.o rand.o ars.o -lm -o net-eval
+		  log.o rand.o ars.o numin.o data-trans.o -lm -o net-eval
 
-net-eval.o:	net-eval.c	misc.h prior.h model.h net.h data.h log.h
+net-eval.o:	net-eval.c	misc.h prior.h model.h net.h net-data.h \
+				data.h log.h
 
 net-values:	net-values.o	net-util.o net-config.o prior.o net-prior.o \
 				net-setup.o \

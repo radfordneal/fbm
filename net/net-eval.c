@@ -24,6 +24,7 @@
 #include "data.h"
 #include "model.h"
 #include "net.h"
+#include "net-data.h"
 
 static void usage(void);
 
@@ -35,7 +36,8 @@ int main
   char **argv
 )
 {
-  char *file;
+  char *fname;
+
   net_arch *a;
   net_precomputed pre;
   net_flags *flgs;
@@ -102,8 +104,8 @@ int main
     argv += 1;
   }
 
-  if (argc<3 || argc>3 && strcmp(argv[3],"/")!=0
-             || argc!=3 && argc!=5 && (argc-3)%4!=0 || (argc-3)/4>Max_inputs)
+  if (argc<4 || strcmp(argv[3],"/")!=0
+             || argc!=5 && (argc-3)%4!=0 || (argc-3)/4>Max_inputs)
   { usage();
   }
 
@@ -119,11 +121,11 @@ int main
   }
 
   if (argc==5)
-  { file = argv[4];
+  { fname = argv[4];
   }
   else
   { 
-    file = NULL;
+    fname = NULL;
     ng = 0;
 
     for (ap = argv+3; *ap!=0; ap += 4)
@@ -178,7 +180,7 @@ int main
     N_targets = m->type=='C' ? 1 : a->N_outputs;
   }
 
-  if (a->N_inputs!=ng)
+  if (fname==NULL && a->N_inputs!=ng)
   { fprintf(stderr,
       "Number of grid ranges doesn't match number of input dimensions\n");
     exit(1);
@@ -250,10 +252,72 @@ int main
     /* Print the value of the network function, or targets generated from it, 
        or hidden layer values, for the file or grid of points. */
 
-    if (file)
+    if (fname!=NULL)
     {
+      static data_specifications ds0;  /* static so it's initialized to zero. */
+
+      data_spec = logg.data['D']==0 ? &ds0 : logg.data['D'];
+    
+      if (logg.data['D']==0)
+      { data_spec->N_inputs = a->N_inputs;
+        data_spec->N_targets = m!=0 && m->type=='C' ? 1 : a->N_outputs;
+        if (m!=0 && m->type=='B') 
+        { data_spec->int_target = 2;
+        }
+        if (m!=0 && m->type=='C') 
+        { data_spec->int_target = a->N_outputs;
+        }
+        if (m!=0 && m->type=='N')
+        { data_spec->int_target = -1;
+        }
+        for (i = 0; i<data_spec->N_inputs+data_spec->N_targets; i++)
+        { data_spec->trans[i] = data_trans_parse("I");
+        }
+      }
+
+      if (strlen(fname)>=Max_data_source)
+      { fprintf(stderr,"Source for inputs is too long\n");
+        exit(1);
+      }
+      strcpy(data_spec->test_inputs,fname);
+
+      net_data_read (0, 1, a, m, sv);
+
+      for (i = 0; i<N_test; i++)
+      {
+        v = test_values+i;
+
+        net_func (v, a, &pre, flgs, w, 1);
+
+        if (inputs)    
+        { for (j = 0; j<a->N_inputs; j++) printf(" %+.6e",v->i[j]);
+        }
+
+        if (hid)
+        { int l;
+          for (l = 0; l<a->N_layers; l++)
+          { if (layer<0 || layer==l)
+            { for (j = 0; j<a->N_hidden[l]; j++) 
+              { printf(" %+.6e",v->h[l][j]);
+              }
+            }
+          }
+        }
+
+        if (outputs)
+        { if (gen_targets)
+          { net_model_guess (v, targets, a, &pre, flgs, m, sv, w, s->noise, 1);
+            for (j = 0; j<N_targets; j++) printf(" %+.6e",targets[j]);
+          }
+          else
+          { for (j = 0; j<a->N_outputs; j++) printf(" %+.6e",v->o[j]);
+          }
+        }
+    
+        printf("\n");
+      }
     }
-    else
+    else  /* from grid, not file */
     {
       if (first)
       { first = 0;
@@ -272,7 +336,7 @@ int main
         net_func (v, a, &pre, flgs, w, 1);
 
         if (inputs)    
-        { for (i = 0; i<a->N_inputs; i++) printf(" %8.5f",v->i[i]);
+        { for (j = 0; j<a->N_inputs; j++) printf(" %+.6e",v->i[j]);
         }
 
         if (hid)
@@ -323,6 +387,8 @@ int main
 static void usage(void)
 {
   fprintf (stderr, 
-   "Usage: net-eval log-file range { / low high grid-size } [ \"targets\" | h[#] ]\n");
+   "Usage: net-eval [ -i ] [ -h[#] ] [ -o | -t ] log-file range / input-file\n");
+  fprintf (stderr,
+   "   or: net-eval [ -i ] [ -h[#] ] [ -o | -t ] log-file range { / low high sz }\n");
   exit(1);
 }

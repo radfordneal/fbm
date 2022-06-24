@@ -12,7 +12,7 @@ target points at random in accordance with the data model.
 
 Usage:
 
-    net-eval [ -i ] [ -h[#] ] [ -o | -t ] log-file range [ / file-of-inputs ]
+    net-eval [ -i ] [ -h[#] ] [ -o | -t ] log-file range / input-file 
 
 or:
 
@@ -32,10 +32,10 @@ log-file, with the specified range.  The range has the usual form,
 "[low][:[high]][%mod]", with 'high' defaulting to 'low' if the colon
 is absent, and to the end of the file if the colon is present.
 
-In the first form, a file to read inputs from is specified (default is
-the file of inputs for training cases), as described in <A HREF="numin.html">numin.doc</A>
-(which is also used for data-spec).  Any data transformations
-specified by data-spec are applied when these inputs are read.
+In the first form, a file to read inputs from is specified, as
+described in <A HREF="numin.html">numin.doc</A> (which is also used for data-spec).  Any data
+transformations specified by data-spec are applied when these inputs
+are read.
 
 In the second form, each group of arguments beginning with "/"
 describes a grid along one input dimension, with 'low' and 'high'

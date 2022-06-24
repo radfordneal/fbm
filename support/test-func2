@@ -52,8 +52,8 @@ net-gen log fix - <<end
 end
 net-display log 0
 net-tbl -h x0@x1@x2@x3@x4@ log 0
-net-eval log 0 / 1.1 1.1 0 / 0.7 0.7 0 / 2.2 2.2 0 / 0.8 0.8 0 / 3.3 3.3 0 h0
-net-eval log 0 / 1.1 1.1 0 / 0.7 0.7 0 / 2.2 2.2 0 / 0.8 0.8 0 / 3.3 3.3 0 h1
+net-eval -h0 -o log 0 / 1.1 1.1 0 / 0.7 0.7 0 / 2.2 2.2 0 / 0.8 0.8 0 / 3.3 3.3 0
+net-eval -h1 -o log 0 / 1.1 1.1 0 / 0.7 0.7 0 / 2.2 2.2 0 / 0.8 0.8 0 / 3.3 3.3 0
 net-eval log 0 / 1.1 1.1 0 / 0.7 0.7 0 / 2.2 2.2 0 / 0.8 0.8 0 / 3.3 3.3 0 
 net-tbl -h o0@ log 0
 net-tbl -h b@ log 0

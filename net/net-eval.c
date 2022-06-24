@@ -35,6 +35,7 @@ int main
   char **argv
 )
 {
+  char *file;
   net_arch *a;
   net_precomputed pre;
   net_flags *flgs;
@@ -62,36 +63,47 @@ int main
 
   net_value targets[Max_targets];
   int gen_targets;
-  int layer;
+  int inputs, hid, layer, outputs;
   int N_targets;
 
   char **ap;
+  char junk;
   int first;
   int i, j;
 
   /* Look at arguments. */
-  
+
+  inputs = 1;  /* yes */
+  hid = 0;     /* no */
+  outputs = 1; /* yes */
+  layer = -1;  /* all */
   gen_targets = 0;
-  layer = -1;
 
-  if (argc>1 && strcmp(argv[argc-1],"targets")==0)
-  { gen_targets = 1;
-    argc -= 1;
-    argv[argc] = 0;
-  }
-  else if (argc>1 && argv[argc-1][0]=='h')
-  { if (argv[argc-1][1]==0)
-    { layer = 0;
+  while (argc>1 && argv[1][0]=='-')
+  { if (strcmp(argv[1],"-i")==0)
+    { inputs = 0;  /* no */
     }
-    else
-    { if (argv[argc-1][1]<'0' || argv[argc-1][1]>'9') usage();
-      layer = atoi(argv[argc-1]+1);
+    else if (strcmp(argv[1],"-o")==0)
+    { outputs = 0;  /* no */
+    }
+    else if (strcmp(argv[1],"-t")==0)
+    { gen_targets = 1;
+      outputs = 1;  /* yes (as targets) */
+    }
+    else if (strcmp(argv[1],"-h")==0)
+    { hid = 1;     /* yes */
+      layer = -1;  /* all */
+    }
+    else if (argv[1][1]=='h' && sscanf(argv[1]+2,"%d%c",&layer,&junk)==1)
+    { if (layer<0) usage();
+      hid = 1;  /* yes */
     }
     argc -= 1;
-    argv[argc] = 0;
+    argv += 1;
   }
 
-  if (argc<7 || (argc-3)%4!=0 || (argc-3)/4>Max_inputs)
+  if (argc<3 || argc>3 && strcmp(argv[3],"/")!=0
+             || argc!=3 && argc!=5 && (argc-3)%4!=0 || (argc-3)/4>Max_inputs)
   { usage();
   }
 
@@ -106,14 +118,21 @@ int main
   { hindex = 1000000000;
   }
 
-  ng = 0;
+  if (argc==5)
+  { file = argv[4];
+  }
+  else
+  { 
+    file = NULL;
+    ng = 0;
 
-  for (ap = argv+3; *ap!=0; ap += 4)
-  { if (strcmp(ap[0],"/")!=0 
-     || ((grid_size[ng] = atoi(ap[3]))<=0 && strcmp(ap[3],"0")!=0)) usage();
-    grid_low[ng] = atof(ap[1]);
-    grid_high[ng] = atof(ap[2]);
-    ng += 1;
+    for (ap = argv+3; *ap!=0; ap += 4)
+    { if (strcmp(ap[0],"/")!=0 
+       || ((grid_size[ng] = atoi(ap[3]))<=0 && strcmp(ap[3],"0")!=0)) usage();
+      grid_low[ng] = atof(ap[1]);
+      grid_high[ng] = atof(ap[2]);
+      ng += 1;
+    }
   }
 
   /* Open log file and read network architecture and data model. */
@@ -165,7 +184,7 @@ int main
     exit(1);
   }
 
-  if (layer>=a->N_layers)
+  if (hid && layer>=a->N_layers)
   { fprintf(stderr, "Hidden layer specified does not exist\n");
     exit(1);
   }
@@ -229,51 +248,69 @@ int main
     }
   
     /* Print the value of the network function, or targets generated from it, 
-       or hidden layer values, for the grid of points. */
+       or hidden layer values, for the file or grid of points. */
 
-    if (first)
-    { first = 0;
+    if (file)
+    {
     }
     else
-    { printf("\n");
-    }
-  
-    for (i = 0; i<a->N_inputs; i++) 
-    { grid_point[i] = 0;
-      v->i[i] = grid_low[i];
-    }
-  
-    for (;;)
     {
-      net_func (v, a, &pre, flgs, w, 1);
-  
-      for (i = 0; i<a->N_inputs; i++) printf(" %8.5f",v->i[i]);
-  
-      if (layer>=0)
-      { for (j = 0; j<a->N_hidden[layer]; j++) printf(" %+.6e",v->h[layer][j]);
-      }
-      else if (gen_targets)
-      { net_model_guess (v, targets, a, &pre, flgs, m, sv, w, s->noise, 1);
-        for (j = 0; j<N_targets; j++) printf(" %+.6e",targets[j]);
+      if (first)
+      { first = 0;
       }
       else
-      { for (j = 0; j<a->N_outputs; j++) printf(" %+.6e",v->o[j]);
+      { printf("\n");
       }
-  
-      printf("\n");
-  
-      for (i = a->N_inputs-1; i>=0 && grid_point[i]==grid_size[i]; i--) 
+    
+      for (i = 0; i<a->N_inputs; i++) 
       { grid_point[i] = 0;
         v->i[i] = grid_low[i];
       }
-   
-      if (i<0) break;
-  
-      if (i!=a->N_inputs-1) printf("\n");
-  
-      grid_point[i] += 1;
-      v->i[i] = grid_low[i] 
-                  + grid_point[i] * (grid_high[i]-grid_low[i]) / grid_size[i];
+    
+      for (;;)
+      {
+        net_func (v, a, &pre, flgs, w, 1);
+
+        if (inputs)    
+        { for (i = 0; i<a->N_inputs; i++) printf(" %8.5f",v->i[i]);
+        }
+
+        if (hid)
+        { int l;
+          for (l = 0; l<a->N_layers; l++)
+          { if (layer<0 || layer==l)
+            { for (j = 0; j<a->N_hidden[l]; j++) 
+              { printf(" %+.6e",v->h[l][j]);
+              }
+            }
+          }
+        }
+
+        if (outputs)
+        { if (gen_targets)
+          { net_model_guess (v, targets, a, &pre, flgs, m, sv, w, s->noise, 1);
+            for (j = 0; j<N_targets; j++) printf(" %+.6e",targets[j]);
+          }
+          else
+          { for (j = 0; j<a->N_outputs; j++) printf(" %+.6e",v->o[j]);
+          }
+        }
+    
+        printf("\n");
+
+        for (i = a->N_inputs-1; i>=0 && grid_point[i]==grid_size[i]; i--) 
+        { grid_point[i] = 0;
+          v->i[i] = grid_low[i];
+        }
+     
+        if (i<0) break;
+    
+        // if (i!=a->N_inputs-1) printf("\n");
+    
+        grid_point[i] += 1;
+        v->i[i] = grid_low[i] 
+                    + grid_point[i] * (grid_high[i]-grid_low[i]) / grid_size[i];
+      }
     }
   }
   

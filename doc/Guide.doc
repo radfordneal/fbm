@@ -147,7 +147,7 @@ Bayesian neural networks [net]:
 
   * net-pred        Make predictions for test cases
 
-    net-eval        Evaluate network functions over a grid  
+    net-eval        Evaluate network funcs for inputs from a file or on a grid 
     net-dvar        Find the variance of a difference in function values
 
     net-rej         Generate networks from the posterior by rejection sampling

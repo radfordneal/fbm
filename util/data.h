@@ -48,17 +48,19 @@ typedef struct
    would waste space if actually used when not necessary. (But will
    be used if a data_specifications var is allocated statically.) */
 
+#define Max_data_source 201
+
 typedef struct
 {
   int N_inputs;			/* Number of "input" values */
   int N_targets;		/* Number of "target" values */
   int int_target;		/* Zero for real targets, else upper bound */
 
-  char train_inputs[100];	/* Source of training set input values */
-  char train_targets[100];	/* Source of training set target values */
+  char train_inputs[Max_data_source];  /* Source of training set input values */
+  char train_targets[Max_data_source]; /* Source of training set target values*/
 
-  char test_inputs[100];	/* Source of test set input values */
-  char test_targets[100];	/* Source of test set target values */
+  char test_inputs[Max_data_source];   /* Source of test set input values */
+  char test_targets[Max_data_source];  /* Source of test set target values */
 
   data_transformation trans[Max_inputs+Max_targets];
                                 /* Transformations for inputs and targets, with

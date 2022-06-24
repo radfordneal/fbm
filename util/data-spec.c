@@ -1,6 +1,6 @@
 /* DATA-SPEC.C - Program for specifying data sets for training and testing. */
 
-/* Copyright (c) 1995-2021 by Radford M. Neal 
+/* Copyright (c) 1995-2022 by Radford M. Neal 
  *
  * Permission is granted for anyone to copy, use, modify, or distribute this
  * program and accompanying programs and documents for any purpose, provided 
@@ -234,15 +234,32 @@ int main
   if (*ap==0 || strcmp(*ap++,"/")!=0) usage();
 
   if (*ap==0) usage();
+  if (strlen(*ap)>=Max_data_source)
+  { fprintf(stderr,"Training inputs source too long\n");
+    exit(1);
+  }
   strcpy(ds->train_inputs,*ap++);
 
   if (*ap==0) usage();
+  if (strlen(*ap)>=Max_data_source)
+  { fprintf(stderr,"Training targets source too long\n");
+    exit(1);
+  }
   strcpy(ds->train_targets,*ap++);
 
   if (*ap!=0 && strcmp(*ap,"/")!=0)
-  { strcpy(ds->test_inputs,*ap++);
+  {
+    if (strlen(*ap)>=Max_data_source)
+    { fprintf(stderr,"Test inputs source too long\n");
+      exit(1);
+    }
+    strcpy(ds->test_inputs,*ap++);
     if (*ap!=0 && strcmp(*ap,"/")!=0)
-    { strcpy(ds->test_targets,*ap++);
+    { if (strlen(*ap)>=Max_data_source)
+      { fprintf(stderr,"Test targets source too long\n");
+        exit(1);
+      }
+      strcpy(ds->test_targets,*ap++);
     }
   }
 

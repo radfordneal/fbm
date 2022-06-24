@@ -119,6 +119,12 @@ Known bugs and other deficiencies.
 6) When prediction windows overlap in xxx-avepred, so predictions for
    some iterations are used in several windows, these predictions are
    inefficiently recomputed for each use.
+
+7) Make dependencies for the 'net' module for header files in other 
+   modules don't work correctly, since the headers are wrapped in
+   files in 'net' for C++ compatibility, due to CUDA requirements.
+   As a result, it is necessary to do a make-clean before make-all 
+   after changing some header files, such as data.h.
 </pre>
 </body>
 </html>

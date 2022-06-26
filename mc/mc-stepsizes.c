@@ -45,12 +45,20 @@ int main
   mc_value *seconds;
 
   double delta; 
+  int bare;
   int index;
   int dosec;
  
   int i;
 
   /* Look at program arguments. */
+
+  bare = 0;
+  if (argc>1 && strcmp(argv[1],"-b")==0)
+  { bare = 1;
+    argc -= 1;
+    argv += 1;
+  }
 
   dosec = argc==4;
 
@@ -121,37 +129,56 @@ int main
 
   /* Print results. */
 
-  if (dosec)
-  { printf(
-     "\nStepsizes selected by application and from second derivatives\n\n");
-    printf("Log file: %s  Index: %d  Delta: %.6f\n\n",
-            logf.file_name, index, delta);
-    printf("  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize\n\n");
-  }
-  else
-  { printf("\nStepsizes selected by application\n\n");
-    printf("Log file: %s  Index: %d\n\n", logf.file_name, index);
-    printf("  Coord  Stepsize\n\n");
+  if (!bare)
+  { if (dosec)
+    { printf(
+       "\nStepsizes selected by application and from second derivatives\n\n");
+      printf("Log file: %s  Index: %d  Delta: %.6f\n\n",
+              logf.file_name, index, delta);
+      printf("  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize\n\n");
+    }
+    else
+    { printf("\nStepsizes selected by application\n\n");
+      printf("Log file: %s  Index: %d\n\n", logf.file_name, index);
+      printf("  Coord  Stepsize\n\n");
+    }
   }
 
   for (i = 0; i<ds.dim; i++)
   { 
     if (dosec)
     { if (seconds[i]>0)
-      { printf ("%6d %+10.5f   %+11.4e  %+11.4e   %+10.5f\n",
-                i, ds.stepsize[i], bgrad[i], fgrad[i], 1/sqrt(seconds[i]));
+      { if (bare)
+        { printf ("%6d %.16g %.16g %.16g %.16g\n",
+                  i, ds.stepsize[i], bgrad[i], fgrad[i], 1/sqrt(seconds[i]));
+        }
+        else
+        { printf ("%6d %+10.5f   %+11.4e  %+11.4e   %+10.5f\n",
+                  i, ds.stepsize[i], bgrad[i], fgrad[i], 1/sqrt(seconds[i]));
+        }
       }
       else
-      { printf ("%6d %+10.5f   %+11.4e  %+11.4e   **********\n",
-                i, ds.stepsize[i], bgrad[i], fgrad[i]);
+      { if (bare)
+        { printf ("%6d %16g %.16g %.16g NaN\n",
+                  i, ds.stepsize[i], bgrad[i], fgrad[i]);
+        }
+        else
+        { printf ("%6d %+10.5f   %+11.4e  %+11.4e   **********\n",
+                  i, ds.stepsize[i], bgrad[i], fgrad[i]);
+        }
       }
     }
     else
-    { printf ("%6d %+10.5f\n", i, ds.stepsize[i]);
+    { if (bare)
+      { printf ("%6d %.16g\n", i, ds.stepsize[i]);
+      }
+      else
+      { printf ("%6d %+10.5f\n", i, ds.stepsize[i]);
+      }
     }
   }
 
-  printf("\n");
+  if (!bare) printf("\n");
 
   exit(0);
 }

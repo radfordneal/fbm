@@ -83,6 +83,10 @@ Feature changes in the version:
 15) The gp-eval program has been slightly changed, to better match
     the new net-eval program.  See gp-eval.doc for details.
 
+16) The xxx-stepsizes programs now have a -b option for output of
+    bare numbers.  See xxx-stepsizes.doc and dist-stepsizes.doc.
+
+
 Performance changes in this version:
 
 None yet.

@@ -12,7 +12,7 @@ rather than by numeric position in the vector of state variables.
 
 Usage:
 
-    dist-stepsizes log-file index delta
+    dist-stepsizes [ -b ] log-file index delta
 
 or:
 
@@ -28,6 +28,12 @@ that point are displayed, the second derivatives being found by
 differences of first derivatives, using the given delta.  This is the
 same as generic stepsizes program, described in xxx-stepsizes.doc.
 
+The -b option causes the stepsizes to be output in "bare" form,
+without any headers, and in high precision, as would be suitable for
+further automatic processing.  When a stepsize found from the second
+derivative is negative, it is printed as "NaN", not "**********", when
+-b is given.
+
 The second form allows you to set the stepsizes that are used for
 particular variables.  The new stepsizes are written to the end of the
 log file, and are used in subsequent Markov chain operations until set
@@ -37,4 +43,4 @@ not mentioned have the default stepsize of one.
 The final form displays the selection of stepsizes stored at the given
 index, or the last stepsizes set if no index is given.
 
-            Copyright (c) 1995-2004 by Radford M. Neal
+            Copyright (c) 1995-2022 by Radford M. Neal

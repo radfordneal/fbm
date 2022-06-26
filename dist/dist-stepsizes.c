@@ -43,7 +43,7 @@ int main
   mc_value *grad, *bgrad, *fgrad;
   mc_value *seconds, *stepsizes;
 
-  int show, set, index, any_specs;
+  int show, set, bare, index, any_specs;
   double delta; 
  
   int a, c, i, n;
@@ -53,6 +53,13 @@ int main
 
   show = 0;
   set = 0;
+  bare = 0;
+
+  if (argc>1 && strcmp(argv[1],"-b")==0)
+  { bare = 1;
+    argc -= 1;
+    argv += 1;
+  }
 
   if (argc<2) usage();
 
@@ -136,25 +143,39 @@ int main
 
     /* Print results. */
 
-    printf(
-     "\nActual stepsizes and stepsizes based on second derivatives\n\n");
-    printf("Log file: %s  Index: %d  Delta: %.6f\n\n",
-            logf.file_name, index, delta);
-    printf("  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize\n\n");
+    if (!bare)
+    { printf(
+       "\nActual stepsizes and stepsizes based on second derivatives\n\n");
+      printf("Log file: %s  Index: %d  Delta: %.6f\n\n",
+              logf.file_name, index, delta);
+      printf("  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize\n\n");
+    }
 
     for (i = 0; i<ds.dim; i++)
     { 
       if (seconds[i]>0)
-      { printf ("%6d %+10.5f   %+11.4e  %+11.4e   %+10.5f\n",
-                i, ds.stepsize[i], bgrad[i], fgrad[i], 1/sqrt(seconds[i]));
+      { if (bare)
+        { printf ("%6d %.16g %.16g %.16g %.16g\n",
+                  i, ds.stepsize[i], bgrad[i], fgrad[i], 1/sqrt(seconds[i]));
+        }
+        else
+        { printf ("%6d %+10.5f   %+11.4e  %+11.4e   %+10.5f\n",
+                  i, ds.stepsize[i], bgrad[i], fgrad[i], 1/sqrt(seconds[i]));
+        }
       }
       else
-      { printf ("%6d %+10.5f   %+11.4e  %+11.4e   **********\n",
-                i, ds.stepsize[i], bgrad[i], fgrad[i]);
+      { if (bare)
+        { printf ("%6d %.16g %.16g %.16g NaN\n",
+                  i, ds.stepsize[i], bgrad[i], fgrad[i]);
+        }
+        else
+        { printf ("%6d %+10.5f   %+11.4e  %+11.4e   **********\n",
+                  i, ds.stepsize[i], bgrad[i], fgrad[i]);
+        }
       }
     }
   
-    printf("\n");
+    if (!bare) printf("\n");
   }
 
   /* Look at specification if we're going to set or show stepsizes by name. */

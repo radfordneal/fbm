@@ -3931,7 +3931,8 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
     else  /* Normalize layer */
     { int cc = a->N_channels[l];
-      int c = cc>0 ? cc : N_hidden/(-cc);
+      int c = cc>0 ? cc : N_hidden/(-cc);   /* number of groups */
+      int cn = N_hidden / c;                /* number of units in a group */
       int k;
       for (k = 0; k<c; k++)
       { net_value s = vh[N_hidden+k];
@@ -3942,20 +3943,20 @@ void STATIC_IF_INCLUDED net_back_add_grad
           }
         }
         else  /* normalize/... */
-        { int kk = -cc*k;
-          for (i = 0; i<c; i++)
+        { int kk = cn*k;
+          for (i = 0; i<cn; i++)
           { t += dh[kk+i] * vh[kk+i];
           }
         }
-        t = (t*c)/N_hidden;
+        t /= cn;
         if (cc>0)  /* normalize%... */
         { for (i = k; i<N_hidden; i+=c)
           { dh[i] = s * (dh[i] - vh[i]*t);
           }
         }
         else  /* normalize/... */
-        { int kk = -cc*k;
-          for (i = 0; i<c; i++)
+        { int kk = cn*k;
+          for (i = 0; i<cn; i++)
           { dh[kk+i] = s * (dh[kk+i] - vh[kk+i]*t);
           }
         }
@@ -4418,7 +4419,8 @@ __device__ __forceinline__ static void net_back_grad_gpu
       }
       else /* normalize layer */
       { int cc = A.N_channels[l];
-        int c = cc>0 ? cc : N_hidden/(-cc);
+        int c = cc>0 ? cc : N_hidden/(-cc);   /* number of groups */
+        int cn = N_hidden / c;                /* number of units in a group */
         int k;
         for (k = 0; k<c; k++)
         { net_value s = vth->h[l][N_hidden+k];
@@ -4429,20 +4431,20 @@ __device__ __forceinline__ static void net_back_grad_gpu
             }
           }
           else  /* normalize/... */
-          { int kk = -cc*k;
-            for (i = 0; i<c; i++)
+          { int kk = cn*k;
+            for (i = 0; i<cn; i++)
             { t += dh[kk+i] * vh[kk+i];
             }
           }
-          t = (t*c)/N_hidden;
+          t /= cn;
           if (cc>0)  /* normalize%... */
           { for (i = k; i<N_hidden; i+=c)
             { dh[i] = s * (dh[i] - vh[i]*t);
             }
           }
           else  /* normalize/... */
-          { int kk = -cc*k;
-            for (i = 0; i<c; i++)
+          { int kk = cn*k;
+            for (i = 0; i<cn; i++)
             { dh[kk+i] = s * (dh[kk+i] - vh[kk+i]*t);
             }
           }

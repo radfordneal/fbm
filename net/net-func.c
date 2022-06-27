@@ -665,7 +665,8 @@ void STATIC_IF_INCLUDED net_func
 
     else  /* Normalize layer */
     { int cc = a->N_channels[l];
-      int c = cc>0 ? cc : N_hidden/(-cc);
+      int c = cc>0 ? cc : N_hidden/(-cc);  /* number of groups */
+      int cn = N_hidden / c;               /* number of units in a group */
       int k;
       for (k = 0; k<c; k++)
       { net_value s = 0;
@@ -675,12 +676,12 @@ void STATIC_IF_INCLUDED net_func
           }
         }
         else  /* normalize/... */
-        { int kk = -cc*k;
-          for (j = 0; j<c; j++)
+        { int kk = cn*k;
+          for (j = 0; j<cn; j++)
           { s += vh[kk+j] * vh[kk+j];
           }
         }
-        s = (s*c)/N_hidden + Normalize_epsilon;
+        s = s/cn + Normalize_epsilon;
         s = 1/sqrt(s);
         vh[N_hidden+k] = s;  /* saved for use later in backprop */
         if (cc>0)  /* normalize%... */
@@ -689,8 +690,8 @@ void STATIC_IF_INCLUDED net_func
           }
         }
         else  /* normalize/... */
-        { int kk = -cc*k;
-          for (j = 0; j<c; j++)
+        { int kk = cn*k;
+          for (j = 0; j<cn; j++)
           { vh[kk+j] *= s;
           }
         }
@@ -2009,7 +2010,8 @@ __device__ __forceinline__ static void net_func_gpu
     }
     else /* normalize layer */
     { int cc = A.N_channels[l];
-      int c = cc>0 ? cc : N_hidden/(-cc);
+      int c = cc>0 ? cc : N_hidden/(-cc);   /* number of groups */
+      int cn = N_hidden / c;                /* number of units in a group */
       int k;
       for (k = th; k<c; k+=NTH)
       { net_value s = 0;
@@ -2019,12 +2021,12 @@ __device__ __forceinline__ static void net_func_gpu
           }
         }
         else  /* normalize/... */
-        { int kk = -cc*k;
-          for (j = 0; j<c; j++)
+        { int kk = cn*k;
+          for (j = 0; j<cn; j++)
           { s += vh[kk+j] * vh[kk+j];
           }
         }
-        s = (s*c)/N_hidden + Normalize_epsilon;
+        s = s/cn + Normalize_epsilon;
         s = 1/sqrt(s);
         v->h[l][N_hidden+k] = s;  /* saved for use later in backprop */
         if (cc>0)  /* normalize%... */
@@ -2033,8 +2035,8 @@ __device__ __forceinline__ static void net_func_gpu
           }
         }
         else  /* normalize/... */
-        { int kk = -cc*k;
-          for (j = 0; j<c; j++)
+        { int kk = cn*k;
+          for (j = 0; j<cn; j++)
           { vh[kk+j] *= s;
           }
         }

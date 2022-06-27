@@ -3694,22 +3694,27 @@ void mc_app_stepsizes
 
   inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
 
-  /* Find "typical" squared values for hidden units. */
+  /* Find "typical" squared values for hidden units, storing in the
+     'typical' value structre.  This is done by a fake forward pass
+     (just one, not one for each training case), that does not use any
+     actual parameter values, but may use hyperparameter values, and
+     input values. */
 
   nsqi = 0;
   for (l = 0; l<arch->N_layers; l++)
   { 
+    int N_hidden = arch->N_hidden[l];
     net_value *typl = typical.h[l];
     double alpha, var_adj;
 
     if (TYPICAL_VALUES_ALL_ONE || N_train==0)
-    { for (j = 0; j<arch->N_hidden[l]; j++)
+    { for (j = 0; j<N_hidden; j++)
       { typl[j] = 1;
       }
     }
 
     else
-    { for (j = 0; j<arch->N_hidden[l]; j++)
+    { for (j = 0; j<N_hidden; j++)
       { typl[j] = 0;
       }
       if (arch->has_bh[l])
@@ -3722,7 +3727,7 @@ void mc_app_stepsizes
           }
         }
         else
-        { for (j = 0; j<arch->N_hidden[l]; j++)
+        { for (j = 0; j<N_hidden; j++)
           { typl[j] += var_adj * sq(*sigmas.bh_cm[l]);
           }
         }
@@ -3738,7 +3743,7 @@ void mc_app_stepsizes
           }
         }
         else if (arch->any_omitted[l])
-        { for (j = 0; j<arch->N_hidden[l]; j++)
+        { for (j = 0; j<N_hidden; j++)
           { for (i = 0; i<arch->N_inputs; i++)
             { if (flgs->omit[i] & (1<<(l+1)))
               { continue;
@@ -3748,7 +3753,7 @@ void mc_app_stepsizes
           }
         }
         else
-        { for (j = 0; j<arch->N_hidden[l]; j++)
+        { for (j = 0; j<N_hidden; j++)
           { for (i = 0; i<arch->N_inputs; i++)
             { typl[j] += var_adj * (train_sumsq[i]/N_train)*sq(sigmas.ih[l][i]);
             }
@@ -3768,7 +3773,7 @@ void mc_app_stepsizes
             }
           }
           else
-          { for (j = 0; j<arch->N_hidden[l]; j++)
+          { for (j = 0; j<N_hidden; j++)
             { for (i = 0; i<arch->N_hidden[ls]; i++)
               { typl[j] += var_adj * typical.h[ls][i] * sq(sigmas.nsq[nsqi][i]);
               }
@@ -3788,7 +3793,7 @@ void mc_app_stepsizes
           }
         }
         else
-        { for (j = 0; j<arch->N_hidden[l]; j++)
+        { for (j = 0; j<N_hidden; j++)
           { for (i = 0; i<arch->N_hidden[l-1]; i++)
             { typl[j] += var_adj * typical.h[l-1][i] * sq(sigmas.hh[l-1][i]);
             }
@@ -3796,7 +3801,7 @@ void mc_app_stepsizes
         }
       }
       if (arch->has_ah[l])
-      { for (j = 0; j<arch->N_hidden[l]; j++)
+      { for (j = 0; j<N_hidden; j++)
         { typl[j] *= sq (sigmas.ah[l][j]);
         }
       }
@@ -3804,25 +3809,25 @@ void mc_app_stepsizes
       /* Adjustments based on activation function. */
 
       if (arch->layer_type[l]==Tanh_type)
-      { for (j = 0; j<arch->N_hidden[l]; j++)
+      { for (j = 0; j<N_hidden; j++)
         { if (typl[j]>1)
           { typl[j] = 1;
           }
         }
       }
       else if (arch->layer_type[l]==Softplus_type)
-      { for (j = 0; j<arch->N_hidden[l]; j++)
+      { for (j = 0; j<N_hidden; j++)
         { if (typl[j]<LOG2*LOG2)
           { typl[j] = LOG2*LOG2;
           }
         }
       }
       else if (arch->layer_type[l]==Normalize_type)
-      { int N_hidden = arch->N_hidden[l];
-        int cc = arch->N_channels[l];
-        int c = cc>0 ? cc : N_hidden/(-cc);
-        int cn = N_hidden / c;
+      { int cc = arch->N_channels[l];
+        int c = cc>0 ? cc : N_hidden/(-cc);   /* number of groups */
+        int cn = N_hidden / c;                /* number of units in a group */
         int k;
+        /* Compute sums, stored after typical squared values, for later use */
         for (k = 0; k<c; k++)
         { double s = 0;
           if (cc>0)  /* normalize%... */
@@ -3831,14 +3836,15 @@ void mc_app_stepsizes
             }
           }
           else  /* normalize/... */
-          { int kk = -cc*k;
-            for (j = 0; j<c; j++)
+          { int kk = cn*k;
+            for (j = 0; j<cn; j++)
             { s += typl[kk+j];
             }
           }
           s = 1 / (s/cn + Normalize_epsilon);
           typl[N_hidden+k] = s;
         }
+        /* Typical squared values are just the number of units in a group */
         for (j = 0; j<N_hidden; j++)
         { typl[j] = cn;
         }
@@ -3847,7 +3853,7 @@ void mc_app_stepsizes
 
     if (debug)
     { printf("\nTypical values for hidden layer %d:\n",l);
-      for (j = 0; j<arch->N_hidden[l]; j++)
+      for (j = 0; j<N_hidden; j++)
       { printf(" %.3f",sqrt(typl[j]));
       }
       printf("\n");
@@ -3887,11 +3893,13 @@ void mc_app_stepsizes
 
   for (l = arch->N_layers-1; l>=0; l--)
   { 
-    for (i = 0; i<arch->N_hidden[l]; i++)
+    int N_hidden = arch->N_hidden[l];
+      
+    for (i = 0; i<N_hidden; i++)
     { seconds.h[l][i] = 0;
     }
 
-    for (i = 0; i<arch->N_hidden[l]; i++)
+    for (i = 0; i<N_hidden; i++)
     { if (arch->has_ho[l])
       { int kk = 2*arch->N_layers-1-l;
         if (arch->hidden_config[kk])
@@ -3925,7 +3933,7 @@ void mc_app_stepsizes
           }
         }
         else
-        { for (i = 0; i<arch->N_hidden[l]; i++)
+        { for (i = 0; i<N_hidden; i++)
           { for (j = 0; j<arch->N_hidden[ld]; j++)
             { net_sigma w = sigmas.nsq[nsqi][i];
               if (sigmas.ah[ld]!=0) w *= sigmas.ah[ld][j];
@@ -3946,7 +3954,7 @@ void mc_app_stepsizes
         }
       }
       else
-      { for (i = 0; i<arch->N_hidden[l]; i++)
+      { for (i = 0; i<N_hidden; i++)
         { for (j = 0; j<arch->N_hidden[l+1]; j++)
           { w = sigmas.hh[l][i];
             if (sigmas.ah[l+1]!=0) w *= sigmas.ah[l+1][j];
@@ -3957,12 +3965,11 @@ void mc_app_stepsizes
     }
 
     if (arch->layer_type[l] == Normalize_type)
-    { int N_hidden = arch->N_hidden[l];
-      int cc = arch->N_channels[l];
+    { int cc = arch->N_channels[l];
       int c = cc>0 ? cc : N_hidden/(-cc);
       int k;
       for (k = 0; k<c; k++)
-      { double sh = seconds.h[l][N_hidden+k];
+      { double sh = typical.h[l][N_hidden+k];
         if (cc>0)  /* normalize%... */
         { for (i = k; i<N_hidden; i+=c)
           { seconds.h[l][i] *= sh;
@@ -3977,7 +3984,7 @@ void mc_app_stepsizes
       }
     }
     else if (0)  /* nothing need be done for current activation functions */
-    { for (i = 0; i<arch->N_hidden[l]; i++)
+    { for (i = 0; i<N_hidden; i++)
       { net_value s = seconds.h[l][i];
         switch (arch->layer_type[l])
         { case Tanh_type: 
@@ -3993,7 +4000,7 @@ void mc_app_stepsizes
 
     if (debug)
     { printf("\nEstimated 2nd derivatives for hidden layer %d:\n",l);
-      for (i = 0; i<arch->N_hidden[l]; i++)
+      for (i = 0; i<N_hidden; i++)
       { printf(" %.3f",seconds.h[l][i]);
       }
       printf("\n");

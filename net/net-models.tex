@@ -726,7 +726,7 @@ the activation function, evaluated at $u^{\ell}_i$.  For computational
 reasons, it is convenient to express this derivative in terms of
 $v^{\ell}_i$, which is possible since all the activation functions
 used are strictly monotonic.  For the $\tanh$ activation function, the
-derivative of $L$ is $1 - \big[v^{\ell}_i\big]^2\!$.  For the softplus
+derivative of $a$ is $1 - \big[v^{\ell}_i\big]^2\!$.  For the softplus
 activation function, it is $1 - \exp(-v^{\ell}_i)$, and for softplus0,
 it is $1 - \exp(-v^{\ell}_i-\log(2)))$.
 
@@ -896,17 +896,17 @@ Estimates of ``typical'' squared values for hidden units are made by
 simulating a forward pass, in which actual parameter values are not
 used, but instead parameters are assumed to be typical, given the
 current hyperparameters.  Just one simulation is done for each update
-needing stepsizes, not one for every training case - the typical
+needing stepsizes, not one for every training case --- the typical
 squared values are taken to be the same for each training case,
 approximating (roughly) the mean over training cases.
 
 The typical squared value for a hidden unit with the identity
 activation function is found from the sum of the previously-estimated
 typical squared values of the units connecting to this unit (one for a
-bias connection) multipled by the prior variance of the weight (or
+bias connection) multiplied by the prior variance of the weight (or
 bias) on that connection, as given by the controlling hyperparameter.
 (For parameters with t distributions, the variance is capped at what
-it would be if the degrees of freedom were three.) 
+it would be if the degrees of freedom were three.)
 
 For a layer of tanh hidden units, the typical squared value for the
 unit's input found in this way is reduced to one if it exceeds one,
@@ -917,7 +917,7 @@ is the value when the inputs are zero. For units with the softplus0
 activation function, the typical squared input value is used
 unchanged, as for the identity activation function.  For normalization
 layers, units are taken to have a typical squared value for their
-output equal to the number of units in their channel (the maximum
+output equal to the number of units in their group (the maximum
 possible).
 
 The typical squared value for the input to a unit, $[u^{\ell}_i]^2$,

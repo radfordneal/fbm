@@ -24,13 +24,13 @@ Prior Specifications:
 Debugging stepsizes
 
 Typical values for hidden layer 0:
- 1.000
+   1.00000
 
 Estimated 2nd derivatives for outputs:
- 1.000
+   1.00000
 
 Estimated 2nd derivatives for hidden layer 0:
- 100.000
+ 100.00000
 
 Stepsizes selected by application and from second derivatives
 
@@ -81,16 +81,17 @@ Debugging stepsizes
 
 Values for sqrt average squared input:
 
- 2.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+   2.00000   1.00000   1.00000   1.00000   1.00000   1.00000   1.00000   1.00000
+   1.00000   1.00000
 
 Typical values for hidden layer 0:
- 7.212
+   7.21180
 
 Estimated 2nd derivatives for outputs:
- 1.000
+   1.00000
 
 Estimated 2nd derivatives for hidden layer 0:
- 100.000
+ 100.00000
 
 Stepsizes selected by application and from second derivatives
 
@@ -141,16 +142,17 @@ Debugging stepsizes
 
 Values for sqrt average squared input:
 
- 10.000 10.000 10.000 10.000 10.000 10.000 10.000 10.000 10.000 10.000
+  10.00000  10.00000  10.00000  10.00000  10.00000  10.00000  10.00000  10.00000
+  10.00000  10.00000
 
 Typical values for hidden layer 0:
- 63.246
+  63.24563
 
 Estimated 2nd derivatives for outputs:
- 1.000
+   1.00000
 
 Estimated 2nd derivatives for hidden layer 0:
- 100.000
+ 100.00000
 
 Stepsizes selected by application and from second derivatives
 
@@ -201,16 +203,17 @@ Debugging stepsizes
 
 Values for sqrt average squared input:
 
- 3.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+   3.00000   1.00000   1.00000   1.00000   1.00000   1.00000   1.00000   1.00000
+   1.00000   1.00000
 
 Typical values for hidden layer 0:
- 9.000
+   9.00000
 
 Estimated 2nd derivatives for outputs:
- 10000.000
+ 10000.00000
 
 Estimated 2nd derivatives for hidden layer 0:
- 1000000.000
+ 1000000.00000
 
 Stepsizes selected by application and from second derivatives
 
@@ -258,16 +261,17 @@ Debugging stepsizes
 
 Values for sqrt average squared input:
 
- 3.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+   3.00000   1.00000   1.00000   1.00000   1.00000   1.00000   1.00000   1.00000
+   1.00000   1.00000
 
 Typical values for hidden layer 0:
- 9.000
+   9.00000
 
 Estimated 2nd derivatives for outputs:
- 10000.000
+ 10000.00000
 
 Estimated 2nd derivatives for hidden layer 0:
- 1000000.000
+ 1000000.00000
 
 Stepsizes selected by application and from second derivatives
 
@@ -315,16 +319,17 @@ Debugging stepsizes
 
 Values for sqrt average squared input:
 
- 3.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+   3.00000   1.00000   1.00000   1.00000   1.00000   1.00000   1.00000   1.00000
+   1.00000   1.00000
 
 Typical values for hidden layer 0:
- 9.000
+   9.00000
 
 Estimated 2nd derivatives for outputs:
- 10000.000
+ 10000.00000
 
 Estimated 2nd derivatives for hidden layer 0:
- 1000000.000
+ 1000000.00000
 
 Stepsizes selected by application and from second derivatives
 
@@ -372,16 +377,17 @@ Debugging stepsizes
 
 Values for sqrt average squared input:
 
- 3.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+   3.00000   1.00000   1.00000   1.00000   1.00000   1.00000   1.00000   1.00000
+   1.00000   1.00000
 
 Typical values for hidden layer 0:
- 9.000
+   9.00000
 
 Estimated 2nd derivatives for outputs:
- 10000.000
+ 10000.00000
 
 Estimated 2nd derivatives for hidden layer 0:
- 1000000.000
+ 1000000.00000
 
 Stepsizes selected by application and from second derivatives
 
@@ -443,28 +449,29 @@ Debugging stepsizes
 
 Values for sqrt average squared input:
 
- 2.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+   2.00000   1.00000   1.00000   1.00000   1.00000   1.00000   1.00000   1.00000
+   1.00000   1.00000
 
 Typical values for hidden layer 0:
- 7.280
+   7.28011
 
 Typical values for hidden layer 1:
- 50.961 50.961
+  50.96077  50.96077
 
 Typical values for hidden layer 2:
- 433.946 433.946
+ 433.94585 433.94585
 
 Estimated 2nd derivatives for outputs:
- 1.000
+   1.00000
 
 Estimated 2nd derivatives for hidden layer 2:
- 100.000 100.000
+ 100.00000 100.00000
 
 Estimated 2nd derivatives for hidden layer 1:
- 7200.000 7200.000
+ 7200.00000 7200.00000
 
 Estimated 2nd derivatives for hidden layer 0:
- 710600.000
+ 710600.00000
 
 Stepsizes selected by application and from second derivatives
 
@@ -531,16 +538,17 @@ Debugging stepsizes
 
 Values for sqrt average squared input:
 
- 2.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000 1.000
+   2.00000   1.00000   1.00000   1.00000   1.00000   1.00000   1.00000   1.00000
+   1.00000   1.00000
 
 Typical values for hidden layer 0:
- 4.899 4.000
+   4.89898   4.00000
 
 Estimated 2nd derivatives for outputs:
- 1.000
+   1.00000
 
 Estimated 2nd derivatives for hidden layer 0:
- 25.000 25.000
+  25.00000  25.00000
 
 Stepsizes selected by application and from second derivatives
 

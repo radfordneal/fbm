@@ -47,7 +47,7 @@ static void pick_unit_params_config (net_param *, net_sigma *, int,
 static void pick_weights (net_param *, net_sigma *, net_sigma *, 
                           int, int, net_sigma *, prior_spec, int, double, int);
 
-static void pick_weights_config (net_param *, net_sigma *, net_sigma *, 
+static void pick_weights_config (net_param *, net_sigma *, 
                                  int, int, prior_spec, int, double, int);
 
 static void compute_prior (net_param *, int, double *, net_param *, 
@@ -107,7 +107,7 @@ void net_prior_generate
     { if (bits&1)
       { if (ls>=l-1) abort();
         if (a->nonseq_config[nsqi])
-        { pick_weights_config (w->nsq[nsqi], s->nsq_cm[nsqi], s->nsq[nsqi],
+        { pick_weights_config (w->nsq[nsqi], s->nsq_cm[nsqi], 
                                a->N_hidden[ls], a->nonseq_config[nsqi]->N_wts,
                                p->nsq[nsqi], fix, value, param_opt);
         }
@@ -122,7 +122,7 @@ void net_prior_generate
 
     if (l>0 && a->has_hh[l-1]) 
     { if (a->hidden_config[l])
-      { pick_weights_config (w->hh[l-1], s->hh_cm[l-1], s->hh[l-1],
+      { pick_weights_config (w->hh[l-1], s->hh_cm[l-1], 
                              a->N_hidden[l-1], a->hidden_config[l]->N_wts,
                              p->hh[l-1], fix, value, param_opt);
       }
@@ -135,7 +135,7 @@ void net_prior_generate
 
     if (a->has_ih[l]) 
     { if (a->input_config[l])
-      { pick_weights_config (w->ih[l], s->ih_cm[l], s->ih[l],
+      { pick_weights_config (w->ih[l], s->ih_cm[l],
                              a->N_inputs, a->input_config[l]->N_wts,
                              p->ih[l], fix, value, param_opt);
       }
@@ -167,7 +167,7 @@ void net_prior_generate
   { if (a->has_ho[l])
     { int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
-      { pick_weights_config (w->ho[l], s->ho_cm[l], s->ho[l],
+      { pick_weights_config (w->ho[l], s->ho_cm[l], 
                              a->N_hidden[l], a->hidden_config[k]->N_wts,
                              p->ho[l], fix, out_value, out_param_opt);
       }
@@ -181,7 +181,7 @@ void net_prior_generate
 
   if (a->has_io) 
   { if (a->input_config[a->N_layers])
-    { pick_weights_config (w->io, s->io_cm, s->io,
+    { pick_weights_config (w->io, s->io_cm,
                            a->N_inputs, a->input_config[a->N_layers]->N_wts,
                            p->io, fix, out_value, out_param_opt);
     }
@@ -367,7 +367,6 @@ static void pick_weights
 static void pick_weights_config
 ( net_param *wt,	/* Array to store weights */
   net_sigma *sd_cm,	/* Place to store common sigma */
-  net_sigma *sd,	/* Array to store sigmas for each unit (all sd_cm) */
   int n,		/* Number of source units */
   int nw,		/* Number of weights, possibly sparse and/or shared */
   prior_spec pr,	/* Prior to use */
@@ -383,10 +382,6 @@ static void pick_weights_config
 
   *sd_cm = fix ? (value==0 || pr.alpha[0]==0 ? width : value)
                : prior_pick_sigma (width, pr.alpha[0]);
-
-  for (i = 0; i<n; i++)
-  { sd[i] = *sd_cm;
-  }
 
   for (j = 0; j<nw; j++)
   { 

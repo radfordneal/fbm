@@ -320,7 +320,7 @@ Hidden Layer 0 to Hidden Layer 2 Weights [3]
 
 Hidden Layer 1 to Hidden Layer 2 Weights [4]
 
-   3.00 -  3.00
+   3.00 - 
 
 Hidden Layer 2 to Output Weights [5]
 
@@ -462,7 +462,7 @@ Input to Hidden Layer 1 Weights [2]
 
 Hidden Layer 0 to Hidden Layer 2 Weights [3]
 
-   7.00 -  7.00  7.00
+   7.00 - 
 
 Hidden Layer 1 to Hidden Layer 2 Weights [4]
 
@@ -602,7 +602,7 @@ Input to Hidden Layer 1 Weights [2]
 
 Hidden Layer 0 to Hidden Layer 2 Weights [3]
 
-   7.00 -  7.00  7.00
+   7.00 - 
 
 Hidden Layer 1 to Hidden Layer 2 Weights [4]
 
@@ -742,7 +742,7 @@ Input to Hidden Layer 1 Weights [2]
 
 Hidden Layer 0 to Hidden Layer 2 Weights [3]
 
-   7.00 -  7.00  7.00
+   7.00 - 
 
 Hidden Layer 1 to Hidden Layer 2 Weights [4]
 

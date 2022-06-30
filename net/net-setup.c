@@ -67,24 +67,55 @@ unsigned net_setup_sigma_count
     for (ls = 0, b = a->has_nsq[l]; b!=0; ls++, b>>=1)
     { if (b&1)
       { if (ls>=l-1) abort();
-        count += 1 + a->N_hidden[ls];
+        if (flgs && flgs->nonseq_config[ls])
+        { count += 1;
+        }
+        else
+        { count += 1 + a->N_hidden[ls];
+        }
       }
     }
 
-    if (l>0 && a->has_hh[l-1]) count += 1 + a->N_hidden[l-1];
+    if (l>0 && a->has_hh[l-1])
+    { if (flgs && flgs->hidden_config[l])
+      { count += 1;
+      }
+      else
+      { count += 1 + a->N_hidden[l-1];
+      }
+    }
 
     if (a->has_ih[l]) 
-    { count += 1 + not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1));
+    { if (flgs && flgs->input_config[l])
+      { count += 1;
+      }
+      else
+      { count += 1 + not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1));
+      }
     }
 
     if (a->has_bh[l]) count += 1;
     if (a->has_ah[l]) count += a->N_hidden[l];
     if (a->has_th[l]) count += 1;
-    if (a->has_ho[l]) count += 1 + a->N_hidden[l];
+
+    if (a->has_ho[l])
+    { int k = 2*a->N_layers-1-l;
+      if (flgs && flgs->hidden_config[k])
+      { count += 1;
+      }
+      else
+      { count += 1 + a->N_hidden[l];
+      }
+    }
   }
 
   if (a->has_io) 
-  { count += 1 + not_omitted(flgs?flgs->omit:0,a->N_inputs,1);
+  { if (flgs && flgs->input_config[a->N_layers])
+    { count += 1;
+    }
+    else
+    { count += 1 + not_omitted(flgs?flgs->omit:0,a->N_inputs,1);
+    }
   }
   if (a->has_bo) count += 1;
   if (a->has_ao) count += a->N_outputs;
@@ -308,8 +339,11 @@ void net_setup_sigma_pointers
     { if (bits&1)
       { if (ls>=l-1) abort();
         s->nsq_cm[nsqi] = b++;
-        s->nsq[nsqi] = b;
-        b += a->N_hidden[ls];
+        s->nsq[nsqi] = 0;
+        if (!flgs || !flgs->nonseq_config[ls])
+        { s->nsq[nsqi] = b;
+          b += a->N_hidden[ls];
+        }
         nsqi += 1;
       }
     }
@@ -317,7 +351,7 @@ void net_setup_sigma_pointers
     if (l>0)
     { s->hh_cm[l-1] = a->has_hh[l-1] ? b++ : 0;
       s->hh[l-1] = 0;
-      if (a->has_hh[l-1]) 
+      if (a->has_hh[l-1] && !(flgs && flgs->hidden_config[l])) 
       { s->hh[l-1] = b;
         b += a->N_hidden[l-1];
       }
@@ -325,7 +359,7 @@ void net_setup_sigma_pointers
 
     s->ih_cm[l] = a->has_ih[l] ? b++ : 0;
     s->ih[l] = 0;
-    if (a->has_ih[l]) 
+    if (a->has_ih[l] && !(flgs && flgs->input_config[l])) 
     { s->ih[l] = b;
       b += not_omitted(flgs?flgs->omit:0,a->N_inputs,1<<(l+1));
     }
@@ -344,7 +378,7 @@ void net_setup_sigma_pointers
   for (l = a->N_layers-1; l>=0; l--)
   { s->ho_cm[l] = a->has_ho[l] ? b++ : 0;
     s->ho[l] = 0;
-    if (a->has_ho[l]) 
+    if (a->has_ho[l] && !(flgs && flgs->hidden_config[2*a->N_layers-1-l])) 
     { s->ho[l] = b;
       b += a->N_hidden[l];
     }
@@ -352,7 +386,7 @@ void net_setup_sigma_pointers
 
   s->io_cm = a->has_io ? b++ : 0;
   s->io = 0;
-  if (a->has_io) 
+  if (a->has_io && !(flgs && flgs->input_config[a->N_layers]))
   { s->io = b;
     b += not_omitted(flgs?flgs->omit:0,a->N_inputs,1);
   }

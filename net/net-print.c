@@ -389,7 +389,9 @@ static void print_param_array
 
 
 /* PRINT ARRAY OF SIGMA VALUES.  The array may have to extend over several
-   lines.  Each new line (but not the first) is preceded by ten spaces. */
+   lines.  Each new line (but not the first) is preceded by ten spaces. 
+
+   If the argument is NULL, just prints a newline. */
 
 static void print_sigma_array
 ( net_sigma *s,
@@ -398,12 +400,14 @@ static void print_sigma_array
 { 
   int i;
 
-  for (i = 0; i<n; i++)
-  { if (i!=0)
-    { if (i%10==0) printf("\n          ");
-      else printf(" ");
+  if (s)
+  { for (i = 0; i<n; i++)
+    { if (i!=0)
+      { if (i%10==0) printf("\n          ");
+        else printf(" ");
+      }
+      printf("%5.2f",s[i]);
     }
-    printf("%5.2f",s[i]);
   }
 
   printf("\n");

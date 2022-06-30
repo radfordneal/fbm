@@ -340,7 +340,7 @@ static void gibbs_unit (int, net_param *, net_sigma *, net_sigma *,
 static void gibbs_conn (int, net_param *, net_sigma *, net_sigma *, net_sigma *,
                         int, int, prior_spec *);
 
-static void gibbs_conn_config (int, net_param *, net_sigma *, net_sigma *, 
+static void gibbs_conn_config (int, net_param *, net_sigma *, 
                         int, int, prior_spec *);
 
 static void gibbs_adjustments (net_sigma *, double, int,
@@ -360,7 +360,7 @@ static void rgrid_met_conn (double, mc_iter *,
                             int, int, prior_spec *);
 
 static void rgrid_met_conn_config (double, mc_iter *,
-                            net_param *, net_sigma *, net_sigma *,
+                            net_param *, net_sigma *,
                             int, int, prior_spec *);
 
 static double sum_squares (net_param *, net_sigma *, int);
@@ -1525,7 +1525,7 @@ int mc_app_sample
         { if (ls>=l-1) abort();
           if (arch->nonseq_config[nsqi])
           { rgrid_met_conn_config (pm, it,
-                        params.nsq[nsqi], sigmas.nsq_cm[nsqi], sigmas.nsq[nsqi],
+                        params.nsq[nsqi], sigmas.nsq_cm[nsqi],
                         arch->N_hidden[ls], arch->nonseq_config[nsqi]->N_wts,
                         &priors->nsq[nsqi]);
           }
@@ -1544,7 +1544,7 @@ int mc_app_sample
         if (arch->has_hh[l-1]) 
         { if (arch->hidden_config[l])
           { rgrid_met_conn_config (pm, it,
-                        params.hh[l-1], sigmas.hh_cm[l-1], sigmas.hh[l-1], 
+                        params.hh[l-1], sigmas.hh_cm[l-1],
                         arch->N_hidden[l-1], arch->hidden_config[l]->N_wts,
                         &priors->hh[l-1]);
           }
@@ -1560,7 +1560,7 @@ int mc_app_sample
       if (arch->has_ih[l]) 
       { if (arch->input_config[l])
         { rgrid_met_conn_config (pm, it,
-                      params.ih[l], sigmas.ih_cm[l], sigmas.ih[l],
+                      params.ih[l], sigmas.ih_cm[l], 
                       arch->N_inputs, arch->input_config[l]->N_wts,
                       &priors->ih[l]); 
         }
@@ -1591,7 +1591,7 @@ int mc_app_sample
       { int k = 2*arch->N_layers-1-l;
         if (arch->hidden_config[k])
         { rgrid_met_conn_config (pm, it,
-                       params.ho[l], sigmas.ho_cm[l], sigmas.ho[l], 
+                       params.ho[l], sigmas.ho_cm[l], 
                        arch->N_hidden[l], arch->hidden_config[k]->N_wts,
                        &priors->ho[l]);
           }
@@ -1606,7 +1606,7 @@ int mc_app_sample
   
     if (arch->has_io) 
     { if (arch->input_config[arch->N_layers])
-      { rgrid_met_conn_config (pm, it, params.io, sigmas.io_cm, sigmas.io,
+      { rgrid_met_conn_config (pm, it, params.io, sigmas.io_cm,
                     arch->N_inputs, arch->input_config[arch->N_layers]->N_wts,
                     &priors->io); 
       }
@@ -1651,7 +1651,7 @@ int mc_app_sample
         { if (ls>=l-1) abort();
           if (arch->nonseq_config[nsqi])
           { gibbs_conn_config (sample_hyper, 
-                        params.nsq[nsqi], sigmas.nsq_cm[nsqi], sigmas.nsq[nsqi],
+                        params.nsq[nsqi], sigmas.nsq_cm[nsqi],
                         arch->N_hidden[ls], arch->nonseq_config[nsqi]->N_wts,
                         &priors->nsq[nsqi]);
           }
@@ -1669,7 +1669,7 @@ int mc_app_sample
       { if (arch->has_hh[l-1] && THISGRP) 
         { if (arch->hidden_config[l])
           { gibbs_conn_config (sample_hyper, 
-                            params.hh[l-1], sigmas.hh_cm[l-1], sigmas.hh[l-1],
+                            params.hh[l-1], sigmas.hh_cm[l-1],
                             arch->N_hidden[l-1], arch->hidden_config[l]->N_wts,
                             &priors->hh[l-1]);
           }
@@ -1685,7 +1685,7 @@ int mc_app_sample
       if (arch->has_ih[l] && THISGRP) 
       { if (arch->input_config[l])
         { gibbs_conn_config (sample_hyper, 
-                             params.ih[l], sigmas.ih_cm[l], sigmas.ih[l],
+                             params.ih[l], sigmas.ih_cm[l],
                              arch->N_inputs, arch->input_config[l]->N_wts,
                              &priors->ih[l]); 
         }
@@ -1736,7 +1736,7 @@ int mc_app_sample
       { int k = 2*arch->N_layers-1-l;
         if (arch->hidden_config[k])
         { gibbs_conn_config (sample_hyper, 
-                             params.ho[l], sigmas.ho_cm[l], sigmas.ho[l],
+                             params.ho[l], sigmas.ho_cm[l],
                              arch->N_hidden[l], arch->hidden_config[k]->N_wts,
                              &priors->ho[l]);
           }
@@ -1751,7 +1751,7 @@ int mc_app_sample
     if (arch->has_io && THISGRP)
     { if (arch->input_config[arch->N_layers])
       { gibbs_conn_config (sample_hyper, 
-                      params.io, sigmas.io_cm, sigmas.io,
+                      params.io, sigmas.io_cm, 
                       arch->N_inputs, arch->input_config[arch->N_layers]->N_wts,
                       &priors->io); 
       }
@@ -2146,7 +2146,6 @@ static void gibbs_conn_config
 ( int sample_hyper,	/* +1 for all, -1 for lower only */
   net_param *wt,	/* Weights on connections */
   net_sigma *sg_cm,	/* Common sigma controlling weights */
-  net_sigma *sg,	/* Individual sigmas for source units (all = common) */
   int ns,		/* Number of source units */
   int nw,		/* Number of weights */
   prior_spec *pr	/* Prior for sigmas */
@@ -2166,10 +2165,6 @@ static void gibbs_conn_config
     nprec = nalpha / sum;
 
     *sg_cm = prior_pick_sigma (1/sqrt(nprec), nalpha);
-
-    for (i = 0; i<ns; i++)
-    { sg[i] = *sg_cm;
-    }
   }
 
   if (pr->alpha[0]!=0 && pr->alpha[2]!=0 && sample_hyper>0)
@@ -2183,10 +2178,6 @@ static void gibbs_conn_config
     }
 
     *sg_cm = cond_sigma (width, pr->alpha[0], pr->alpha[2], sum, nw);
-
-    for (i = 0; i<ns; i++)
-    { sg[i] = *sg_cm;
-    }
   }
 }
 
@@ -2270,7 +2261,6 @@ static void rgrid_met_conn_config
   mc_iter *it,
   net_param *wt,	/* Weights on connections */
   net_sigma *sg_cm,	/* Common sigma controlling weights */
-  net_sigma *sg,	/* Individual sigmas for source units */
   int ns,		/* Number of source units */
   int nw,		/* Number of weights */
   prior_spec *pr	/* Prior for sigmas */
@@ -2293,10 +2283,6 @@ static void rgrid_met_conn_config
 
     *sg_cm = rgrid_sigma (stepsize, it, *sg_cm,
                           width, pr->alpha[0], pr->alpha[2], sum, nw);
-
-    for (i = 0; i<ns; i++)
-    { sg[i] = *sg_cm;
-    }
   }
 }
 

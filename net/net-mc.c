@@ -3687,7 +3687,8 @@ void mc_app_stepsizes
   if (debug && N_train>0)    
   { printf("\nValues for sqrt average squared input:\n\n");
     for (i = 0; i<arch->N_inputs; i++)
-    { printf(" %.3f",sqrt(train_sumsq[i]/N_train));
+    { if (i>0 && i%8==0) printf("\n");
+      printf(" %9.5f",sqrt(train_sumsq[i]/N_train));
     }
     printf("\n");
   }
@@ -3854,7 +3855,8 @@ void mc_app_stepsizes
     if (debug)
     { printf("\nTypical values for hidden layer %d:\n",l);
       for (j = 0; j<N_hidden; j++)
-      { printf(" %.3f",sqrt(typl[j]));
+      { if (j>0 && j%8==0) printf("\n");
+        printf(" %9.5f",sqrt(typl[j]));
       }
       printf("\n");
     }
@@ -3874,7 +3876,8 @@ void mc_app_stepsizes
   if (debug)
   { printf("\nEstimated 2nd derivatives for outputs:\n");
     for (i = 0; i<arch->N_outputs; i++)
-    { printf(" %.3f",seconds.o[i]);
+    { if (i>0 && i%8==0) printf("\n");
+      printf(" %9.5f",seconds.o[i]);
     }
     printf("\n");
   }
@@ -4001,7 +4004,8 @@ void mc_app_stepsizes
     if (debug)
     { printf("\nEstimated 2nd derivatives for hidden layer %d:\n",l);
       for (i = 0; i<N_hidden; i++)
-      { printf(" %.3f",seconds.h[l][i]);
+      { if (i>0 && i%8==0) printf("\n");
+        printf(" %9.5f",seconds.h[l][i]);
       }
       printf("\n");
     }
@@ -4061,7 +4065,8 @@ void mc_app_stepsizes
     if (debug)
     { printf("\nEstimated 2nd derivatives for inputs:\n");
       for (i = 0; i<arch->N_inputs; i++)
-      { printf(" %.3f",seconds.i[i]);
+      { if (i>0 && i%8==0) printf("\n");
+        printf(" %9.5f",seconds.i[i]);
       }
       printf("\n");
     }

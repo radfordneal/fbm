@@ -4395,34 +4395,20 @@ __device__ __forceinline__ static void net_back_grad_gpu
     /* Pass backwards through activation function to get derivatives with 
        respect to the summed inputs of units in this hidden layer. */
 
-    if (thrb>=0)
-    {
-      net_value const*restrict vh = fw_hidden_loc(&PRE,vth,l);
+    net_value const*restrict vh = thrb<0 ? 0 : fw_hidden_loc(&PRE,vth,l);
 
-      if (A.layer_type[l]==Tanh_type)
-      { for (i = thrb; i<N_hidden; i+=NTH)
-        { dh[i] *= (1 - vh[i]*vh[i]);
-        }
-      }
-      else if (A.layer_type[l]==Softplus_type)
-      { for (i = thrb; i<N_hidden; i+=NTH)
-        { dh[i] *= 1 - prec_exp(-vh[i]);
-        }
-      }
-      else if (A.layer_type[l]==Softplus0_type)
-      { for (i = thrb; i<N_hidden; i+=NTH)
-        { dh[i] *= 1 - prec_exp(-LOG2-vh[i]);
-        }
-      }
-      else if (A.layer_type[l]==Identity_type)
-      { /* nothing to do */
-      }
-      else /* normalize layer */
-      { int cc = A.N_channels[l];
+    if (A.layer_type[l]==Normalize_type)
+    { 
+      if (NTH>1) __syncthreads();
+
+      if (thrb>=0)
+      { 
+        int cc = A.N_channels[l];
         int c = cc>0 ? cc : N_hidden/(-cc);   /* number of groups */
         int cn = N_hidden / c;                /* number of units in a group */
         int k;
-        for (k = 0; k<c; k++)
+
+        for (k = thrb; k<c; k+=NTH)
         { net_value s = vth->h[l][N_hidden+k];
           net_value t = 0;
           if (cc>0)  /* normalize%... */
@@ -4450,8 +4436,35 @@ __device__ __forceinline__ static void net_back_grad_gpu
           }
         }
       }
+    }
+    else if (thrb<0)
+    { /* nothing, surplus thread */
+    }
+    else if (A.layer_type[l]==Tanh_type)
+    { for (i = thrb; i<N_hidden; i+=NTH)
+      { dh[i] *= (1 - vh[i]*vh[i]);
+      }
+    }
+    else if (A.layer_type[l]==Softplus_type)
+    { for (i = thrb; i<N_hidden; i+=NTH)
+      { dh[i] *= 1 - prec_exp(-vh[i]);
+      }
+    }
+    else if (A.layer_type[l]==Softplus0_type)
+    { for (i = thrb; i<N_hidden; i+=NTH)
+      { dh[i] *= 1 - prec_exp(-LOG2-vh[i]);
+      }
+    }
+    else if (A.layer_type[l]==Identity_type)
+    { /* nothing to do */
+    }
+    else
+    { abort();
+    }
 
-      if (CHECK_NAN)
+    if (CHECK_NAN)
+    { if (NTH>1) __syncthreads();
+      if (thrb>=0)
       { for (i = thrb; i<N_hidden; i+=NTH)
         { if (isnan(dh[i])) abort();
         }
@@ -4464,8 +4477,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
        with respect to inputs, if they will be needed. */
 
     if (A.has_ti && thrb>=0)
-    { 
-      if (A.has_ih[l])
+    { if (A.has_ih[l])
       { if (A.input_config[l])
         { sum_derivatives_config_gpu (thrb, dh, dth->i, W.ih[l], 
                                       A.input_config[l], syncmask);
@@ -4540,9 +4552,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
      to inputs have been computed. */
 
   if (A.has_ti && !PRIORS.ti.one_or_two_point)
-  { 
-    __syncthreads();
-
+  { __syncthreads();
     store_grad1 (thrg, gsz, g->ti, d[0].i, d[1].i-d[0].i, A.N_inputs);
   }
 

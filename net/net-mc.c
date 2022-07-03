@@ -2858,7 +2858,7 @@ __launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
 
 #endif
 
-  { if (KDEBUG) 
+  { if (KDEBUG)
     { printf("Forward computation: blk %d, thread %d, start %d, end %d\n",
               blockIdx.x,threadIdx.x,start,end);
     }
@@ -2938,7 +2938,7 @@ __launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
 
   net_values *restrict deriv_i = need_deriv ? const_deriv+i : 0;
 
-  { if (KDEBUG) 
+  { if (KDEBUG)
     { printf("Energy computation/%d,%d: blk %d, thread %d, start %d, end %d\n",
               case_energy!=0,need_deriv,blockIdx.x,threadIdx.x,start,end);
     }
@@ -2950,7 +2950,7 @@ __launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
                         SCRATCH_PER_CASE(const_arch.N_outputs) * i,
                         Cheap_energy);
 
-    if (KDEBUG) 
+    if (KDEBUG)
     { printf("Before energy reduction: blk %d, thread %d\n",
               blockIdx.x,threadIdx.x);
     }
@@ -2971,7 +2971,7 @@ __launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
       }
     }
 
-    if (KDEBUG) 
+    if (KDEBUG)
     { printf("After energy reduction: block %d, thread %d\n",
               blockIdx.x,threadIdx.x);
     }
@@ -3008,7 +3008,7 @@ __launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
 
 #endif
 
-  { if (KDEBUG) 
+  { if (KDEBUG)
     { printf("Back/grad computation: blk %d, thread %d, start %d, end %d\n",
               blockIdx.x,threadIdx.x,start,end);
     }
@@ -3026,7 +3026,7 @@ __launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
       }
     }
 
-    if (KDEBUG) 
+    if (KDEBUG)
     { printf(
        "Back_grad %d %d: m %d, h %d, end %d, gsz %d, thrg %d, thm %d\n",
         blockIdx.x, threadIdx.x, m, h, end, gsz, thrg, thm);
@@ -3038,7 +3038,7 @@ __launch_bounds__(THREADS_PER_BLOCK,BLOCKS_PER_SM)
         : group_grad + blockIdx.x * GROUPS_PER_BLOCK + (m >> GROUP_SHIFT),
       train_vals_h - thm, deriv_i - thm, const_sparse, syncmask);
 
-    if (KDEBUG) 
+    if (KDEBUG)
     { printf("Done back_grad %d %d\n", blockIdx.x, threadIdx.x);
     }
   }

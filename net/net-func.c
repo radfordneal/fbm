@@ -1979,7 +1979,55 @@ __device__ __forceinline__ static void net_func_gpu
 
     /* Put values through hidden unit activation function. */
 
-    if (A.layer_type[l]==Tanh_type)
+  sync_layer:
+
+    if (A.layer_type[l]==Normalize_type)
+    { 
+      if (NTH>1) __syncthreads();
+
+      if (th>=0)
+      {
+        int cc = A.N_channels[l];
+        int c = cc>0 ? cc : N_hidden/(-cc);   /* number of groups */
+        int cn = N_hidden / c;                /* number of units in a group */
+        int k;
+
+        for (k = th; k<c; k+=NTH)
+        { net_value s = 0;
+          if (cc>0)  /* normalize%... */
+          { for (j = k; j<N_hidden; j+=c)
+            { s += vh[j] * vh[j];
+            }
+          }
+          else  /* normalize/... */
+          { int kk = cn*k;
+            for (j = 0; j<cn; j++)
+            { s += vh[kk+j] * vh[kk+j];
+            }
+          }
+          s = s/cn + Normalize_epsilon;
+          s = 1/sqrt(s);
+          v->h[l][N_hidden+k] = s;  /* saved for use later in backprop */
+          if (cc>0)  /* normalize%... */
+          { for (j = k; j<N_hidden; j+=c)
+            { vh[j] *= s;
+            }
+          }
+          else  /* normalize/... */
+          { int kk = cn*k;
+            for (j = 0; j<cn; j++)
+            { vh[kk+j] *= s;
+            }
+          }
+        }
+
+        if (SYNC_AFTER && N_hidden % NTH != 0) __syncwarp(syncmask);
+      }
+    }
+    else if (th<0)
+    { /* nothing, surplus thread */
+    }
+    else if (A.layer_type[l]==Tanh_type)
     { for (j = th; j<N_hidden; j+=NTH)
       { vh[j] = TANH (vh[j]);
       }
@@ -2008,46 +2056,13 @@ __device__ __forceinline__ static void net_func_gpu
     else if (A.layer_type[l]==Identity_type)
     { /* nothing to do */
     }
-    else /* normalize layer */
-    { int cc = A.N_channels[l];
-      int c = cc>0 ? cc : N_hidden/(-cc);   /* number of groups */
-      int cn = N_hidden / c;                /* number of units in a group */
-      int k;
-      for (k = th; k<c; k+=NTH)
-      { net_value s = 0;
-        if (cc>0)  /* normalize%... */
-        { for (j = k; j<N_hidden; j+=c)
-          { s += vh[j] * vh[j];
-          }
-        }
-        else  /* normalize/... */
-        { int kk = cn*k;
-          for (j = 0; j<cn; j++)
-          { s += vh[kk+j] * vh[kk+j];
-          }
-        }
-        s = s/cn + Normalize_epsilon;
-        s = 1/sqrt(s);
-        v->h[l][N_hidden+k] = s;  /* saved for use later in backprop */
-        if (cc>0)  /* normalize%... */
-        { for (j = k; j<N_hidden; j+=c)
-          { vh[j] *= s;
-          }
-        }
-        else  /* normalize/... */
-        { int kk = cn*k;
-          for (j = 0; j<cn; j++)
-          { vh[kk+j] *= s;
-          }
-        }
-      }
-      if (SYNC_AFTER && N_hidden % NTH != 0) __syncwarp(syncmask);
+    else
+    { abort();
     }
 
     /* Synchronize threads so that up-to-date values computed for this
        layer will be seen by all threads. */
 
-  sync_layer:
     if (NTH>1) __syncthreads();
 
     vhp = vh;

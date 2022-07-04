@@ -1875,14 +1875,11 @@ __device__ static void add_connections_config_gpu (int, net_value *restrict,
    set), it just skips to the synchronization points.
   
    Layers are computed in sequence, using all threads, with a
-   __syncthreads call after each layer's computations, so that all
+   synchronization after each layer's computations, so that all
    threads will correctly see all values when computing the next
    layer.  Note that ALL threads must call this function so that all
-   will make the __syncthreads calls here.
-
-   Synchronization is avoided when there is only one thread - note
-   that this means that outputs for different cases will not have been
-   synchronized.
+   will make the synchronization calls here.  Note outputs for
+   different cases will not necessarily have been synchronized.
 
    Thread 'th' is used to compute the units whose index is 'th' mod
    THREADS_PER_CASE.  Consistent use of this scheme for the various
@@ -1983,7 +1980,7 @@ __device__ __forceinline__ static void net_func_gpu
 
     if (A.layer_type[l]==Normalize_type)
     { 
-      if (NTH>1) __syncthreads();
+      SYNCTH();
 
       if (th>=0)
       {
@@ -2063,7 +2060,7 @@ __device__ __forceinline__ static void net_func_gpu
     /* Synchronize threads so that up-to-date values computed for this
        layer will be seen by all threads. */
 
-    if (NTH>1) __syncthreads();
+    SYNCTH();
 
     vhp = vh;
   }

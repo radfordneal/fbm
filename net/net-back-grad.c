@@ -4384,7 +4384,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
 
     if (A.has_th[l] && !PRIORS.th[l].one_or_two_point)
     { 
-      __syncthreads();
+      SYNCTH();
 
       net_value *restrict c0 = bw_hidden_loc_grad(&PRE,d,l,0);
       int cs = bw_hidden_stride(&PRE,l);
@@ -4399,7 +4399,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
 
     if (A.layer_type[l]==Normalize_type)
     { 
-      if (NTH>1) __syncthreads();
+      SYNCTH();
 
       if (thrb>=0)
       { 
@@ -4463,7 +4463,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
     }
 
     if (CHECK_NAN)
-    { if (NTH>1) __syncthreads();
+    { SYNCTH();
       if (thrb>=0)
       { for (i = thrb; i<N_hidden; i+=NTH)
         { if (isnan(dh[i])) abort();
@@ -4471,7 +4471,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
       }
     }
 
-    __syncthreads();
+    SYNCTH();
 
     /* Add contribution from this hidden layer's derivatives to the derivatives
        with respect to inputs, if they will be needed. */
@@ -4552,13 +4552,13 @@ __device__ __forceinline__ static void net_back_grad_gpu
      to inputs have been computed. */
 
   if (A.has_ti && !PRIORS.ti.one_or_two_point)
-  { __syncthreads();
+  { SYNCTH();
     store_grad1 (thrg, gsz, g->ti, d[0].i, d[1].i-d[0].i, A.N_inputs);
   }
 
   if (CHECK_NAN)
   { if (blockIdx.x==0)
-    { __syncthreads();
+    { SYNCTH();
       if (thrg==0)
       { int k;
         for (k = 0; k<g->total_params; k++)

@@ -566,9 +566,9 @@ void STATIC_IF_INCLUDED net_model_guess
    The derivative at index i in 'dp' is computed by the thread with 'th'
    equal to i mod THREADS_PER_CASE.
 
-   A no syncthreads call is made after these computations are done, so
-   if threads are not synchronized later, only the threads that
-   computed a value can reliably access it.
+   No synchronization is done after these computations are, so if
+   threads are not synchronized later, only the threads that computed
+   a value can reliably access it.
 
    Assumes that on entry the i'th output is accessible to thread 'th'
    if i mod THREADS_PER_CASE is 'th'. 
@@ -674,9 +674,7 @@ __device__ __forceinline__ static void net_model_prob_gpu
       }
 
     sync_c:
-      if (NTH>1)
-      { __syncthreads();
-      }
+      SYNCTH();
 
       if (th<0)
       { return;
@@ -799,9 +797,7 @@ __device__ __forceinline__ static void net_model_prob_gpu
 
   if (pr)
   { 
-    if (NTH>1 && N_outputs>1) 
-    { __syncthreads();
-    }
+    if (N_outputs>1) SYNCTH();
 
     if (th==0)
     { double p = 0;

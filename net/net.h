@@ -149,6 +149,12 @@
 #define AVOID_BANK_CONFLICTS 1 /* Increase size of shared memory per case if
                                   necessary to avoid bank conflicts? */
 
+/* How to sync to ensure computated values for all units of a training
+   case are available to all threads.  Could use __syncthreads(), but
+   __syncwarp() should be sufficient as long as GTH < WARPSIZE */
+
+#define SYNCTH() do { if (NTH>1) __syncwarp(); } while (0)
+
 #define GPU_CACHE_PREFERENCE   /* Can edit last bit below as desired... */ \
  (!USING_SHARED_MEMORY \
    ? cudaFuncCachePreferL1      /* L1 is better if shared memory isn't used */ \
@@ -208,7 +214,7 @@ typedef struct
 
 #define CONFIG_OCT_GPU_S_8D_8W_FW 1 /* Make oct_s_8d_8w_dgpu groups for forw? */
 #define CONFIG_OCT_GPU_S_8D_8W_BW 1 /* Make oct_s_8d_8w_sgpu groups for back? */
-#define CONFIG_OCT_GPU_S_8D_8W_GRAD (GTH>=8 && 0) /* Make oct grps for grad? */
+#define CONFIG_OCT_GPU_S_8D_8W_GRAD (GTH>=8 && 1) /* Make oct grps for grad? */
 #define CONFIG_QUAD_GPU_S_4D_4W_FW 1 /* Make quad_s_4d_4w_dgpu grps for forw? */
 #define CONFIG_QUAD_GPU_S_4D_4W_BW 1 /* Make quad_s_4d_4w_sgpu grps for back? */
 #define CONFIG_QUAD_GPU_S_4D_4W_GRAD (GTH>=4 && 1) /* Make quad grps for grad?*/

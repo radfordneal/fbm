@@ -3475,11 +3475,11 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
   if (a->has_io && !p->io.one_or_two_point)
   { if (a->input_config[a->N_layers])
-    { add_grad2_config (g->io, v->i, a->has_ti ? params.ti : 0, d->o,
+    { add_grad2_config (g->io, v->i, 0, d->o,
                         a->input_config[a->N_layers]);
     }
     else
-    { add_grad2 (g->io, v->i, a->has_ti ? params.ti : 0, a->N_inputs,
+    { add_grad2 (g->io, v->i, 0, a->N_inputs,
                  d->o, a->N_outputs,
                  a->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
                  sparse);
@@ -3491,11 +3491,11 @@ void STATIC_IF_INCLUDED net_back_add_grad
     if (a->has_ho[l] && !p->ho[l].one_or_two_point)
     { int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
-      { add_grad2_config (g->ho[l], v->h[l], a->has_th[l] ? params.th[l] : 0,
+      { add_grad2_config (g->ho[l], v->h[l], 0,
                           d->o, a->hidden_config[k]);
       }
       else
-      { add_grad2 (g->ho[l], v->h[l], a->has_th[l] ? params.th[l] : 0,
+      { add_grad2 (g->ho[l], v->h[l], 0,
                 a->N_hidden[l], d->o, a->N_outputs, (unsigned short *) 0, 0, 0);
       }
     }
@@ -3603,7 +3603,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
     /* Pass backwards through activation function to get derivatives with 
        respect to the summed inputs of units in this hidden layer. */
 
-    net_value const* vh = v->h[l];
+    net_value const* vh = v->h0[l];
 
     if (a->layer_type[l]==Tanh_type)
     {
@@ -3983,11 +3983,11 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
     if (a->has_ih[l] && !p->ih[l].one_or_two_point)
     { if (a->input_config[l])
-      { add_grad2_config (g->ih[l], v->i, a->has_ti ? params.ti : 0, dh,
+      { add_grad2_config (g->ih[l], v->i, 0, dh,
                           a->input_config[l]);
       }
       else
-      { add_grad2 (g->ih[l], v->i, a->has_ti ? params.ti : 0, a->N_inputs,
+      { add_grad2 (g->ih[l], v->i, 0, a->N_inputs,
                    dh, N_hidden,
                    a->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
                    sparse);
@@ -4009,11 +4009,11 @@ void STATIC_IF_INCLUDED net_back_add_grad
         gh = g->nsq[nsqi];
       }
       if (cf)
-      { add_grad2_config (gh, v->h[ls], a->has_th[ls] ? params.th[ls] : 0, 
+      { add_grad2_config (gh, v->h[ls], 0, 
                           dh, cf);
       }
       else
-      { add_grad2 (gh, v->h[ls], a->has_th[ls] ? params.th[ls] : 0,
+      { add_grad2 (gh, v->h[ls], 0,
           a->N_hidden[ls], dh, N_hidden, (unsigned short *)0, 0, 0);
       }
     }
@@ -4217,14 +4217,14 @@ __device__ __forceinline__ static void net_back_grad_gpu
   { if (A.input_config[A.N_layers])
     { store_grad2_config (thrg, gsz, g->io, 
                           v[0].i, v[1].i-v[0].i,
-                          A.has_ti ? W.ti : 0, 
+                          0, 
                           d[0].o, d[1].o-d[0].o,
                           A.input_config[A.N_layers]);
     }
     else
     { store_grad2 (thrg, gsz, g->io, 
                    v[0].i, v[1].i-v[0].i,
-                   A.has_ti ? W.ti : 0, A.N_inputs,
+                   0, A.N_inputs,
                    d[0].o, d[1].o-d[0].o, A.N_outputs,
                    A.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
                    sparse);
@@ -4241,13 +4241,13 @@ __device__ __forceinline__ static void net_back_grad_gpu
       int k = 2*A.N_layers-1-l;
       if (A.hidden_config[k])
       { store_grad2_config (thrg, gsz, g->ho[l], u0, us, 
-                            A.has_th[l] ? W.th[l] : 0,
+                            0,
                             d[0].o, A.N_outputs,
                             A.hidden_config[k]);
       }
       else
       { store_grad2 (thrg, gsz, g->ho[l], u0, us,
-                     A.has_th[l] ? W.th[l] : 0, A.N_hidden[l], 
+                     0, A.N_hidden[l], 
                      d[0].o, A.N_outputs, A.N_outputs, 
                      (unsigned short *) 0, 0, 0);
       }
@@ -4395,7 +4395,9 @@ __device__ __forceinline__ static void net_back_grad_gpu
     /* Pass backwards through activation function to get derivatives with 
        respect to the summed inputs of units in this hidden layer. */
 
-    net_value const*restrict vh = thrb<0 ? 0 : fw_hidden_loc(&PRE,vth,l);
+    net_value const*restrict vh = thrb<0 ? 0 
+                                : A.has_th[l] ? vth->h0[l]
+                                : fw_hidden_loc(&PRE,vth,l);
 
     if (A.layer_type[l]==Normalize_type)
     { 
@@ -4409,7 +4411,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
         int k;
 
         for (k = thrb; k<c; k+=NTH)
-        { net_value s = vth->h[l][N_hidden+k];
+        { net_value s = vth->h0[l][N_hidden+k];
           net_value t = 0;
           if (cc>0)  /* normalize%... */
           { for (i = k; i<N_hidden; i+=c)
@@ -4507,14 +4509,14 @@ __device__ __forceinline__ static void net_back_grad_gpu
     if (A.has_ih[l] && !PRIORS.ih[l].one_or_two_point)
     { if (A.input_config[l])
       { store_grad2_config (thrg, gsz, g->ih[l], 
-                            v[0].i, A.N_inputs,
-                            A.has_ti ? W.ti : 0, 
+                            v[0].i, v[1].i-v[0].i,
+                            0, 
                             c0, cs, A.input_config[l]);
       }
       else
       { store_grad2 (thrg, gsz, g->ih[l], 
                      v[0].i, v[1].i-v[0].i,
-                     A.has_ti ? W.ti : 0, A.N_inputs,
+                     0, A.N_inputs,
                      c0, cs, N_hidden,
                      A.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1), sparse);
       }
@@ -4537,12 +4539,12 @@ __device__ __forceinline__ static void net_back_grad_gpu
       net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,ls,0);
       int us = fw_hidden_stride(&PRE,ls);
       if (cf)
-      { store_grad2_config (thrg, gsz, gh, u0, us, A.has_th[ls] ? W.th[ls] : 0,
+      { store_grad2_config (thrg, gsz, gh, u0, us, 0,
                             c0, cs, cf);
       }
       else
       { store_grad2 (thrg, gsz, gh, u0, us,
-                     A.has_th[ls] ? W.th[ls] : 0, A.N_hidden[ls], 
+                     0, A.N_hidden[ls], 
                      c0, cs, N_hidden, (unsigned short *)0, 0, 0);
       }
     }

@@ -273,7 +273,8 @@ unsigned net_setup_value_count
    the number of unit-related values for a network with the given architecture,
    including padding for alignment to 'align' boundary (elements, not bytes,
    must be a power of two).  May or may not include inputs and outputs, 
-   depending on the last two arguments. */
+   depending on the last two arguments.  Inputs with offsets added are always
+   included, when needed. */
 
 unsigned net_setup_value_count_aligned
 ( net_arch *a,		/* Network architecture */
@@ -289,6 +290,10 @@ unsigned net_setup_value_count_aligned
   { count += ALIGN(a->N_inputs,align);
   }
 
+  if (a->has_ti)
+  { count += ALIGN(a->N_inputs,align);
+  }
+
   for (l = 0; l<a->N_layers; l++)
   { int n = a->N_hidden[l];
     if (a->layer_type[l] == Normalize_type)
@@ -296,6 +301,9 @@ unsigned net_setup_value_count_aligned
       n += c>0 ? c : a->N_hidden[l]/(-c);
     } 
     count += ALIGN(n,align);
+    if (a->has_th[l])
+    { count += ALIGN(a->N_hidden[l],align);
+    }
   }
 
   if (include_outputs)
@@ -691,7 +699,7 @@ void net_replicate_param_pointers
 /* SET UP POINTERS TO UNIT VALUES.  Sets the pointers in the net_values
    structure to point to the appropriate places in the block of net_value
    values passed.  The size of this block must be as indicated by the
-   net_setup_value_count procedure, with inputs/outputs included according
+   net_setup_value_count procedure, with inputs/outputs included accordingly,
    to match whether they are provided separately here. */
 
 void net_setup_value_pointers
@@ -724,11 +732,19 @@ void net_setup_value_pointers_aligned
   int l;
 
   if (inputs)
-  { v->i = inputs;
+  { v->i0 = inputs;
   }
   else
+  { v->i0 = b;
+    b += ALIGN(a->N_inputs,align);
+  }
+
+  if (a->has_ti)
   { v->i = b;
     b += ALIGN(a->N_inputs,align);
+  }
+  else
+  { v->i = v->i0;
   }
 
   for (l = 0; l<a->N_layers; l++)
@@ -737,8 +753,15 @@ void net_setup_value_pointers_aligned
     { int c = a->N_channels[l];
       n += c>0 ? c : a->N_hidden[l]/(-c);
     } 
-    v->h[l] = b;
+    v->h0[l] = b;
     b += ALIGN(n,align);
+    if (a->has_th[l])
+    { v->h[l] = b;
+      b += ALIGN(a->N_hidden[l],align);
+    }
+    else
+    { v->h[l] = v->h0[l];
+    }
   }
 
   if (outputs)

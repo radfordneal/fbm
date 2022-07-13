@@ -290,7 +290,7 @@ int main
         net_func (v, a, &pre, flgs, w, 1);
 
         if (inputs)    
-        { for (j = 0; j<a->N_inputs; j++) printf(" %+.6e",v->i[j]);
+        { for (j = 0; j<a->N_inputs; j++) printf(" %+.6e",v->i0[j]);
         }
 
         if (hid)
@@ -298,7 +298,7 @@ int main
           for (l = 0; l<a->N_layers; l++)
           { if (layer<0 || layer==l)
             { for (j = 0; j<a->N_hidden[l]; j++) 
-              { printf(" %+.6e",v->h[l][j]);
+              { printf(" %+.6e",v->h0[l][j]);
               }
             }
           }
@@ -336,7 +336,7 @@ int main
         net_func (v, a, &pre, flgs, w, 1);
 
         if (inputs)    
-        { for (j = 0; j<a->N_inputs; j++) printf(" %+.6e",v->i[j]);
+        { for (j = 0; j<a->N_inputs; j++) printf(" %+.6e",v->i0[j]);
         }
 
         if (hid)
@@ -344,7 +344,7 @@ int main
           for (l = 0; l<a->N_layers; l++)
           { if (layer<0 || layer==l)
             { for (j = 0; j<a->N_hidden[l]; j++) 
-              { printf(" %+.6e",v->h[l][j]);
+              { printf(" %+.6e",v->h0[l][j]);
               }
             }
           }

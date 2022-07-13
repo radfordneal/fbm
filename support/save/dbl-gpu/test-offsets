@@ -80,6 +80,8 @@ Log file: log  Index: 0  Delta: 0.001000  Energy: 4.15
 
 Largest absolute log ratio: 0.0000
 
+ +1.000000e-01 +4.000000e-01 +7.200000e+00
+ 4.00000000e-01 
  
 --- C
  
@@ -116,3 +118,5 @@ Log file: log  Index: 0  Delta: 0.001000  Energy: 4.14
 
 Largest absolute log ratio: 0.0000
 
+ +1.000000e-01 +3.799490e-01 +7.139847e+00
+ 3.79948962e-01 

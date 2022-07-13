@@ -391,7 +391,7 @@ void net_evaluate
       { 
         case 'x': case 'X': case 'i': case 'I':
         { for (i = low; i<=high; i++)
-          { qh->value[v][i-low] = cases[i].i[mod];
+          { qh->value[v][i-low] = cases[i].i0[mod];
           }
           qh->updated[v] = 1;
           break;
@@ -413,14 +413,14 @@ void net_evaluate
           { if (j<0)
             { for (i = 0; i<N_cases; i++)
               { for (j = 0; j<arch->N_hidden[l]; j++)
-                { s += fabs (cases[i].h[l][j]);
+                { s += fabs (cases[i].h0[l][j]);
                 }
               }
               *qh->value[v] = s / (N_cases*arch->N_hidden[l]);
             }
             else
             { for (i = 0; i<N_cases; i++)
-              { s += fabs (cases[i].h[l][j]);
+              { s += fabs (cases[i].h0[l][j]);
               }
               *qh->value[v] = s / N_cases;
             }
@@ -429,12 +429,12 @@ void net_evaluate
           { for (i = low; i<=high; i++)
             { if (j<0)
               { for (j = 0; j<arch->N_hidden[l]; j++)
-                { s += fabs (cases[i].h[l][j]);
+                { s += fabs (cases[i].h0[l][j]);
                 }
                 qh->value[v][i-low] = s / arch->N_hidden[l];
               }
               else
-              { qh->value[v][i-low] = cases[i].h[l][j];
+              { qh->value[v][i-low] = cases[i].h0[l][j];
               }
             }
           }
@@ -791,7 +791,7 @@ void net_evaluate
             m = q = 0;
 
             for (i = 0; i<N_cases; i++)
-            { h = cases[i].h[mod][j];
+            { h = cases[i].h0[mod][j];
               m += h;
               q += h*h;
             }

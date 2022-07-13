@@ -498,11 +498,15 @@ typedef struct
 
 typedef struct
 { 
-  net_value *i;			/* Values of input units */
+  net_value *i0;		/* Values of input units */
+  net_value *i;			/* Values of input units after offsets added,
+                                   points same place as i0 if no offsets */
 
-  net_value *h[Max_layers];	/* Values of hidden units.  For normalize
+  net_value *h0[Max_layers];	/* Values of hidden units.  For normalize
                                    layers, also has inverse sqrt of sums of 
                                    squared values for each channel, at end */ 
+  net_value *h[Max_layers];	/* Values of hidden units after offsets added,
+                                   point to sample place as h0 if no offsets. */
 
   net_value *o;			/* Values of output units */
 

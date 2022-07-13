@@ -101,7 +101,7 @@ void pred_app_init (void)
   for (i = 0; i<N_test; i++)
   { for (j = m!=0 && m->type=='V' && sv->hazard_type!='C' ? 1 : 0; 
          j<a->N_inputs; j++)
-    { *t++ = test_values[i].i[j];
+    { *t++ = test_values[i].i0[j];
     }
   }
 }
@@ -173,7 +173,7 @@ int pred_app_use_index (void)
 
         t0 = 0;
         t1 = sv->time[0];
-        test_values[i].i[0] = sv->log_time ? log(t1) : t1;
+        test_values[i].i0[0] = sv->log_time ? log(t1) : t1;
 
         x = 0;
         test_log_prob[i] = 0;
@@ -197,11 +197,11 @@ int pred_app_use_index (void)
           
           if (sv->time[x]==0) 
           { t1 = ot;
-            test_values[i].i[0] = sv->log_time ? log(t0) : t0;
+            test_values[i].i0[0] = sv->log_time ? log(t0) : t0;
           }
           else
           { t1 = sv->time[x];
-            test_values[i].i[0] = sv->log_time ? (log(t0)+log(t1))/2
+            test_values[i].i0[0] = sv->log_time ? (log(t0)+log(t1))/2
                                                   : (t0+t1)/2;
           }
         }

@@ -23,6 +23,8 @@ net-gen log fix - <<end
 end
 net-display log
 net-grad-test log 0 0.001
+net-eval -h log 0 / "%echo 0.1 3"
+net-tbl u100@ log 0
 
 echo " "; echo "--- C"; echo " "
 
@@ -34,3 +36,5 @@ net-gen log fix - <<end
 end
 net-display log
 net-grad-test log 0 0.001
+net-eval -h log 0 / "%echo 0.1 3"
+net-tbl u100@ log 0

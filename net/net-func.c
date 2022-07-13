@@ -95,6 +95,14 @@ void STATIC_IF_INCLUDED net_func
 {
   int l, ls, j;
 
+  /* Compute inputs with offsets added, if required. */
+
+  if (a->has_ti)
+  { for (j = 0; j<a->N_inputs; j++)
+    { v->i[j] = v->i0[j] + w->ti[j];
+    }
+  }
+
   /* Compute values for successive hidden layers. */
 
   for (l = 0; l<a->N_layers; l++)
@@ -118,11 +126,11 @@ void STATIC_IF_INCLUDED net_func
     if (a->has_ih[l])
     { if (a->input_config[l])
       { add_connections_config (vh, N_hidden, v->i, w->ih[l], 
-          a->has_ti ? w->ti : 0, a->input_config[l]);
+          0, a->input_config[l]);
       }
       else
       { add_connections (vh, N_hidden, v->i, a->N_inputs, 
-          w->ih[l], a->has_ti ? w->ti : 0, 
+          w->ih[l], 0, 
           a->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), sparse);
       }
     }
@@ -143,11 +151,11 @@ void STATIC_IF_INCLUDED net_func
       }
       if (cf)         
       { add_connections_config (vh, N_hidden, v->h[ls], wh,
-          a->has_th[ls] ? w->th[ls] : 0, cf);
+          0, cf);
       }
       else
       { add_connections (vh, N_hidden, v->h[ls], a->N_hidden[ls],
-          wh, a->has_th[ls] ? w->th[ls] : 0, (unsigned short *) 0, 0, 0);
+          wh, 0, (unsigned short *) 0, 0, 0);
       }
     }
 
@@ -698,6 +706,17 @@ void STATIC_IF_INCLUDED net_func
       }
     }
 
+    /* Compute hidden unit values with offsets added, if required. */
+
+    if (a->has_th[l])
+    { net_value *restrict vh0 = v->h0[l];
+      net_param *restrict t = w->th[l];
+      for (j = 0; j<N_hidden; j++)
+      { vh0[j] = vh[j];
+        vh[j] += t[j];
+      }
+    }
+
     if (CHECK_NAN)
     { for (j = 0; j<N_hidden; j++)
       { if (isnan(vh[j])) abort();
@@ -722,11 +741,11 @@ void STATIC_IF_INCLUDED net_func
   if (a->has_io)
   { if (a->input_config[a->N_layers])
     { add_connections_config (v->o, a->N_outputs, v->i, w->io,
-        a->has_ti ? w->ti : 0, a->input_config[a->N_layers]);
+        0, a->input_config[a->N_layers]);
     }
     else
     { add_connections (v->o, a->N_outputs, v->i, a->N_inputs,
-                    w->io, a->has_ti ? w->ti : 0, 
+                    w->io, 0, 
                     a->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
                     sparse);
     }
@@ -737,11 +756,11 @@ void STATIC_IF_INCLUDED net_func
     { int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { add_connections_config (v->o, a->N_outputs, v->h[l], w->ho[l], 
-                         a->has_th[l] ? w->th[l] : 0, a->hidden_config[k]);
+                         0, a->hidden_config[k]);
       }
       else
       { add_connections (v->o, a->N_outputs, v->h[l], a->N_hidden[l], w->ho[l],
-                         a->has_th[l] ? w->th[l] : 0, (unsigned short *) 0, 0,
+                         0, (unsigned short *) 0, 0,
                          0);
       }
     }
@@ -1907,6 +1926,17 @@ __device__ __forceinline__ static void net_func_gpu
   net_value *vhp;
   int l, ls, j;
 
+  /* Compute inputs with offsets added, if required. */
+
+  if (A.has_ti)
+  { if (th>=0)
+    { for (j = th; j<A.N_inputs; j+=NTH)
+      { v->i[j] = v->i0[j] + W.ti[j];
+      }
+    }
+    SYNCTH();
+  }
+
   /* Compute values for successive hidden layers. */
 
   for (l = 0; l<A.N_layers; l++)
@@ -1939,11 +1969,11 @@ __device__ __forceinline__ static void net_func_gpu
     if (A.has_ih[l])
     { if (A.input_config[l])
       { add_connections_config_gpu (th, vh, v->i, W.ih[l], 
-          A.has_ti ? W.ti : 0, A.input_config[l], syncmask);
+          0, A.input_config[l], syncmask);
       }
       else
       { add_connections_gpu (th, vh, N_hidden, v->i, A.N_inputs, 
-          W.ih[l], A.has_ti ? W.ti : 0, 
+          W.ih[l], 0, 
           A.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1), 
           sparse, syncmask);
       }
@@ -1966,11 +1996,11 @@ __device__ __forceinline__ static void net_func_gpu
       net_value *vhs = fw_hidden_loc(&PRE,v,ls);
       if (cf)
       { add_connections_config_gpu (th, vh, vhs, wh,
-          A.has_th[ls] ? W.th[ls] : 0, cf, syncmask);
+          0, cf, syncmask);
       }
       else
       { add_connections_gpu (th, vh, N_hidden, vhs, A.N_hidden[ls], wh,
-          A.has_th[ls] ? W.th[ls] : 0, (unsigned short *) 0, 0, 0, syncmask);
+          0, (unsigned short *) 0, 0, 0, syncmask);
       }
     }
 
@@ -2057,6 +2087,19 @@ __device__ __forceinline__ static void net_func_gpu
     { abort();
     }
 
+    /* Compute hidden unit values with offsets added, if required. */
+
+    if (A.has_th[l])
+    { if (th>=0)
+      { net_value *restrict vh0 = v->h0[l];
+        net_param *restrict t = W.th[l];
+        for (j = th; j<N_hidden; j+=NTH)
+        { vh0[j] = vh[j];
+          vh[j] += t[j];
+        }
+      }
+    }
+
     /* Synchronize threads so that up-to-date values computed for this
        layer will be seen by all threads. */
 
@@ -2090,11 +2133,11 @@ __device__ __forceinline__ static void net_func_gpu
   if (A.has_io)
   { if (A.input_config[A.N_layers])
     { add_connections_config_gpu (th, v->o, v->i, W.io,
-        A.has_ti ? W.ti : 0, A.input_config[A.N_layers], syncmask);
+        0, A.input_config[A.N_layers], syncmask);
     }
     else
     { add_connections_gpu (th, v->o, A.N_outputs, v->i, A.N_inputs,
-                    W.io, A.has_ti ? W.ti : 0, 
+                    W.io, 0, 
                     A.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
                     sparse, syncmask);
     }
@@ -2106,12 +2149,12 @@ __device__ __forceinline__ static void net_func_gpu
       int k = 2*A.N_layers-1-l;
       if (A.hidden_config[k])
       { add_connections_config_gpu (th, v->o, vhp, W.ho[l], 
-                         A.has_th[l] ? W.th[l] : 0, A.hidden_config[k],
+                         0, A.hidden_config[k],
                          syncmask);
       }
       else
       { add_connections_gpu (th, v->o, A.N_outputs, vhp, A.N_hidden[l], 
-                             W.ho[l], A.has_th[l] ? W.th[l] : 0, 
+                             W.ho[l], 0, 
                              (unsigned short *) 0, 0, 0, syncmask);
       }
     }

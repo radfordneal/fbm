@@ -138,7 +138,7 @@ void net_data_read
     train_zero_frac = 0;
     for (i = 0; i<N_train; i++) 
     { for (j = 0; j<arch->N_inputs; j++)
-      { if (train_values[i].i[j]==0) train_zero_frac += 1;
+      { if (train_values[i].i0[j]==0) train_zero_frac += 1;
       }
     }
     train_zero_frac /= N_train * arch->N_inputs;
@@ -202,7 +202,7 @@ static net_values *read_inputs
 
   for (i = 0; i<N_cases; i++) 
   { if (model!=0 && model->type=='V' && surv->hazard_type!='C')
-    { values[i].i[0] = 0;
+    { values[i].i0[0] = 0;
       j0 = 1;
     }
     else
@@ -210,7 +210,7 @@ static net_values *read_inputs
     }
     numin_read(ns,ind);
     for (j = j0; j<arch->N_inputs; j++)
-    { values[i].i[j] = data_trans (ind[j-j0], data_spec->trans[j-j0]);
+    { values[i].i0[j] = data_trans (ind[j-j0], data_spec->trans[j-j0]);
     }
   }
 

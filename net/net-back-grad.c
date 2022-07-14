@@ -857,32 +857,30 @@ static void add_grad1_config
 
 /* ADD TO GRADIENT FROM PRODUCT OF UNIT VALUE AND UNIT DERIVATIVE. */
 
-#define ADD_GRAD2(offset,omit,sprs) \
+#define ADD_GRAD2(omit,sprs) \
 do \
-{ net_value o; \
-  int i, j; \
+{ int i, j; \
   if (nd==1) \
   { net_value d0 = d[0]; \
     i = 3; \
     while (i<nv) \
-    { o = (offset); if (!(omit)) *g++ += (v[i-3] + o) * d0; \
-      o = (offset); if (!(omit)) *g++ += (v[i-2] + o) * d0; \
-      o = (offset); if (!(omit)) *g++ += (v[i-1] + o) * d0; \
-      o = (offset); if (!(omit)) *g++ += (v[i-0] + o) * d0; \
+    { if (!(omit)) *g++ += v[i-3] * d0; \
+      if (!(omit)) *g++ += v[i-2] * d0; \
+      if (!(omit)) *g++ += v[i-1] * d0; \
+      if (!(omit)) *g++ += v[i-0] * d0; \
       i += 4; \
     } \
     i -= 3; \
     while (i<nv) \
-    { o = (offset); if (!(omit)) *g++ += (v[i] + o) * d0; \
+    { if (!(omit)) *g++ += v[i] * d0; \
       i += 1; \
     } \
   } \
   else \
   { for (i = 0; i<nv; i++) \
     { net_value tv; \
-      o = (offset); \
       if (omit) continue; \
-      tv = v[i] + o; \
+      tv = v[i]; \
       if (!sprs || tv!=0)  \
       { j = 3; \
         while (j<nd) \
@@ -905,7 +903,7 @@ do \
 
 #if FP64 && USE_SIMD_INTRINSICS && __AVX__
 
-#define ADD_GRAD2_00(one_more,done,sprs) \
+#define ADD_GRAD2_0(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -1000,7 +998,7 @@ do \
 
 #elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
 
-#define ADD_GRAD2_00(one_more,done,sprs) \
+#define ADD_GRAD2_0(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -1100,7 +1098,7 @@ do \
 
 #elif FP32 && USE_SIMD_INTRINSICS && __AVX__
 
-#define ADD_GRAD2_00(one_more,done,sprs) \
+#define ADD_GRAD2_0(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -1217,7 +1215,7 @@ do \
 
 #elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
 
-#define ADD_GRAD2_00(one_more,done,sprs) \
+#define ADD_GRAD2_0(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -1314,7 +1312,7 @@ do \
 
 #else
 
-#define ADD_GRAD2_00(one_more,done,sprs) \
+#define ADD_GRAD2_0(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -1362,7 +1360,6 @@ do \
 static void add_grad2
 ( net_param *restrict g,  /* Array of derivatives to add to */
   net_value const* v,     /* Source unit values */
-  net_param const* off,   /* Offsets for source units, or zero if no offsets */
   int nv,		  /* Number of source units */
   net_value const* d,     /* Derivatives with respect to destination units */
   int nd,		  /* Number of destination units */
@@ -1371,30 +1368,20 @@ static void add_grad2
   int sparse              /* Might source unit values often be zero? */
 )
 { 
-  if (sparse && off==0)
+  if (sparse)
   { if (omit==0)
-    { ADD_GRAD2_00(one_more1,done1,1);
+    { ADD_GRAD2_0(one_more1,done1,1);
     }
     else
-    { ADD_GRAD2(0,(*omit++)&ob,1);
+    { ADD_GRAD2((*omit++)&ob,1);
     }
   }
   else 
   { if (omit==0)
-    { if (off==0)
-      { ADD_GRAD2_00(one_more2,done2,0);
-      }
-      else
-      { ADD_GRAD2(*off++,0,0);
-      }
+    { ADD_GRAD2_0(one_more2,done2,0);
     }
     else
-    { if (off==0)
-      { ADD_GRAD2(0,(*omit++)&ob,0);
-      }
-      else
-      { ADD_GRAD2(*off++,(*omit++)&ob,0);
-      }
+    { ADD_GRAD2((*omit++)&ob,0);
     }
   }
 }
@@ -1405,7 +1392,6 @@ static void add_grad2
 static void add_grad2_config
 ( net_param *restrict g,  /* Array of derivatives to add to */
   net_value const* s,     /* Source unit values */
-  net_param const* off,   /* Offsets for source units, or zero if no offsets */
   net_value const* d,     /* Derivatives with respect to destination units */
   net_config const* cf    /* Configuration for connections and weights */
 )
@@ -1416,122 +1402,57 @@ static void add_grad2_config
   if (CONFIG_OCT_S_8D_8W && (cn = cf->oct_s_8d_8w))
   {
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m256d SI = _mm256_set1_pd (s[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm256_storeu_pd (g+k, FMA256_pd (SI, _mm256_loadu_pd(d+j),
-                                                _mm256_loadu_pd(g+k)));
-          _mm256_storeu_pd (g+k+4, FMA256_pd (SI, _mm256_loadu_pd(d+j+4),
-                                                  _mm256_loadu_pd(g+k+4)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m256d SI = _mm256_set1_pd (s[cn[c].s]);
-          j = cn[c].d;
-          _mm256_storeu_pd (g+k, FMA256_pd (SI, _mm256_loadu_pd(d+j),
-                                                _mm256_loadu_pd(g+k)));
-          _mm256_storeu_pd (g+k+4, FMA256_pd (SI, _mm256_loadu_pd(d+j+4),
-                                                  _mm256_loadu_pd(g+k+4)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { __m256d SI = _mm256_set1_pd (s[cn[c].s]);
+        j = cn[c].d;
+        _mm256_storeu_pd (g+k, FMA256_pd (SI, _mm256_loadu_pd(d+j),
+                                              _mm256_loadu_pd(g+k)));
+        _mm256_storeu_pd (g+k+4, FMA256_pd (SI, _mm256_loadu_pd(d+j+4),
+                                                _mm256_loadu_pd(g+k+4)));
       }
     }
 #   elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128d SI = _mm_set1_pd (s[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_pd (g+k, FMA_pd (SI, _mm_loadu_pd(d+j),
-                                          _mm_loadu_pd(g+k)));
-          _mm_storeu_pd (g+k+2, FMA_pd (SI, _mm_loadu_pd(d+j+2),
-                                            _mm_loadu_pd(g+k+2)));
-          _mm_storeu_pd (g+k+4, FMA_pd (SI, _mm_loadu_pd(d+j+4),
-                                            _mm_loadu_pd(g+k+4)));
-          _mm_storeu_pd (g+k+6, FMA_pd (SI, _mm_loadu_pd(d+j+6),
-                                            _mm_loadu_pd(g+k+6)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128d SI = _mm_set1_pd (s[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_pd (g+k, FMA_pd (SI, _mm_loadu_pd(d+j),
-                                          _mm_loadu_pd(g+k)));
-          _mm_storeu_pd (g+k+2, FMA_pd (SI, _mm_loadu_pd(d+j+2),
-                                            _mm_loadu_pd(g+k+2)));
-          _mm_storeu_pd (g+k+4, FMA_pd (SI, _mm_loadu_pd(d+j+4),
-                                            _mm_loadu_pd(g+k+4)));
-          _mm_storeu_pd (g+k+6, FMA_pd (SI, _mm_loadu_pd(d+j+6),
-                                            _mm_loadu_pd(g+k+6)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { __m128d SI = _mm_set1_pd (s[cn[c].s]);
+        j = cn[c].d;
+        _mm_storeu_pd (g+k, FMA_pd (SI, _mm_loadu_pd(d+j),
+                                        _mm_loadu_pd(g+k)));
+        _mm_storeu_pd (g+k+2, FMA_pd (SI, _mm_loadu_pd(d+j+2),
+                                          _mm_loadu_pd(g+k+2)));
+        _mm_storeu_pd (g+k+4, FMA_pd (SI, _mm_loadu_pd(d+j+4),
+                                          _mm_loadu_pd(g+k+4)));
+        _mm_storeu_pd (g+k+6, FMA_pd (SI, _mm_loadu_pd(d+j+6),
+                                          _mm_loadu_pd(g+k+6)));
       }
     }
 #   elif FP32 && USE_SIMD_INTRINSICS && __AVX__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m256 SI = _mm256_set1_ps (s[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm256_storeu_ps (g+k, FMA256_ps(SI, _mm256_loadu_ps(d+j), 
-                                               _mm256_loadu_ps(g+k)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m256 SI = _mm256_set1_ps (s[cn[c].s]);
-          j = cn[c].d;
-          _mm256_storeu_ps (g+k, FMA256_ps(SI, _mm256_loadu_ps(d+j), 
-                                               _mm256_loadu_ps(g+k)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { __m256 SI = _mm256_set1_ps (s[cn[c].s]);
+        j = cn[c].d;
+        _mm256_storeu_ps (g+k, FMA256_ps(SI, _mm256_loadu_ps(d+j), 
+                                             _mm256_loadu_ps(g+k)));
       }
     }
 #   elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128 SI = _mm_set1_ps (s[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_ps (g+k, FMA_ps(SI, _mm_loadu_ps(d+j), _mm_loadu_ps(g+k)));
-          _mm_storeu_ps (g+k+4, FMA_ps(SI, _mm_loadu_ps(d+j+4), 
-                                           _mm_loadu_ps(g+k+4)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128 SI = _mm_set1_ps (s[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_ps (g+k+4, FMA_ps(SI, _mm_loadu_ps(d+j+4), 
-                                           _mm_loadu_ps(g+k+4)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { __m128 SI = _mm_set1_ps (s[cn[c].s]);
+        j = cn[c].d;
+        _mm_storeu_ps (g+k+4, FMA_ps(SI, _mm_loadu_ps(d+j+4), 
+                                         _mm_loadu_ps(g+k+4)));
       }
     }
 #   else
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { net_value soi = s[cn[c].s] + off[cn[c].s];
-          j = cn[c].d;
-          g[k+0] += soi * d[j+0];
-          g[k+1] += soi * d[j+1];
-          g[k+2] += soi * d[j+2];
-          g[k+3] += soi * d[j+3];
-          g[k+4] += soi * d[j+4];
-          g[k+5] += soi * d[j+5];
-          g[k+6] += soi * d[j+6];
-          g[k+7] += soi * d[j+7];
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { net_value si = s[cn[c].s];
-          j = cn[c].d;
-          g[k+0] += si * d[j+0];
-          g[k+1] += si * d[j+1];
-          g[k+2] += si * d[j+2];
-          g[k+3] += si * d[j+3];
-          g[k+4] += si * d[j+4];
-          g[k+5] += si * d[j+5];
-          g[k+6] += si * d[j+6];
-          g[k+7] += si * d[j+7];
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { net_value si = s[cn[c].s];
+        j = cn[c].d;
+        g[k+0] += si * d[j+0];
+        g[k+1] += si * d[j+1];
+        g[k+2] += si * d[j+2];
+        g[k+3] += si * d[j+3];
+        g[k+4] += si * d[j+4];
+        g[k+5] += si * d[j+5];
+        g[k+6] += si * d[j+6];
+        g[k+7] += si * d[j+7];
       }
     }
 #   endif
@@ -1540,81 +1461,38 @@ static void add_grad2_config
   if (CONFIG_QUAD_S_4D_4W && (cn = cf->quad_s_4d_4w))
   {
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m256d SI = _mm256_set1_pd (s[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm256_storeu_pd (g+k, FMA256_pd (SI, _mm256_loadu_pd(d+j),
-                                                _mm256_loadu_pd(g+k)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m256d SI = _mm256_set1_pd (s[cn[c].s]);
-          j = cn[c].d;
-          _mm256_storeu_pd (g+k, FMA256_pd (SI, _mm256_loadu_pd(d+j),
-                                                _mm256_loadu_pd(g+k)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { __m256d SI = _mm256_set1_pd (s[cn[c].s]);
+        j = cn[c].d;
+        _mm256_storeu_pd (g+k, FMA256_pd (SI, _mm256_loadu_pd(d+j),
+                                              _mm256_loadu_pd(g+k)));
       }
     }
 #   elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128d SI = _mm_set1_pd (s[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_pd (g+k, FMA_pd (SI, _mm_loadu_pd(d+j),
-                                          _mm_loadu_pd(g+k)));
-          _mm_storeu_pd (g+k+2, FMA_pd (SI, _mm_loadu_pd(d+j+2),
-                                            _mm_loadu_pd(g+k+2)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128d SI = _mm_set1_pd (s[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_pd (g+k, FMA_pd (SI, _mm_loadu_pd(d+j),
-                                          _mm_loadu_pd(g+k)));
-          _mm_storeu_pd (g+k+2, FMA_pd (SI, _mm_loadu_pd(d+j+2),
-                                            _mm_loadu_pd(g+k+2)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { __m128d SI = _mm_set1_pd (s[cn[c].s]);
+        j = cn[c].d;
+        _mm_storeu_pd (g+k, FMA_pd (SI, _mm_loadu_pd(d+j),
+                                        _mm_loadu_pd(g+k)));
+        _mm_storeu_pd (g+k+2, FMA_pd (SI, _mm_loadu_pd(d+j+2),
+                                          _mm_loadu_pd(g+k+2)));
       }
     }
 #   elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128 SI = _mm_set1_ps (s[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_ps (g+k, FMA_ps(SI, _mm_loadu_ps(d+j), _mm_loadu_ps(g+k)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128 SI = _mm_set1_ps (s[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_ps (g+k, FMA_ps(SI, _mm_loadu_ps(d+j), _mm_loadu_ps(g+k)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { __m128 SI = _mm_set1_ps (s[cn[c].s]);
+        j = cn[c].d;
+        _mm_storeu_ps (g+k, FMA_ps(SI, _mm_loadu_ps(d+j), _mm_loadu_ps(g+k)));
       }
     }
 #   else
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { net_value soi = s[cn[c].s] + off[cn[c].s];
-          j = cn[c].d;
-          g[k+0] += soi * d[j+0];
-          g[k+1] += soi * d[j+1];
-          g[k+2] += soi * d[j+2];
-          g[k+3] += soi * d[j+3];
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { net_value si = s[cn[c].s];
-          j = cn[c].d;
-          g[k+0] += si * d[j+0];
-          g[k+1] += si * d[j+1];
-          g[k+2] += si * d[j+2];
-          g[k+3] += si * d[j+3];
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { net_value si = s[cn[c].s];
+        j = cn[c].d;
+        g[k+0] += si * d[j+0];
+        g[k+1] += si * d[j+1];
+        g[k+2] += si * d[j+2];
+        g[k+3] += si * d[j+3];
       }
     }
 #   endif
@@ -1623,197 +1501,95 @@ static void add_grad2_config
   if (CONFIG_QUAD_S_4D_4W && MAKE_QUAD_PAIRS && (cn = cf->quad_s_4d_4w_2))
   {
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { __m256d GK = _mm256_loadu_pd(g+k);
-          __m256d SI;
-          SI = _mm256_set1_pd (s[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          GK = FMA256_pd (SI, _mm256_loadu_pd(d+j), GK);
-          SI = _mm256_set1_pd (s[cn[c+1].s] + off[cn[c+1].s]);
-          j = cn[c+1].d;
-          GK = FMA256_pd (SI, _mm256_loadu_pd(d+j), GK);
-          _mm256_storeu_pd (g+k, GK);
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { __m256d GK = _mm256_loadu_pd(g+k);
-          __m256d SI;
-          SI = _mm256_set1_pd (s[cn[c].s]);
-          j = cn[c].d;
-          GK = FMA256_pd (SI, _mm256_loadu_pd(d+j), GK);
-          SI = _mm256_set1_pd (s[cn[c+1].s]);
-          j = cn[c+1].d;
-          GK = FMA256_pd (SI, _mm256_loadu_pd(d+j), GK);
-          _mm256_storeu_pd (g+k, GK);
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+      { __m256d GK = _mm256_loadu_pd(g+k);
+        __m256d SI;
+        SI = _mm256_set1_pd (s[cn[c].s]);
+        j = cn[c].d;
+        GK = FMA256_pd (SI, _mm256_loadu_pd(d+j), GK);
+        SI = _mm256_set1_pd (s[cn[c+1].s]);
+        j = cn[c+1].d;
+        GK = FMA256_pd (SI, _mm256_loadu_pd(d+j), GK);
+        _mm256_storeu_pd (g+k, GK);
       }
     }
 #   elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { __m128d GK = _mm_loadu_pd(g+k), GK2 = _mm_loadu_pd(g+k+2);
-          __m128d SI;
-          SI = _mm_set1_pd (s[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          GK = FMA_pd (SI, _mm_loadu_pd(d+j), GK);
-          GK2 = FMA_pd (SI, _mm_loadu_pd(d+j+2), GK2);
-          SI = _mm_set1_pd (s[cn[c+1].s] + off[cn[c+1].s]);
-          j = cn[c+1].d;
-          GK = FMA_pd (SI, _mm_loadu_pd(d+j), GK);
-          GK2 = FMA_pd (SI, _mm_loadu_pd(d+j+2), GK2);
-          _mm_storeu_pd (g+k, GK);
-          _mm_storeu_pd (g+k+2, GK2);
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { __m128d GK = _mm_loadu_pd(g+k), GK2 = _mm_loadu_pd(g+k+2);
-          __m128d SI;
-          SI = _mm_set1_pd (s[cn[c].s]);
-          j = cn[c].d;
-          GK = FMA_pd (SI, _mm_loadu_pd(d+j), GK);
-          GK2 = FMA_pd (SI, _mm_loadu_pd(d+j+2), GK2);
-          SI = _mm_set1_pd (s[cn[c+1].s]);
-          j = cn[c+1].d;
-          GK = FMA_pd (SI, _mm_loadu_pd(d+j), GK);
-          GK2 = FMA_pd (SI, _mm_loadu_pd(d+j+2), GK2);
-          _mm_storeu_pd (g+k, GK);
-          _mm_storeu_pd (g+k+2, GK2);
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+      { __m128d GK = _mm_loadu_pd(g+k), GK2 = _mm_loadu_pd(g+k+2);
+        __m128d SI;
+        SI = _mm_set1_pd (s[cn[c].s]);
+        j = cn[c].d;
+        GK = FMA_pd (SI, _mm_loadu_pd(d+j), GK);
+        GK2 = FMA_pd (SI, _mm_loadu_pd(d+j+2), GK2);
+        SI = _mm_set1_pd (s[cn[c+1].s]);
+        j = cn[c+1].d;
+        GK = FMA_pd (SI, _mm_loadu_pd(d+j), GK);
+        GK2 = FMA_pd (SI, _mm_loadu_pd(d+j+2), GK2);
+        _mm_storeu_pd (g+k, GK);
+        _mm_storeu_pd (g+k+2, GK2);
       }
     }
 #   elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { __m128 GK = _mm_loadu_ps(g+k);
-          __m128 SI;
-          SI = _mm_set1_ps (s[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          GK = FMA_ps(SI, _mm_loadu_ps(d+j), GK);
-          SI = _mm_set1_ps (s[cn[c+1].s] + off[cn[c+1].s]);
-          j = cn[c+1].d;
-          GK = FMA_ps(SI, _mm_loadu_ps(d+j), GK);
-          _mm_storeu_ps (g+k, GK);
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { __m128 GK = _mm_loadu_ps(g+k);
-          __m128 SI;
-          SI = _mm_set1_ps (s[cn[c].s]);
-          j = cn[c].d;
-          GK = FMA_ps(SI, _mm_loadu_ps(d+j), GK);
-          SI = _mm_set1_ps (s[cn[c+1].s]);
-          j = cn[c+1].d;
-          GK = FMA_ps(SI, _mm_loadu_ps(d+j), GK);
-          _mm_storeu_ps (g+k, GK);
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+      { __m128 GK = _mm_loadu_ps(g+k);
+        __m128 SI;
+        SI = _mm_set1_ps (s[cn[c].s]);
+        j = cn[c].d;
+        GK = FMA_ps(SI, _mm_loadu_ps(d+j), GK);
+        SI = _mm_set1_ps (s[cn[c+1].s]);
+        j = cn[c+1].d;
+        GK = FMA_ps(SI, _mm_loadu_ps(d+j), GK);
+        _mm_storeu_ps (g+k, GK);
       }
     }
 #   else
     { int j2;
-      if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { net_value soi = s[cn[c].s] + off[cn[c].s];
-          j = cn[c].d;
-          net_value soi2 = s[cn[c+1].s] + off[cn[c+1].s];
-          j2 = cn[c+1].d;
-          g[k+0] = g[k+0] + soi * d[j+0] + soi2 * d[j2+0];  /* not using +=  */
-          g[k+1] = g[k+1] + soi * d[j+1] + soi2 * d[j2+1];  /* allows use of */
-          g[k+2] = g[k+2] + soi * d[j+2] + soi2 * d[j2+2];  /* multiply-add, */
-          g[k+3] = g[k+3] + soi * d[j+3] + soi2 * d[j2+3];  /* matching AVX  */
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { net_value si = s[cn[c].s];
-          j = cn[c].d;
-          net_value si2 = s[cn[c+1].s];
-          j2 = cn[c+1].d;
-          g[k+0] = g[k+0] + si * d[j+0] + si2 * d[j2+0];  /* not using +=  */
-          g[k+1] = g[k+1] + si * d[j+1] + si2 * d[j2+1];  /* allows use of */
-          g[k+2] = g[k+2] + si * d[j+2] + si2 * d[j2+2];  /* multiply-add, */
-          g[k+3] = g[k+3] + si * d[j+3] + si2 * d[j2+3];  /* matching AVX  */
-        }
+      for (c = 0; (k = cn[c].w) >= 0; c+=2)
+      { net_value si = s[cn[c].s];
+        j = cn[c].d;
+        net_value si2 = s[cn[c+1].s];
+        j2 = cn[c+1].d;
+        g[k+0] = g[k+0] + si * d[j+0] + si2 * d[j2+0];  /* not using +=  */
+        g[k+1] = g[k+1] + si * d[j+1] + si2 * d[j2+1];  /* allows use of */
+        g[k+2] = g[k+2] + si * d[j+2] + si2 * d[j2+2];  /* multiply-add, */
+        g[k+3] = g[k+3] + si * d[j+3] + si2 * d[j2+3];  /* matching AVX  */
       }
     }
 #   endif
   }
 
   if (CONFIG_SINGLE4 && (cn = cf->single4_s))
-  {
-    if (off)
-    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_value soi = s[cn[c].s] + off[cn[c].s];
-        j = cn[c].d;
-        g[k] += soi * d[j];
-        j = cn[c+1].d; k = cn[c+1].w; 
-        g[k] += soi * d[j];
-        j = cn[c+2].d; k = cn[c+2].w; 
-        g[k] += soi * d[j];
-        j = cn[c+3].d; k = cn[c+3].w; 
-        g[k] += soi * d[j];
-      }
-    }
-    else
-    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_value si = s[cn[c].s];
-        j = cn[c].d;
-        g[k] += si * d[j];
-        j = cn[c+1].d; k = cn[c+1].w; 
-        g[k] += si * d[j];
-        j = cn[c+2].d; k = cn[c+2].w; 
-        g[k] += si * d[j];
-        j = cn[c+3].d; k = cn[c+3].w; 
-        g[k] += si * d[j];
-      }
+  { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+    { net_value si = s[cn[c].s];
+      j = cn[c].d;
+      g[k] += si * d[j];
+      j = cn[c+1].d; k = cn[c+1].w; 
+      g[k] += si * d[j];
+      j = cn[c+2].d; k = cn[c+2].w; 
+      g[k] += si * d[j];
+      j = cn[c+3].d; k = cn[c+3].w; 
+      g[k] += si * d[j];
     }
   }
 
   if (CONFIG_SINGLE4 && (cn = cf->single4_d))
-  {
-    if (off)
-    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_value dj = d[cn[c].d];
-        i = cn[c].s;
-        g[k] += (s[i]+off[i]) * dj;
-        i = cn[c+1].s; k = cn[c+1].w; 
-        g[k] += (s[i]+off[i]) * dj;
-        i = cn[c+2].s; k = cn[c+2].w; 
-        g[k] += (s[i]+off[i]) * dj;
-        i = cn[c+3].s; k = cn[c+3].w; 
-        g[k] += (s[i]+off[i]) * dj;
-      }
-    }
-    else
-    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_value dj = d[cn[c].d];
-        i = cn[c].s;
-        g[k] += s[i] * dj;
-        i = cn[c+1].s; k = cn[c+1].w; 
-        g[k] += s[i] * dj;
-        i = cn[c+2].s; k = cn[c+2].w; 
-        g[k] += s[i] * dj;
-        i = cn[c+3].s; k = cn[c+3].w; 
-        g[k] += s[i] * dj;
-      }
+  { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+    { net_value dj = d[cn[c].d];
+      i = cn[c].s;
+      g[k] += s[i] * dj;
+      i = cn[c+1].s; k = cn[c+1].w; 
+      g[k] += s[i] * dj;
+      i = cn[c+2].s; k = cn[c+2].w; 
+      g[k] += s[i] * dj;
+      i = cn[c+3].s; k = cn[c+3].w; 
+      g[k] += s[i] * dj;
     }
   }
 
   if (cn = CONFIG_ORIGINAL ? cf->conn : cf->single)
-  { if (off)
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { i = cn[c].s; j = cn[c].d;
-        g[k] += (s[i]+off[i]) * d[j];
-      }
-    }
-    else
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { i = cn[c].s; j = cn[c].d;
-        g[k] += s[i] * d[j];
-      }
+  { for (c = 0; (k = cn[c].w) >= 0; c++)
+    { i = cn[c].s; j = cn[c].d;
+      g[k] += s[i] * d[j];
     }
   }
 
@@ -1926,31 +1702,21 @@ __device__ static void net_store1_grad1_config
    only one destination unit, in which case it is based on the indexes
    for the source units. */
 
-#define NET_STORE1_GRAD2(has_off,has_omit,sprs) \
+#define NET_STORE1_GRAD2(has_omit,sprs) \
 do \
 { int i; \
   if (nd==1 && !has_omit) \
   { net_value d00 = d0[0]; \
-    if (has_off) \
-    { net_value o; \
-      for (i = th; i<nv; i+=GTH) \
-      { o = off[i]; \
-        g[ILV*i] = (v0[i]+o)*d00; \
-      } \
-    } \
-    else \
-    { for (i = th; i<nv; i+=GTH) \
-      { g[ILV*i] = v0[i]*d00; \
-      } \
+    for (i = th; i<nv; i+=GTH) \
+    { g[ILV*i] = v0[i]*d00; \
     } \
   } \
   else if (sprs) \
-  { net_value tv0, o; \
+  { net_value tv0; \
     int j; \
     for (i = 0; i<nv; i++) \
     { if (has_omit && (omit[i]&ob)) continue; \
-      o = has_off ? off[i] : 0; \
-      tv0 = v0[i] + o; \
+      tv0 = v0[i]; \
       if (tv0==0) \
       { for (j = th; j<nd; j+=GTH) \
         { g[ILV*j] = 0; \
@@ -1966,12 +1732,11 @@ do \
     } \
   } \
   else \
-  { net_value tv0, o; \
+  { net_value tv0; \
     int j; \
     for (i = 0; i<nv; i++) \
     { if (has_omit && (omit[i]&ob)) continue; \
-      o = has_off ? off[i] : 0; \
-      tv0 = v0[i] + o; \
+      tv0 = v0[i]; \
       for (j = th; j<nd; j+=GTH) \
       { g[ILV*j] = tv0*d0[j]; \
       } \
@@ -1985,7 +1750,6 @@ __device__ static void net_store1_grad2
 ( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const* v0,    /* Source unit values */
-  net_param const* off,   /* Offsets for source units, or zero if no offsets */
   int nv,		  /* Number of source units */
   net_value const* d0,    /* Derivatives with respect to destination units */
   int nd,		  /* Number of destination units */
@@ -1994,30 +1758,20 @@ __device__ static void net_store1_grad2
   int sparse              /* Might source unit values often be zero? */
 )
 { 
-  if (sparse && off==0)
+  if (sparse)
   { if (omit==0)
-    { NET_STORE1_GRAD2(0,0,1);
+    { NET_STORE1_GRAD2(0,1);
     }
     else
-    { NET_STORE1_GRAD2(0,1,1);
+    { NET_STORE1_GRAD2(1,1);
     }
   }
   else
   { if (omit==0)
-    { if (off==0)
-      { NET_STORE1_GRAD2(0,0,0);
-      }
-      else
-      { NET_STORE1_GRAD2(1,0,0);
-      }
+    { NET_STORE1_GRAD2(0,0);
     }
     else
-    { if (off==0)
-      { NET_STORE1_GRAD2(0,1,0);
-      }
-      else
-      { NET_STORE1_GRAD2(1,1,0);
-      }
+    { NET_STORE1_GRAD2(1,0);
     }
   }
 }
@@ -2032,7 +1786,6 @@ __device__ static void net_store1_grad2_config
 ( int th,		  /* Which thread (0 to GTH-1) */
   net_param *restrict g,  /* Array of derivatives to add to */
   net_value const* s0,    /* Source unit values */
-  net_param const* off,   /* Offsets for source units, or zero if no offsets */
   net_value const* d0,    /* Derivatives with respect to destination units */
   net_config const* cf    /* Configuration for connections and weights */
 )
@@ -2049,36 +1802,18 @@ __device__ static void net_store1_grad2_config
   if (CONFIG_OCT_GPU_S_8D_8W_GRAD && (cn = cf->oct_s_8d_8w_wgpu))
   { int thmod8 = (th&7) + 8;
     int m, ix;
-    if (off)
-    { for (m = 0; m<8; m++)
-      { ix = (thmod8-m) & 7;
-        c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { s += (s0[i]+off[i]) * d0[j+ix];
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
-      }
-    }
-    else
-    { for (m = 0; m<8; m++)
-      { ix = (thmod8-m) & 7;
-        c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { s += s0[i] * d0[j+ix];
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
+    for (m = 0; m<8; m++)
+    { ix = (thmod8-m) & 7;
+      c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
+      i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      while (k>=0)
+      { int kk = k;
+        net_value s = g[ILV*(kk+ix)];
+        do
+        { s += s0[i] * d0[j+ix];
+          i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        } while (k==kk);
+        g[ILV*(kk+ix)] = s;
       }
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
@@ -2087,36 +1822,18 @@ __device__ static void net_store1_grad2_config
   if (CONFIG_QUAD_GPU_S_4D_4W_GRAD && (cn = cf->quad_s_4d_4w_wgpu))
   { int thmod4 = (th&3) + 4;
     int m, ix;
-    if (off)
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { s += (s0[i]+off[i]) * d0[j+ix];
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
-      }
-    }
-    else
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { s += s0[i] * d0[j+ix];
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
+    for (m = 0; m<4; m++)
+    { ix = (thmod4-m) & 3;
+      c = cf->start_quad_wgpu [(th-ix+GTH) & (GTH-1)];
+      i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      while (k>=0)
+      { int kk = k;
+        net_value s = g[ILV*(kk+ix)];
+        do
+        { s += s0[i] * d0[j+ix];
+          i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        } while (k==kk);
+        g[ILV*(kk+ix)] = s;
       }
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
@@ -2124,29 +1841,15 @@ __device__ static void net_store1_grad2_config
 
   if (cn = cf->other_wgpu)
   { c = cf->start_other_wgpu[th];
-    if (off)
-    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-      while (k>=0)
-      { int kk = k;
-        net_value s = g[ILV*kk];
-        do
-        { s += (s0[i]+off[i])*d0[j];
-          i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        } while (k==kk);
-        g[ILV*kk] = s;
-      }
-    }
-    else
-    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-      while (k>=0)
-      { int kk = k;
-        net_value s = g[ILV*kk];
-        do
-        { s += s0[i]*d0[j];
-          i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        } while (k==kk);
-        g[ILV*kk] = s;
-      }
+    i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+    while (k>=0)
+    { int kk = k;
+      net_value s = g[ILV*kk];
+      do
+      { s += s0[i]*d0[j];
+        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      } while (k==kk);
+      g[ILV*kk] = s;
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
@@ -2268,42 +1971,29 @@ __device__ static void net_store2_grad1_config
    only one destination unit, in which case it is based on the indexes
    for the source units. */
 
-#define NET_STORE2_GRAD2(has_off,has_omit,alllab,onelab,sprs) \
+#define NET_STORE2_GRAD2(has_omit,alllab,onelab,sprs) \
 do \
 { int i; \
   if (nd==1 && !has_omit) \
   { net_value const*restrict d = d0; \
     net_value d00 = *d; d += ds; \
     net_value d10 = *d; \
-    if (has_off) \
-    { net_value o; \
-      for (i = th; i<nv; i+=GTH) \
-      { o = off[i]; \
-        net_value const*restrict v = v0 + i; \
-        net_value tv0 = *v; v += vs; \
-        net_value tv1 = *v; \
-        g[ILV*i] = (tv0+o)*d00 + (tv1+o)*d10; \
-      } \
-    } \
-    else \
-    { for (i = th; i<nv; i+=GTH) \
-      { net_value const*restrict v = v0 + i; \
-        net_value tv0 = *v; v += vs; \
-        net_value tv1 = *v; \
-        g[ILV*i] = tv0*d00 + tv1*d10; \
-      } \
+    for (i = th; i<nv; i+=GTH) \
+    { net_value const*restrict v = v0 + i; \
+      net_value tv0 = *v; v += vs; \
+      net_value tv1 = *v; \
+      g[ILV*i] = tv0*d00 + tv1*d10; \
     } \
   } \
   else if (sprs) \
-  { net_value tv0, tv1, tvh, o; \
+  { net_value tv0, tv1, tvh; \
     net_value const*dh; \
     int j; \
     for (i = 0; i<nv; i++) \
     { if (has_omit && (omit[i]&ob)) continue; \
-      o = has_off ? off[i] : 0; \
       net_value const*restrict v = v0 + i; \
-      tv0 = *v + o; v += vs; \
-      tv1 = *v + o; \
+      tv0 = *v; v += vs; \
+      tv1 = *v; \
       if (tv0!=0) \
       { if (tv1!=0) goto alllab; \
         tvh = tv0; dh = d0; \
@@ -2337,14 +2027,13 @@ do \
     } \
   } \
   else \
-  { net_value tv0, tv1, o; \
+  { net_value tv0, tv1; \
     int j; \
     for (i = 0; i<nv; i++) \
     { if (has_omit && (omit[i]&ob)) continue; \
-      o = has_off ? off[i] : 0; \
       net_value const*restrict v = v0 + i; \
-      tv0 = *v + o; v += vs; \
-      tv1 = *v + o; \
+      tv0 = *v; v += vs; \
+      tv1 = *v; \
       for (j = th; j<nd; j+=GTH) \
       { net_value const*restrict d = d0 + j; \
         net_value td0 = *d; d += ds; \
@@ -2362,7 +2051,6 @@ __device__ static void net_store2_grad2
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const*restrict v0,  /* Source unit values, case 0 */
   int vs,                 /* Stride to get to values for following cases */
-  net_param const* off,   /* Offsets for source units, or zero if no offsets */
   int nv,		  /* Number of source units */
   net_value const*restrict d0,  /* Derivs with respect to unit values, case 0 */
   int ds,                 /* Stride to get to derivatives for following cases */
@@ -2372,30 +2060,20 @@ __device__ static void net_store2_grad2
   int sparse		  /* Might source unit values often be zero? */
 )
 { 
-  if (sparse && off==0)
+  if (sparse)
   { if (omit==0)
-    { NET_STORE2_GRAD2(0,0,all1s,one1s,1);
+    { NET_STORE2_GRAD2(0,all1s,one1s,1);
     }
     else
-    { NET_STORE2_GRAD2(0,1,all3s,one3s,1);
+    { NET_STORE2_GRAD2(1,all3s,one3s,1);
     }
   }
   else
   { if (omit==0)
-    { if (off==0)
-      { NET_STORE2_GRAD2(0,0,all1,one1,0);
-      }
-      else
-      { NET_STORE2_GRAD2(1,0,all2,one2,0);
-      }
+    { NET_STORE2_GRAD2(0,all1,one1,0);
     }
     else
-    { if (off==0)
-      { NET_STORE2_GRAD2(0,1,all3,one3,0);
-      }
-      else
-      { NET_STORE2_GRAD2(1,1,all4,one4,0);
-      }
+    { NET_STORE2_GRAD2(1,all3,one3,0);
     }
   }
 }
@@ -2411,7 +2089,6 @@ __device__ static void net_store2_grad2_config
   net_param *restrict g,  /* Array of derivatives to add to */
   net_value const*restrict v0,  /* Source unit values, case 0 */
   int vs,                 /* Stride to get to values for following cases */
-  net_param const* off,   /* Offsets for source units, or zero if no offsets */
   net_value const*restrict d0,  /* Derivs with respect to unit values, case 0 */
   int ds,                 /* Stride to get to derivatives for following cases */
   net_config const*restrict cf  /* Configuration for connections and weights */
@@ -2429,45 +2106,22 @@ __device__ static void net_store2_grad2_config
   if (CONFIG_OCT_GPU_S_8D_8W_GRAD && (cn = cf->oct_s_8d_8w_wgpu))
   { int thmod8 = (th&7) + 8;
     int m, ix;
-    if (off)
-    { for (m = 0; m<8; m++)
-      { ix = (thmod8-m) & 7;
-        c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { net_param o = off[i];
-            net_value const*restrict v = v0+i;
-            net_value const*restrict d = d0+j+ix;
-            net_value tv, td;
-            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-            tv = *v; td = *d; s += (tv+o)*td;
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
-      }
-    }
-    else
-    { for (m = 0; m<8; m++)
-      { ix = (thmod8-m) & 7;
-        c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { net_value const*restrict v = v0+i;
-            net_value const*restrict d = d0+j+ix;
-            net_value tv, td;
-            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-            tv = *v; td = *d; s += tv*td;
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
+    for (m = 0; m<8; m++)
+    { ix = (thmod8-m) & 7;
+      c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
+      i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      while (k>=0)
+      { int kk = k;
+        net_value s = g[ILV*(kk+ix)];
+        do
+        { net_value const*restrict v = v0+i;
+          net_value const*restrict d = d0+j+ix;
+          net_value tv, td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; s += tv*td;
+          i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        } while (k==kk);
+        g[ILV*(kk+ix)] = s;
       }
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
@@ -2476,45 +2130,22 @@ __device__ static void net_store2_grad2_config
   if (CONFIG_QUAD_GPU_S_4D_4W_GRAD && (cn = cf->quad_s_4d_4w_wgpu))
   { int thmod4 = (th&3) + 4;
     int m, ix;
-    if (off)
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { net_param o = off[i];
-            net_value const*restrict v = v0+i;
-            net_value const*restrict d = d0+j+ix;
-            net_value tv, td;
-            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-            tv = *v; td = *d; s += (tv+o)*td;
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
-      }
-    }
-    else
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { net_value const*restrict v = v0+i;
-            net_value const*restrict d = d0+j+ix;
-            net_value tv, td;
-            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-            tv = *v; td = *d; s += tv*td;
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
+    for (m = 0; m<4; m++)
+    { ix = (thmod4-m) & 3;
+      c = cf->start_quad_wgpu [(th-ix+GTH) & (GTH-1)];
+      i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      while (k>=0)
+      { int kk = k;
+        net_value s = g[ILV*(kk+ix)];
+        do
+        { net_value const*restrict v = v0+i;
+          net_value const*restrict d = d0+j+ix;
+          net_value tv, td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; s += tv*td;
+          i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        } while (k==kk);
+        g[ILV*(kk+ix)] = s;
       }
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
@@ -2522,38 +2153,19 @@ __device__ static void net_store2_grad2_config
 
   if (cn = cf->other_wgpu)
   { c = cf->start_other_wgpu[th];
-    if (off)
-    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-      while (k>=0)
-      { int kk = k;
-        net_value s = g[ILV*kk];
-        do
-        { net_param o = off[i];
-          net_value const*restrict v = v0+i;
-          net_value const*restrict d = d0+j;
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; s += (tv+o)*td;
-          i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        } while (k==kk);
-        g[ILV*kk] = s;
-      }
-    }
-    else
-    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-      while (k>=0)
-      { int kk = k;
-        net_value s = g[ILV*kk];
-        do
-        { net_value const*restrict v = v0+i;
-          net_value const*restrict d = d0+j;
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; s += tv*td;
-          i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        } while (k==kk);
-        g[ILV*kk] = s;
-      }
+    i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+    while (k>=0)
+    { int kk = k;
+      net_value s = g[ILV*kk];
+      do
+      { net_value const*restrict v = v0+i;
+        net_value const*restrict d = d0+j;
+        net_value tv, td;
+        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+        tv = *v; td = *d; s += tv*td;
+        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      } while (k==kk);
+      g[ILV*kk] = s;
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
@@ -2677,7 +2289,7 @@ __device__ static void net_store3_grad1_config
    only one destination unit, in which case it is based on the indexes
    for the source units. */
 
-#define NET_STORE3_GRAD2(has_off,has_omit,alllab,onelab,sprs) \
+#define NET_STORE3_GRAD2(has_omit,alllab,onelab,sprs) \
 do \
 { int i; \
   if (nd==1 && !has_omit) \
@@ -2685,38 +2297,24 @@ do \
     net_value d00 = *d; d += ds; \
     net_value d10 = *d; d += ds; \
     net_value d20 = *d; \
-    if (has_off) \
-    { net_value o; \
-      for (i = th; i<nv; i+=GTH) \
-      { o = off[i]; \
-        net_value const*restrict v = v0 + i; \
-        net_value tv0 = *v; v += vs; \
-        net_value tv1 = *v; v += vs; \
-        net_value tv2 = *v; \
-        g[ILV*i] = (tv0+o)*d00 + (tv1+o)*d10 + (tv2+o)*d20; \
-      } \
-    } \
-    else \
-    { for (i = th; i<nv; i+=GTH) \
-      { net_value const*restrict v = v0 + i; \
-        net_value tv0 = *v; v += vs; \
-        net_value tv1 = *v; v += vs; \
-        net_value tv2 = *v; \
-        g[ILV*i] = tv0*d00 + tv1*d10 + tv2*d20; \
-      } \
+    for (i = th; i<nv; i+=GTH) \
+    { net_value const*restrict v = v0 + i; \
+      net_value tv0 = *v; v += vs; \
+      net_value tv1 = *v; v += vs; \
+      net_value tv2 = *v; \
+      g[ILV*i] = tv0*d00 + tv1*d10 + tv2*d20; \
     } \
   } \
   else if (sprs) \
-  { net_value tv0, tv1, tv2, tvh, o; \
+  { net_value tv0, tv1, tv2, tvh; \
     net_value const*dh; \
     int j; \
     for (i = 0; i<nv; i++) \
     { if (has_omit && (omit[i]&ob)) continue; \
-      o = has_off ? off[i] : 0; \
       net_value const*restrict v = v0 + i; \
-      tv0 = *v + o; v += vs; \
-      tv1 = *v + o; v += vs; \
-      tv2 = *v + o; \
+      tv0 = *v; v += vs; \
+      tv1 = *v; v += vs; \
+      tv2 = *v; \
       if (tv0!=0) \
       { if (tv1!=0 || tv2!=0) goto alllab; \
         tvh = tv0; dh = d0; \
@@ -2756,15 +2354,14 @@ do \
     } \
   } \
   else \
-  { net_value tv0, tv1, tv2, o; \
+  { net_value tv0, tv1, tv2; \
     int j; \
     for (i = 0; i<nv; i++) \
     { if (has_omit && (omit[i]&ob)) continue; \
-      o = has_off ? off[i] : 0; \
       net_value const*restrict v = v0 + i; \
-      tv0 = *v + o; v += vs; \
-      tv1 = *v + o; v += vs; \
-      tv2 = *v + o; \
+      tv0 = *v; v += vs; \
+      tv1 = *v; v += vs; \
+      tv2 = *v; \
       for (j = th; j<nd; j+=GTH) \
       { net_value const*restrict d = d0 + j; \
         net_value td0 = *d; d += ds; \
@@ -2783,7 +2380,6 @@ __device__ static void net_store3_grad2
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const*restrict v0,  /* Source unit values, case 0 */
   int vs,                 /* Stride to get to values for following cases */
-  net_param const* off,   /* Offsets for source units, or zero if no offsets */
   int nv,		  /* Number of source units */
   net_value const*restrict d0,  /* Derivs with respect to unit values, case 0 */
   int ds,                 /* Stride to get to derivatives for following cases */
@@ -2793,30 +2389,20 @@ __device__ static void net_store3_grad2
   int sparse		  /* Might source unit values often be zero? */
 )
 { 
-  if (sparse && off==0)
+  if (sparse)
   { if (omit==0)
-    { NET_STORE3_GRAD2(0,0,all1s,one1s,1);
+    { NET_STORE3_GRAD2(0,all1s,one1s,1);
     }
     else
-    { NET_STORE3_GRAD2(0,1,all3s,one3s,1);
+    { NET_STORE3_GRAD2(1,all3s,one3s,1);
     }
   }
   else
   { if (omit==0)
-    { if (off==0)
-      { NET_STORE3_GRAD2(0,0,all1,one1,0);
-      }
-      else
-      { NET_STORE3_GRAD2(1,0,all2,one2,0);
-      }
+    { NET_STORE3_GRAD2(0,all1,one1,0);
     }
     else
-    { if (off==0)
-      { NET_STORE3_GRAD2(0,1,all3,one3,0);
-      }
-      else
-      { NET_STORE3_GRAD2(1,1,all4,one4,0);
-      }
+    { NET_STORE3_GRAD2(1,all3,one3,0);
     }
   }
 }
@@ -2832,7 +2418,6 @@ __device__ static void net_store3_grad2_config
   net_param *restrict g,  /* Array of derivatives to add to */
   net_value const*restrict v0,  /* Source unit values, case 0 */
   int vs,                 /* Stride to get to values for following cases */
-  net_param const* off,   /* Offsets for source units, or zero if no offsets */
   net_value const*restrict d0,  /* Derivs with respect to unit values, case 0 */
   int ds,                 /* Stride to get to derivatives for following cases */
   net_config const*restrict cf  /* Configuration for connections and weights */
@@ -2850,47 +2435,23 @@ __device__ static void net_store3_grad2_config
   if (CONFIG_OCT_GPU_S_8D_8W_GRAD && (cn = cf->oct_s_8d_8w_wgpu))
   { int thmod8 = (th&7) + 8;
     int m, ix;
-    if (off)
-    { for (m = 0; m<8; m++)
-      { ix = (thmod8-m) & 7;
-        c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { net_param o = off[i];
-            net_value const*restrict v = v0+i;
-            net_value const*restrict d = d0+j+ix;
-            net_value tv, td;
-            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-            tv = *v; td = *d; s += (tv+o)*td;
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
-      }
-    }
-    else
-    { for (m = 0; m<8; m++)
-      { ix = (thmod8-m) & 7;
-        c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { net_value const*restrict v = v0+i;
-            net_value const*restrict d = d0+j+ix;
-            net_value tv, td;
-            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-            tv = *v; td = *d; s += tv*td;
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
+    for (m = 0; m<8; m++)
+    { ix = (thmod8-m) & 7;
+      c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
+      i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      while (k>=0)
+      { int kk = k;
+        net_value s = g[ILV*(kk+ix)];
+        do
+        { net_value const*restrict v = v0+i;
+          net_value const*restrict d = d0+j+ix;
+          net_value tv, td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; s += tv*td;
+          i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        } while (k==kk);
+        g[ILV*(kk+ix)] = s;
       }
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
@@ -2899,47 +2460,23 @@ __device__ static void net_store3_grad2_config
   if (CONFIG_QUAD_GPU_S_4D_4W_GRAD && (cn = cf->quad_s_4d_4w_wgpu))
   { int thmod4 = (th&3) + 4;
     int m, ix;
-    if (off)
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { net_param o = off[i];
-            net_value const*restrict v = v0+i;
-            net_value const*restrict d = d0+j+ix;
-            net_value tv, td;
-            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-            tv = *v; td = *d; s += (tv+o)*td;
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
-      }
-    }
-    else
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { net_value const*restrict v = v0+i;
-            net_value const*restrict d = d0+j+ix;
-            net_value tv, td;
-            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-            tv = *v; td = *d; s += tv*td;
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
+    for (m = 0; m<4; m++)
+    { ix = (thmod4-m) & 3;
+      c = cf->start_quad_wgpu [(th-ix+GTH) & (GTH-1)];
+      i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      while (k>=0)
+      { int kk = k;
+        net_value s = g[ILV*(kk+ix)];
+        do
+        { net_value const*restrict v = v0+i;
+          net_value const*restrict d = d0+j+ix;
+          net_value tv, td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; s += tv*td;
+          i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        } while (k==kk);
+        g[ILV*(kk+ix)] = s;
       }
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
@@ -2947,40 +2484,20 @@ __device__ static void net_store3_grad2_config
 
   if (cn = cf->other_wgpu)
   { c = cf->start_other_wgpu[th];
-    if (off)
-    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-      while (k>=0)
-      { int kk = k;
-        net_value s = g[ILV*kk];
-        do
-        { net_param o = off[i];
-          net_value const*restrict v = v0+i;
-          net_value const*restrict d = d0+j;
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; s += (tv+o)*td;
-          i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        } while (k==kk);
-        g[ILV*kk] = s;
-      }
-    }
-    else
-    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-      while (k>=0)
-      { int kk = k;
-        net_value s = g[ILV*kk];
-        do
-        { net_value const*restrict v = v0+i;
-          net_value const*restrict d = d0+j;
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-          tv = *v; td = *d; s += tv*td;
-          i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        } while (k==kk);
-        g[ILV*kk] = s;
-      }
+    i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+    while (k>=0)
+    { int kk = k;
+      net_value s = g[ILV*kk];
+      do
+      { net_value const*restrict v = v0+i;
+        net_value const*restrict d = d0+j;
+        net_value tv, td;
+        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+        tv = *v; td = *d; s += tv*td;
+        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      } while (k==kk);
+      g[ILV*kk] = s;
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
@@ -3107,7 +2624,7 @@ __device__ static void net_store4_grad1_config
    only one destination unit, in which case it is based on the indexes
    for the source units. */
 
-#define NET_STORE4_GRAD2(has_off,has_omit,alllab,onelab,sprs) \
+#define NET_STORE4_GRAD2(has_omit,alllab,onelab,sprs) \
 do \
 { int i; \
   if (nd==1 && !has_omit) \
@@ -3116,41 +2633,26 @@ do \
     net_value d10 = *d; d += ds; \
     net_value d20 = *d; d += ds; \
     net_value d30 = *d; \
-    if (has_off) \
-    { net_value o; \
-      for (i = th; i<nv; i+=GTH) \
-      { o = off[i]; \
-        net_value const*restrict v = v0 + i; \
-        net_value tv0 = *v; v += vs; \
-        net_value tv1 = *v; v += vs; \
-        net_value tv2 = *v; v += vs; \
-        net_value tv3 = *v; \
-        g[ILV*i] = (tv0+o)*d00 + (tv1+o)*d10 + (tv2+o)*d20 + (tv3+o)*d30; \
-      } \
-    } \
-    else \
-    { for (i = th; i<nv; i+=GTH) \
-      { net_value const*restrict v = v0 + i; \
-        net_value tv0 = *v; v += vs; \
-        net_value tv1 = *v; v += vs; \
-        net_value tv2 = *v; v += vs; \
-        net_value tv3 = *v; \
-        g[ILV*i] = tv0*d00 + tv1*d10 + tv2*d20 + tv3*d30; \
-      } \
+    for (i = th; i<nv; i+=GTH) \
+    { net_value const*restrict v = v0 + i; \
+      net_value tv0 = *v; v += vs; \
+      net_value tv1 = *v; v += vs; \
+      net_value tv2 = *v; v += vs; \
+      net_value tv3 = *v; \
+      g[ILV*i] = tv0*d00 + tv1*d10 + tv2*d20 + tv3*d30; \
     } \
   } \
   else if (sprs) \
-  { net_value tv0, tv1, tv2, tv3, tvh, o; \
+  { net_value tv0, tv1, tv2, tv3, tvh; \
     net_value const*dh; \
     int j; \
     for (i = 0; i<nv; i++) \
     { if (has_omit && (omit[i]&ob)) continue; \
-      o = has_off ? off[i] : 0; \
       net_value const*restrict v = v0 + i; \
-      tv0 = *v + o; v += vs; \
-      tv1 = *v + o; v += vs; \
-      tv2 = *v + o; v += vs; \
-      tv3 = *v + o; \
+      tv0 = *v; v += vs; \
+      tv1 = *v; v += vs; \
+      tv2 = *v; v += vs; \
+      tv3 = *v; \
       if (tv0!=0) \
       { if (tv1!=0 || tv2!=0 || tv3!=0) goto alllab; \
         tvh = tv0; dh = d0; \
@@ -3196,16 +2698,15 @@ do \
     } \
   } \
   else \
-  { net_value tv0, tv1, tv2, tv3, o; \
+  { net_value tv0, tv1, tv2, tv3; \
     int j; \
     for (i = 0; i<nv; i++) \
     { if (has_omit && (omit[i]&ob)) continue; \
-      o = has_off ? off[i] : 0; \
       net_value const*restrict v = v0 + i; \
-      tv0 = *v + o; v += vs; \
-      tv1 = *v + o; v += vs; \
-      tv2 = *v + o; v += vs; \
-      tv3 = *v + o; \
+      tv0 = *v; v += vs; \
+      tv1 = *v; v += vs; \
+      tv2 = *v; v += vs; \
+      tv3 = *v; \
       for (j = th; j<nd; j+=GTH) \
       { net_value const*restrict d = d0 + j; \
         net_value td0 = *d; d += ds; \
@@ -3225,7 +2726,6 @@ __device__ static void net_store4_grad2
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const*restrict v0,  /* Source unit values, case 0 */
   int vs,                 /* Stride to get to values for following cases */
-  net_param const* off,   /* Offsets for source units, or zero if no offsets */
   int nv,		  /* Number of source units */
   net_value const*restrict d0,  /* Derivs with respect to unit values, case 0 */
   int ds,                 /* Stride to get to derivatives for following cases */
@@ -3235,30 +2735,20 @@ __device__ static void net_store4_grad2
   int sparse		  /* Might source unit values often be zero? */
 )
 { 
-  if (sparse && off==0)
+  if (sparse)
   { if (omit==0)
-    { NET_STORE4_GRAD2(0,0,all1s,one1s,1);
+    { NET_STORE4_GRAD2(0,all1s,one1s,1);
     }
     else
-    { NET_STORE4_GRAD2(0,1,all3s,one3s,1);
+    { NET_STORE4_GRAD2(1,all3s,one3s,1);
     }
   }
   else
   { if (omit==0)
-    { if (off==0)
-      { NET_STORE4_GRAD2(0,0,all1,one1,0);
-      }
-      else
-      { NET_STORE4_GRAD2(1,0,all2,one2,0);
-      }
+    { NET_STORE4_GRAD2(0,all1,one1,0);
     }
     else
-    { if (off==0)
-      { NET_STORE4_GRAD2(0,1,all3,one3,0);
-      }
-      else
-      { NET_STORE4_GRAD2(1,1,all4,one4,0);
-      }
+    { NET_STORE4_GRAD2(1,all3,one3,0);
     }
   }
 }
@@ -3274,7 +2764,6 @@ __device__ static void net_store4_grad2_config
   net_param *restrict g,  /* Array of derivatives to add to */
   net_value const*restrict v0,  /* Source unit values, case 0 */
   int vs,                 /* Stride to get to values for following cases */
-  net_param const* off,   /* Offsets for source units, or zero if no offsets */
   net_value const*restrict d0,  /* Derivs with respect to unit values, case 0 */
   int ds,                 /* Stride to get to derivatives for following cases */
   net_config const*restrict cf  /* Configuration for connections and weights */
@@ -3292,49 +2781,24 @@ __device__ static void net_store4_grad2_config
   if (CONFIG_OCT_GPU_S_8D_8W_GRAD && (cn = cf->oct_s_8d_8w_wgpu))
   { int thmod8 = (th&7) + 8;
     int m, ix;
-    if (off)
-    { for (m = 0; m<8; m++)
-      { ix = (thmod8-m) & 7;
-        c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { net_param o = off[i];
-            net_value const*restrict v = v0+i;
-            net_value const*restrict d = d0+j+ix;
-            net_value tv, td;
-            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-            tv = *v; td = *d; s += (tv+o)*td;
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
-      }
-    }
-    else
-    { for (m = 0; m<8; m++)
-      { ix = (thmod8-m) & 7;
-        c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { net_value const*restrict v = v0+i;
-            net_value const*restrict d = d0+j+ix;
-            net_value tv, td;
-            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-            tv = *v; td = *d; s += tv*td;
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
+    for (m = 0; m<8; m++)
+    { ix = (thmod8-m) & 7;
+      c = cf->start_oct_wgpu [(th-ix+GTH) & (GTH-1)];
+      i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      while (k>=0)
+      { int kk = k;
+        net_value s = g[ILV*(kk+ix)];
+        do
+        { net_value const*restrict v = v0+i;
+          net_value const*restrict d = d0+j+ix;
+          net_value tv, td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+          tv = *v; td = *d; s += tv*td;
+          i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+        } while (k==kk);
+        g[ILV*(kk+ix)] = s;
       }
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
@@ -3343,83 +2807,16 @@ __device__ static void net_store4_grad2_config
   if (CONFIG_QUAD_GPU_S_4D_4W_GRAD && (cn = cf->quad_s_4d_4w_wgpu))
   { int thmod4 = (th&3) + 4;
     int m, ix;
-    if (off)
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { net_param o = off[i];
-            net_value const*restrict v = v0+i;
-            net_value const*restrict d = d0+j+ix;
-            net_value tv, td;
-            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-            tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-            tv = *v; td = *d; s += (tv+o)*td;
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
-      }
-    }
-    else
-    { for (m = 0; m<4; m++)
-      { ix = (thmod4-m) & 3;
-        c = cf->start_quad_wgpu [(th-ix+GTH) & (GTH-1)];
-        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        while (k>=0)
-        { int kk = k;
-          net_value s = g[ILV*(kk+ix)];
-          do
-          { net_value const*restrict v = v0+i;
-            net_value const*restrict d = d0+j+ix;
-            net_value tv, td;
-            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-            tv = *v; td = *d; v += vs; d += ds; s += tv*td;
-            tv = *v; td = *d; s += tv*td;
-            i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-          } while (k==kk);
-          g[ILV*(kk+ix)] = s;
-        }
-      }
-    }
-    if (SYNC_AFTER && GTH>=32) __syncwarp();
-  }
-
-  if (cn = cf->other_wgpu)
-  { c = cf->start_other_wgpu[th];
-    if (off)
-    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+    for (m = 0; m<4; m++)
+    { ix = (thmod4-m) & 3;
+      c = cf->start_quad_wgpu [(th-ix+GTH) & (GTH-1)];
+      i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
       while (k>=0)
       { int kk = k;
-        net_value s = g[ILV*kk];
-        do
-        { net_param o = off[i];
-          net_value const*restrict v = v0+i;
-          net_value const*restrict d = d0+j;
-          net_value tv, td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; v += vs; d += ds; s += (tv+o)*td;
-          tv = *v; td = *d; s += (tv+o)*td;
-          i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-        } while (k==kk);
-        g[ILV*kk] = s;
-      }
-    }
-    else
-    { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
-      while (k>=0)
-      { int kk = k;
-        net_value s = g[ILV*kk];
+        net_value s = g[ILV*(kk+ix)];
         do
         { net_value const*restrict v = v0+i;
-          net_value const*restrict d = d0+j;
+          net_value const*restrict d = d0+j+ix;
           net_value tv, td;
           tv = *v; td = *d; v += vs; d += ds; s += tv*td;
           tv = *v; td = *d; v += vs; d += ds; s += tv*td;
@@ -3427,8 +2824,29 @@ __device__ static void net_store4_grad2_config
           tv = *v; td = *d; s += tv*td;
           i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
         } while (k==kk);
-        g[ILV*kk] = s;
+        g[ILV*(kk+ix)] = s;
       }
+    }
+    if (SYNC_AFTER && GTH>=32) __syncwarp();
+  }
+
+  if (cn = cf->other_wgpu)
+  { c = cf->start_other_wgpu[th];
+    i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+    while (k>=0)
+    { int kk = k;
+      net_value s = g[ILV*kk];
+      do
+      { net_value const*restrict v = v0+i;
+        net_value const*restrict d = d0+j;
+        net_value tv, td;
+        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+        tv = *v; td = *d; v += vs; d += ds; s += tv*td;
+        tv = *v; td = *d; s += tv*td;
+        i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
+      } while (k==kk);
+      g[ILV*kk] = s;
     }
     if (SYNC_AFTER && GTH>=32) __syncwarp();
   }
@@ -3475,12 +2893,10 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
   if (a->has_io && !p->io.one_or_two_point)
   { if (a->input_config[a->N_layers])
-    { add_grad2_config (g->io, v->i, 0, d->o,
-                        a->input_config[a->N_layers]);
+    { add_grad2_config (g->io, v->i, d->o, a->input_config[a->N_layers]);
     }
     else
-    { add_grad2 (g->io, v->i, 0, a->N_inputs,
-                 d->o, a->N_outputs,
+    { add_grad2 (g->io, v->i, a->N_inputs, d->o, a->N_outputs,
                  a->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
                  sparse);
     }
@@ -3491,12 +2907,11 @@ void STATIC_IF_INCLUDED net_back_add_grad
     if (a->has_ho[l] && !p->ho[l].one_or_two_point)
     { int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
-      { add_grad2_config (g->ho[l], v->h[l], 0,
-                          d->o, a->hidden_config[k]);
+      { add_grad2_config (g->ho[l], v->h[l], d->o, a->hidden_config[k]);
       }
       else
-      { add_grad2 (g->ho[l], v->h[l], 0,
-                a->N_hidden[l], d->o, a->N_outputs, (unsigned short *) 0, 0, 0);
+      { add_grad2 (g->ho[l], v->h[l], a->N_hidden[l], d->o, a->N_outputs,
+                   (unsigned short *) 0, 0, 0);
       }
     }
   }
@@ -3983,14 +3398,11 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
     if (a->has_ih[l] && !p->ih[l].one_or_two_point)
     { if (a->input_config[l])
-      { add_grad2_config (g->ih[l], v->i, 0, dh,
-                          a->input_config[l]);
+      { add_grad2_config (g->ih[l], v->i, dh, a->input_config[l]);
       }
       else
-      { add_grad2 (g->ih[l], v->i, 0, a->N_inputs,
-                   dh, N_hidden,
-                   a->any_omitted[l] ? flgs->omit : 0, 1<<(l+1),
-                   sparse);
+      { add_grad2 (g->ih[l], v->i, a->N_inputs, dh, N_hidden,
+                   a->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), sparse);
       }
     }
 
@@ -4009,12 +3421,11 @@ void STATIC_IF_INCLUDED net_back_add_grad
         gh = g->nsq[nsqi];
       }
       if (cf)
-      { add_grad2_config (gh, v->h[ls], 0, 
-                          dh, cf);
+      { add_grad2_config (gh, v->h[ls], dh, cf);
       }
       else
-      { add_grad2 (gh, v->h[ls], 0,
-          a->N_hidden[ls], dh, N_hidden, (unsigned short *)0, 0, 0);
+      { add_grad2 (gh, v->h[ls], a->N_hidden[ls], dh, N_hidden, 
+                   (unsigned short *)0, 0, 0);
       }
     }
 
@@ -4126,7 +3537,6 @@ __device__ static void store_grad2
   net_param *restrict g,  /* Array of derivatives to store to */
   net_value const*restrict v0,  /* Source unit values, case 0 */
   int vs,                 /* Stride to get to values for following cases */
-  net_param const*restrict off, /* Offsets for source units, 0 if no offsets */
   int nv,                       /* Number of source units */
   net_value const*restrict d0,  /* Derivs with respect to dest units, case 0 */
   int ds,                 /* Stride to get to derivatives for following cases */
@@ -4137,16 +3547,16 @@ __device__ static void store_grad2
 )
 {
   if (GROUP_SIZE>=4 && gsz==4)
-  { net_store4_grad2 (th, g, v0, vs, off, nv, d0, ds, nd, omit, ob, sparse);
+  { net_store4_grad2 (th, g, v0, vs, nv, d0, ds, nd, omit, ob, sparse);
   }
   else if (GROUP_SIZE>=3 && gsz==3)
-  { net_store3_grad2 (th, g, v0, vs, off, nv, d0, ds, nd, omit, ob, sparse);
+  { net_store3_grad2 (th, g, v0, vs, nv, d0, ds, nd, omit, ob, sparse);
   }
   else if (GROUP_SIZE>=2 && gsz==2)
-  { net_store2_grad2 (th, g, v0, vs, off, nv, d0, ds, nd, omit, ob, sparse);
+  { net_store2_grad2 (th, g, v0, vs, nv, d0, ds, nd, omit, ob, sparse);
   }
   else if (gsz==1)
-  { net_store1_grad2 (th, g, v0, off, nv, d0, nd, omit, ob, sparse);
+  { net_store1_grad2 (th, g, v0, nv, d0, nd, omit, ob, sparse);
   }
 
   if (SYNC_AFTER && GTH>=32) __syncwarp();
@@ -4158,23 +3568,22 @@ __device__ static void store_grad2_config
   net_param *restrict g,  /* Array of derivatives to add to */
   net_value const*restrict v0,  /* Source unit values, case 0 */
   int vs,                 /* Stride to get to values for following cases */
-  net_param const*restrict off, /* Offsets for source units, 0 if no offsets */
   net_value const*restrict d0,  /* Derivs with respect to dest units, case 0 */
   int ds,                 /* Stride to get to derivatives for following cases */
   net_config const*restrict cf  /* Configuration for connections and weights */
 )
 {
   if (GROUP_SIZE>=4 && gsz==4)
-  { net_store4_grad2_config (th, g, v0, vs, off, d0, ds, cf);
+  { net_store4_grad2_config (th, g, v0, vs, d0, ds, cf);
   }
   else if (GROUP_SIZE>=3 && gsz==3)
-  { net_store3_grad2_config (th, g, v0, vs, off, d0, ds, cf);
+  { net_store3_grad2_config (th, g, v0, vs, d0, ds, cf);
   }
   else if (GROUP_SIZE>=2 && gsz==2)
-  { net_store2_grad2_config (th, g, v0, vs, off, d0, ds, cf);
+  { net_store2_grad2_config (th, g, v0, vs, d0, ds, cf);
   }
   else if (gsz==1)
-  { net_store1_grad2_config (th, g, v0, off, d0, cf);
+  { net_store1_grad2_config (th, g, v0, d0, cf);
   }
 
   if (SYNC_AFTER && GTH>=32) __syncwarp();
@@ -4215,19 +3624,13 @@ __device__ __forceinline__ static void net_back_grad_gpu
 
   if (A.has_io && !PRIORS.io.one_or_two_point)
   { if (A.input_config[A.N_layers])
-    { store_grad2_config (thrg, gsz, g->io, 
-                          v[0].i, v[1].i-v[0].i,
-                          0, 
-                          d[0].o, d[1].o-d[0].o,
-                          A.input_config[A.N_layers]);
+    { store_grad2_config (thrg, gsz, g->io,  v[0].i, v[1].i-v[0].i,
+                          d[0].o, d[1].o-d[0].o, A.input_config[A.N_layers]);
     }
     else
-    { store_grad2 (thrg, gsz, g->io, 
-                   v[0].i, v[1].i-v[0].i,
-                   0, A.N_inputs,
+    { store_grad2 (thrg, gsz, g->io, v[0].i, v[1].i-v[0].i, A.N_inputs,
                    d[0].o, d[1].o-d[0].o, A.N_outputs,
-                   A.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
-                   sparse);
+                   A.any_omitted[A.N_layers] ? FLGS.omit : 0, 1, sparse);
     }
   }
 
@@ -4240,14 +3643,11 @@ __device__ __forceinline__ static void net_back_grad_gpu
 
       int k = 2*A.N_layers-1-l;
       if (A.hidden_config[k])
-      { store_grad2_config (thrg, gsz, g->ho[l], u0, us, 
-                            0,
-                            d[0].o, A.N_outputs,
+      { store_grad2_config (thrg, gsz, g->ho[l], u0, us, d[0].o, A.N_outputs,
                             A.hidden_config[k]);
       }
       else
-      { store_grad2 (thrg, gsz, g->ho[l], u0, us,
-                     0, A.N_hidden[l], 
+      { store_grad2 (thrg, gsz, g->ho[l], u0, us, A.N_hidden[l], 
                      d[0].o, A.N_outputs, A.N_outputs, 
                      (unsigned short *) 0, 0, 0);
       }
@@ -4506,16 +3906,12 @@ __device__ __forceinline__ static void net_back_grad_gpu
 
     if (A.has_ih[l] && !PRIORS.ih[l].one_or_two_point)
     { if (A.input_config[l])
-      { store_grad2_config (thrg, gsz, g->ih[l], 
-                            v[0].i, v[1].i-v[0].i,
-                            0, 
+      { store_grad2_config (thrg, gsz, g->ih[l], v[0].i, v[1].i-v[0].i,
                             c0, cs, A.input_config[l]);
       }
       else
-      { store_grad2 (thrg, gsz, g->ih[l], 
-                     v[0].i, v[1].i-v[0].i,
-                     0, A.N_inputs,
-                     c0, cs, N_hidden,
+      { store_grad2 (thrg, gsz, g->ih[l], v[0].i, v[1].i-v[0].i,
+                     A.N_inputs, c0, cs, N_hidden,
                      A.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1), sparse);
       }
     }
@@ -4537,12 +3933,10 @@ __device__ __forceinline__ static void net_back_grad_gpu
       net_value *restrict u0 = fw_hidden_loc_grad(&PRE,v,ls,0);
       int us = fw_hidden_stride(&PRE,ls);
       if (cf)
-      { store_grad2_config (thrg, gsz, gh, u0, us, 0,
-                            c0, cs, cf);
+      { store_grad2_config (thrg, gsz, gh, u0, us, c0, cs, cf);
       }
       else
-      { store_grad2 (thrg, gsz, gh, u0, us,
-                     0, A.N_hidden[ls], 
+      { store_grad2 (thrg, gsz, gh, u0, us, A.N_hidden[ls], 
                      c0, cs, N_hidden, (unsigned short *)0, 0, 0);
       }
     }

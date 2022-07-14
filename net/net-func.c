@@ -58,10 +58,8 @@
 
 /* This module calculates the values of the output units in a network, given 
    values for the input units.  The values of hidden units are calculated
-   along the way.  There are facilities for starting the calculation on the 
-   assumption the values are already known up to some layer, as would be 
-   the case if the weights into earlier layers have not changed since the
-   last calculation. 
+   along the way.  Values for input and hidden units with offsets (if they
+   exist) added are also calculated. 
 */
 
 static void bias_values (net_value *restrict, int, net_param const*);
@@ -70,12 +68,11 @@ static void bias_values_config (net_value *restrict, int,
                                 net_param const*, net_config const*);
 
 static void add_connections (net_value *restrict, int, net_value const*,
-                             int, net_param const*, net_param const*,
-                             unsigned short const*, int, int);
+                             int, net_param const*, unsigned short const*,
+                             int, int);
 
 static void add_connections_config (net_value *restrict, int,
-                                    net_value const*,
-                                    net_param const*, net_param const*,
+                                    net_value const*, net_param const*,
                                     net_config const*);
 
 
@@ -126,11 +123,10 @@ void STATIC_IF_INCLUDED net_func
     if (a->has_ih[l])
     { if (a->input_config[l])
       { add_connections_config (vh, N_hidden, v->i, w->ih[l], 
-          0, a->input_config[l]);
+                                a->input_config[l]);
       }
       else
-      { add_connections (vh, N_hidden, v->i, a->N_inputs, 
-          w->ih[l], 0, 
+      { add_connections (vh, N_hidden, v->i, a->N_inputs, w->ih[l],
           a->any_omitted[l] ? flgs->omit : 0, 1<<(l+1), sparse);
       }
     }
@@ -150,12 +146,11 @@ void STATIC_IF_INCLUDED net_func
         wh = w->nsq[nsqi];
       }
       if (cf)         
-      { add_connections_config (vh, N_hidden, v->h[ls], wh,
-          0, cf);
+      { add_connections_config (vh, N_hidden, v->h[ls], wh, cf);
       }
       else
       { add_connections (vh, N_hidden, v->h[ls], a->N_hidden[ls],
-          wh, 0, (unsigned short *) 0, 0, 0);
+                         wh, (unsigned short *) 0, 0, 0);
       }
     }
 
@@ -741,13 +736,11 @@ void STATIC_IF_INCLUDED net_func
   if (a->has_io)
   { if (a->input_config[a->N_layers])
     { add_connections_config (v->o, a->N_outputs, v->i, w->io,
-        0, a->input_config[a->N_layers]);
+                              a->input_config[a->N_layers]);
     }
     else
-    { add_connections (v->o, a->N_outputs, v->i, a->N_inputs,
-                    w->io, 0, 
-                    a->any_omitted[a->N_layers] ? flgs->omit : 0, 1,
-                    sparse);
+    { add_connections (v->o, a->N_outputs, v->i, a->N_inputs, w->io,
+                       a->any_omitted[a->N_layers] ? flgs->omit : 0, 1, sparse);
     }
   }
 
@@ -756,12 +749,11 @@ void STATIC_IF_INCLUDED net_func
     { int k = 2*a->N_layers-1-l;
       if (a->hidden_config[k])
       { add_connections_config (v->o, a->N_outputs, v->h[l], w->ho[l], 
-                         0, a->hidden_config[k]);
+                                a->hidden_config[k]);
       }
       else
       { add_connections (v->o, a->N_outputs, v->h[l], a->N_hidden[l], w->ho[l],
-                         0, (unsigned short *) 0, 0,
-                         0);
+                         (unsigned short *) 0, 0, 0);
       }
     }
   }
@@ -865,16 +857,14 @@ static void bias_values_config
    due to connections from one source layer to the current unit values for
    the destination layer. */
 
-#define ADD_CONNECTIONS(offset,omit,sprs) \
+#define ADD_CONNECTIONS(omit,sprs) \
 do \
 { int i, j; \
-  net_param o; \
   if (nd==1) \
   { net_value sv = 0; \
     for (i = 0; i<ns; i++) \
-    { o = (offset); \
-      if (!(omit)) \
-      { sv += (v[i] + o) * *w; \
+    { if (!(omit)) \
+      { sv += v[i] * *w; \
         w += 1; \
       } \
     } \
@@ -882,9 +872,8 @@ do \
   } \
   else if (sprs) \
   { for (i = 0; i<ns; i++) \
-    { o = (offset); \
-      if (omit) continue; \
-      net_value tv = v[i] + o; \
+    { if (omit) continue; \
+      net_value tv = v[i]; \
       if (tv!=0)  \
       { for (j = 0; j<nd; j++) \
         { s[j] += w[j] * tv; \
@@ -895,9 +884,8 @@ do \
   } \
   else \
   { for (i = 0; i<ns; i++) \
-    { o = (offset); \
-      if (omit) continue; \
-      net_value tv = v[i] + o; \
+    { if (omit) continue; \
+      net_value tv = v[i]; \
       for (j = 0; j<nd; j++) \
       { s[j] += w[j] * tv; \
       } \
@@ -908,7 +896,7 @@ do \
 
 #if FP64 && USE_SIMD_INTRINSICS && __AVX__
 
-#define ADD_CONNECTIONS00(one_more,done,sprs) \
+#define ADD_CONNECTIONS0(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -1008,7 +996,7 @@ do \
 
 #elif FP64 && USE_SIMD_INTRINSICS && __SSE3__
 
-#define ADD_CONNECTIONS00(one_more,done,sprs) \
+#define ADD_CONNECTIONS0(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -1086,7 +1074,7 @@ do \
 
 #elif FP32 && USE_SIMD_INTRINSICS && __AVX__
 
-#define ADD_CONNECTIONS00(one_more,done,sprs) \
+#define ADD_CONNECTIONS0(one_more,done,sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -1209,7 +1197,7 @@ do \
 
 #elif FP32 && USE_SIMD_INTRINSICS && __SSE3__
 
-#define ADD_CONNECTIONS00(one_more,done,sprs) \
+#define ADD_CONNECTIONS0(one_more,done,sprs) \
 do \
 { int i, j; \
   __m128 Z = _mm_setzero_ps(); \
@@ -1338,7 +1326,7 @@ do \
 
 #else
 
-#define ADD_CONNECTIONS00(lab1,lab2,sprs) ADD_CONNECTIONS(0,0,sprs)
+#define ADD_CONNECTIONS0(lab1,lab2,sprs) ADD_CONNECTIONS(0,sprs)
 
 #endif
 
@@ -1348,36 +1336,25 @@ static void add_connections
   net_value const* v,     /* Values for source units */
   int ns,		  /* Number of source units */
   net_param const* w,     /* Connection weights */
-  net_param const* off,   /* Offsets to add to source unit values */
   unsigned short const* omit, /* Omit flags, null if not present/relevant */
   int ob,		  /* Bit to look at in omit flags */
   int sparse		  /* Are input values sparse? */
 )
 {
-  if (sparse && off==0)
+  if (sparse)
   { if (omit==0)
-    { ADD_CONNECTIONS00(one_more1,done1,1);
+    { ADD_CONNECTIONS0(one_more1,done1,1);
     }
     else
-    { ADD_CONNECTIONS(0,(*omit++)&ob,1);
+    { ADD_CONNECTIONS((*omit++)&ob,1);
     }
   }
   else
   { if (omit==0)
-    { if (off==0)
-      { ADD_CONNECTIONS00(one_more2,done2,0);
-      }
-      else
-      { ADD_CONNECTIONS(*off++,0,0);
-      }
+    { ADD_CONNECTIONS0(one_more2,done2,0);
     }
     else
-    { if (off==0)
-      { ADD_CONNECTIONS(0,(*omit++)&ob,0);
-      }
-      else
-      { ADD_CONNECTIONS(*off++,(*omit++)&ob,0);
-      }
+    { ADD_CONNECTIONS((*omit++)&ob,0);
     }
   }
 
@@ -1399,7 +1376,6 @@ static void add_connections_config
   int nd,		  /* Number of destination units, for debug check only*/
   net_value const* v,     /* Values for source units */
   net_param const* w,     /* Connection weights */
-  net_param const* off,   /* Offsets to add to source unit values */
   net_config const* cf    /* Configuration for connections and weights */
 )
 {
@@ -1409,129 +1385,61 @@ static void add_connections_config
   if (CONFIG_OCT_S_8D_8W && (cn = cf->oct_s_8d_8w))
   {
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { j = cn[c].d;
-          __m256d VOI = _mm256_set1_pd (v[cn[c].s] + off[cn[c].s]);
-          __m256d WK = _mm256_loadu_pd(w+k);
-          __m256d WK4 = _mm256_loadu_pd(w+k+4);
-          __m256d SJ = _mm256_loadu_pd(s+j);
-          __m256d SJ4 = _mm256_loadu_pd(s+j+4);
-          _mm256_storeu_pd (s+j, FMA256_pd (VOI, WK, SJ));
-          _mm256_storeu_pd (s+j+4, FMA256_pd (VOI, WK4, SJ4));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { j = cn[c].d;
-          __m256d VOI = _mm256_set1_pd (v[cn[c].s]);
-          __m256d WK = _mm256_loadu_pd(w+k);
-          __m256d WK4 = _mm256_loadu_pd(w+k+4);
-          __m256d SJ = _mm256_loadu_pd(s+j);
-          __m256d SJ4 = _mm256_loadu_pd(s+j+4);
-          _mm256_storeu_pd (s+j, FMA256_pd (VOI, WK, SJ));
-          _mm256_storeu_pd (s+j+4, FMA256_pd (VOI, WK4, SJ4));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { j = cn[c].d;
+        __m256d VOI = _mm256_set1_pd (v[cn[c].s]);
+        __m256d WK = _mm256_loadu_pd(w+k);
+        __m256d WK4 = _mm256_loadu_pd(w+k+4);
+        __m256d SJ = _mm256_loadu_pd(s+j);
+        __m256d SJ4 = _mm256_loadu_pd(s+j+4);
+        _mm256_storeu_pd (s+j, FMA256_pd (VOI, WK, SJ));
+        _mm256_storeu_pd (s+j+4, FMA256_pd (VOI, WK4, SJ4));
       }
     }
 #   elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { j = cn[c].d;
-          __m128d VOI = _mm_set1_pd (v[cn[c].s] + off[cn[c].s]);
-          _mm_storeu_pd (s+j, FMA_pd(VOI, _mm_loadu_pd(w+k), 
-                                          _mm_loadu_pd(s+j)));
-          _mm_storeu_pd (s+j+2, FMA_pd(VOI, _mm_loadu_pd(w+k+2), 
-                                            _mm_loadu_pd(s+j+2)));
-          _mm_storeu_pd (s+j+4, FMA_pd(VOI, _mm_loadu_pd(w+k+4), 
-                                            _mm_loadu_pd(s+j+4)));
-          _mm_storeu_pd (s+j+6, FMA_pd(VOI, _mm_loadu_pd(w+k+6), 
-                                            _mm_loadu_pd(s+j+6)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { j = cn[c].d;
-          __m128d VOI = _mm_set1_pd (v[cn[c].s]);
-          _mm_storeu_pd (s+j, FMA_pd(VOI, _mm_loadu_pd(w+k), 
-                                          _mm_loadu_pd(s+j)));
-          _mm_storeu_pd (s+j+2, FMA_pd(VOI, _mm_loadu_pd(w+k+2),
-                                            _mm_loadu_pd(s+j+2)));
-          _mm_storeu_pd (s+j+4, FMA_pd(VOI, _mm_loadu_pd(w+k+4),
-                                            _mm_loadu_pd(s+j+4)));
-          _mm_storeu_pd (s+j+6, FMA_pd(VOI, _mm_loadu_pd(w+k+6),
-                                            _mm_loadu_pd(s+j+6)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { j = cn[c].d;
+        __m128d VOI = _mm_set1_pd (v[cn[c].s]);
+        _mm_storeu_pd (s+j, FMA_pd(VOI, _mm_loadu_pd(w+k), 
+                                        _mm_loadu_pd(s+j)));
+        _mm_storeu_pd (s+j+2, FMA_pd(VOI, _mm_loadu_pd(w+k+2),
+                                          _mm_loadu_pd(s+j+2)));
+        _mm_storeu_pd (s+j+4, FMA_pd(VOI, _mm_loadu_pd(w+k+4),
+                                          _mm_loadu_pd(s+j+4)));
+        _mm_storeu_pd (s+j+6, FMA_pd(VOI, _mm_loadu_pd(w+k+6),
+                                          _mm_loadu_pd(s+j+6)));
       }
     }
 #   elif FP32 && USE_SIMD_INTRINSICS && __AVX__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { j = cn[c].d;
-          __m256 VOI = _mm256_set1_ps (v[cn[c].s] + off[cn[c].s]);
-          __m256 WK = _mm256_loadu_ps(w+k);
-          _mm256_storeu_ps (s+j, FMA256_ps (VOI, WK, _mm256_loadu_ps(s+j)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { j = cn[c].d;
-          __m256 VOI = _mm256_set1_ps (v[cn[c].s]);
-          __m256 WK = _mm256_loadu_ps(w+k);
-          _mm256_storeu_ps (s+j, FMA256_ps (VOI, WK, _mm256_loadu_ps(s+j)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { j = cn[c].d;
+        __m256 VOI = _mm256_set1_ps (v[cn[c].s]);
+        __m256 WK = _mm256_loadu_ps(w+k);
+        _mm256_storeu_ps (s+j, FMA256_ps (VOI, WK, _mm256_loadu_ps(s+j)));
       }
     }
 #   elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { j = cn[c].d;
-          __m128 VOI = _mm_set1_ps (v[cn[c].s] + off[cn[c].s]);
-          _mm_storeu_ps (s+j, FMA_ps (VOI, _mm_loadu_ps(w+k),
-                                           _mm_loadu_ps(s+j)));
-          _mm_storeu_ps (s+j+4, FMA_ps (VOI, _mm_loadu_ps(w+k+4),
-                                             _mm_loadu_ps(s+j+4)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { j = cn[c].d;
-          __m128 VOI = _mm_set1_ps (v[cn[c].s]);
-          _mm_storeu_ps (s+j, FMA_ps (VOI, _mm_loadu_ps(w+k),
-                                           _mm_loadu_ps(s+j)));
-          _mm_storeu_ps (s+j+4, FMA_ps (VOI, _mm_loadu_ps(w+k+4),
-                                             _mm_loadu_ps(s+j+4)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { j = cn[c].d;
+        __m128 VOI = _mm_set1_ps (v[cn[c].s]);
+        _mm_storeu_ps (s+j, FMA_ps (VOI, _mm_loadu_ps(w+k),
+                                         _mm_loadu_ps(s+j)));
+        _mm_storeu_ps (s+j+4, FMA_ps (VOI, _mm_loadu_ps(w+k+4),
+                                           _mm_loadu_ps(s+j+4)));
       }
     }
 #   else
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { net_value voi = v[cn[c].s] + off[cn[c].s];
-          j = cn[c].d;
-          s[j+0] += voi * w[k+0];
-          s[j+1] += voi * w[k+1];
-          s[j+2] += voi * w[k+2];
-          s[j+3] += voi * w[k+3];
-          s[j+4] += voi * w[k+4];
-          s[j+5] += voi * w[k+5];
-          s[j+6] += voi * w[k+6];
-          s[j+7] += voi * w[k+7];
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { net_value vi = v[cn[c].s];
-          j = cn[c].d; 
-          s[j+0] += vi * w[k+0];
-          s[j+1] += vi * w[k+1];
-          s[j+2] += vi * w[k+2];
-          s[j+3] += vi * w[k+3];
-          s[j+4] += vi * w[k+4];
-          s[j+5] += vi * w[k+5];
-          s[j+6] += vi * w[k+6];
-          s[j+7] += vi * w[k+7];
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { net_value vi = v[cn[c].s];
+        j = cn[c].d; 
+        s[j+0] += vi * w[k+0];
+        s[j+1] += vi * w[k+1];
+        s[j+2] += vi * w[k+2];
+        s[j+3] += vi * w[k+3];
+        s[j+4] += vi * w[k+4];
+        s[j+5] += vi * w[k+5];
+        s[j+6] += vi * w[k+6];
+        s[j+7] += vi * w[k+7];
       }
     }
 #   endif
@@ -1540,83 +1448,39 @@ static void add_connections_config
   if (CONFIG_QUAD_S_4D_4W && (cn = cf->quad_s_4d_4w))
   {
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m256d VOI = _mm256_set1_pd (v[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm256_storeu_pd (s+j, FMA256_pd (VOI, _mm256_loadu_pd(w+k),
-                                                 _mm256_loadu_pd(s+j)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m256d VOI = _mm256_set1_pd (v[cn[c].s]);
-          j = cn[c].d;
-          _mm256_storeu_pd (s+j, FMA256_pd (VOI, _mm256_loadu_pd(w+k),
-                                                 _mm256_loadu_pd(s+j)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { __m256d VOI = _mm256_set1_pd (v[cn[c].s]);
+        j = cn[c].d;
+        _mm256_storeu_pd (s+j, FMA256_pd (VOI, _mm256_loadu_pd(w+k),
+                                               _mm256_loadu_pd(s+j)));
       }
     }
 #   elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128d VOI = _mm_set1_pd (v[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_pd (s+j, FMA_pd(VOI, _mm_loadu_pd(w+k), 
-                                          _mm_loadu_pd(s+j)));
-          _mm_storeu_pd (s+j+2, FMA_pd(VOI, _mm_loadu_pd(w+k+2), 
-                                            _mm_loadu_pd(s+j+2)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128d VOI = _mm_set1_pd (v[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_pd (s+j, FMA_pd(VOI, _mm_loadu_pd(w+k), 
-                                          _mm_loadu_pd(s+j)));
-          _mm_storeu_pd (s+j+2, FMA_pd(VOI, _mm_loadu_pd(w+k+2),
-                                            _mm_loadu_pd(s+j+2)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { __m128d VOI = _mm_set1_pd (v[cn[c].s]);
+        j = cn[c].d;
+        _mm_storeu_pd (s+j, FMA_pd(VOI, _mm_loadu_pd(w+k), 
+                                        _mm_loadu_pd(s+j)));
+        _mm_storeu_pd (s+j+2, FMA_pd(VOI, _mm_loadu_pd(w+k+2),
+                                          _mm_loadu_pd(s+j+2)));
       }
     }
 #   elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128 VOI = _mm_set1_ps (v[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_ps (s+j, FMA_ps (VOI, _mm_loadu_ps(w+k),
-                                           _mm_loadu_ps(s+j)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { __m128 VOI = _mm_set1_ps (v[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_ps (s+j, FMA_ps (VOI, _mm_loadu_ps(w+k),
-                                           _mm_loadu_ps(s+j)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { __m128 VOI = _mm_set1_ps (v[cn[c].s]);
+        j = cn[c].d;
+        _mm_storeu_ps (s+j, FMA_ps (VOI, _mm_loadu_ps(w+k),
+                                         _mm_loadu_ps(s+j)));
       }
     }
 #   else
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { net_value voi = v[cn[c].s] + off[cn[c].s];
-          j = cn[c].d;
-          s[j+0] += voi * w[k+0];
-          s[j+1] += voi * w[k+1];
-          s[j+2] += voi * w[k+2];
-          s[j+3] += voi * w[k+3];
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c++)
-        { net_value vi = v[cn[c].s];
-          j = cn[c].d; 
-          s[j+0] += vi * w[k+0];
-          s[j+1] += vi * w[k+1];
-          s[j+2] += vi * w[k+2];
-          s[j+3] += vi * w[k+3];
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c++)
+      { net_value vi = v[cn[c].s];
+        j = cn[c].d; 
+        s[j+0] += vi * w[k+0];
+        s[j+1] += vi * w[k+1];
+        s[j+2] += vi * w[k+2];
+        s[j+3] += vi * w[k+3];
       }
     }
 #   endif
@@ -1625,232 +1489,124 @@ static void add_connections_config
   if (CONFIG_QUAD_S_4D_4W && MAKE_QUAD_PAIRS && (cn = cf->quad_s_4d_4w_2))
   {
 #   if FP64 && USE_SIMD_INTRINSICS && __AVX__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { __m256d WK = _mm256_loadu_pd(w+k);
-          __m256d VOI;
-          VOI = _mm256_set1_pd (v[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm256_storeu_pd (s+j, FMA256_pd (VOI, WK, _mm256_loadu_pd(s+j)));
-          VOI = _mm256_set1_pd (v[cn[c+1].s] + off[cn[c+1].s]);
-          j = cn[c+1].d;
-          _mm256_storeu_pd (s+j, FMA256_pd (VOI, WK, _mm256_loadu_pd(s+j)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { __m256d WK = _mm256_loadu_pd(w+k);
-          __m256d VOI;
-          VOI = _mm256_set1_pd (v[cn[c].s]);
-          j = cn[c].d;
-          _mm256_storeu_pd (s+j, FMA256_pd (VOI, WK, _mm256_loadu_pd(s+j)));
-          VOI = _mm256_set1_pd (v[cn[c+1].s]);
-          j = cn[c+1].d;
-          _mm256_storeu_pd (s+j, FMA256_pd (VOI, WK, _mm256_loadu_pd(s+j)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+      { __m256d WK = _mm256_loadu_pd(w+k);
+        __m256d VOI;
+        VOI = _mm256_set1_pd (v[cn[c].s]);
+        j = cn[c].d;
+        _mm256_storeu_pd (s+j, FMA256_pd (VOI, WK, _mm256_loadu_pd(s+j)));
+        VOI = _mm256_set1_pd (v[cn[c+1].s]);
+        j = cn[c+1].d;
+        _mm256_storeu_pd (s+j, FMA256_pd (VOI, WK, _mm256_loadu_pd(s+j)));
       }
     }
 #   elif FP64 && USE_SIMD_INTRINSICS && __SSE2__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { __m128d WK = _mm_loadu_pd(w+k), WK2 = _mm_loadu_pd(w+k+2);
-          __m128d VOI;
-          VOI = _mm_set1_pd (v[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_pd (s+j, FMA_pd(VOI, WK, _mm_loadu_pd(s+j)));
-          _mm_storeu_pd (s+j+2, FMA_pd(VOI, WK2, _mm_loadu_pd(s+j+2)));
-          VOI = _mm_set1_pd (v[cn[c+1].s] + off[cn[c+1].s]);
-          j = cn[c+1].d;
-          _mm_storeu_pd (s+j, FMA_pd(VOI, WK, _mm_loadu_pd(s+j)));
-          _mm_storeu_pd (s+j+2, FMA_pd(VOI, WK2, _mm_loadu_pd(s+j+2)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { __m128d WK = _mm_loadu_pd(w+k), WK2 = _mm_loadu_pd(w+k+2);
-          __m128d VOI;
-          VOI = _mm_set1_pd (v[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_pd (s+j, FMA_pd(VOI, WK, _mm_loadu_pd(s+j)));
-          _mm_storeu_pd (s+j+2, FMA_pd(VOI, WK2, _mm_loadu_pd(s+j+2)));
-          VOI = _mm_set1_pd (v[cn[c+1].s]);
-          j = cn[c+1].d;
-          _mm_storeu_pd (s+j, FMA_pd(VOI, WK, _mm_loadu_pd(s+j)));
-          _mm_storeu_pd (s+j+2, FMA_pd(VOI, WK2, _mm_loadu_pd(s+j+2)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+      { __m128d WK = _mm_loadu_pd(w+k), WK2 = _mm_loadu_pd(w+k+2);
+        __m128d VOI;
+        VOI = _mm_set1_pd (v[cn[c].s]);
+        j = cn[c].d;
+        _mm_storeu_pd (s+j, FMA_pd(VOI, WK, _mm_loadu_pd(s+j)));
+        _mm_storeu_pd (s+j+2, FMA_pd(VOI, WK2, _mm_loadu_pd(s+j+2)));
+        VOI = _mm_set1_pd (v[cn[c+1].s]);
+        j = cn[c+1].d;
+        _mm_storeu_pd (s+j, FMA_pd(VOI, WK, _mm_loadu_pd(s+j)));
+        _mm_storeu_pd (s+j+2, FMA_pd(VOI, WK2, _mm_loadu_pd(s+j+2)));
       }
     }
 #   elif FP32 && USE_SIMD_INTRINSICS && __SSE2__
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { __m128 WK = _mm_loadu_ps(w+k);
-          __m128 VOI;
-          VOI = _mm_set1_ps (v[cn[c].s] + off[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_ps (s+j, FMA_ps (VOI, WK, _mm_loadu_ps(s+j)));
-          VOI = _mm_set1_ps (v[cn[c+1].s] + off[cn[c+1].s]);
-          j = cn[c+1].d;
-          _mm_storeu_ps (s+j, FMA_ps (VOI, WK, _mm_loadu_ps(s+j)));
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { __m128 WK = _mm_loadu_ps(w+k);
-          __m128 VOI;
-          VOI = _mm_set1_ps (v[cn[c].s]);
-          j = cn[c].d;
-          _mm_storeu_ps (s+j, FMA_ps (VOI, WK, _mm_loadu_ps(s+j)));
-          VOI = _mm_set1_ps (v[cn[c+1].s]);
-          j = cn[c+1].d;
-          _mm_storeu_ps (s+j, FMA_ps (VOI, WK, _mm_loadu_ps(s+j)));
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+      { __m128 WK = _mm_loadu_ps(w+k);
+        __m128 VOI;
+        VOI = _mm_set1_ps (v[cn[c].s]);
+        j = cn[c].d;
+        _mm_storeu_ps (s+j, FMA_ps (VOI, WK, _mm_loadu_ps(s+j)));
+        VOI = _mm_set1_ps (v[cn[c+1].s]);
+        j = cn[c+1].d;
+        _mm_storeu_ps (s+j, FMA_ps (VOI, WK, _mm_loadu_ps(s+j)));
       }
     }
 #   else
-    { if (off)
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { net_value w0 = w[k+0];
-          net_value w1 = w[k+1];
-          net_value w2 = w[k+2];
-          net_value w3 = w[k+3];
-          net_value voi = v[cn[c].s] + off[cn[c].s];
-          j = cn[c].d;
-          s[j+0] += voi * w0;
-          s[j+1] += voi * w1;
-          s[j+2] += voi * w2;
-          s[j+3] += voi * w3;
-          voi = v[cn[c+1].s] + off[cn[c+1].s];
-          j = cn[c+1].d;
-          s[j+0] += voi * w0;
-          s[j+1] += voi * w1;
-          s[j+2] += voi * w2;
-          s[j+3] += voi * w3;
-        }
-      }
-      else
-      { for (c = 0; (k = cn[c].w) >= 0; c+=2)
-        { net_value w0 = w[k+0];
-          net_value w1 = w[k+1];
-          net_value w2 = w[k+2];
-          net_value w3 = w[k+3];
-          net_value vi = v[cn[c].s];
-          j = cn[c].d; 
-          s[j+0] += vi * w0;
-          s[j+1] += vi * w1;
-          s[j+2] += vi * w2;
-          s[j+3] += vi * w3;
-          vi = v[cn[c+1].s];
-          j = cn[c+1].d; 
-          s[j+0] += vi * w0;
-          s[j+1] += vi * w1;
-          s[j+2] += vi * w2;
-          s[j+3] += vi * w3;
-        }
+    { for (c = 0; (k = cn[c].w) >= 0; c+=2)
+      { net_value w0 = w[k+0];
+        net_value w1 = w[k+1];
+        net_value w2 = w[k+2];
+        net_value w3 = w[k+3];
+        net_value vi = v[cn[c].s];
+        j = cn[c].d; 
+        s[j+0] += vi * w0;
+        s[j+1] += vi * w1;
+        s[j+2] += vi * w2;
+        s[j+3] += vi * w3;
+        vi = v[cn[c+1].s];
+        j = cn[c+1].d; 
+        s[j+0] += vi * w0;
+        s[j+1] += vi * w1;
+        s[j+2] += vi * w2;
+        s[j+3] += vi * w3;
       }
     }
 #   endif
   }
 
   if (CONFIG_SINGLE4 && (cn = cf->single4_s))
-  { 
-    if (off)
-    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_value voi = v[cn[c].s] + off[cn[c].s];
-        j = cn[c].d;
-        s[j] += voi * w[k];
-        j = cn[c+1].d; k = cn[c+1].w; 
-        s[j] += voi * w[k];
-        j = cn[c+2].d; k = cn[c+2].w; 
-        s[j] += voi * w[k];
-        j = cn[c+3].d; k = cn[c+3].w;
-        s[j] += voi * w[k];
-      }
-    }
-    else
-    { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-      { net_value vi = v[cn[c].s];
-        j = cn[c].d; 
-        s[j] += vi * w[k];
-        j = cn[c+1].d; k = cn[c+1].w; 
-        s[j] += vi * w[k];
-        j = cn[c+2].d; k = cn[c+2].w; 
-        s[j] += vi * w[k];
-        j = cn[c+3].d; k = cn[c+3].w;
-        s[j] += vi * w[k];
-      }
+  { for (c = 0; (k = cn[c].w) >= 0; c+=4)
+    { net_value vi = v[cn[c].s];
+      j = cn[c].d; 
+      s[j] += vi * w[k];
+      j = cn[c+1].d; k = cn[c+1].w; 
+      s[j] += vi * w[k];
+      j = cn[c+2].d; k = cn[c+2].w; 
+      s[j] += vi * w[k];
+      j = cn[c+3].d; k = cn[c+3].w;
+      s[j] += vi * w[k];
     }
   }
 
   if (CONFIG_SINGLE4 && (cn = cf->single4_d))
-  {
-    if (off)
+  {  
+#   if FP64 && USE_SIMD_INTRINSICS && __AVX2__ && 0 /* disabled: slower */
+    { __m256i MASK16 = _mm256_set1_epi64x (0xffff);
+      for (c = 0; ; c+=4)
+      { __m256i K = _mm256_loadu_si256 ((__m256i *) &cn[c]);
+        int64_t t = _mm_cvtsi128_si64 (_mm256_castsi256_si128(K));
+        if (t<0)
+        { break; 
+        }
+        __m256i I = _mm256_and_si256 (MASK16, K);
+        K = _mm256_srli_epi64 (K, 32);
+        __m256d VI = _mm256_i64gather_pd (v, I, 8);
+        __m256d WK = _mm256_i64gather_pd (w, K, 8);
+        j = (t >> 16) & 0xffff;
+        __m128d SJ = _mm_load_sd(s+j);
+        __m256d P = _mm256_mul_pd (VI, WK);
+        __m128d S = _mm_add_pd (cast128d(P),
+                                _mm256_extractf128_pd(P,1));
+        _mm_store_sd (s+j, _mm_add_sd (SJ, _mm_hadd_pd(S,S)));
+      }
+    }
+#   else
     { for (c = 0; (k = cn[c].w) >= 0; c+=4)
       { j = cn[c].d;
         net_value sj = s[j];
         i = cn[c].s; 
-        sj += (v[i]+off[i]) * w[k];
+        sj += v[i] * w[k];
         i = cn[c+1].s; k = cn[c+1].w; 
-        sj += (v[i]+off[i]) * w[k];
+        sj += v[i] * w[k];
         i = cn[c+2].s; k = cn[c+2].w; 
-        sj += (v[i]+off[i]) * w[k];
+        sj += v[i] * w[k];
         i = cn[c+3].s; k = cn[c+3].w;
-        sj += (v[i]+off[i]) * w[k];
+        sj += v[i] * w[k];
         s[j] = sj;
       }
     }
-    else
-    { 
-#     if FP64 && USE_SIMD_INTRINSICS && __AVX2__ && 0 /* disabled: slower */
-      { __m256i MASK16 = _mm256_set1_epi64x (0xffff);
-        for (c = 0; ; c+=4)
-        { __m256i K = _mm256_loadu_si256 ((__m256i *) &cn[c]);
-          int64_t t = _mm_cvtsi128_si64 (_mm256_castsi256_si128(K));
-          if (t<0)
-          { break; 
-          }
-          __m256i I = _mm256_and_si256 (MASK16, K);
-          K = _mm256_srli_epi64 (K, 32);
-          __m256d VI = _mm256_i64gather_pd (v, I, 8);
-          __m256d WK = _mm256_i64gather_pd (w, K, 8);
-          j = (t >> 16) & 0xffff;
-          __m128d SJ = _mm_load_sd(s+j);
-          __m256d P = _mm256_mul_pd (VI, WK);
-          __m128d S = _mm_add_pd (cast128d(P),
-                                  _mm256_extractf128_pd(P,1));
-          _mm_store_sd (s+j, _mm_add_sd (SJ, _mm_hadd_pd(S,S)));
-        }
-      }
-#     else
-      { for (c = 0; (k = cn[c].w) >= 0; c+=4)
-        { j = cn[c].d;
-          net_value sj = s[j];
-          i = cn[c].s; 
-          sj += v[i] * w[k];
-          i = cn[c+1].s; k = cn[c+1].w; 
-          sj += v[i] * w[k];
-          i = cn[c+2].s; k = cn[c+2].w; 
-          sj += v[i] * w[k];
-          i = cn[c+3].s; k = cn[c+3].w;
-          sj += v[i] * w[k];
-          s[j] = sj;
-        }
-      }
-#     endif
-    }
+#   endif
   }
 
   if (cn = CONFIG_ORIGINAL ? cf->conn : cf->single)
-  { if (off)
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { i = cn[c].s; j = cn[c].d;
-        s[j] += (v[i]+off[i]) * w[k];
-      }
-    }
-    else
-    { for (c = 0; (k = cn[c].w) >= 0; c++)
-      { i = cn[c].s; j = cn[c].d;
-        s[j] += v[i] * w[k];
-      }
+  { for (c = 0; (k = cn[c].w) >= 0; c++)
+    { i = cn[c].s; j = cn[c].d;
+      s[j] += v[i] * w[k];
     }
   }
 
@@ -1875,12 +1631,11 @@ __device__ static void bias_values_config_gpu (int, net_value *restrict, int,
                                         unsigned);
 
 __device__ static void add_connections_gpu (int, net_value *restrict, int, 
-                      net_value const*, int, net_param const*, net_param const*,
+                      net_value const*, int, net_param const*,
                       unsigned short const*, int, int, unsigned);
 
 __device__ static void add_connections_config_gpu (int, net_value *restrict, 
-                                    net_value const*,
-                                    net_param const*, net_param const*,
+                                    net_value const*, net_param const*, 
                                     net_config const*, unsigned);
 
 
@@ -1969,13 +1724,12 @@ __device__ __forceinline__ static void net_func_gpu
     if (A.has_ih[l])
     { if (A.input_config[l])
       { add_connections_config_gpu (th, vh, v->i, W.ih[l], 
-          0, A.input_config[l], syncmask);
+                                    A.input_config[l], syncmask);
       }
       else
-      { add_connections_gpu (th, vh, N_hidden, v->i, A.N_inputs, 
-          W.ih[l], 0, 
-          A.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1), 
-          sparse, syncmask);
+      { add_connections_gpu (th, vh, N_hidden, v->i, A.N_inputs, W.ih[l], 
+                             A.any_omitted[l] ? FLGS.omit : 0, 1<<(l+1), 
+                             sparse, syncmask);
       }
     }
 
@@ -1995,12 +1749,11 @@ __device__ __forceinline__ static void net_func_gpu
       }
       net_value *vhs = fw_hidden_loc(&PRE,v,ls);
       if (cf)
-      { add_connections_config_gpu (th, vh, vhs, wh,
-          0, cf, syncmask);
+      { add_connections_config_gpu (th, vh, vhs, wh, cf, syncmask);
       }
       else
       { add_connections_gpu (th, vh, N_hidden, vhs, A.N_hidden[ls], wh,
-          0, (unsigned short *) 0, 0, 0, syncmask);
+                             (unsigned short *) 0, 0, 0, syncmask);
       }
     }
 
@@ -2133,12 +1886,11 @@ __device__ __forceinline__ static void net_func_gpu
   if (A.has_io)
   { if (A.input_config[A.N_layers])
     { add_connections_config_gpu (th, v->o, v->i, W.io,
-        0, A.input_config[A.N_layers], syncmask);
+                                  A.input_config[A.N_layers], syncmask);
     }
     else
     { add_connections_gpu (th, v->o, A.N_outputs, v->i, A.N_inputs,
-                    W.io, 0, 
-                    A.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
+                    W.io, A.any_omitted[A.N_layers] ? FLGS.omit : 0, 1,
                     sparse, syncmask);
     }
   }
@@ -2149,13 +1901,11 @@ __device__ __forceinline__ static void net_func_gpu
       int k = 2*A.N_layers-1-l;
       if (A.hidden_config[k])
       { add_connections_config_gpu (th, v->o, vhp, W.ho[l], 
-                         0, A.hidden_config[k],
-                         syncmask);
+                                    A.hidden_config[k], syncmask);
       }
       else
       { add_connections_gpu (th, v->o, A.N_outputs, vhp, A.N_hidden[l], 
-                             W.ho[l], 0, 
-                             (unsigned short *) 0, 0, 0, syncmask);
+                             W.ho[l], (unsigned short *) 0, 0, 0, syncmask);
       }
     }
   }
@@ -2302,24 +2052,17 @@ __device__ static void bias_values_config_gpu
 
 /* ADD CONTRIBUTION FROM ONE GROUP OF CONNECTIONS.  Adds the weighted input
    due to connections from one source layer to the current unit values for
-   the destination layer.  Note that off and sprs will be constants, so
-   compiler should eliminate much of any particular invokation as dead code. */
+   the destination layer.  Note that sprs will be a constant, so compiler 
+   should eliminate some of any particular invokation as dead code. */
 
-#define ADD_CONNECTIONS_GPU(off,sprs) \
+#define ADD_CONNECTIONS_GPU(sprs) \
 do \
 { int i; \
   if (nd==1) \
   { if (th==0) \
     { net_value sv = 0; \
-      if (off) \
-      { for (i = 0; i<ns; i++) \
-        { sv += (v[i] + off[i]) * w[i]; \
-        } \
-      } \
-      else \
-      { for (i = 0; i<ns; i++) \
-        { sv += v[i] * w[i]; \
-        } \
+      for (i = 0; i<ns; i++) \
+      { sv += v[i] * w[i]; \
       } \
       s[0] += sv; \
     } \
@@ -2328,7 +2071,7 @@ do \
   else if (nd>4 /* adjustable */) \
   { if (sprs) \
     { for (i = 0; i<ns; i++) \
-      { net_value tv = off ? v[i] + off[i] : v[i]; \
+      { net_value tv = v[i]; \
         if (tv!=0) \
         { int j; \
           for (j = th; j<nd; j+=NTH) \
@@ -2342,10 +2085,10 @@ do \
     else \
     { i = 3; \
       while (i<ns) \
-      { net_value tv0 = off ? v[i-3] + off[i-3] : v[i-3]; \
-        net_value tv1 = off ? v[i-2] + off[i-2] : v[i-2]; \
-        net_value tv2 = off ? v[i-1] + off[i-1] : v[i-1]; \
-        net_value tv3 = off ? v[i] + off[i] : v[i]; \
+      { net_value tv0 = v[i-3]; \
+        net_value tv1 = v[i-2]; \
+        net_value tv2 = v[i-1]; \
+        net_value tv3 = v[i]; \
         int j = th; \
         while (j<nd) \
         { net_value r = s[j]; \
@@ -2363,8 +2106,8 @@ do \
       } \
       i -= 2; \
       if (i<ns) \
-      { net_value tv0 = off ? v[i-1] + off[i-1] : v[i-1]; \
-        net_value tv1 = off ? v[i] + off[i] : v[i]; \
+      { net_value tv0 = v[i-1]; \
+        net_value tv1 = v[i]; \
         int j = th; \
         while (j<nd) \
         { net_value r = s[j]; \
@@ -2379,7 +2122,7 @@ do \
         i += 2; \
       } \
       if (i<=ns) \
-      { net_value tv = off ? v[i-1] + off[i-1] : v[i-1]; \
+      { net_value tv = v[i-1]; \
         int j = th; \
         while (j<nd) \
         { s[j] += w[j] * tv; \
@@ -2394,17 +2137,9 @@ do \
     for (j = th; j<nd; j+=NTH) \
     { net_value sv = s[j]; \
       net_param const* wj = w+j; \
-      if (off) \
-      { for (i = 0; i<ns; i++) \
-        { sv += (v[i] + off[i]) * *wj; \
-          wj += nd; \
-        } \
-      } \
-      else \
-      { for (i = 0; i<ns; i++) \
-        { sv += v[i] * *wj; \
-          wj += nd; \
-        } \
+      for (i = 0; i<ns; i++) \
+      { sv += v[i] * *wj; \
+        wj += nd; \
       } \
       s[j] = sv; \
     } \
@@ -2412,7 +2147,7 @@ do \
   } \
 } while (0)
 
-#define ADD_CONNECTIONS_OMIT_GPU(off,sprs) \
+#define ADD_CONNECTIONS_OMIT_GPU(sprs) \
 do \
 { int i, j; \
   if (nd==1) \
@@ -2420,7 +2155,7 @@ do \
     { net_value sv = 0; \
       for (i = 0; i<ns; i++) \
       { if (omit[i]&ob) continue; \
-        sv += off ? (v[i] + off[i]) * *w : v[i] * *w; \
+        sv += v[i] * *w; \
         w += 1; \
       } \
       s[0] += sv; \
@@ -2430,7 +2165,7 @@ do \
   else if (sprs && nd>4 /* adjustable */) \
   { for (i = 0; i<ns; i++) \
     { if (omit[i]&ob) continue; \
-      net_value tv = off ? v[i] + off[i] : v[i]; \
+      net_value tv = v[i]; \
       if (tv!=0)  \
       { for (j = th; j<nd; j+=NTH) \
         { s[j] += w[j] * tv; \
@@ -2451,7 +2186,7 @@ do \
           k += 1; \
         } \
         if (!(omit[i]&ob)) \
-        { sv += off ? (v[i] + off[i]) * *wj : v[i] * *wj; \
+        { sv += v[i] * *wj; \
         } \
       } \
       s[j] = sv; \
@@ -2471,7 +2206,6 @@ __device__ static void add_connections_gpu
 # else
   net_param const* w,     /* Connection weights */
 # endif
-  net_param const* off,   /* Offsets to add to source unit values */
   unsigned short const* omit, /* Omit flags, null if not present/relevant */
   int ob,		  /* Bit to look at in omit flags */
   int sparse,             /* Might source unit values often be zero? */
@@ -2483,30 +2217,20 @@ __device__ static void add_connections_gpu
   net_param const* w = &dev_param_block [w0 - dev_param_block];
 # endif
 
-  if (sparse && off==0)
+  if (sparse)
   { if (omit==0)
-    { ADD_CONNECTIONS_GPU(((char*)0),1);
+    { ADD_CONNECTIONS_GPU(1);
     }
     else
-    { ADD_CONNECTIONS_OMIT_GPU(((char*)0),1);
+    { ADD_CONNECTIONS_OMIT_GPU(1);
     }
   }
   else
   { if (omit==0)
-    { if (off==0)
-      { ADD_CONNECTIONS_GPU(((char*)0),0);
-      }
-      else
-      { ADD_CONNECTIONS_GPU(off,0);
-      }
+    { ADD_CONNECTIONS_GPU(0);
     }
     else
-    { if (off==0)
-      { ADD_CONNECTIONS_OMIT_GPU(((char*)0),0);
-      }
-      else
-      { ADD_CONNECTIONS_OMIT_GPU(off,0);
-      }
+    { ADD_CONNECTIONS_OMIT_GPU(0);
     }
   }
 }
@@ -2525,7 +2249,6 @@ __device__ static void add_connections_config_gpu
 # else
   net_param const* w,     /* Connection weights */
 # endif
-  net_param const* off,   /* Offsets to add to source unit values */
   net_config const* cf,   /* Configuration for connections and weights */
   unsigned syncmask       /* Mask of active threads */
 )
@@ -2546,7 +2269,6 @@ __device__ static void add_connections_config_gpu
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
         vi = v[i];
-        if (off) vi += off[i];
         if (NTH==1)
         { s[j] += vi * w[k];
           s[j+1] += vi * w[k+1];
@@ -2587,7 +2309,6 @@ __device__ static void add_connections_config_gpu
       { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
         if (k<0) break;
         vi = v[i];
-        if (off) vi += off[i];
         if (NTH==1)
         { s[j+0] += vi * w[k+0];
           s[j+1] += vi * w[k+1];
@@ -2616,9 +2337,7 @@ __device__ static void add_connections_config_gpu
     for (;;)
     { i = cn[c].s; j = cn[c].d; k = cn[c].w; c += 1;
       if (k<0) break;
-      vi = v[i];
-      if (off) vi += off[i];
-      s[j] += vi * w[k];
+      s[j] += v[i] * w[k];
     }
     if (SYNC_AFTER) __syncwarp(syncmask);
   }

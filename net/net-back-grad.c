@@ -3544,7 +3544,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
       }
       else if (TRANS_WEIGHTS(N_hidden,a->N_outputs))
       { add_connections (dh, N_hidden, d->o, a->N_outputs, params_trans.ho[l],
-                         (net_param const*) 0, (unsigned short *) 0, 0, 0);
+                         (unsigned short *) 0, 0, 0);
       }
       else
       { sum_derivatives (d->o, a->N_outputs, dh, N_hidden,
@@ -3583,7 +3583,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
       }
       else if (TRANS_WEIGHTS(N_hidden,a->N_hidden[ld]))
       { add_connections (dh, N_hidden, dhd, a->N_hidden[ld], wht,
-                         (net_param const*) 0, (unsigned short *) 0, 0, 0);
+                         (unsigned short *) 0, 0, 0);
       }
       else
       { sum_derivatives (dhd, a->N_hidden[ld], dh, N_hidden,
@@ -4325,8 +4325,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
       }
       else if (TRANS_WEIGHTS(N_hidden,A.N_outputs))
       { add_connections_gpu (thrb, dh, N_hidden, dth->o, A.N_outputs, WT.ho[l],
-                             (net_param const*) 0, (unsigned short *) 0, 0, 0,
-                             syncmask);
+                             (unsigned short *) 0, 0, 0, syncmask);
       }
       else
       { sum_derivatives_gpu 
@@ -4366,8 +4365,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
       }
       else if (TRANS_WEIGHTS(N_hidden,A.N_hidden[ld]))
       { add_connections_gpu (thrb, dh, N_hidden, dhd, A.N_hidden[ld], wht,
-                             (net_param const*) 0, (unsigned short *) 0, 0, 0,
-                             syncmask);
+                             (unsigned short *) 0, 0, 0, syncmask);
       }
       else
       { sum_derivatives_gpu (thrb, dhd, A.N_hidden[ld], dh, N_hidden,

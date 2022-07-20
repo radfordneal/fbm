@@ -3685,7 +3685,8 @@ void mc_app_stepsizes
      'typical' value structre.  This is done by a fake forward pass
      (just one, not one for each training case), that does not use any
      actual parameter values, but may use hyperparameter values, and
-     input values. */
+     input values.  Note:  Here, offsets are added explicitly, not in 
+     'h' values. */
 
   nsqi = 0;
   for (l = 0; l<arch->N_layers; l++)
@@ -3693,6 +3694,7 @@ void mc_app_stepsizes
     int N_hidden = arch->N_hidden[l];
     net_value *typl = typical.h[l];
     double alpha, var_adj;
+    net_value vo;  /* typical sq value of incoming unit, with sq offset */
 
     if (TYPICAL_VALUES_ALL_ONE || N_train==0)
     { for (j = 0; j<N_hidden; j++)
@@ -3726,7 +3728,9 @@ void mc_app_stepsizes
         { for (k = 0; k<arch->input_config[l]->N_conn; k++)
           { i = arch->input_config[l]->conn[k].s;
             j = arch->input_config[l]->conn[k].d;
-            typl[j] += var_adj * (train_sumsq[i]/N_train)*sq(*sigmas.ih_cm[l]);
+            vo = train_sumsq[i]/N_train;
+            if (arch->has_ti) vo += sq(*sigmas.ti_cm);
+            typl[j] += var_adj * vo * sq(*sigmas.ih_cm[l]);
           }
         }
         else if (arch->any_omitted[l])
@@ -3735,14 +3739,18 @@ void mc_app_stepsizes
             { if (flgs->omit[i] & (1<<(l+1)))
               { continue;
               }
-              typl[j] += var_adj * (train_sumsq[i]/N_train)*sq(sigmas.ih[l][i]);
+              vo = train_sumsq[i]/N_train;
+              if (arch->has_ti) vo += sq(*sigmas.ti_cm);
+              typl[j] += var_adj * vo * sq(sigmas.ih[l][i]);
             }
           }
         }
         else
         { for (j = 0; j<N_hidden; j++)
           { for (i = 0; i<arch->N_inputs; i++)
-            { typl[j] += var_adj * (train_sumsq[i]/N_train)*sq(sigmas.ih[l][i]);
+            { vo = train_sumsq[i]/N_train;
+              if (arch->has_ti) vo += sq(*sigmas.ti_cm);
+              typl[j] += var_adj * vo * sq(sigmas.ih[l][i]);
             }
           }
         }
@@ -3756,13 +3764,17 @@ void mc_app_stepsizes
           { for (k = 0; k<arch->nonseq_config[nsqi]->N_conn; k++)
             { i = arch->nonseq_config[nsqi]->conn[k].s;
               j = arch->nonseq_config[nsqi]->conn[k].d;
-              typl[j] += var_adj * typical.h[ls][i] * sq(*sigmas.nsq_cm[nsqi]);
+              vo = typical.h[ls][i];
+              if (arch->has_th[l]) vo += sq(*sigmas.th_cm[ls]);
+              typl[j] += var_adj * vo * sq(*sigmas.nsq_cm[nsqi]);
             }
           }
           else
           { for (j = 0; j<N_hidden; j++)
             { for (i = 0; i<arch->N_hidden[ls]; i++)
-              { typl[j] += var_adj * typical.h[ls][i] * sq(sigmas.nsq[nsqi][i]);
+              { vo = typical.h[ls][i];
+                if (arch->has_th[l]) vo += sq(*sigmas.th_cm[ls]);
+                typl[j] += var_adj * vo * sq(sigmas.nsq[nsqi][i]);
               }
             }
           }
@@ -3776,13 +3788,17 @@ void mc_app_stepsizes
         { for (k = 0; k<arch->hidden_config[l]->N_conn; k++)
           { i = arch->hidden_config[l]->conn[k].s;
             j = arch->hidden_config[l]->conn[k].d;
-            typl[j] += var_adj * typical.h[l-1][i] * sq(*sigmas.hh_cm[l-1]);
+            vo = typical.h[l-1][i];
+            if (arch->has_th[l-1]) vo += sq(*sigmas.th_cm[l-1]);
+            typl[j] += var_adj * vo * sq(*sigmas.hh_cm[l-1]);
           }
         }
         else
         { for (j = 0; j<N_hidden; j++)
           { for (i = 0; i<arch->N_hidden[l-1]; i++)
-            { typl[j] += var_adj * typical.h[l-1][i] * sq(sigmas.hh[l-1][i]);
+            { vo = typical.h[l-1][i];
+              if (arch->has_th[l-1]) vo += sq(*sigmas.th_cm[l-1]);
+              typl[j] += var_adj * vo * sq(sigmas.hh[l-1][i]);
             }
           }
         }

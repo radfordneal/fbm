@@ -44,6 +44,23 @@ Log file: log  Index: 0  Delta: 0.001000  Energy: 61.86
 
 Largest absolute log ratio: 0.0000
 
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.001000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +1.10940   +6.1457e+00  +6.1463e+00     +1.29624
+     1   +1.10940   +9.5431e+00  +9.5441e+00     +0.97542
+     2   +2.00000   -2.2512e-01  -2.2488e-01     +2.00000
+     3   +1.10940   +6.5279e-01  +6.5306e-01     +1.92593
+     4   +0.89443   +3.5697e+00  +3.5700e+00     +1.74129
+     5   +3.00000   -1.9853e+00  -1.9852e+00     +2.69663
+     6   +3.00000   -8.8597e+00  -8.8590e+00     +1.15693
+     7   +3.00000   +3.4655e+00  +3.4658e+00     +2.12397
+     8   +3.00000   -1.9464e+01  -1.9461e+01     +0.53974
+
  
 --- B
  
@@ -79,6 +96,17 @@ Log file: log  Index: 0  Delta: 0.001000  Energy: 4.15
      2   +3.00   +2.0002e-04  +1.9998e-04   +4.0000e-01  +4.0000e-01     0.0000
 
 Largest absolute log ratio: 0.0000
+
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.001000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +2.91043   +4.7939e-01  +4.7950e-01     +2.96681
+     1   +1.14939   +4.7484e-01  +4.7516e-01     +1.78885
+     2   +4.85071   +3.9990e-01  +4.0010e-01     +2.23607
 
  +1.000000e-01 +4.000000e-01 +7.200000e+00
  4.00000000e-01 
@@ -117,6 +145,17 @@ Log file: log  Index: 0  Delta: 0.001000  Energy: 4.14
      2   +3.00   +1.9687e-04  +1.9682e-04   +3.9368e-01  +3.9368e-01     0.0000
 
 Largest absolute log ratio: 0.0000
+
+
+Stepsizes selected by application and from second derivatives
+
+Log file: log  Index: 0  Delta: 0.001000
+
+  Coord  Stepsize   Back. Grad.  Forw. Grad.   Stepsize
+
+     0   +2.91043   +4.7391e-01  +4.7402e-01     +3.00559
+     1   +1.14939   +4.6983e-01  +4.7014e-01     +1.78885
+     2   +4.85071   +3.9359e-01  +3.9378e-01     +2.25110
 
  +1.000000e-01 +3.799490e-01 +7.139847e+00
  3.79948962e-01 

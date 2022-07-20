@@ -903,10 +903,11 @@ approximating (roughly) the mean over training cases.
 The typical squared value for a hidden unit with the identity
 activation function is found from the sum of the previously-estimated
 typical squared values of the units connecting to this unit (one for a
-bias connection) multiplied by the prior variance of the weight (or
-bias) on that connection, as given by the controlling hyperparameter.
-(For parameters with t distributions, the variance is capped at what
-it would be if the degrees of freedom were three.)
+bias connection), with the prior variance of offsets added (if
+present), multiplied by the prior variance of the weight (or bias) on
+that connection, as given by the controlling hyperparameter.  (For
+parameters with t distributions, the variance is capped at what it
+would be if the degrees of freedom were three.)
 
 For a layer of tanh hidden units, the typical squared value for the
 unit's input found in this way is reduced to one if it exceeds one,

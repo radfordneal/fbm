@@ -41,7 +41,8 @@ typedef struct
 { int scale;		/* Scale width according to, eg, size of source layer?*/
   int one_or_two_point;	/* 0 = final distribution is Gaussian,
                            1 = distribution concentrated on 1 point, 
-                           2 = distribution concentrated on 2 points */
+                           2 = distribution concentrated on 2 points
+                           3 = distribution concentrated on 1 point, negative */
   double width;		/* Value used to determine top-level mean precision */
   double alpha[Max_alphas]; /* Shape parameters down the hierarchy */
 } prior_spec;

@@ -28,7 +28,7 @@ are similar, but go down only two levels.
 
 These priors are specified using the following syntax:
  
-  [x]Width[:[Alpha-group][:[Alpha-sub-group][:[Alpha-parameter]]]][!|!!]
+  [x]Width[:[Alpha-group][:[Alpha-sub-group][:[Alpha-parameter]]]][!|!-|!!]
 
 The Width part of the specification is used to specify the mean of the
 precision at the top level, as described below.  The Alpha parts gives
@@ -65,11 +65,13 @@ Alpha-parameter are finite).  For Alpha >= 2, convergence is to a
 Gaussian process, for Alpha < 2, to a stable process of index Alpha.
 
 If the prior specification ends with "!", then rather than being
-Gaussian, the lowest-level distribution is concentrated on the single
-point equal to the standard deviation.  If the prior specification
-ends with "!!", the lowest-level distribution is concentrated on the
-two points equal to plus or minus the standard deviation.  (Note that
-the shell may interpret "!!", so you may have to write it as "\!!".)
+Gaussian, the lowest-level distribution is concentrated on a single
+point equal to the standard deviation; if it ends with "!-", it is
+concentrated on a single point equal to minus the standard deviation.
+If the prior specification ends with "!!", the lowest-level
+distribution is concentrated on the two points equal to plus or minus
+the standard deviation.  (Note that the shell may interpret "!!" or
+"!-", so you may have to write something like "\!!".)
 
 These specifications are useful for debugging, as they make it easy to
 see whether each parameter was derived from the correct

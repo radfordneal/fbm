@@ -242,6 +242,7 @@ static void pick_unit_params
     { unit_sigma = prior_pick_sigma (*sd_cm, pr.alpha[1]);
       *wt = unit_sigma * (pr.one_or_two_point==1 ? 1 
                            : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
+                           : pr.one_or_two_point==3 ? -1
                            : rand_gaussian());
       if (adj!=0) 
       { *wt *= adj[i];
@@ -287,6 +288,7 @@ static void pick_unit_params_config
     { unit_sigma = prior_pick_sigma (*sd_cm, pr.alpha[1]);
       *wt = unit_sigma * (pr.one_or_two_point==1 ? 1 
                            : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
+                           : pr.one_or_two_point==3 ? -1
                            : rand_gaussian());
     }
     else if (param_opt==0)
@@ -340,6 +342,7 @@ static void pick_weights
       { weight_sigma = prior_pick_sigma (sd[i], pr.alpha[2]);
         *wt = weight_sigma * (pr.one_or_two_point==1 ? 1 
                                : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
+                               : pr.one_or_two_point==3 ? -1
                                : rand_gaussian());
         if (adj!=0) 
         { *wt *= adj[j];
@@ -389,6 +392,7 @@ static void pick_weights_config
     { weight_sigma = prior_pick_sigma (*sd_cm, pr.alpha[2]);
       *wt = weight_sigma * (pr.one_or_two_point==1 ? 1 
                              : pr.one_or_two_point==2 ? 2*rand_int(2)-1 
+                             : pr.one_or_two_point==3 ? -1
                              : rand_gaussian());
     }
     else if (param_opt==0)

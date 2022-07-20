@@ -34,7 +34,8 @@ int prior_parse
   int i, l;
 
   l = strlen(s);
-  pr->one_or_two_point = l>2 && s[l-1]=='!' && s[l-2]=='!' ? 2
+  pr->one_or_two_point = l>2 && s[l-1]=='-' && s[l-2]=='!' ? 3
+                       : l>2 && s[l-1]=='!' && s[l-2]=='!' ? 2
                        : l>1 && s[l-1]=='!' ? 1
                        : 0;
   pr->scale = 0;
@@ -84,7 +85,8 @@ char *prior_show
 
   for (i = Max_alphas-1; i>=0 && pr.alpha[i]==0; i--) ;
 
-  strcpy(s2, pr.one_or_two_point==2 ? "!!" : pr.one_or_two_point==1 ? "!" : "");
+  strcpy(s2, pr.one_or_two_point==3 ? "!-" : pr.one_or_two_point==2 ? "!!" 
+              : pr.one_or_two_point==1 ? "!" : "");
 
   for ( ; i>=0; i--)
   {

@@ -12,12 +12,13 @@ None yet.
 Feature changes in the version:
 
 1) Priors for groups of parameters in network models can now specify
-   that the parameter is fixed at the sigma value, or at plus or minus
-   the sigma value, by appending "!" or "!!" to the prior
-   specification.  (The latter option was available before with "!",
-   in a limited way.)  Initialization respects such priors, and
-   stepsizes for such parameters are forced to zero, so that MCMC
-   operations will not set them to values contrary to their prior.
+   that the parameter is fixed at the sigma value, or at minus the
+   sigma value, or at plus or minus the sigma value, by appending "!",
+   "!-", or "!!" to the prior specification.  (The latter option was
+   available before with "!", in a limited way.)  Initialization
+   respects such priors, and stepsizes for such parameters are forced
+   to zero, so that MCMC operations will not set them to values
+   contrary to their prior.
 
    The "!" option is useful for setting up average pooling layers, for
    which the weights between the layers should be fixed.
@@ -99,6 +100,8 @@ Bug fixes.
 
 2) Fixed overflow problem when recording compute time.  Should now be
    OK for runs of no more than 24.85 days.
+
+3) Fixed some issues with the stepsize heuristic.
 
 
 Known bugs and other deficiencies.

@@ -666,7 +666,7 @@ void STATIC_IF_INCLUDED net_func
     { /* nothing to do */
     }
 
-    else  /* Normalize layer */
+    else if (a->layer_type[l]==Normalize_type)
     { int cc = a->N_channels[l];
       int c = cc>0 ? cc : N_hidden/(-cc);  /* number of groups */
       int cn = N_hidden / c;               /* number of units in a group */
@@ -699,6 +699,53 @@ void STATIC_IF_INCLUDED net_func
           }
         }
       }
+    }
+
+    else if (a->layer_type[l]==Softmax_type)
+    { int cc = a->N_channels[l];
+      int c = cc>0 ? cc : N_hidden/(-cc);  /* number of groups */
+      int cn = N_hidden / c;               /* number of units in a group */
+      int k;
+      for (k = 0; k<c; k++)
+      { net_value s = 0;
+        if (cc>0)  /* normalize%... */
+        { net_value m = vh[k];
+          for (j = k; j<N_hidden; j+=c)
+          { if (vh[j]>m) m = vh[j];
+          }
+          for (j = k; j<N_hidden; j+=c)
+          { vh[j] = prec_exp(vh[j]-m);
+            s += vh[j];
+          }
+        }
+        else  /* normalize/... */
+        { int kk = cn*k;
+          net_value m = vh[kk];
+          for (j = 0; j<cn; j++)
+          { if (vh[kk+j]>m) m = vh[j];
+          }
+          for (j = 0; j<cn; j++)
+          { vh[kk+j] = prec_exp(vh[kk+j]-m);
+            s += vh[kk+j];
+          }
+        }
+        s = 1/s;
+        if (cc>0)  /* softmax%... */
+        { for (j = k; j<N_hidden; j+=c)
+          { vh[j] *= s;
+          }
+        }
+        else  /* softmax/... */
+        { int kk = cn*k;
+          for (j = 0; j<cn; j++)
+          { vh[kk+j] *= s;
+          }
+        }
+      }
+    }
+ 
+    else
+    { abort();
     }
 
     /* Compute hidden unit values with offsets added, if required. */

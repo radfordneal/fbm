@@ -174,29 +174,33 @@ omitted for the first hidden layer; terms involving other pairs of
 layers will also be omitted when those connections are absent from the
 architecture.
 
-The following activation functions are supported:\vspace{-22pt}
+The following activation functions of this form are supported:\vspace{-24pt}
 \begin{quotation}\noindent
 \begin{tabbing}
 {\bf tanh:}\ \ \ \ \ \ \ \= $a(u)\ =\ \tanh(u)$\\[3pt]
 {\bf softplus:}\> $a(u)\ =\ \log(1+\exp(u))$\\[3pt]
 {\bf softplus0:}\> $a(u)\ =\ \log(1+\exp(u))\ -\ \log(2)$\\[3pt]
-{\bf identity:}\> $a(u)\ =\ u$\vspace{-5pt}
-\end{tabbing}
+{\bf identity:}\> $a(u)\ =\ u$
+\end{tabbing}\vspace*{-12pt}
 \end{quotation}
-
 Alternatively, a layer, $\ell$, may compute its values, $v^{\ell}_i$
 from its summed inputs, $u^{\ell}_i$, in a manner that does not
 decompose into computation of $v^{\ell}_i$ from $u^{\ell}_i$
-separately for each $i$.  Currently, the only computation of this
-sort is normalization, defined by\vspace{-5pt}
+separately for each $i$, as is the case for \textbf{softmax} and 
+\textbf{normalization} layers.  The softmax computation is\vspace{-5pt}
+\beq
+  v^{\ell}_i = \exp(u^{\ell}_i)\,/\,\textstyle \sum\limits_j \exp(u^{\ell}_j)
+  \\[-15pt]\nonumber
+\eeq
+Computation for normalization layers is defined by
 \beq
  s^{\ell} & = & \textstyle 
-   \sqrt{\,0.01\,+\,\sum\nolimits_i [u^{\ell}_i]^2\,/\,n^{\ell}\,} 
+   \sqrt{\,0.01\,+\,\sum\nolimits_j [u^{\ell}_j]^2\,/\,n^{\ell}\,} 
    \label{defs}\\[3pt]
  v^{\ell}_i & = & u^{\ell}_i\,/\,s
 \eeq
 where $n^{\ell}$ is the number of units in layer $\ell$.  Normalization
-may alternatively be done separately for sub-groups of units.
+may instead be done separately for sub-groups of units.
 
 Connections from an input layer to a hidden or output layer may not be
 fully connected, but can instead be configured by specifying a set,
@@ -729,6 +733,18 @@ used are strictly monotonic.  For the $\tanh$ activation function, the
 derivative of $a$ is $1 - \big[v^{\ell}_i\big]^2\!$.  For the softplus
 activation function, it is $1 - \exp(-v^{\ell}_i)$, and for softplus0,
 it is $1 - \exp(-v^{\ell}_i-\log(2)))$.
+
+For a softmax layer, equation~(\ref{aderiv}) is replaced by
+\beq
+ t^{\ell} & = & 
+   \sum_j {\partial L \over \partial v^{\ell}_{j\ }\!}\,v^{\ell}_j
+   \\[3pt]
+ {\partial L \over \partial u^{\ell}_{i\ }\!} & = & 
+   v^{\ell}_i \Big( {\partial L \over \partial v^{\ell}_{j\ }\!}
+     \ -\ t^{\ell} \Big)
+\eeq 
+where $s^{\ell}$ is defined by equation~(\ref{defs}).  This is modified 
+in the obvious way when normalization is done separately for sub-groups.
 
 For a normalization layer, equation~(\ref{aderiv}) is replaced by
 \beq

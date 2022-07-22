@@ -139,6 +139,12 @@ int main
         else if (c>0)                             printf("  normalize%%%d",c);
         else                                      printf("  normalize/%d",-c);
       }
+      else if (a->layer_type[l]==Softmax_type)
+      { int c = a->N_channels[l];
+        if (c==1)                                 printf("  softmax");
+        else if (c>0)                             printf("  softmax%%%d",c);
+        else                                      printf("  softmax/%d",-c);
+      }
       else                                        printf("  UNKNOWN TYPE!");
       printf("\n");
     }
@@ -519,6 +525,33 @@ int main
           }
           if (c>=1<<15)
           { fprintf (stderr, "Too many channels in 'normalize' layer\n");
+            exit(1);
+          }
+        }
+      }
+      else if (strncmp(*ap,"softmax",7)==0)
+      { type = Softmax_type;
+        if (strcmp(*ap,"softmax")==0)
+        { channels = 1;
+        }
+        else
+        { int c; char junk;
+          if (sscanf(*ap,"softmax%%%d%c",&c,&junk)==1)
+          { channels = c;
+          }
+          else if (sscanf(*ap,"softmax/%d%c",&c,&junk)==1)
+          { channels = -c;
+          }
+          else 
+          { usage();
+          }
+          if (c<=0 || size%c!=0)
+          { fprintf (stderr,
+                     "Invalid number of channels for 'softmax' layer\n");
+            exit(1);
+          }
+          if (c>=1<<15)
+          { fprintf (stderr, "Too many channels in 'softmax' layer\n");
             exit(1);
           }
         }
@@ -1127,18 +1160,30 @@ static void usage(void)
   );
 
   fprintf(stderr,
-  " config-spec: config:<file>{,<file>}  omit-spec: omit:[-]<input>{,<input>}\n"
+  " group:  ti ih# bh# th# h#h# h#o io bo ah# ao\n");
+
+  fprintf(stderr,
+  " prior:  [x]Width[:[Alpha-type][:[Alpha-unit][:[Alpha-weight]]]][!|!-|!!]\n");
+
+  fprintf(stderr,
+  " config-spec:      config:<file>{,<file>}\n"
   );
 
   fprintf(stderr,
- " activation-func: identity tanh softplus[0] normalize[%%channels|/channels]\n"
+  " omit-spec:        omit:[-]<input>{,<input>}\n"
   );
 
   fprintf(stderr,
-  " group: ti ih# bh# th# h#h# h#o io bo ah# ao\n");
+  " activation-func:  identity tanh softplus[0]\n"
+  );
 
   fprintf(stderr,
-  " prior: [x]Width[:[Alpha-type][:[Alpha-unit][:[Alpha-weight]]]][!|!!]\n");
+  "                   softmax[%%channels|/channels]\n"
+  );
+
+  fprintf(stderr,
+  "                   normalize[%%channels|/channels]\n"
+  );
 
   exit(1);
 }

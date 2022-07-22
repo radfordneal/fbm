@@ -3344,7 +3344,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
     { /* nothing to do */
     }
 
-    else  /* Normalize layer */
+    else if (a->layer_type[l]==Normalize_type)
     { int cc = a->N_channels[l];
       int c = cc>0 ? cc : N_hidden/(-cc);   /* number of groups */
       int cn = N_hidden / c;                /* number of units in a group */
@@ -3376,6 +3376,37 @@ void STATIC_IF_INCLUDED net_back_add_grad
           }
         }
       }
+    }
+
+    else if (a->layer_type[l]==Softmax_type)
+    { int cc = a->N_channels[l];
+      int c = cc>0 ? cc : N_hidden/(-cc);   /* number of groups */
+      int cn = N_hidden / c;                /* number of units in a group */
+      net_value t = 0;
+      int k;
+      for (k = 0; k<c; k++)
+      { if (cc>0)  /* softmax%... */
+        { for (i = k; i<N_hidden; i+=c)
+          { t += dh[i] * vh[i];
+          }
+          for (i = k; i<N_hidden; i+=c)
+          { dh[i] = (dh[i] - t) * vh[i];
+          }
+        }
+        else  /* softmax/... */
+        { int kk = cn*k;
+          for (i = 0; i<cn; i++)
+          { t += dh[kk+i] * vh[kk+i];
+          }
+          for (i = 0; i<cn; i++)
+          { dh[kk+i] = (dh[kk+i] - t) * vh[kk+i];
+          }
+        }
+      }
+    }
+
+    else
+    { abort();
     }
 
     if (CHECK_NAN)

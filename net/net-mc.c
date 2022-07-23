@@ -3682,7 +3682,7 @@ void mc_app_stepsizes
   inv_temp = !ds->temp_state ? 1 : ds->temp_state->inv_temp;
 
   /* Find "typical" squared values for hidden units, storing in the
-     'typical' value structre.  This is done by a fake forward pass
+     'typical' value structure.  This is done by a fake forward pass
      (just one, not one for each training case), that does not use any
      actual parameter values, but may use hyperparameter values, and
      input values.  Note:  Here, offsets are added explicitly, not in 
@@ -3823,6 +3823,11 @@ void mc_app_stepsizes
         { if (typl[j]<LOG2*LOG2)
           { typl[j] = LOG2*LOG2;
           }
+        }
+      }
+      else if (arch->layer_type[l]==Softmax_type)
+      { for (j = 0; j<N_hidden; j++)
+        { typl[j] = 1;
         }
       }
       else if (arch->layer_type[l]==Normalize_type)
@@ -3969,6 +3974,9 @@ void mc_app_stepsizes
       }
     }
 
+    /* Back propagate from 2nd derivative wrt to unit output to 2nd dervivative
+       wrt to unit input. */
+
     if (arch->layer_type[l] == Normalize_type)
     { int cc = arch->N_channels[l];
       int c = cc>0 ? cc : N_hidden/(-cc);
@@ -3988,7 +3996,12 @@ void mc_app_stepsizes
         }
       }
     }
-    else if (0)  /* nothing need be done for current activation functions */
+    else if (arch->layer_type[l] == Softmax_type)
+    { for (i = 0; i<N_hidden; i++)
+      { seconds.h[l][i] *= 1.0/16;
+      }
+    }
+    else if (0)  /* nothing need be done for these activation functions */
     { for (i = 0; i<N_hidden; i++)
       { net_value s = seconds.h[l][i];
         switch (arch->layer_type[l])

@@ -76,18 +76,22 @@ Feature changes in the version:
     operation also allows adaptation, using a different criterion.
     See <A HREF="mc-spec.html">mc-spec.doc</A> for details. 
 
-13) A type of normalization layer is now implemented, similar to one
+13) Softmax layers are now implemented.  (Previously, softmax was used
+    only to produce probabilities for class models.)  See <A HREF="net-spec.html">net-spec.doc</A>
+    for details.
+
+14) A type of normalization layer is now implemented, similar to one
     component of the Filter Response Normalization (FRN) scheme of
     Saurabh Singh and Shankar Krishnan.  See <A HREF="net-spec.html">net-spec.doc</A> for details.
 
-14) The net-eval program has been substantially revised (incompatibly),
+15) The net-eval program has been substantially revised (incompatibly),
     and now allows evaluation for inputs from a file and display of 
     all hidden unit values.  See <A HREF="net-eval.html">net-eval.doc</A> for details.
 
-15) The gp-eval program has been slightly changed, to better match
+16) The gp-eval program has been slightly changed, to better match
     the new net-eval program.  See <A HREF="gp-eval.html">gp-eval.doc</A> for details.
 
-16) The xxx-stepsizes programs now have a -b option for output of
+17) The xxx-stepsizes programs now have a -b option for output of
     bare numbers.  See <A HREF="xxx-stepsizes.html">xxx-stepsizes.doc</A> and <A HREF="dist-stepsizes.html">dist-stepsizes.doc</A>.
 
 

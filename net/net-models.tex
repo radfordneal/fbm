@@ -857,17 +857,18 @@ output.  Letting the hidden unit output be $v = a(u)$, we have\beq
    \ \approx \ a'(u)^2 {d^2L \over dv^2} 
    \ \approx \ \max[a'(u)^2]\, {d^2L \over dv^2}\ \ \
 \eeq%
-The first approximation assumes that since the first term may be either
-positive or negative, its effects will (optimistically) cancel when
-averaged over the training set.  Since $u$ is not known, the second
-approximation above takes the maximum with respect to $u$.  
-For the currently-used unit-by-unit activation functions --- $\tanh$, softplus, 
-softplus0, and identity --- $\max[a'(u)^2] = 1$, so nothing need actually
-be done for this.  For normalization layers, the partial derivative of
-a unit's output with respect to its input is no more than $1/s^{\ell}$,
-where $s^{\ell}$ is defined by equation~(\ref{defs}). An estimate for
-$[1/s^{\ell}]^2 = 1/(0.01\,+\,\sum\nolimits_i [u^{\ell}_i]^2\,/\,n^{\ell})$
-is therefore needed.  This requires an estimate for a typical value of
+The first approximation assumes that since the first term may be
+either positive or negative, its effects will (optimistically) cancel
+when averaged over the training set.  Since $u$ is not known, the
+second approximation above takes the maximum with respect to $u$.  For
+the currently-used unit-by-unit activation functions --- $\tanh$,
+softplus, softplus0, and identity --- $\max[a'(u)^2] = 1$, so nothing
+need actually be done for this.  For softmax layers, the partial
+derivative of a unit's output with respect to its input is no more
+than $1/4$.  For normalization layers, it is no more than $1/s^{\ell}$,
+where $s^{\ell}$ is defined by equation~(\ref{defs}), so an estimate of
+$[1/s^{\ell}]^2 = 1/(0.01\,+\,\sum\nolimits_i [u^{\ell}_i]^2\,/\,n^{\ell})$ 
+is needed.  This requires an estimate for a typical value of
 $[u^{\ell}_i]^2$, which is discussed below.
 
 Note that the backward propagation ignores any interactions between
@@ -932,10 +933,11 @@ activation function, if the typical squared value of the unit's input
 is less than $\log(2)^2$, the value is increased to $\log(2)^2$, which
 is the value when the inputs are zero. For units with the softplus0
 activation function, the typical squared input value is used
-unchanged, as for the identity activation function.  For normalization
+unchanged, as for the identity activation function.  For softmax
 layers, units are taken to have a typical squared value for their
-output equal to the number of units in their group (the maximum
-possible).
+output of one (the maximum possible).  For normalization layers, units
+are taken to have a typical squared value for their output equal to
+the number of units in their group (also the maximum possible).
 
 The typical squared value for the input to a unit, $[u^{\ell}_i]^2$,
 found as above, is also used for estimating $d^2L/du^2$ for a

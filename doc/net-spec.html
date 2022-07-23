@@ -45,7 +45,9 @@ of a unit in the layer from its input following the size.
 
 Possible activation functions are:
 
-    tanh  softplus  softplus0  identity  normalize[%channels|/channels]
+    tanh  softplus  softplus0  identity  
+    softmax[%channels|/channels]
+    normalize[%channels|/channels]
 
 The default is 'tanh', the hyperbolic tangent function.  
 
@@ -55,6 +57,13 @@ has value zero when the input is zero.
 
 For the 'identity' activation function, the output of a hidden unit is
 identical to its summed input.
+
+For the 'softmax' activation function, the output of a unit is the
+exponential of its input, divided by the sum of these exponentials for
+all units of the layer.  (Hence, the output is between 0 and 1, and
+depends on the inputs for all the units, not just the input for that
+unit.)  Note that this is the same as the computation of probabilities
+for the 'class' model from values of output units.
 
 For the 'normalize' activation function, the output of a unit is its
 input divided by the square root of the average squared value of the
@@ -66,13 +75,13 @@ defined as (1/N) (0.01 + SUM x_i^2), where N is the number of units
 and x_i^2 is the square of the input for the i'th unit.  The addition
 of 0.01 ensures that the average will not be zero.
 
-The normalize computation may be done separately for groups of units
-defined according to the number of "channels", which must be a divisor
-of the number of units in the layer.  This can be done in two ways.
-If units are numbered from zero, then for normalize%n, units i and j
-are in the same group if i%n equals j%n, whereas for normalize/n,
-units i and j are in the same group if i/n equals j/n (with truncated
-integer division).
+The softmax and normalize computation may be done separately for
+groups of units defined according to the number of "channels", which
+must be a divisor of the number of units in the layer.  This can be
+done in two ways.  If units are numbered from zero, then for softmax%n
+or normalize%n, units i and j are in the same group if i%n equals j%n,
+whereas for softmax/n or normalize/n, units i and j are in the same
+group if i/n equals j/n (with truncated integer division).
 
 For example, if there are 40 units, 'normalize%4' will normalize the
 units separately for 4 channels, each consisting of 10 units.  The

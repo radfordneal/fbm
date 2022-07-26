@@ -647,8 +647,6 @@ __device__ __forceinline__ static void net_model_prob_gpu
         return;
       }
 
-      if (th<0) goto sync_c;
-
       /* Compute things in scratch memory.  Either value at i is
          exponential of the output, and that at i+N_outputs is zero,
          or value at i is zero and that at i+N_outputs is the
@@ -656,24 +654,26 @@ __device__ __forceinline__ static void net_model_prob_gpu
          point if it might overflow or underflow, while doing as many
          exponentials in parallel as possible (typically all of them). */
 
-      net_value possible_exp_overflow;
-      possible_exp_overflow = 77.2;  /* Maximum value so exp of +- this won't
-                                        overflow with FP32, and such values
-                                        still won't overflow in a summation 
-                                        of up to 100,000 terms */
+      if (th>=0)
+      {
+        net_value possible_exp_overflow;
+        possible_exp_overflow = 77.2;  /* Maximum value so exp of +- this won't
+                                          overflow with FP32, and such values
+                                          still won't overflow in a summation 
+                                          of up to 100,000 terms */
 
-      for (i = th; i<N_outputs; i+=NTH)
-      { if (v->o[i]>possible_exp_overflow || v->o[i]<-possible_exp_overflow) 
-        { const_scratch[scroff+i] = 0;
-          const_scratch[scroff+i+N_outputs] = v->o[i];
-        }
-        else
-        { const_scratch[scroff+i] = prec_exp (v->o[i]);
-          const_scratch[scroff+i+N_outputs] = 0;
+        for (i = th; i<N_outputs; i+=NTH)
+        { if (v->o[i]>possible_exp_overflow || v->o[i]<-possible_exp_overflow) 
+          { const_scratch[scroff+i] = 0;
+            const_scratch[scroff+i+N_outputs] = v->o[i];
+          }
+          else
+          { const_scratch[scroff+i] = prec_exp (v->o[i]);
+            const_scratch[scroff+i+N_outputs] = 0;
+          }
         }
       }
 
-    sync_c:
       SYNCTH();
 
       if (th<0)
@@ -694,16 +694,16 @@ __device__ __forceinline__ static void net_model_prob_gpu
       net_value s = 0;
 
       if (m==0)  /* no big ones, not all small ones */
-      {  for (i = 0; i<N_outputs; i++)
-         { s += const_scratch[scroff+i];
-         }
+      { for (i = 0; i<N_outputs; i++)
+        { s += const_scratch[scroff+i];
+        }
       }
       else  /* some big ones, or all small ones - can ignore normal ones */
       { for (i = 0; i<N_outputs; i++)
-         { if (const_scratch[scroff+i+N_outputs]!=0)
-           { s += prec_exp (const_scratch[scroff+i+N_outputs] - m);
-           }
-         }
+        { if (const_scratch[scroff+i+N_outputs]!=0)
+          { s += prec_exp (const_scratch[scroff+i+N_outputs] - m);
+          }
+        }
       }
 
       /* Compute log probability in thread 0. */

@@ -106,7 +106,7 @@ void STATIC_IF_INCLUDED net_func
   {
     int N_hidden = a->N_hidden[l];
 
-    net_value *restrict vh = v->h[l];
+    net_value *restrict vh = v->h0[l];
 
     if (a->has_bh[l])
     { if (a->bias_config[l])
@@ -751,11 +751,10 @@ void STATIC_IF_INCLUDED net_func
     /* Compute hidden unit values with offsets added, if required. */
 
     if (a->has_th[l])
-    { net_value *restrict vh0 = v->h0[l];
+    { net_value *restrict vh1 = v->h[l];
       net_param *restrict t = w->th[l];
       for (j = 0; j<N_hidden; j++)
-      { vh0[j] = vh[j];
-        vh[j] += t[j];
+      { vh1[j] = vh[j] + t[j];
       }
     }
 
@@ -1844,6 +1843,126 @@ __device__ __forceinline__ static void net_func_gpu
           { int kk = cn*k;
             for (j = 0; j<cn; j++)
             { vh[kk+j] *= s;
+            }
+          }
+        }
+
+        if (SYNC_AFTER && N_hidden % NTH != 0) __syncwarp(syncmask);
+      }
+    }
+    else if (A.layer_type[l]==Softmax_type)
+    { 
+      /* Compute exponentials in parallel, if possible.  Either value at i is
+         exponential of input, and that at i+N_hidden is zero, or value 
+         at i is zero and that at i+N_hidden is the unchanged input.  Avoids
+         the exponential computation at this point if it might overflow or 
+         underflow, while doing as many exponentials in parallel as possible 
+         (typically all of them). */
+
+      if (th>=0)
+      {
+        net_value possible_exp_overflow;
+        possible_exp_overflow = 77.2;  /* Maximum value so exp of +- this won't
+                                          overflow with FP32, and such values
+                                          still won't overflow in a summation
+                                          of up to 100,000 terms */
+        int i;
+
+        for (i = th; i<N_hidden; i+=NTH)
+        { if (vh[i]>possible_exp_overflow || vh[i]<-possible_exp_overflow)
+          { vh[i+N_hidden] = vh[i];
+            vh[i] = 0;
+          }
+          else
+          { vh[i] = prec_exp (vh[i]);
+            vh[i+N_hidden] = 0;
+          }
+        }
+      }
+
+      SYNCTH();
+
+      if (th>=0)
+      {
+        int cc = A.N_channels[l];
+        int c = cc>0 ? cc : N_hidden/(-cc);   /* number of groups */
+        int cn = N_hidden / c;                /* number of units in a group */
+        int k;
+
+        for (k = th; k<c; k+=NTH)
+        {
+          net_value m, s;
+
+          if (cc>0)  /* softmax%... */
+          { 
+            m = vh[k+N_hidden];
+            for (j = k+c; j<N_hidden; j+=c)
+            { if (vh[j+N_hidden]>m)
+              { m = vh[j+N_hidden];
+              }
+            }
+
+            s = 0;
+            if (m==0)  /* no big ones, not all small ones */
+            { for (j = k; j<N_hidden; j+=c)
+              { s += vh[j];
+              }
+            }
+            else /* some big ones, or all small ones - can ignore normal ones */
+            { for (j = k; j<N_hidden; j+=c)
+              { if (vh[j+N_hidden]!=0)
+                { s += prec_exp (vh[j+N_hidden] - m);
+                }
+              }
+            }
+            s = 1/s;
+
+            for (j = k; j<N_hidden; j+=c)
+            { if (m==0)
+              { vh[j] *= s;
+              }
+              else if (vh[j+N_hidden]==0)
+              { vh[j] = 0;
+              }
+              else
+              { vh[j] = s * prec_exp (vh[j+N_hidden] - m);
+              }
+            }
+          }
+          else  /* softmax/... */
+          { int kk = cn*k;
+            
+            m = vh[kk+N_hidden];
+            for (j = 1; j<cn; j++)
+            { if (vh[kk+j+N_hidden]>m)
+              { m = vh[kk+j+N_hidden];
+              }
+            }
+
+            s = 0;
+            if (m==0)  /* no big ones, not all small ones */
+            { for (j = 0; j<cn; j++)
+              { s += vh[kk+j];
+              }
+            }
+            else /* some big ones, or all small ones - can ignore normal ones */
+            { for (j = 0; j<cn; j++)
+              { if (vh[kk+j+N_hidden]!=0)
+                { s += prec_exp (vh[kk+j+N_hidden] - m);
+                }
+              }
+            }
+
+            for (j = 0; j<cn; j++)
+            { if (m==0)
+              { vh[kk+j] *= s;
+              }
+              else if (vh[kk+j+N_hidden]==0)
+              { vh[kk+j] = 0;
+              }
+              else
+              { vh[kk+j] = s * prec_exp (vh[kk+j+N_hidden] - m);
+              }
             }
           }
         }

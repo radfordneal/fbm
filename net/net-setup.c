@@ -300,6 +300,9 @@ unsigned net_setup_value_count_aligned
     { int c = a->N_channels[l];
       n += c>0 ? c : a->N_hidden[l]/(-c);
     } 
+    else if (a->layer_type[l] == Softmax_type)
+    { n += a->N_hidden[l];
+    }
     count += ALIGN(n,align);
     if (a->has_th[l])
     { count += ALIGN(a->N_hidden[l],align);
@@ -753,6 +756,9 @@ void net_setup_value_pointers_aligned
     { int c = a->N_channels[l];
       n += c>0 ? c : a->N_hidden[l]/(-c);
     } 
+    else if (a->layer_type[l] == Softmax_type)
+    { n += a->N_hidden[l];
+    }
     v->h0[l] = b;
     b += ALIGN(n,align);
     if (a->has_th[l])

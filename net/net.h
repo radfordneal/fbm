@@ -505,9 +505,10 @@ typedef struct
 
   net_value *h0[Max_layers];	/* Values of hidden units.  For normalize
                                    layers, also has inverse sqrt of sums of 
-                                   squared values for each channel, at end */ 
-  net_value *h[Max_layers];	/* Values of hidden units after offsets added,
-                                   point to sample place as h0 if no offsets. */
+                                   squared values for each channel, at end. 
+                                   For softmax layers, end has scratch space. */
+  net_value *h[Max_layers];	/* Values of hidden units after offsets added.
+                                   Points to same place as h0 if no offsets. */
 
   net_value *o;			/* Values of output units */
 

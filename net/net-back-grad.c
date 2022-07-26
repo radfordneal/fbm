@@ -3868,6 +3868,39 @@ __device__ __forceinline__ static void net_back_grad_gpu
         }
       }
     }
+    else if (A.layer_type[l]==Softmax_type)
+    { 
+      SYNCTH();
+
+      if (thrb>=0)
+      { 
+        int cc = A.N_channels[l];
+        int c = cc>0 ? cc : N_hidden/(-cc);   /* number of groups */
+        int cn = N_hidden / c;                /* number of units in a group */
+        int k;
+
+        for (k = thrb; k<c; k+=NTH)
+        { net_value t = 0;
+          if (cc>0)  /* normalize%... */
+          { for (i = k; i<N_hidden; i+=c)
+            { t += dh[i] * vh[i];
+            }
+            for (i = k; i<N_hidden; i+=c)
+            { dh[i] = (dh[i] - t) * vh[i];
+            }
+          }
+          else  /* normalize/... */
+          { int kk = cn*k;
+            for (i = 0; i<cn; i++)
+            { t += dh[kk+i] * vh[kk+i];
+            }
+            for (i = 0; i<cn; i++)
+            { dh[kk+i] = (dh[kk+i] - t) * vh[kk+i];
+            }
+          }
+        }
+      }
+    }
     else if (thrb<0)
     { /* nothing, surplus thread */
     }

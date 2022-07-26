@@ -151,12 +151,12 @@ int main
   }
 
   if (energy_only)
-  { printf("Log file: %s  Index: %d  Energy: %.2f\n\n",
+  { printf("Log file: %s  Index: %d  Energy: %.4f\n\n",
             logf.file_name, index, E);
     exit(0);
   }
 
-  printf("Log file: %s  Index: %d  Delta: %.6f  Energy: %.2f\n\n",
+  printf("Log file: %s  Index: %d  Delta: %.6f  Energy: %.4f\n\n",
           logf.file_name, index, delta, E);
 
   if (comp_grad_only)

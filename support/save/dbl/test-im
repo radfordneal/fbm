@@ -5,7 +5,7 @@ Number of training cases: 100
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 1911.81
+Log file: log  Index: 0  Delta: 0.001000  Energy: 1911.8116
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -3323,7 +3323,7 @@ Number of training cases: 100
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 1829.20
+Log file: log  Index: 0  Delta: 0.001000  Energy: 1829.2026
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -6601,7 +6601,7 @@ Number of training cases: 100
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 1812.53
+Log file: log  Index: 0  Delta: 0.001000  Energy: 1812.5293
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -9876,7 +9876,7 @@ Number of training cases: 100
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 355.58
+Log file: log  Index: 0  Delta: 0.001000  Energy: 355.5848
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -10359,7 +10359,7 @@ Number of training cases: 99
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 439.68
+Log file: log  Index: 0  Delta: 0.001000  Energy: 439.6835
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -10878,7 +10878,7 @@ Number of training cases: 42
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 818.13
+Log file: log  Index: 0  Delta: 0.001000  Energy: 818.1259
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 

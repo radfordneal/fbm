@@ -38,7 +38,7 @@ Case   Means
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.010000  Energy: 1105.24
+Log file: log  Index: 0  Delta: 0.010000  Energy: 1105.2383
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 

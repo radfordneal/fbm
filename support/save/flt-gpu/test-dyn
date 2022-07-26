@@ -28,7 +28,7 @@ Noise levels [3]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 9874114.35
+Log file: log  Index: 0  Delta: 0.001000  Energy: 9874114.3472
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -46,7 +46,7 @@ Largest absolute log ratio: 0.1344
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 10  Delta: 0.001000  Energy: 1925973.14
+Log file: log  Index: 10  Delta: 0.001000  Energy: 1925973.1380
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -125,7 +125,7 @@ Noise levels [3]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 19820100.85
+Log file: log  Index: 0  Delta: 0.001000  Energy: 19820100.8472
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -143,7 +143,7 @@ Largest absolute log ratio: 0.0563
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 10  Delta: 0.001000  Energy: 3805584.50
+Log file: log  Index: 10  Delta: 0.001000  Energy: 3805584.5026
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -222,7 +222,7 @@ Noise levels [3]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 19820100.85
+Log file: log  Index: 0  Delta: 0.001000  Energy: 19820100.8472
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -240,7 +240,7 @@ Largest absolute log ratio: 0.0563
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 1  Delta: 0.001000  Energy: 3805584.50
+Log file: log  Index: 1  Delta: 0.001000  Energy: 3805584.5026
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -292,7 +292,7 @@ Noise levels [3]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 19820100.85
+Log file: log  Index: 0  Delta: 0.001000  Energy: 19820100.8472
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -310,7 +310,7 @@ Largest absolute log ratio: 0.0563
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 3  Delta: 0.001000  Energy: 1407872.35
+Log file: log  Index: 3  Delta: 0.001000  Energy: 1407872.3493
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 

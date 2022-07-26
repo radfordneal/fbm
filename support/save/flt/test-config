@@ -69,7 +69,7 @@ Noise levels [4]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.002000  Energy: 3.74
+Log file: log  Index: 0  Delta: 0.002000  Energy: 3.7353
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -211,7 +211,7 @@ Noise levels [5]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.002000  Energy: 54.02
+Log file: log  Index: 0  Delta: 0.002000  Energy: 54.0174
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -351,7 +351,7 @@ Noise levels [5]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.002000  Energy: 54.02
+Log file: log  Index: 0  Delta: 0.002000  Energy: 54.0174
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -476,7 +476,7 @@ Noise levels [5]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.002000  Energy: 15.55
+Log file: log  Index: 0  Delta: 0.002000  Energy: 15.5525
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -616,7 +616,7 @@ Noise levels [5]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.002000  Energy: 15.55
+Log file: log  Index: 0  Delta: 0.002000  Energy: 15.5525
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -1326,7 +1326,7 @@ Noise levels [3]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.002000  Energy: 4.13
+Log file: log  Index: 0  Delta: 0.002000  Energy: 4.1289
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -1405,7 +1405,7 @@ Noise levels [3]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.002000  Energy: 4.29
+Log file: log  Index: 0  Delta: 0.002000  Energy: 4.2890
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -1468,7 +1468,7 @@ Noise levels [2]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.002000  Energy: 31.70
+Log file: log  Index: 0  Delta: 0.002000  Energy: 31.7000
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -1524,7 +1524,7 @@ Noise levels [2]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.002000  Energy: 31.15
+Log file: log  Index: 0  Delta: 0.002000  Energy: 31.1513
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -1584,7 +1584,7 @@ Noise levels [3]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.002000  Energy: 3882508.15
+Log file: log  Index: 0  Delta: 0.002000  Energy: 3882508.1534
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -1679,7 +1679,7 @@ Noise levels [5]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.002000  Energy: 80982941.03
+Log file: log  Index: 0  Delta: 0.002000  Energy: 80982941.0284
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -1803,7 +1803,7 @@ Noise levels [3]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.002000  Energy: 125123.68
+Log file: log  Index: 0  Delta: 0.002000  Energy: 125123.6758
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -1960,7 +1960,7 @@ Noise levels [3]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.002000  Energy: 125123.68
+Log file: log  Index: 0  Delta: 0.002000  Energy: 125123.6758
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 

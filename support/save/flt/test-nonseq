@@ -108,7 +108,7 @@ Noise levels [5]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 29.97
+Log file: log  Index: 0  Delta: 0.001000  Energy: 29.9670
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -246,7 +246,7 @@ Noise levels [6]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 11.78
+Log file: log  Index: 0  Delta: 0.001000  Energy: 11.7769
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -393,7 +393,7 @@ Noise levels [6]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 22.72
+Log file: log  Index: 0  Delta: 0.001000  Energy: 22.7247
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -535,7 +535,7 @@ Noise levels [6]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 8.75
+Log file: log  Index: 0  Delta: 0.001000  Energy: 8.7489
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -675,7 +675,7 @@ Noise levels [6]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 14.00
+Log file: log  Index: 0  Delta: 0.001000  Energy: 14.0024
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -815,7 +815,7 @@ Noise levels [6]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 14.00
+Log file: log  Index: 0  Delta: 0.001000  Energy: 14.0024
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 
@@ -982,7 +982,7 @@ Noise levels [6]
 
 Computed energy and gradient, compared with that from finite differences
 
-Log file: log  Index: 0  Delta: 0.001000  Energy: 17.38
+Log file: log  Index: 0  Delta: 0.001000  Energy: 17.3850
 
   Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
 

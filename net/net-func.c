@@ -708,7 +708,7 @@ void STATIC_IF_INCLUDED net_func
       int k;
       for (k = 0; k<c; k++)
       { net_value s = 0;
-        if (cc>0)  /* normalize%... */
+        if (cc>0)  /* softmax%... */
         { net_value m = vh[k];
           for (j = k; j<N_hidden; j+=c)
           { if (vh[j]>m) m = vh[j];
@@ -718,7 +718,7 @@ void STATIC_IF_INCLUDED net_func
             s += vh[j];
           }
         }
-        else  /* normalize/... */
+        else  /* softmax/... */
         { int kk = cn*k;
           net_value m = vh[kk];
           for (j = 0; j<cn; j++)
@@ -1860,16 +1860,9 @@ __device__ __forceinline__ static void net_func_gpu
          (typically all of them). */
 
       if (th>=0)
-      {
-        net_value possible_exp_overflow;
-        possible_exp_overflow = 77.2;  /* Maximum value so exp of +- this won't
-                                          overflow with FP32, and such values
-                                          still won't overflow in a summation
-                                          of up to 100,000 terms */
-        int i;
-
+      { int i;
         for (i = th; i<N_hidden; i+=NTH)
-        { if (vh[i]>possible_exp_overflow || vh[i]<-possible_exp_overflow)
+        { if (vh[i]>Softmax_pmax || vh[i]<-Softmax_pmax)
           { vh[i+N_hidden] = vh[i];
             vh[i] = 0;
           }
@@ -1905,12 +1898,15 @@ __device__ __forceinline__ static void net_func_gpu
             s = 0;
             if (m==0)  /* no big ones, not all small ones */
             { for (j = k; j<N_hidden; j+=c)
-              { s += vh[j];
+              { s += vh[j+N_hidden]==0 ? vh[j] : prec_exp(vh[j+N_hidden]);
               }
             }
-            else /* some big ones, or all small ones - can ignore normal ones */
+            else /* some big ones, or all small ones */
             { for (j = k; j<N_hidden; j+=c)
-              { if (vh[j+N_hidden]!=0)
+              { if (vh[j+N_hidden]==0)
+                { s += vh[j] * prec_exp(-m);
+                }
+                else
                 { s += prec_exp (vh[j+N_hidden] - m);
                 }
               }
@@ -1919,10 +1915,11 @@ __device__ __forceinline__ static void net_func_gpu
 
             for (j = k; j<N_hidden; j+=c)
             { if (m==0)
-              { vh[j] *= s;
+              { vh[j] = s * (vh[j+N_hidden]==0 ? vh[j] 
+                              : prec_exp(vh[j+N_hidden]));
               }
               else if (vh[j+N_hidden]==0)
-              { vh[j] = 0;
+              { vh[j] = s * vh[j] * prec_exp(-m);
               }
               else
               { vh[j] = s * prec_exp (vh[j+N_hidden] - m);
@@ -1942,23 +1939,29 @@ __device__ __forceinline__ static void net_func_gpu
             s = 0;
             if (m==0)  /* no big ones, not all small ones */
             { for (j = 0; j<cn; j++)
-              { s += vh[kk+j];
+              { s += vh[kk+j+N_hidden]==0 ? vh[kk+j] 
+                                          : prec_exp(vh[kk+j+N_hidden]);
               }
             }
-            else /* some big ones, or all small ones - can ignore normal ones */
+            else /* some big ones, or all small ones */
             { for (j = 0; j<cn; j++)
-              { if (vh[kk+j+N_hidden]!=0)
+              { if (vh[kk+j+N_hidden]==0)
+                { s += vh[kk+j] * prec_exp(-m);
+                }
+                else
                 { s += prec_exp (vh[kk+j+N_hidden] - m);
                 }
               }
             }
+            s = 1/s;
 
             for (j = 0; j<cn; j++)
             { if (m==0)
-              { vh[kk+j] *= s;
+              { vh[kk+j] = s * (vh[kk+j+N_hidden]==0 ? vh[kk+j]
+                                 : prec_exp(vh[kk+j+N_hidden]));
               }
               else if (vh[kk+j+N_hidden]==0)
-              { vh[kk+j] = 0;
+              { vh[kk+j] = s * vh[kk+j] * prec_exp(-m);
               }
               else
               { vh[kk+j] = s * prec_exp (vh[kk+j+N_hidden] - m);

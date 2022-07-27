@@ -3382,10 +3382,10 @@ void STATIC_IF_INCLUDED net_back_add_grad
     { int cc = a->N_channels[l];
       int c = cc>0 ? cc : N_hidden/(-cc);   /* number of groups */
       int cn = N_hidden / c;                /* number of units in a group */
-      net_value t = 0;
       int k;
       for (k = 0; k<c; k++)
-      { if (cc>0)  /* softmax%... */
+      { net_value t = 0;
+        if (cc>0)  /* softmax%... */
         { for (i = k; i<N_hidden; i+=c)
           { t += dh[i] * vh[i];
           }

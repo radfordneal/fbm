@@ -655,15 +655,8 @@ __device__ __forceinline__ static void net_model_prob_gpu
          exponentials in parallel as possible (typically all of them). */
 
       if (th>=0)
-      {
-        net_value possible_exp_overflow;
-        possible_exp_overflow = 77.2;  /* Maximum value so exp of +- this won't
-                                          overflow with FP32, and such values
-                                          still won't overflow in a summation 
-                                          of up to 100,000 terms */
-
-        for (i = th; i<N_outputs; i+=NTH)
-        { if (v->o[i]>possible_exp_overflow || v->o[i]<-possible_exp_overflow) 
+      { for (i = th; i<N_outputs; i+=NTH)
+        { if (v->o[i]>Softmax_pmax || v->o[i]<-Softmax_pmax) 
           { const_scratch[scroff+i] = 0;
             const_scratch[scroff+i+N_outputs] = v->o[i];
           }
@@ -695,12 +688,16 @@ __device__ __forceinline__ static void net_model_prob_gpu
 
       if (m==0)  /* no big ones, not all small ones */
       { for (i = 0; i<N_outputs; i++)
-        { s += const_scratch[scroff+i];
+        { s += const_scratch[scroff+i+N_outputs]==0 ? const_scratch[scroff+i]
+                : prec_exp (const_scratch[scroff+i+N_outputs]);
         }
       }
-      else  /* some big ones, or all small ones - can ignore normal ones */
+      else  /* some big ones, or all small ones */
       { for (i = 0; i<N_outputs; i++)
-        { if (const_scratch[scroff+i+N_outputs]!=0)
+        { if (const_scratch[scroff+i+N_outputs]==0)
+          { s += const_scratch[scroff+i] * prec_exp(-m);
+          }
+          else
           { s += prec_exp (const_scratch[scroff+i+N_outputs] - m);
           }
         }
@@ -719,10 +716,12 @@ __device__ __forceinline__ static void net_model_prob_gpu
         int w = *t;
         for (i = th; i<N_outputs; i+=NTH)
         { if (m==0) 
-          { dp->o[i] = s * const_scratch[scroff+i];
+          { dp->o[i] = s * (const_scratch[scroff+i+N_outputs]==0
+                             ? const_scratch[scroff+i] 
+                             : prec_exp (const_scratch[scroff+i+N_outputs]));
           }
           else if (const_scratch[scroff+i+N_outputs]==0)
-          { dp->o[i] = 0;
+          { dp->o[i] = s * const_scratch[scroff+i] * prec_exp(-m);
           }
           else
           { dp->o[i] = s * prec_exp (const_scratch[scroff+i+N_outputs] - m);

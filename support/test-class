@@ -25,3 +25,36 @@ net-tbl -h o3@ log 0
 net-tbl -h o4@ log 0
 net-pred n log 0 / data 
 net-grad-test log 0 0.01
+
+echo " "; echo "--- B"; echo " "
+
+net-spec log 1 3 / bo=1000000
+model-spec log class
+data-spec log 1 1 3 / "%echo 1" "%echo 1"
+net-gen log fix - <<end
+0.1 0.3 0.4
+end
+net-pred n log 0 / data 
+net-grad-test log 0 0.01
+
+echo " "; echo "--- C"; echo " "
+
+net-spec log 1 3 / bo=1000000
+model-spec log class
+data-spec log 1 1 3 / "%echo 1" "%echo 1"
+net-gen log fix - <<end
+71.28 71.48 71.58
+end
+net-pred n log 0 / data 
+net-grad-test log 0 0.01
+
+echo " "; echo "--- D"; echo " "
+
+net-spec log 1 3 / bo=1000000
+model-spec log class
+data-spec log 1 1 3 / "%echo 1" "%echo 1"
+net-gen log fix - <<end
+-71.58 -71.38 -71.28
+end
+net-pred n log 0 / data 
+net-grad-test log 0 0.01

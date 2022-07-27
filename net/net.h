@@ -182,6 +182,15 @@
 #endif
 
 
+/* CONSTANT FOR ALLOWED MAGNITUDES IN SOFTMAX/CLASS PARALLEL GPU COMPUTATION. 
+
+   Set so that, in FP32 or FP64, exp(a) with |a| <= Softmax_pmax can be added
+   to exp(b) with b < -Softmax_pmax, or exp(b) with b > Softmax_pmax, without
+   overflow or loss of useful precision. */
+
+#define Softmax_pmax 71.38
+
+
 /* WEIGHT CONFIGURATION.  Records network weight configuration set up for a 
    group of connections with a cfg-b, cfg-i, or cfg-h flag.  Note that
    the stored indexes start at zero, though they are 1-based in the file. 

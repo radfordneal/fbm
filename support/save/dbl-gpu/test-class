@@ -53,15 +53,96 @@ Log file: log  Index: 0  Delta: 0.010000  Energy: 1105.2383
      8 -1000.00   -5.0000e-06  -5.0000e-06   -1.0000e-03  -1.0000e-03     0.0000
      9 -1000.00   -5.0000e-06  -5.0000e-06   -1.0000e-03  -1.0000e-03     0.0000
     10 -100.00   -4.9999e-07  -5.0001e-07   -1.0000e-04  -1.0000e-04     0.0000
-    11   +0.00   +1.2506e-11  -1.2506e-11   +0.0000e+00  +0.0000e+00       -nan
+    11   +0.00   +1.2506e-11  -1.2506e-11   +0.0000e+00  +3.7201e-44   ********
     12 -100.00   -5.0005e-03  -5.0005e-03   -1.0001e+00  -1.0001e+00     0.0000
-    13   +0.00   +1.2506e-11  -1.2506e-11   +0.0000e+00  +0.0000e+00       -nan
+    13   +0.00   +1.2506e-11  -1.2506e-11   +0.0000e+00  +3.7201e-44   ********
     14 +100.00   +5.0005e-03  +5.0005e-03   +1.0001e+00  +1.0001e+00     0.0000
     15  +87.99   +1.0024e-03  +9.9844e-04   +2.0009e-01  +2.0009e-01     0.0000
     16  +87.99   +1.0024e-03  +9.9844e-04   +2.0009e-01  +2.0009e-01     0.0000
     17  +87.99   +1.0024e-03  +9.9844e-04   +2.0009e-01  +2.0009e-01     0.0000
     18  +87.99   +1.0024e-03  +9.9844e-04   +2.0009e-01  +2.0009e-01     0.0000
     19  +87.99   -3.9976e-03  -4.0016e-03   -7.9991e-01  -7.9991e-01     0.0000
+
+Largest absolute log ratio: ********
+
+ 
+--- B
+ 
+Number of training cases: 1
+
+Number of iterations used: 1
+
+Case   Means              
+
+   1    0.28   0.34   0.38
+   2    0.28   0.34   0.38
+   3    0.28   0.34   0.38
+   4    0.28   0.34   0.38
+
+
+Computed energy and gradient, compared with that from finite differences
+
+Log file: log  Index: 0  Delta: 0.010000  Energy: 1.0729
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0   +0.10   +1.4026e-03  +1.3975e-03   +2.8001e-01  +2.8001e-01     0.0000
+     1   +0.30   -3.2871e-03  -3.2928e-03   -6.5799e-01  -6.5799e-01     0.0000
+     2   +0.40   +1.8928e-03  +1.8870e-03   +3.7798e-01  +3.7798e-01     0.0000
+
+Largest absolute log ratio: 0.0000
+
+ 
+--- C
+ 
+Number of training cases: 1
+
+Number of iterations used: 1
+
+Case   Means              
+
+   1    0.28   0.34   0.38
+   2    0.28   0.34   0.38
+   3    0.28   0.34   0.38
+   4    0.28   0.34   0.38
+
+
+Computed energy and gradient, compared with that from finite differences
+
+Log file: log  Index: 0  Delta: 0.010000  Energy: 1.0729
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0  +71.28   +1.4026e-03  +1.3975e-03   +2.8001e-01  +2.8001e-01     0.0000
+     1  +71.48   -3.2871e-03  -3.2928e-03   -6.5799e-01  -6.5799e-01     0.0000
+     2  +71.58   +1.8928e-03  +1.8870e-03   +3.7798e-01  +3.7798e-01     0.0000
+
+Largest absolute log ratio: 0.0000
+
+ 
+--- D
+ 
+Number of training cases: 1
+
+Number of iterations used: 1
+
+Case   Means              
+
+   1    0.28   0.34   0.38
+   2    0.28   0.34   0.38
+   3    0.28   0.34   0.38
+   4    0.28   0.34   0.38
+
+
+Computed energy and gradient, compared with that from finite differences
+
+Log file: log  Index: 0  Delta: 0.010000  Energy: 1.0729
+
+  Coord  Value   Forw. Diff.  Back. Diff.   Diff. Grad.  Comp. Grad.   Log Ratio
+
+     0  -71.58   +1.4026e-03  +1.3975e-03   +2.8001e-01  +2.8001e-01     0.0000
+     1  -71.38   -3.2871e-03  -3.2928e-03   -6.5799e-01  -6.5799e-01     0.0000
+     2  -71.28   +1.8928e-03  +1.8870e-03   +3.7798e-01  +3.7798e-01     0.0000
 
 Largest absolute log ratio: 0.0000
 

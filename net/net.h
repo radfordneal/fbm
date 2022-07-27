@@ -318,6 +318,12 @@ typedef struct
   short N_channels[Max_layers]; /* # of channels for softmax/normalize layers,
                                    positive for %channels, neg. for /channels */
 
+  signed char prod[Max_layers];	/* Is layer multiplied by earlier layer unit(s)?
+                                   0 = no, neg = 1 unit (given), 1 = all units*/
+  char prod_layer[Max_layers];	/* Layer used to multiply (if prod not 0) */
+  unsigned short used_for_prod;	/* Bits indicating whether a layer is used to 
+				   multiply a later layer (or layers) */
+
   char any_omitted[Max_layers+1]; /* Whether any inputs omitted for layer, with
                                      any_omitted[N_layers] for output layer -
                                      if so, omit flags are in net_flags struct*/

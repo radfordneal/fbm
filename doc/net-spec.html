@@ -13,7 +13,7 @@ specifications of the network stored in that log file.
 
 Usage:
 
-    net-spec log-file N-inputs { N-hidden [ act-func ] } N-outputs
+    net-spec log-file N-inputs { N-hidden [ act-func ] [ product ] } N-outputs
              / { group=prior [ omit-spec | config-spec ] } 
 
 or: 
@@ -41,11 +41,16 @@ Specifying layer sizes and activation functions.
 N-inputs and N-outputs are the numbers of units in the input and
 output layers.  The sizes of zero or more hidden layers are specified
 between these, with the activation function used to compute the output
-of a unit in the layer from its input following the size.
+of a unit in the layer from its input following the size, along
+perhaps with unit(s) of a previous hidden layer that multiply the
+value after the activation function is applied.
 
 Possible activation functions are:
 
-    tanh  softplus  softplus0  identity  
+    tanh
+    softplus
+    softplus0
+    identity  
     softmax[%channels|/channels]
     normalize[%channels|/channels]
 
@@ -94,6 +99,20 @@ On the other hand, 'normalize/4' will normalize 10 groups of 4 units,
 with each group containing one unit from each channel.  So the first
 group consists of units 0, 1, 2, and 4, the second group consists of
 units 5, 6, 7, and 8, and so forth.
+
+After application of the activation function, the value of units in a
+hidden layer may be multiplied by the value of a unit in an earlier
+hidden layer, or each unit may be multiplied by the corresponding unit
+of an earlier hidden layer.  This option has the form
+
+    product:&lt;hidden-layer&gt;[.&lt;unit&gt;]
+
+where &lt;hidden-layer&gt; is the number of an earlier hidden layer (from
+0), and &lt;unit&gt; is the index of a single unit in that layer (from 1),
+which is used to multiply the values of all unit values.  If &lt;unit&gt; is
+not specified, the earlier hidden layer must have the same number of
+units as the layer it multiplies, with corresponding unit values being
+multiplied.
 
 Specifying layer connections and priors.
 

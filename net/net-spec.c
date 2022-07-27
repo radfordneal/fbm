@@ -146,6 +146,12 @@ int main
         else                                      printf("  softmax/%d",-c);
       }
       else                                        printf("  UNKNOWN TYPE!");
+      if (a->prod[l])
+      { printf("  product:%d",a->prod_layer[l]);
+        if (a->prod[l]<0)
+        { printf(".%d",-a->prod[l]);
+        }
+      }
       printf("\n");
     }
 
@@ -475,13 +481,15 @@ int main
 
   while (*ap!=0 && strcmp(*ap,"/")!=0)
   { 
-    int size, type, channels;
+    int size, type, prod, prod_layer, channels;
     int i;
 
     if ((size = atoi(*ap++))<=0) usage();
 
     if (*ap==0) usage();
 
+    prod = 0;
+    prod_layer = 0;
     type = -1;
     channels = 0;
 
@@ -556,6 +564,28 @@ int main
           }
         }
       }
+      else if (strncmp(*ap,"product",7)==0)
+      { int t; char junk;
+        prod = 1;
+        if (sscanf(*ap,"product:%d.%d%c",&prod_layer,&t,&junk)==2)
+        { if (t<1 || t>128)
+          { fprintf (stderr, "Unit number for product spec out of range\n");
+            exit(1);
+          }
+          prod = -t;
+        }
+        else if (sscanf(*ap,"product:%d%c",&prod_layer,&junk)!=1)
+        { usage();
+        }
+        if (prod_layer<0 || prod_layer>=a->N_layers)
+        { fprintf (stderr, "Layer number for product spec out of range\n");
+          exit(1);
+        }
+        if (prod<0 && -prod>a->N_hidden[prod_layer])
+        { fprintf (stderr, "Unit number for product spec out of range\n");
+          exit(1);
+        }
+      }
       else
       { usage();
       }
@@ -572,13 +602,16 @@ int main
       a->N_hidden[a->N_layers] = size;
       a->layer_type[a->N_layers] = type==-1 ? Tanh_type : type;
       a->N_channels[a->N_layers] = channels;
+      a->prod[a->N_layers] = prod;
+      a->prod_layer[a->N_layers] = prod_layer;
+      a->used_for_prod |= 1<<prod_layer;
       a->N_layers += 1;
     }
 
     else  /* last layer size, so this is the output layer */
     { 
       a->N_outputs = size;
-      if (type!=-1) usage();
+      if (type!=-1 || prod!=0) usage();
     }
   }
 
@@ -1149,7 +1182,7 @@ static void print_config (net_config *cf, int biases)
 static void usage(void)
 {
   fprintf(stderr,
-  "Usage: net-spec log-file N-inputs { N-hidden [ activation-func ] } N-outputs\n"
+  "Usage: net-spec log-file N-inputs { N-hidden [ act-func ] [ prod ] } N-outputs\n"
   );
 
   fprintf(stderr,
@@ -1166,23 +1199,27 @@ static void usage(void)
   " prior:  [x]Width[:[Alpha-type][:[Alpha-unit][:[Alpha-weight]]]][!|!-|!!]\n");
 
   fprintf(stderr,
-  " config-spec:      config:<file>{,<file>}\n"
+  " config-spec:  config:<file>{,<file>}\n"
   );
 
   fprintf(stderr,
-  " omit-spec:        omit:[-]<input>{,<input>}\n"
+  " omit-spec:    omit:[-]<input>{,<input>}\n"
   );
 
   fprintf(stderr,
-  " activation-func:  identity tanh softplus[0]\n"
+  " act-func:     identity tanh softplus[0]\n"
   );
 
   fprintf(stderr,
-  "                   softmax[%%channels|/channels]\n"
+  "               softmax[%%channels|/channels]\n"
   );
 
   fprintf(stderr,
-  "                   normalize[%%channels|/channels]\n"
+  "               normalize[%%channels|/channels]\n"
+  );
+
+  fprintf(stderr,
+  " prod:         product:<hidden-layer>[.<unit>]\n"
   );
 
   exit(1);

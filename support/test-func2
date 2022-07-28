@@ -264,7 +264,7 @@ calc "1/(1+Exp(-5))"
 net-grad-test log 0 0.003
 net-stepsizes log 0 0.001
 
-echo " "; echo "--- M"; echo " "
+echo " "; echo "--- N"; echo " "
 
 net-spec log 1 2 identity 2 identity product:0 1 / ih0=100 ih1=100 h1o=100
 data-spec log 1 1 / "%echo 1 1000" .
@@ -278,5 +278,22 @@ net-tbl -h u100@u200@u101@u201@ log 0
 net-tbl -h o0@ log 0
 net-eval -i -h log 0 / 1 1 0
 calc "3*5*100 + 4*6*1000"
+net-grad-test log 0 0.001
+net-stepsizes log 0 0.001
+
+echo " "; echo "--- O"; echo " "
+
+net-spec log 1 2 identity 2 identity product:0.2 1 / ih0=100 ih1=100 h1o=100
+data-spec log 1 1 / "%echo 1 1000" .
+model-spec log real 10000
+net-gen log fix - <<end
+3 4 5 6
+100 1000
+end
+net-display log 0
+net-tbl -h u100@u200@u101@u201@ log 0
+net-tbl -h o0@ log 0
+net-eval -i -h log 0 / 1 1 0
+calc "4*5*100 + 4*6*1000"
 net-grad-test log 0 0.001
 net-stepsizes log 0 0.001

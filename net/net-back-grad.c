@@ -3006,6 +3006,28 @@ void STATIC_IF_INCLUDED net_back_add_grad
       }
     }
 
+    if ((a->used_for_prod>>l) & 1)
+    { int lp;
+      for (lp = l+1; lp<a->N_layers; lp++)
+      { if (a->prod[lp] && a->prod_layer[lp]==l)
+        { net_value *dh0 = d->h0[lp];
+          net_value *pv = v->h0[lp];
+          if (a->prod[lp]<0)
+          { net_value s = 0;
+            for (i = 0; i<N_hidden; i++)
+            { s += dh0[i] * pv[i];
+            }
+            dh[-a->prod[lp]-1] += s;
+          }
+          else
+          { for (i = 0; i<N_hidden; i++)
+            { dh[i] += dh0[i] * pv[i];
+            }
+          }
+        }
+      }
+    }
+
     /* Add to gradient with respect to hidden offsets, based on derivatives
        with respect to hidden unit values (before these are converted to
        derivatives with respect to the summed input, prior to the activation
@@ -3013,6 +3035,27 @@ void STATIC_IF_INCLUDED net_back_add_grad
 
     if (a->has_th[l] && !p->th[l].one_or_two_point)
     { add_grad1 (g->th[l], dh, N_hidden);
+    }
+
+    /* Pass backwards through product operation, if present.  Save derivative
+       wrt to product in d->h0. */
+
+    if (a->prod[l])
+    { net_value *pv = v->h[a->prod_layer[l]];
+      net_value *dh0 = d->h0[l];
+      if (a->prod[l]<0)
+      { net_value p = pv[-a->prod[l]-1];
+        for (i = 0; i<N_hidden; i++)
+        { dh0[i] = dh[i];
+          dh[i] *= p;
+        }
+      }
+      else
+      { for (i = 0; i<N_hidden; i++)
+        { dh0[i] = dh[i];
+          dh[i] *= pv[i];
+        }
+      }
     }
 
     /* Pass backwards through activation function to get derivatives with 

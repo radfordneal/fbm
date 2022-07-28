@@ -585,6 +585,10 @@ int main
         { fprintf (stderr, "Unit number for product spec out of range\n");
           exit(1);
         }
+        if (prod==1 && a->N_hidden[prod_layer]!=size)
+        { fprintf (stderr, "Layer sizes don't match in product spec\n");
+          exit(1);
+        }
       }
       else
       { usage();

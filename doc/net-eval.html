@@ -27,6 +27,9 @@ is given, the outputs are replaced by "target" values generated from
 the outputs, as defined by the data model.  The -t option is not
 allowed for survival models, except for those with constant hazard.
 
+The hidden unit values shown are after applying the activation
+function, but before any product operation or addition of offsets.
+
 The networks used to compute these values are taken from the named
 log-file, with the specified range.  The range has the usual form,
 "[low][:[high]][%mod]", with 'high' defaulting to 'low' if the colon

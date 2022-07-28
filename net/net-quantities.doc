@@ -37,6 +37,9 @@ available.
          average over training cases of the absolute value of unit n
          div 100 of hidden layer n mod 100.
 
+         Note that the unit values shown are after applying the activation
+         function, but before any product operation or addition of offsets.
+
     Un   Same as for un, except for test cases.
 
     P    Log prior probability of the network parameters with current 

@@ -274,7 +274,8 @@ unsigned net_setup_value_count
    including padding for alignment to 'align' boundary (elements, not bytes,
    must be a power of two).  May or may not include inputs and outputs, 
    depending on the last two arguments.  Inputs with offsets added are always
-   included, when needed. */
+   included, when needed.  One or two places for hidden unit values are
+   allocated, depending on whether there are offsets, etc. */
 
 unsigned net_setup_value_count_aligned
 ( net_arch *a,		/* Network architecture */
@@ -304,7 +305,7 @@ unsigned net_setup_value_count_aligned
     { n += a->N_hidden[l];
     }
     count += ALIGN(n,align);
-    if (a->has_th[l])
+    if (a->has_th[l] || a->prod[l])
     { count += ALIGN(a->N_hidden[l],align);
     }
   }
@@ -761,7 +762,7 @@ void net_setup_value_pointers_aligned
     }
     v->h0[l] = b;
     b += ALIGN(n,align);
-    if (a->has_th[l])
+    if (a->has_th[l] || a->prod[l])
     { v->h[l] = b;
       b += ALIGN(a->N_hidden[l],align);
     }

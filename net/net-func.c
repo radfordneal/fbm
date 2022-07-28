@@ -748,13 +748,35 @@ void STATIC_IF_INCLUDED net_func
     { abort();
     }
 
-    /* Compute hidden unit values with offsets added, if required. */
+    /* Compute hidden unit values after product with another layer, if this
+       is done.  Also add offsets, if required.
 
-    if (a->has_th[l])
+       Note that in these situations, v->h and v->h0 will be different. */
+
+    if (a->has_th[l] || a->prod[l])
     { net_value *restrict vh1 = v->h[l];
-      net_param *restrict t = w->th[l];
       for (j = 0; j<N_hidden; j++)
-      { vh1[j] = vh[j] + t[j];
+      { vh1[j] = vh[j];
+      }
+      if (a->prod[l])
+      { net_value *pv = v->h[a->prod_layer[l]];
+        if (a->prod[l]<0)
+        { net_value p = pv[-a->prod[l]-1];
+          for (j = 0; j<N_hidden; j++)
+          { vh1[j] *= p;
+          }
+        }
+        else
+        { for (j = 0; j<N_hidden; j++)
+          { vh1[j] *= pv[j];
+          }
+        }
+      }
+      if (a->has_th[l])
+      { net_param *restrict t = w->th[l];
+        for (j = 0; j<N_hidden; j++)
+        { vh1[j] += t[j];
+        }
       }
     }
 

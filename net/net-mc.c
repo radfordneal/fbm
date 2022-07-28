@@ -463,11 +463,11 @@ net_config *net_config_to_gpu (net_config *cf)
    the memory for the values in that layer.
 
    Memory for derivatives for hidden layers with input from
-   non-sequential connections is allocated in a separate area, that
+   non-sequential connections (or with a product from other than the
+   immediately previous layer) is allocated in a separate area, that
    does not overlap with any other allocations, when there is
    available space when the layer is reached in the backward scan for
-   allocating space for hidden unit values.
-*/
+   allocating space for hidden unit values.  */
 
 #if __CUDACC__
 
@@ -520,7 +520,7 @@ static void decide_gpu_shared_mem_use
     if (fwshared[l])
     { in_use += arch->N_hidden[l];
     }
-    if (arch->has_nsq[l])
+    if (arch->has_nsq[l] || arch->prod[l] && arch->prod_layer[l]!=l-1)
     { bwshared[l] = in_use+arch->N_hidden[l] <= allowed_elements-nonseq;
       if (bwshared[l])
       { nonseq += arch->N_hidden[l];

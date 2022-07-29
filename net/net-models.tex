@@ -202,17 +202,34 @@ Computation for normalization layers is defined by
 where $n^{\ell}$ is the number of units in layer $\ell$.  Normalization
 may instead be done separately for sub-groups of units.
 
+After the activation function has been applied, the values of units in
+a layer may optionally be multiplied by a value or values from an
+earlier layer.  The values used from this previous layer will be after
+any such multiplication for that layer, and after addition of the
+offset (if present) for that unit.  For example, if layer $\ell$ is
+fully connected to layer $\ell\!-\!1$ (but not to other layers), uses the
+$\tanh$ activation function, and has its values multiplied by
+corresponding values in layer $\ell\!-\!2$, then
+\beq
+  u^{\ell}_j & = & b^{\ell}_j 
+                   \ +\ \sum_i w^{\ell-1,\ell}_{i,j} (v^{\ell-1}_i+t^{\ell-1}_i)
+  \\[3pt]
+  v^{\ell}_i & = & (v^{\ell-2}_i+t^{\ell-2})\,\tanh(u^{\ell}_i)
+\eeq
+
 Connections from an input layer to a hidden or output layer may not be
 fully connected, but can instead be configured by specifying a set,
 $C^{I,\ell}$ of triplets, $(i,j,k)$, indicating that unit $i$ in the
 input layer contributes to the input of unit $j$ of the hidden layer,
 using the weight indexed by $k$, or similarly by a set $C^{I,O}$ for
 the output layer.  The set of weights referenced may be smaller (or
-larger) than the number in that would be present when each input unit
+larger) than the number that would be present if each input unit
 connects to each hidden or output unit, with an unshared weight.  The
 configuration may specify that a weight is shared by more than one
 $i$,$j$ pair, and a single $i$,$j$ pair may be connected with more
-than one weight.  
+than one weight.  (The simple case in which some inputs are omitted,
+but the layers are otherwise fully connected, can be specified by a
+special syntax, and is handled specially computationally.)
 
 Similarly, connections from a hidden layer to the next hidden layer
 may be specified by a set of triplets $C^{\ell\!-\!1,\ell}$, and
@@ -693,7 +710,7 @@ then the inputs (if required):\beq
   {\partial L \over \partial v^{\ell}_{i\ }\!} & = & 
     \sum_j w^{\ell,O}_{i,j} {\partial L \over \partial v^O_j} \ +\
     \sum_j w^{\ell,\ell+1}_{i,j} {\partial L\ \over \partial u^{\ell+1}_j\! }
-    \\[3pt]
+    \label{bderiv}\\[3pt]
   {\partial L \over \partial u^{\ell}_{i\ }\!} & = & 
    a'^{\ell}\big(u^{\ell}_i\big) {\partial L \over \partial v^{\ell}_i } 
    \label{aderiv}\\[3pt]
@@ -757,6 +774,24 @@ For a normalization layer, equation~(\ref{aderiv}) is replaced by
 \eeq 
 where $s^{\ell}$ is defined by equation~(\ref{defs}).  This is modified 
 in the obvious way when normalization is done separately for sub-groups.
+
+When values for layer $\ell$ are multiplied by corresponding values in some 
+earlier layer, say $\ell\!-\!2$, equation~(\ref{aderiv}) for layer $\ell$ 
+must be modified as follows:
+\beq
+  {\partial L \over \partial u^{\ell}_{i\ }\!} & = & 
+   (v^{\ell-2}_i+t^{\ell-2}_i)\,a'^{\ell}\big(u^{\ell}_i\big)
+    {\partial L \over \partial v^{\ell}_i } 
+\eeq
+and equation~(\ref{bderiv}) for layer $\ell\!-\!2$ must be modified to
+include the contribution due to the effect of layer $\ell\!-\!2$ on
+the outputs of layer $\ell$:
+\beq
+{\partial L \over \partial v^{\ell-2}_{i\ }\!} & = &
+  \sum_j w^{\ell-2,O}_{i,j} {\partial L \over \partial v^O_j} \ +\
+  \sum_j w^{\ell-2,\ell-1}_{i,j} {\partial L\ \over \partial u^{\ell-1}_j\!}
+   \ +\ a^{\ell}\big(u^{\ell}_i\big) {\partial L\ \over \partial v^{\ell}_i\!}
+\eeq
 
 \subsubsection*{Derivatives of the log likelihood with respect to parameters}
 

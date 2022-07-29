@@ -448,9 +448,10 @@ net_config *net_config_to_gpu (net_config *cf)
 
    The available memory is allocated greedily (when it wouldn't exceed
    the maximum) for hidden unit values, starting with the last hidden
-   layer, with successive allocations for even-numbered layers stacked
-   at the front of the memory area, and those for odd-numbered layers
-   stacked from the back of the memory area.
+   layer, with successive (in forward direction) allocations for
+   even-numbered layers stacked at the front of the memory area, and
+   those for odd-numbered layers stacked from the back of the memory
+   area.
    
    After this, memory for derivatives with respect to sequential
    hidden layers is allocated greedily in backward fashion.  At the
@@ -463,8 +464,7 @@ net_config *net_config_to_gpu (net_config *cf)
    the memory for the values in that layer.
 
    Memory for derivatives for hidden layers with input from
-   non-sequential connections (or with a product from other than the
-   immediately previous layer) is allocated in a separate area, that
+   non-sequential connections is allocated in a separate area, that
    does not overlap with any other allocations, when there is
    available space when the layer is reached in the backward scan for
    allocating space for hidden unit values.  */
@@ -520,7 +520,7 @@ static void decide_gpu_shared_mem_use
     if (fwshared[l])
     { in_use += arch->N_hidden[l];
     }
-    if (arch->has_nsq[l] || arch->prod[l] && arch->prod_layer[l]!=l-1)
+    if (arch->has_nsq[l])
     { bwshared[l] = in_use+arch->N_hidden[l] <= allowed_elements-nonseq;
       if (bwshared[l])
       { nonseq += arch->N_hidden[l];

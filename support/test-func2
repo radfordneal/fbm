@@ -266,7 +266,7 @@ net-stepsizes log 0 0.001
 
 echo " "; echo "--- N"; echo " "
 
-net-spec log 1 2 identity 2 identity product:0 1 / ih0=100 ih1=100 h1o=100
+net-spec log 1 2 identity 2 identity product:0 1 / ih0=10 ih1=10 h1o=10
 data-spec log 1 1 / "%echo 1 1000" .
 model-spec log real 10000
 net-gen log fix - <<end
@@ -283,7 +283,7 @@ net-stepsizes log 0 0.001
 
 echo " "; echo "--- O"; echo " "
 
-net-spec log 1 2 identity 2 identity product:0.2 1 / ih0=100 ih1=100 h1o=100
+net-spec log 1 2 identity 2 identity product:0.2 1 / ih0=10 ih1=10 h1o=10
 data-spec log 1 1 / "%echo 1 1000" .
 model-spec log real 10000
 net-gen log fix - <<end

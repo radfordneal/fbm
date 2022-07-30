@@ -3850,11 +3850,30 @@ void mc_app_stepsizes
             }
           }
           s = 1 / (s/cn + Normalize_epsilon);
-          typl[N_hidden+k] = s;
+          typical.h0[l][N_hidden+k] = s;
         }
         /* Typical squared values are just the number of units in a group */
         for (j = 0; j<N_hidden; j++)
         { typl[j] = cn;
+        }
+      }
+
+      /* Adjustment for product layers. */
+
+      if (arch->prod[l])
+      { net_value *pv = typical.h[arch->prod_layer[l]];
+        if (arch->prod[l]<0)
+        { net_value p = pv[-arch->prod[l]-1];
+          for (j = 0; j<N_hidden; j++)
+          { typical.h0[l][j] = typl[j];  /* saved for later use */
+            typl[j] *= p;
+          }
+        }
+        else
+        { for (j = 0; j<N_hidden; j++)
+          { typical.h0[l][j] = typl[j];  /* saved for later use */
+            typl[j] *= pv[j];
+          }
         }
       }
     }
@@ -3974,15 +3993,50 @@ void mc_app_stepsizes
       }
     }
 
+    if ((arch->used_for_prod>>l) & 1)
+    { int lp;
+      for (lp = l+1; lp<arch->N_layers; lp++)
+      { if (arch->prod[lp] && arch->prod_layer[lp]==l)
+        { if (arch->prod[lp]<0)
+          { net_value s = 0;
+            for (i = 0; i<N_hidden; i++)
+            { s += seconds.h[lp][i] * typical.h0[lp][i];
+            }
+            seconds.h[l][-arch->prod[lp]-1] += s;
+          }
+          else
+          { for (i = 0; i<N_hidden; i++)
+            { seconds.h[l][i] += seconds.h[lp][i] * typical.h0[lp][i];
+            }
+          }
+        }
+      }
+    }
+
     /* Back propagate from 2nd derivative wrt to unit output to 2nd dervivative
        wrt to unit input. */
+
+    if (arch->prod[l])
+    { net_value *pv = typical.h[arch->prod_layer[l]];
+      if (arch->prod[l]<0)
+      { net_value p = pv[-arch->prod[l]-1];
+        for (i = 0; i<N_hidden; i++)
+        { seconds.h[l][i] *= p;
+        }
+      }
+      else
+      { for (i = 0; i<N_hidden; i++)
+        { seconds.h[l][i] *= pv[i];
+        }
+      }
+    }
 
     if (arch->layer_type[l] == Normalize_type)
     { int cc = arch->N_channels[l];
       int c = cc>0 ? cc : N_hidden/(-cc);
       int k;
       for (k = 0; k<c; k++)
-      { double sh = typical.h[l][N_hidden+k];
+      { double sh = typical.h0[l][N_hidden+k];
         if (cc>0)  /* normalize%... */
         { for (i = k; i<N_hidden; i+=c)
           { seconds.h[l][i] *= sh;

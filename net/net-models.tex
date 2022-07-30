@@ -891,6 +891,7 @@ output.  Letting the hidden unit output be $v = a(u)$, we have\beq
    \ = \ a''(u) {dL \over dv} + a'(u)^2 {d^2L \over dv^2}
    \ \approx \ a'(u)^2 {d^2L \over dv^2} 
    \ \approx \ \max[a'(u)^2]\, {d^2L \over dv^2}\ \ \
+   \label{approx2nd}
 \eeq%
 The first approximation assumes that since the first term may be
 either positive or negative, its effects will (optimistically) cancel
@@ -906,7 +907,11 @@ $[1/s^{\ell}]^2 = 1/(0.01\,+\,\sum\nolimits_i [u^{\ell}_i]^2\,/\,n^{\ell})$
 is needed.  This requires an estimate for a typical value of
 $[u^{\ell}_i]^2$, which is discussed below.
 
-Note that the backward propagation ignores any interactions between
+When units in this layer are multiplied by unit value(s) of an earlier
+layer, the estimate of equation~(\ref{approx2nd}) is multiplied an
+estimate of the typical squared value of units in that earlier layer.
+
+Note that this backward propagation ignores any interactions between
 multiple connections from a unit.
 
 Since the stepsizes chosen are not allowed to depend on the actual
@@ -917,6 +922,7 @@ the following generic estimate, when layers are fully connected:\beq
   {\partial^2 L \over \partial (v^S_i)^2} & \approx &
      \sum_D\, \sum_j\, (\sigma^{S,D}_{w,i}\, \sigma^D_{a,j})^2\, 
      {\partial^2 L \over (u^D_j)^2}
+  \label{Lv2nd}
 \eeq%
 Here, $S$ is the source layer, $D$ goes through the various layers
 receiving connections from $S$, $\sigma^{S,D}_{w,i}$ is the
@@ -928,7 +934,17 @@ When connections are configured, the formula is
   {\partial^2 L \over \partial (v^S_i)^2} & \approx &
      \sum_D\, \sum_{(j,k)\,:\,(i,j,k)\in C^{S,D}}\!\!\!\!
        (\sigma^{S,D}_w)^2\, {\partial^2 L \over (u^D_j)^2}
+  \label{Lv2ndc}
 \eep
+If $v^S_i$ is used to multiply unit $j$ in a later layer, $M$,
+the following term must be added to equation~(\ref{Lv2nd}) 
+or~(\ref{Lv2ndc}):
+\beq
+  (a(u^M_j))^2\,{\partial^2 L \over \partial (v^M_j)^2}
+\eeq
+There may be more than one such term, if $v^S_i$ is used to multiply more 
+than one unit.  Both factors above must be estimated, the second as
+described here, and the first as described below.
      
 The second derivative of $L$ with respect to a weight, $w^{S,D}_{i,j}$,
 can be expressed as follows:\beq
@@ -972,7 +988,11 @@ unchanged, as for the identity activation function.  For softmax
 layers, units are taken to have a typical squared value for their
 output of one (the maximum possible).  For normalization layers, units
 are taken to have a typical squared value for their output equal to
-the number of units in their group (also the maximum possible).
+the number of units in their group (also the maximum possible).  
+
+If units in this layer are multiplied by value(s) of units in an
+earlier layer, the typical squared value is multiplied by the typical
+squared value for this earlier layer.
 
 The typical squared value for the input to a unit, $[u^{\ell}_i]^2$,
 found as above, is also used for estimating $d^2L/du^2$ for a

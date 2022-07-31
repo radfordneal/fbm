@@ -156,6 +156,16 @@ int main
     exit(0);
   }
 
+  /* Find constrained parameters (with one or two point priors) so we won't
+     try to find stepsize for them. */
+
+  for (i = 0; i<ds.dim; i++)
+  { ds.stepsize[i] = 1;
+  }
+  mc_app_stepsizes_constrain(&ds);
+
+  /* Print computed and (possibly) estimated gradients. */
+
   printf("Log file: %s  Index: %d  Delta: %.6f  Energy: %.4f\n\n",
           logf.file_name, index, delta, E);
 
@@ -176,15 +186,22 @@ int main
     { continue;
     }
 
+    printf ("%6d %+7.2f", i, ds.q[i]);
+
+    if (ds.stepsize[i]==0)
+    { printf ("        -\n");
+      continue;
+    }
+
     if (comp_grad_only)
-    { printf ("%6d %+7.2f   %+11.4e\n", i, ds.q[i], grad[i]);
+    { printf ("   %+11.4e\n", grad[i]);
       continue;
     }
 
     double r, lr;
 
-    printf ("%6d %+7.2f   %+11.4e  %+11.4e   %+11.4e  %+11.4e", 
-            i, ds.q[i], EF[i]-E, E-EB[i], (EF[i]-EB[i])/delta, grad[i]);
+    printf ("   %+11.4e  %+11.4e   %+11.4e  %+11.4e", 
+            EF[i]-E, E-EB[i], (EF[i]-EB[i])/delta, grad[i]);
 
     r = ((EF[i]-EB[i])/delta) / grad[i];
     if (r<=0) 

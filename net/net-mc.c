@@ -3999,7 +3999,7 @@ void mc_app_stepsizes
       { if (arch->prod[lp] && arch->prod_layer[lp]==l)
         { if (arch->prod[lp]<0)
           { net_value s = 0;
-            for (i = 0; i<N_hidden; i++)
+            for (i = 0; i<arch->N_hidden[lp]; i++)
             { s += seconds.h[lp][i] * typical.h0[lp][i];
             }
             seconds.h[l][-arch->prod[lp]-1] += s;

@@ -3014,7 +3014,7 @@ void STATIC_IF_INCLUDED net_back_add_grad
           net_value *pv = v->h0[lp];
           if (a->prod[lp]<0)
           { net_value s = 0;
-            for (i = 0; i<N_hidden; i++)
+            for (i = 0; i<a->N_hidden[lp]; i++)
             { s += dh0[i] * pv[i];
             }
             dh[-a->prod[lp]-1] += s;

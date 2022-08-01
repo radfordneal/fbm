@@ -1,4 +1,4 @@
-/* RGEN.C - Generate cases for a problem with a binary response. */
+/* BGEN.C - Generate cases for a problem with a binary response. */
 
 #include <stdio.h>
 #include <math.h>

@@ -2031,15 +2031,34 @@ __device__ __forceinline__ static void net_func_gpu
     { abort();
     }
 
-    /* Compute hidden unit values with offsets added, if required. */
+    /* Compute hidden unit values after product with another layer, if this
+       is done.  Also add offsets, if required.
 
-    if (A.has_th[l])
-    { if (th>=0)
-      { net_value *restrict vh0 = v->h0[l];
-        net_param *restrict t = W.th[l];
+       Note that in these situations, v->h and v->h0 will be different. */
+
+    if ((A.has_th[l] || A.prod[l]) && th>=0)
+    { net_value *restrict vh0 = v->h0[l];
+      for (j = th; j<N_hidden; j+=NTH)
+      { vh0[j] = vh[j];
+      }
+      if (A.prod[l])
+      { net_value *pv = fw_hidden_loc(&PRE,v,A.prod_layer[l]);
+        if (A.prod[l]<0)
+        { net_value p = pv[-A.prod[l]-1];
+          for (j = th; j<N_hidden; j+=NTH)
+          { vh[j] *= p;
+          }
+        }
+        else
+        { for (j = th; j<N_hidden; j+=NTH)
+          { vh[j] *= pv[j];
+          }
+        }
+      }
+      if (A.has_th[l])
+      { net_param *restrict t = W.th[l];
         for (j = th; j<N_hidden; j+=NTH)
-        { vh0[j] = vh[j];
-          vh[j] += t[j];
+        { vh[j] += t[j];
         }
       }
     }

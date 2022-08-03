@@ -82,14 +82,18 @@ Feature changes in the version:
     component of the Filter Response Normalization (FRN) scheme of
     Saurabh Singh and Shankar Krishnan.  See net-spec.doc for details.
 
-15) The net-eval program has been substantially revised (incompatibly),
+15) Layers in which the unit values are multiplied by unit value(s)
+    of an earlier layer are now implemented.  See net-spec.doc for
+    details.
+
+16) The net-eval program has been substantially revised (incompatibly),
     and now allows evaluation for inputs from a file and display of 
     all hidden unit values.  See net-eval.doc for details.
 
-16) The gp-eval program has been slightly changed, to better match
+17) The gp-eval program has been slightly changed, to better match
     the new net-eval program.  See gp-eval.doc for details.
 
-17) The xxx-stepsizes programs now have a -b option for output of
+18) The xxx-stepsizes programs now have a -b option for output of
     bare numbers.  See xxx-stepsizes.doc and dist-stepsizes.doc.
 
 

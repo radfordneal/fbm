@@ -3847,6 +3847,31 @@ __device__ __forceinline__ static void net_back_grad_gpu
       }
     }
 
+    if ((A.used_for_prod>>l) & 1)
+    { int lp;
+      for (lp = l+1; lp<A.N_layers; lp++)
+      { if (A.prod[lp] && A.prod_layer[lp]==l)
+        { net_value *dh0 = dth->h0[lp];
+          net_value *pv = vth->h0[lp];
+          if (A.prod[lp]<0)
+          { int j = -A.prod[lp]-1;
+            if (thrb==(j&(NTH-1)))
+            { net_value s = 0;
+              for (i = 0; i<A.N_hidden[lp]; i++)
+              { s += dh0[i] * pv[i];
+              }
+              dh[j] += s;
+            }
+          }
+          else
+          { for (i = thrb; i<N_hidden; i+=NTH)
+            { dh[i] += dh0[i] * pv[i];
+            }
+          }
+        }
+      }
+    }
+
   sync_layer:
 
     /* Add to gradient with respect to hidden offsets, based on derivatives
@@ -3862,6 +3887,27 @@ __device__ __forceinline__ static void net_back_grad_gpu
       int cs = bw_hidden_stride(&PRE,l);
 
       store_grad1 (thrg, gsz, g->th[l], c0, cs, N_hidden);
+    }
+
+    /* Pass backwards through product operation, if present.  Save derivative
+       wrt to product in d->h0. */
+
+    if (A.prod[l] && thrb>=0)
+    { net_value *pv = fw_hidden_loc (&PRE, vth, A.prod_layer[l]);
+      net_value *dh0 = dth->h0[l];
+      if (A.prod[l]<0)
+      { net_value p = pv[-A.prod[l]-1];
+        for (i = thrb; i<N_hidden; i+=NTH)
+        { dh0[i] = dh[i];
+          dh[i] *= p;
+        }
+      }
+      else
+      { for (i = thrb; i<N_hidden; i+=NTH)
+        { dh0[i] = dh[i];
+          dh[i] *= pv[i];
+        }
+      }
     }
 
     /* Pass backwards through activation function to get derivatives with 

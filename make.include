@@ -1,23 +1,19 @@
 # COMMANDS THAT ARE INCLUDED IN ALL MAKEFILES.  
 #
 # You may wish to modify this file to fit your local installation and
-# preferences.  The USE_SIMD_INTRINSICS and USE_FMA options will be
-# ignored if the -march specification is not for an architecture that
-# has the corresponding instructions. The USE_SLEEF option enables use
-# of the SLEEF inline vectorized math functions for some CPU operations,
-# which will use SIMD and FMA instructions if available given -march.
-#
-# The NVCC_OPTIONS are used only if you do make-all with a "gpu" argument,
-# to make a version of some programs that use a GPU via CUDA.  Setting 
-# the --gpu-architecture option to a later architecture may improve 
-# performance when running on such a GPU.  The compute capability 3.5
-# setting below is the earliest supported (though deprecated) by CUDA-11.
-# The USE_SLEEF_CUDA option for nvcc enables use of SLEEP functions in 
-# GPU code.
+# preferences.  Commands for compilation of a version using the CPU
+# only come first, followed by commands for compilation for a version
+# using a GPU.
 
+
+# COMMANDS FOR CPU VERSION.  The USE_SIMD_INTRINSICS and USE_FMA
+# options will be ignored if the -march specification is not for an
+# architecture that has the corresponding instructions. The USE_SLEEF
+# option enables use of the SLEEF inline vectorized math functions for
+# some CPU operations, which will use SIMD and FMA instructions if
+# available given -march.
 
 CC = gcc               # C compiler to use
-
 
 # Setup for optional use of address sanitizer for testing.  Best used with
 # an environment setting ASAN_OPTIONS=detect_leaks=0 since there are some
@@ -42,110 +38,130 @@ CFLAGS = -g -O3 $(SANITIZE) -march=native -mtune=native \
 LFLAGS = $(SANITIZE)
 
 
-# Options for nvcc (CUDA compiler for GPU code), written for CUDA 11.x.  
-#
-# The settings below are designed to work well for the widest possible 
-# set of GPUs supported by the current versions of CUDA.  The first 
-# --generate-code line compiles for a virtual architecture, and hence 
-# will be runnable on future GPUs.  Other lines are for specific GPUs;
-# any that you don't use can be deleted.
-#
-# See below for some other possibilities for how to set these options.
+# COMMANDS FOR GPU VERSION.  Uses the NVIDIA CUDA compiler for GPU
+# code. The code is written for CUDA 11.x.  Several versions of the
+# commands are given below; all but one should be commented out.  
+# A version tailored to your specific environment might be desirable.
 
-#### This version has a large number of -D compiler options for
-#### ..._H_INCLUDED symbols, that have the effect of disabling the
-#### Intel intrinsics for AVX512, which are not used by FBM, and which
-#### casue nvcc to fail with ubuntu 20.04, gcc 9.4.0, and CUDA 11.4 or
-#### 11.6.  The problem will presumably be fixed sometime, at which
-#### point this will no longer be necessary (and might cause problems
-#### if left in).
+# Note that various combinations of Linux version, CUDA version,
+# NVIDIA driver version, and gcc version may produce problems.  Recent
+# testing has been with Ubuntu 22.04.1, CUDA 11.7.1, driver 515.65.01,
+# and gcc 11.2.0, 
+
+
+# Settings that should work with CUDA 11.5 and later, compiling for all
+# current architectures, plus a virtual architecture that will work for
+# later architectures.  The -DUSE_SLEEF_CUDA option may be commented out,
+# since it may not be faster.
 
 NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
-         -D_AVX512FINTRIN_H_INCLUDED \
-         -D_AVX512ERINTRIN_H_INCLUDED \
-         -D_AVX512PFINTRIN_H_INCLUDED \
-         -D_AVX512CDINTRIN_H_INCLUDED \
-         -D_AVX512VLINTRIN_H_INCLUDED \
-         -D_AVX512BWINTRIN_H_INCLUDED \
-         -D_AVX512DQINTRIN_H_INCLUDED \
-         -D_AVX512VLBWINTRIN_H_INCLUDED \
-         -D_AVX512VLDQINTRIN_H_INCLUDED \
-         -D_AVX512IFMAINTRIN_H_INCLUDED \
-         -D_AVX512IFMAVLINTRIN_H_INCLUDED \
-         -D_AVX512VBMIINTRIN_H_INCLUDED \
-         -D_AVX512VBMIVLINTRIN_H_INCLUDED \
-         -D_AVX5124FMAPSINTRIN_H_INCLUDED \
-         -D_AVX5124VNNIWINTRIN_H_INCLUDED \
-         -D_AVX512VPOPCNTDQINTRIN_H_INCLUDED \
-         -D__AVX512VBMI2INTRIN_H_INCLUDED \
-         -D_AVX512VBMI2VLINTRIN_H_INCLUDED \
-         -D__AVX512VNNIINTRIN_H_INCLUDED \
-         -D_AVX512VNNIVLINTRIN_H_INCLUDED \
-         -D_AVX512VPOPCNTDQVLINTRIN_H_INCLUDED \
-         -D_AVX512BITALGINTRIN_H_INCLUDED \
-         -D_SHAINTRIN_H_INCLUDED \
-         -D_LZCNTINTRIN_H_INCLUDED \
-         -D_BMIIINTRIN_H_INCLUDED \
-         -D_BMI2INTRIN_H_INCLUDED \
-         -D_F16CINTRIN_H_INCLUDED \
-         -D_RTMINTRIN_H_INCLUDED \
-         -D_XTESTINTRIN_H_INCLUDED \
-         -D_CETINTRIN_H_INCLUDED \
-         -D_GFNIINTRIN_H_INCLUDED \
-         -D__VAESINTRIN_H_INCLUDED \
-         -D_VPCLMULQDQINTRIN_H_INCLUDED \
-         -D_MOVDIRINTRIN_H_INCLUDED \
-         -D_SGXINTRIN_H_INCLUDED \
-         -D_PCONFIGINTRIN_H_INCLUDED \
-         -D_WAITPKGINTRIN_H_INCLUDED \
-         -D_CLDEMOTEINTRIN_H_INCLUDED \
-         -D_RDSEEDINTRIN_H_INCLUDED \
-         -D_PRFCHWINTRIN_H_INCLUDED \
-         -D_ADXINTRIN_H_INCLUDED \
-         -D_CLWBINTRIN_H_INCLUDED \
-         -D_CLFLUSHOPTINTRIN_H_INCLUDED \
-         -D_WBNOINVDINTRIN_H_INCLUDED \
-         -D_PKUINTRIN_H_INCLUDED \
-         --threads=0 --Wno-deprecated-gpu-targets \
-         --generate-code=arch=compute_86,code=compute_86 \
-         --generate-code=arch=compute_35,code=sm_35 \
-         --generate-code=arch=compute_37,code=sm_37 \
-         --generate-code=arch=compute_50,code=sm_50 \
-         --generate-code=arch=compute_52,code=sm_52 \
-         --generate-code=arch=compute_53,code=sm_53 \
-         --generate-code=arch=compute_60,code=sm_60 \
-         --generate-code=arch=compute_61,code=sm_61 \
-         --generate-code=arch=compute_62,code=sm_62 \
-         --generate-code=arch=compute_70,code=sm_70 \
-         --generate-code=arch=compute_72,code=sm_72 \
-         --generate-code=arch=compute_75,code=sm_75 \
-         --generate-code=arch=compute_80,code=sm_80 \
-         --generate-code=arch=compute_86,code=sm_86 \
+         --threads=0 --gpu-architecture=all \
          --ptxas-options=-v \
          -ccbin=g++ \
          -DUSE_SIMD_INTRINSICS -DUSE_FMA \
          -DUSE_SLEEF -Xcompiler -ffp-contract=off # -DUSE_SLEEF_CUDA
 
 
-# Settings that should work with CUDA 11.5 and later, compiling for all
-# current architectures, plus a virtual architecture that will work for
-# later architectures.
+# Settings that should work for CUDA 11.4 or later, for GPUs of compute 
+# capability 5.2 and later, relying on JIT compilation by the NVIDIA
+# driver (hence there will be some delay the first time a program is run).
+# This will give faster compilation than the settings above.  The 
+# -DUSE_SLEEF_CUDA option may be commented out, since it may not be faster.
 
 # NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
-#          --threads=0 --gpu-architecture=all \
+#          --generate-code=arch=compute_52,code=compute_52 \
 #          --ptxas-options=-v \
 #          -ccbin=g++ \
 #          -DUSE_SIMD_INTRINSICS -DUSE_FMA \
 #          -DUSE_SLEEF -Xcompiler -ffp-contract=off # -DUSE_SLEEF_CUDA
 
 
-# Settings that should work for GPUs of compute capability 5.2 and later,
-# relying on JIT compilation by the NVIDIA driver (so there will be some 
-# delay the first time a program is run).  This will give faster compilation
-# than the settings above.
+# Settings for CUDA 11.4 or later 11.x versions, with the widest
+# possible set of supported GPUs.  The first --generate-code line
+# compiles for a virtual architecture, and hence will be runnable on
+# future GPUs.  Other lines are for specific GPUs; any that you don't
+# use can be deleted.  Note that versions of CUDA 11.x later than 11.4
+# should be able to compile for the deprecated GPUs with compute
+# capability 3.5, 3.7, or 5.0, but are incompatible with drivers that
+# support these GPUs (except perhaps using the NVIDIA compatibility
+# facility).  However, the compiled programs should be runnable on a
+# system with older drivers that do support these GPUs.
+#
+# In this command, there are a large number of -D compiler options for
+# ..._H_INCLUDED symbols, that have the effect of disabling the Intel
+# intrinsics for AVX512, which are not used by FBM, and which cause
+# nvcc to fail with ubuntu 20.04, gcc 9.4.0, and CUDA 11.4 or 11.6.
+# It seems that this problem does not arise with ubuntu 22.04.1, gcc
+# 11.2.0, and CUDA 11.7.1, for which these options might best be
+# removed.
+#
+# The -DUSE_SLEEF_CUDA option may be commented out, since it may not be faster.
 
 # NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
-#          --generate-code=arch=compute_52,code=compute_52 \
+#          -D_AVX512FINTRIN_H_INCLUDED \
+#          -D_AVX512ERINTRIN_H_INCLUDED \
+#          -D_AVX512PFINTRIN_H_INCLUDED \
+#          -D_AVX512CDINTRIN_H_INCLUDED \
+#          -D_AVX512VLINTRIN_H_INCLUDED \
+#          -D_AVX512BWINTRIN_H_INCLUDED \
+#          -D_AVX512DQINTRIN_H_INCLUDED \
+#          -D_AVX512VLBWINTRIN_H_INCLUDED \
+#          -D_AVX512VLDQINTRIN_H_INCLUDED \
+#          -D_AVX512IFMAINTRIN_H_INCLUDED \
+#          -D_AVX512IFMAVLINTRIN_H_INCLUDED \
+#          -D_AVX512VBMIINTRIN_H_INCLUDED \
+#          -D_AVX512VBMIVLINTRIN_H_INCLUDED \
+#          -D_AVX5124FMAPSINTRIN_H_INCLUDED \
+#          -D_AVX5124VNNIWINTRIN_H_INCLUDED \
+#          -D_AVX512VPOPCNTDQINTRIN_H_INCLUDED \
+#          -D__AVX512VBMI2INTRIN_H_INCLUDED \
+#          -D_AVX512VBMI2VLINTRIN_H_INCLUDED \
+#          -D__AVX512VNNIINTRIN_H_INCLUDED \
+#          -D_AVX512VNNIVLINTRIN_H_INCLUDED \
+#          -D_AVX512VPOPCNTDQVLINTRIN_H_INCLUDED \
+#          -D_AVX512BITALGINTRIN_H_INCLUDED \
+#          -D_AVX512VP2INTERSECTINTRIN_H_INCLUDED \
+#          -D_AVX512VP2INTERSECTVLINTRIN_H_INCLUDED \
+#          -D_AVX512BF16VLINTRIN_H_INCLUDED \
+#          -D_AVX512BF16INTRIN_H_INCLUDED \
+#          -D_SHAINTRIN_H_INCLUDED \
+#          -D_LZCNTINTRIN_H_INCLUDED \
+#          -D_BMIIINTRIN_H_INCLUDED \
+#          -D_BMI2INTRIN_H_INCLUDED \
+#          -D_F16CINTRIN_H_INCLUDED \
+#          -D_RTMINTRIN_H_INCLUDED \
+#          -D_XTESTINTRIN_H_INCLUDED \
+#          -D_CETINTRIN_H_INCLUDED \
+#          -D_GFNIINTRIN_H_INCLUDED \
+#          -D__VAESINTRIN_H_INCLUDED \
+#          -D_VPCLMULQDQINTRIN_H_INCLUDED \
+#          -D_MOVDIRINTRIN_H_INCLUDED \
+#          -D_SGXINTRIN_H_INCLUDED \
+#          -D_PCONFIGINTRIN_H_INCLUDED \
+#          -D_WAITPKGINTRIN_H_INCLUDED \
+#          -D_CLDEMOTEINTRIN_H_INCLUDED \
+#          -D_RDSEEDINTRIN_H_INCLUDED \
+#          -D_PRFCHWINTRIN_H_INCLUDED \
+#          -D_ADXINTRIN_H_INCLUDED \
+#          -D_CLWBINTRIN_H_INCLUDED \
+#          -D_CLFLUSHOPTINTRIN_H_INCLUDED \
+#          -D_WBNOINVDINTRIN_H_INCLUDED \
+#          -D_PKUINTRIN_H_INCLUDED \
+#          --threads=0 --Wno-deprecated-gpu-targets \
+#          --generate-code=arch=compute_86,code=compute_86 \
+#          --generate-code=arch=compute_35,code=sm_35 \
+#          --generate-code=arch=compute_37,code=sm_37 \
+#          --generate-code=arch=compute_50,code=sm_50 \
+#          --generate-code=arch=compute_52,code=sm_52 \
+#          --generate-code=arch=compute_53,code=sm_53 \
+#          --generate-code=arch=compute_60,code=sm_60 \
+#          --generate-code=arch=compute_61,code=sm_61 \
+#          --generate-code=arch=compute_62,code=sm_62 \
+#          --generate-code=arch=compute_70,code=sm_70 \
+#          --generate-code=arch=compute_72,code=sm_72 \
+#          --generate-code=arch=compute_75,code=sm_75 \
+#          --generate-code=arch=compute_80,code=sm_80 \
+#          --generate-code=arch=compute_86,code=sm_86 \
 #          --ptxas-options=-v \
 #          -ccbin=g++ \
 #          -DUSE_SIMD_INTRINSICS -DUSE_FMA \

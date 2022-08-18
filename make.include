@@ -49,27 +49,35 @@ LFLAGS = $(SANITIZE)
 # and gcc 11.2.0, 
 
 
-# Settings that should work with CUDA 11.5 and later, compiling for all
-# current architectures, plus a virtual architecture that will work for
-# later architectures.  The -DUSE_SLEEF_CUDA option may be commented out,
-# since it may not be faster.
+# Settings that should work for CUDA 11.4 or later, for GPUs of
+# compute capability 3.5 and later, relying on JIT compilation by the
+# NVIDIA driver.  With JIT, there will be some delay the first time a
+# program is run, but compilation is faster.  The -DUSE_SLEEF_CUDA
+# option may be commented out, since it may not be faster.
+#
+# Note that there is an issue that may make this not work with gcc 9.4.0
+# and some versions of CUDA, in which case a fudge such as is used in the
+# version at the bottom of this file may be necessary.
 
 NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
-         --threads=0 --gpu-architecture=all \
+         --Wno-deprecated-gpu-targets \
+         --generate-code=arch=compute_35,code=compute_35 \
          --ptxas-options=-v \
          -ccbin=g++ \
          -DUSE_SIMD_INTRINSICS -DUSE_FMA \
          -DUSE_SLEEF -Xcompiler -ffp-contract=off # -DUSE_SLEEF_CUDA
 
 
-# Settings that should work for CUDA 11.4 or later, for GPUs of compute 
-# capability 5.2 and later, relying on JIT compilation by the NVIDIA
-# driver (hence there will be some delay the first time a program is run).
-# This will give faster compilation than the settings above.  The 
-# -DUSE_SLEEF_CUDA option may be commented out, since it may not be faster.
+# Settings that should work with CUDA 11.5 and later, compiling for
+# all non-deprecated architectures, plus a virtual architecture that
+# will work for later architectures.  The -DUSE_SLEEF_CUDA option may
+# be commented out, since it may not be faster.
+#
+# Again, there could be an issue necessitating using the version at
+# the bottom of this file.
 
 # NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
-#          --generate-code=arch=compute_52,code=compute_52 \
+#          --threads=0 --gpu-architecture=all \
 #          --ptxas-options=-v \
 #          -ccbin=g++ \
 #          -DUSE_SIMD_INTRINSICS -DUSE_FMA \
@@ -77,7 +85,8 @@ NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
 
 
 # Settings for CUDA 11.4 or later 11.x versions, with the widest
-# possible set of supported GPUs.  The first --generate-code line
+# possible set of supported GPUs, and fudge for possible problem 
+# involving gcc and CUDA versions.  The first --generate-code line
 # compiles for a virtual architecture, and hence will be runnable on
 # future GPUs.  Other lines are for specific GPUs; any that you don't
 # use can be deleted.  Note that versions of CUDA 11.x later than 11.4

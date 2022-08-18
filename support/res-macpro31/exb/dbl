@@ -1,0 +1,18 @@
+Commit: 415d4a7752700b539a03d942a7da3914de1cd5cc
+
+Running exb with dbl:
+
+Number of training cases: 300
+Number of test cases: 1000
+Precision: FP64, SIMD capability: SSE3, Use: SIMD SLEEF
+Precision: FP64, SIMD capability: SSE3, Use: SIMD SLEEF
+
+Number of iterations used: 20
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.241+-0.016
+Fraction of guesses that were wrong:    0.1020+-0.0096
+
+elapsed 4.64s
+fb1b20545d0c0de59c23607f5c15664d25b7bf48  -

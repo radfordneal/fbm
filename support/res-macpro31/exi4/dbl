@@ -1,0 +1,18 @@
+Commit: 415d4a7752700b539a03d942a7da3914de1cd5cc
+
+Running exi4 with dbl:
+
+Number of training cases: 2500
+Precision: FP64, SIMD capability: SSE3, Use: SIMD SLEEF
+Precision: FP64, SIMD capability: SSE3, Use: SIMD SLEEF
+
+Number of iterations used: 2
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.115+-0.073
+Fraction of guesses that were wrong:    0.4900+-0.0502
+Average squared error guessing mean:    0.61600+-0.03636
+
+elapsed 149.31s
+1c21a15b1825789176d484f805126357a19728b2  -

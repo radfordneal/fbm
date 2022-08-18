@@ -1,0 +1,32 @@
+Commit: 415d4a7752700b539a03d942a7da3914de1cd5cc
+
+Running exr with dbl-gpu on K20c:
+
+Number of training cases: 100
+Number of test cases: 1000
+Precision: FP64, SIMD capability: SSE3, Use: SIMD SLEEF
+Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
+Using 32 cases per block, 8 threads per case, max 208 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 49152, blks per SM: 16
+Desired blks per SM: 2, allowed shared mem per case: 768 bytes, 96 values
+Hid layer shrd mem: 0:8:0,8 T 24
+With 100 cases, need 1 launches, max 4 blocks/launch
+Precision: FP64, SIMD capability: SSE3, Use: SIMD SLEEF
+Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
+Using 32 cases per block, 8 threads per case, max 208 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 49152, blks per SM: 16
+Desired blks per SM: 2, allowed shared mem per case: 768 bytes, 96 values
+Hid layer shrd mem: 0:8:0,8 T 24
+With 100 cases, need 1 launches, max 4 blocks/launch
+ 
+Predictions after running for 1000 iterations:
+
+Number of iterations used: 80
+
+Number of test cases: 1000
+
+Average log probability of targets:     0.851+-0.020
+Average squared error guessing mean:    0.01538+-0.00235
+
+elapsed 9.14s
+d2e1ea8408cd75e72cd2461001f628d0267d01f3  -

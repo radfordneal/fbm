@@ -1,0 +1,20 @@
+Commit: 415d4a7752700b539a03d942a7da3914de1cd5cc
+
+Running exr with flt:
+
+Number of training cases: 100
+Number of test cases: 1000
+Precision: FP32, SIMD capability: SSE3, Use: SIMD SLEEF
+Precision: FP32, SIMD capability: SSE3, Use: SIMD SLEEF
+ 
+Predictions after running for 1000 iterations:
+
+Number of iterations used: 80
+
+Number of test cases: 1000
+
+Average log probability of targets:     0.849+-0.020
+Average squared error guessing mean:    0.01494+-0.00206
+
+elapsed 2.19s
+be10efb525d71f0580d8ef064c6e55ec8f28e46f  -

@@ -1,0 +1,20 @@
+Commit: 415d4a7752700b539a03d942a7da3914de1cd5cc
+
+Running exr with dbl:
+
+Number of training cases: 100
+Number of test cases: 1000
+Precision: FP64, SIMD capability: SSE3, Use: SIMD SLEEF
+Precision: FP64, SIMD capability: SSE3, Use: SIMD SLEEF
+ 
+Predictions after running for 1000 iterations:
+
+Number of iterations used: 80
+
+Number of test cases: 1000
+
+Average log probability of targets:     0.829+-0.023
+Average squared error guessing mean:    0.01839+-0.00326
+
+elapsed 3.10s
+64f472fa7cf8753b61f359fbc605b2143942dd39  -

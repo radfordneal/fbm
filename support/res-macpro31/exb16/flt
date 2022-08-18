@@ -1,0 +1,18 @@
+Commit: 415d4a7752700b539a03d942a7da3914de1cd5cc
+
+Running exb16 with flt:
+
+Number of training cases: 300
+Number of test cases: 1000
+Precision: FP32, SIMD capability: SSE3, Use: SIMD SLEEF
+Precision: FP32, SIMD capability: SSE3, Use: SIMD SLEEF
+
+Number of iterations used: 20
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.239+-0.017
+Fraction of guesses that were wrong:    0.1110+-0.0099
+
+elapsed 2.86s
+87d1074ed5d6903988318479ba883c342c10ff17  -

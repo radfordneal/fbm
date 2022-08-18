@@ -1,0 +1,38 @@
+Commit: 415d4a7752700b539a03d942a7da3914de1cd5cc
+
+Running exi1c with dbl-gpu on K20c:
+
+Number of training cases: 4999
+Precision: FP64, SIMD capability: SSE3, Use: SIMD SLEEF
+Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
+Using 32 cases per block, 8 threads per case, max 75 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 49152, blks per SM: 16
+Desired blks per SM: 2, allowed shared mem per case: 768 bytes, 96 values
+Hid layer shrd mem: 0:80:0,-1 T 88
+With 4999 cases, need 3 launches, max 53 blocks/launch
+With 1666 cases, need 1 launches, max 53 blocks/launch
+With 1667 cases, need 1 launches, max 53 blocks/launch
+With 3333 cases, need 2 launches, max 53 blocks/launch
+With 3332 cases, need 2 launches, max 53 blocks/launch
+Precision: FP64, SIMD capability: SSE3, Use: SIMD SLEEF
+Tesla K20c, Compute Capability 3.5, 13 SM processors, 4.6 GBytes ECC
+Using 32 cases per block, 8 threads per case, max 75 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 49152, blks per SM: 16
+Desired blks per SM: 2, allowed shared mem per case: 768 bytes, 96 values
+Hid layer shrd mem: 0:80:0,-1 T 88
+With 4999 cases, need 3 launches, max 53 blocks/launch
+With 1666 cases, need 1 launches, max 53 blocks/launch
+With 1667 cases, need 1 launches, max 53 blocks/launch
+With 3333 cases, need 2 launches, max 53 blocks/launch
+With 3332 cases, need 2 launches, max 53 blocks/launch
+
+Number of iterations used: 2
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.062+-0.080
+Fraction of guesses that were wrong:    0.4400+-0.0499
+Average squared error guessing mean:    0.57778+-0.04052
+
+elapsed 22.20s
+aecd8bd231eebe3fe57fb4379abbae666f6914f8  -

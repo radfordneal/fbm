@@ -1,0 +1,18 @@
+Commit: c6088fd873136835c4f41c7ec2808297a0014228
+
+Running exb with dbl:
+
+Number of training cases: 300
+Number of test cases: 1000
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+
+Number of iterations used: 20
+
+Number of test cases: 1000
+
+Average log probability of targets:    -0.235+-0.016
+Fraction of guesses that were wrong:    0.1000+-0.0095
+
+elapsed 0.90s
+4599ca051677951de62f5abdd6d3c8bf2f3263b8  -

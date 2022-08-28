@@ -1,0 +1,23 @@
+Commit: c6088fd873136835c4f41c7ec2808297a0014228
+
+Running exi4m with dbl-gpu on A5000:
+
+Number of training cases: 1500
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+NVIDIA RTX A5000, Compute Capability 8.6, 64 SM processors, 22.2 GBytes ECC
+Using 32 cases per block, 8 threads per case, max 1024 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 102400, blks per SM: 16
+Desired blks per SM: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:64:0,80 1:16:128,64 T 152
+With 1500 cases, need 1 launches, max 47 blocks/launch
+
+Number of iterations used: 1
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.380+-0.010
+Fraction of guesses that were wrong:    0.7200+-0.0451
+Average squared error guessing mean:    0.74700+-0.00493
+
+elapsed 2.86s
+a7d06b4c1692b786e7594d6aa970de7511151b28  -

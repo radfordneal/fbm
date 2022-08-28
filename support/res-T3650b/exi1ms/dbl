@@ -1,0 +1,17 @@
+Commit: c6088fd873136835c4f41c7ec2808297a0014228
+
+Running exi1ms with dbl:
+
+Number of training cases: 4999
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+
+Number of iterations used: 1
+
+Number of test cases: 100
+
+Average log probability of targets:    -1.275+-0.024
+Fraction of guesses that were wrong:    0.5900+-0.0494
+Average squared error guessing mean:    0.69415+-0.01275
+
+elapsed 38.08s
+913720491dc8e580d7b6d625e9010d682a4a00f7  -

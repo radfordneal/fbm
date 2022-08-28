@@ -1,0 +1,23 @@
+Commit: c6088fd873136835c4f41c7ec2808297a0014228
+
+Running exbgd with dbl-gpu on A5000:
+
+Number of training cases: 800
+Precision: FP64, SIMD capability: AVX2 FMA, Use: SIMD FMA SLEEF
+NVIDIA RTX A5000, Compute Capability 8.6, 64 SM processors, 22.2 GBytes ECC
+Using 32 cases per block, 8 threads per case, max 1024 blocks per launch
+Shared mem per blk: 49152, shared mem per SM: 102400, blks per SM: 16
+Desired blks per SM: 2, allowed shared mem per case: 1536 bytes, 192 values
+Hid layer shrd mem: 0:15:0,15 T 40
+With 800 cases, need 1 launches, max 25 blocks/launch
+
+Number of iterations used: 1
+
+Number of test cases: 500
+
+Average log probability of targets:    -0.238+-0.025
+Fraction of guesses that were wrong:    0.1120+-0.0141
+Average squared error guessing mean:    0.07571+-0.00848
+
+elapsed 3.96s
+2d033f693f378bbbc2fc96af6c5bad8858aca936  -

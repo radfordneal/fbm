@@ -300,15 +300,6 @@ net-stepsizes log 0 0.001
 
 echo " "; echo "--- P"; echo " "
 
-net-spec log 1 2 softmax 2 product:0 1 \
-                   / ih0=1 ih1=1 h1o=1
-data-spec log 2 1 / "%echo 2 4" .
-model-spec log real 10
-rand-seed log 1
-net-gen log 
-net-display log 0
-net-grad-test log 0 0.001
-
 net-spec log 2 2 softmax 2 product:0 1 \
                    / ih0=1 ih1=1 h1o=1
 data-spec log 2 1 / "%echo 1 2 4" .
@@ -318,20 +309,29 @@ net-gen log
 net-display log 0
 net-grad-test log 0 0.001
 
-echo " "; echo "--- Q"; echo " "
-
-net-spec log 1 2 softmax 2 product:0.1 2 product:0.2 1 \
-                   / ih0=1 ih1=1 ih2=1 h1o=1 h2o=1
-data-spec log 2 1 / "%echo 2 4" .
+net-spec log 1 2 softmax 2 product:0 1 \
+                   / bh0=1 bh1=1 h1o=1 
+data-spec log 1 1 / "%echo 1 8" .
 model-spec log real 10
 rand-seed log 1
 net-gen log 
 net-display log 0
 net-grad-test log 0 0.001
 
+echo " "; echo "--- Q"; echo " "
+
 net-spec log 2 2 softmax 2 product:0.1 2 product:0.2 1 \
                    / ih0=1 ih1=1 ih2=1 h1o=1 h2o=1
 data-spec log 2 1 / "%echo 1 2 4" .
+model-spec log real 10
+rand-seed log 1
+net-gen log 
+net-display log 0
+net-grad-test log 0 0.001
+
+net-spec log 1 2 softmax 1 product:0.1 1 \
+                   / bh0=1 bh1=1 h1o=1 
+data-spec log 1 1 / "%echo 1 8" .
 model-spec log real 10
 rand-seed log 1
 net-gen log 

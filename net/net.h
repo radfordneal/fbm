@@ -522,8 +522,9 @@ typedef struct
                                    layers, also has inverse sqrt of sums of 
                                    squared values for each channel, at end. 
                                    For softmax layers, end has scratch space. */
-  net_value *h[Max_layers];	/* Values of hidden units after offsets added.
-                                   Points to same place as h0 if no offsets. */
+  net_value *h[Max_layers];	/* Values of hidden units after offsets added,
+                                   and product with other layer taken, if either
+                                   done. Points same place as h0 if not done. */
 
   net_value *o;			/* Values of output units */
 

@@ -3914,7 +3914,7 @@ __device__ __forceinline__ static void net_back_grad_gpu
        respect to the summed inputs of units in this hidden layer. */
 
     net_value const*restrict vh = thrb<0 ? 0 
-                                : A.has_th[l] ? vth->h0[l]
+                                : A.has_th[l] || A.prod[l] ? vth->h0[l]
                                 : fw_hidden_loc(&PRE,vth,l);
 
     if (A.layer_type[l]==Normalize_type)

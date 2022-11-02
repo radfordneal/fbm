@@ -58,10 +58,15 @@ LFLAGS = $(SANITIZE)
 # Note that there is an issue that may make this not work with gcc 9.4.0
 # and some versions of CUDA, in which case a fudge such as is used in the
 # version at the bottom of this file may be necessary.
+#
+# Also explicit code for compute capability 3.5 (most Kepler GPUs) is
+# created, as necessary if a driver supporting Kepler GPUs is used with
+# a CUDA version that isn't compatible with that driver.	
 
 NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
          --Wno-deprecated-gpu-targets \
          --generate-code=arch=compute_35,code=compute_35 \
+         --generate-code=arch=compute_35,code=sm_35 \
          --ptxas-options=-v \
          -ccbin=g++ \
          -DUSE_SIMD_INTRINSICS -DUSE_FMA \

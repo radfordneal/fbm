@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Add the bin-fbm directory to this user's PATH envirionment variable,
+# if it's not already there.
+
+if echo $PATH | grep -q bin-fbm; then
+  echo A bin-fbm directory is already in PATH
+else
+  pth=\$PATH=\$PATH:`pwd`/bin-fbm
+  echo export \$PATH=\$PATH:`pwd`/bin-fbm >> ~/.bashrc
+  echo Added command to .bashrc to add $pth to PATH
+fi

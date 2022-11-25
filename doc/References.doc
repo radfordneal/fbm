@@ -25,7 +25,7 @@ I discussed neural network survival analysis models in this talk:
 
   Neal, R. M. (2001) ``Survival analysis using a Bayesian neural
   network'', Joint Statistical Meetings, August 2001.  Slides
-  available at http://www.cs.utoronto.ca/~radford/ftp/nnsv-talk.pdf
+  available at https://glizen.com/radfordneal/ftp/nnsv-talk.pdf
 
 Descriptions of the Bayesian neural network models I used to win two
 prediction competitions are available here:
@@ -56,7 +56,7 @@ The Gaussian process models are described in the following papers:
   Neal, R. M. (1997) ``Monte Carlo implementation of Gaussian process
   models for Bayesian regression and classification'', Technical
   Report No. 9702, Dept. of Statistics, University of Toronto, 24
-  pages.  See http://www.cs.utoronto.ca/~radford/mc-gp.abstract.html
+  pages.  See https://glizen.com/radfordneal/mc-gp.abstract.html
 
 You might also want to read Carl Rasmussen's thesis on Evaluation of
 Gaussian Processes and Other Methods for Non-Linear Regression, at
@@ -72,7 +72,7 @@ following technical reports:
   Neal, R. M. (1998) ``Markov chain sampling methods for Dirichlet
   process mixture models'', Technical Report No. 9815, Dept. of
   Statistics, University of toronto, 17 pages.  Available at
-  http://www.cs.utoronto.ca/~radford/mixmc.abstract.html
+  https://glizen.com/radfordneal/mixmc.abstract.html
 
 
 Dirichlet diffusion tree models.
@@ -87,11 +87,11 @@ are described in the following papers:
   Neal, R. M. (2001) ``Defining priors for distributions using
   Dirichlet diffusion trees'', Technical Report No. 0104, Dept. of
   Statistics, University of Toronto, 25 pages.  Available at
-  http://www.cs.utoronto.ca/~radford/dft-paper1.abstract.html
+  https://glizen.com/radfordneal/dft-paper1.abstract.html
 
 You can also get to the slides for my talk on ``Markov chain Monte
 Carlo computations for Dirichlet diffusion trees'', NTOC 2001, Kyoto,
-December 2001, at http://www.cs.utoronto.ca/~radford/ftp/ntoc2001.pdf
+December 2001, at https://glizen.com/radfordneal/ftp/ntoc2001.pdf
 
 
 Markov chain sampling methods.
@@ -101,7 +101,7 @@ which are described in the following papers:
 
   Neal, R. M. (2020) ``Non-reversibly updating a uniform [0,1] value
   for Metropolis accept/reject decisions'', Technical Report, 14
-  pages, http://www.cs.utoronto.ca/~radford/nrevu.abstract.html
+  pages, https://glizen.com/radfordneal/nrevu.abstract.html
 
   Neal, R. M. (2010) ``MCMC using Hamiltonian dynamics'', in the
   Handbook of Markov Chain Monte Carlo, S. Brooks, A. Gelman,
@@ -111,20 +111,20 @@ which are described in the following papers:
 
   Neal, R. M. (2000) ``Slice sampling'', Technical Report No. 2005,
   Dept. of Statistics, University of Toronto, 40 pages, available
-  at http://www.cs.utoronto.ca/~radford/slc-samp.abstract.html
+  at https://glizen.com/radfordneal/slc-samp.abstract.html
 
   Neal, R. M. (2002) ``Circularly-coupled Markov chain sampling'',
   Technical Report No. 9910 (revised), Dept. of Statistics, University
-  of Toronto, 49 pages, http://www.cs.utoronto.ca/~radford/circ.abstract.html
+  of Toronto, 49 pages, https://glizen.com/radfordneal/circ.abstract.html
 
   Neal, R. M. (1998) ``Annealed importance sampling'', Technical
   Report No. 9805 (revised), Dept. of Statistics, University of
-  Toronto, 25 pages, http://www.cs.utoronto.ca/~radford/ais.abstract.html
+  Toronto, 25 pages, https://glizen.com/radfordneal/ais.abstract.html
 
   Neal, R. M. (1994) ``Sampling from multimodal distributions using
   tempered transitions'', Technical Report No. 9421, Dept. of
   Statistics, University of Toronto, 22 pages, available at
-  http://www.cs.utoronto.ca/~radford/ttrans.abstract.html
+  https://glizen.com/radfordneal/ttrans.abstract.html
 
   Neal, R. M. (1994) ``An improved acceptance procedure for the hybrid
   Monte Carlo algorithm'', Journal of Computational Physics, vol. 111,
@@ -133,5 +133,5 @@ which are described in the following papers:
   Neal, R. M. (1993) Probabilistic Inference Using Markov Chain Monte
   Carlo Methods, Technical Report CRG-TR-93-1, Dept. of Computer
   Science, University of Toronto, 144 pages, available at
-  http://www.cs.utoronto.ca/~radford/review.abstract.html
+  https://glizen.com/radfordneal/review.abstract.html
   

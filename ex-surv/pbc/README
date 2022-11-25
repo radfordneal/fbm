@@ -3,7 +3,7 @@ in the talk on ``Survival analysis using a Bayesian neural network''
 that I gave at the 2001 Joint Statistical Meetings in Atlanta.  The
 slides from this talk are available via the following web page:
 
-    http://www.cs.toronto.edu/~radford/misc-docs.html
+    https://glizen.com/radfordneal/ftp/nnsv-talk.pdf
 
 NOTE:  The command files will not work for versions of the software
        after the release of 2020-01-24, due to the change in syntax

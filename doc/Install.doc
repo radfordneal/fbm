@@ -11,7 +11,7 @@ Unpacking the files.
 
 The software is distributed as a Unix tar archive.  You should
 download the tar archive for the desired version from my web page at
-www.cs.utoronto.ca/~radford/fbm.software.html via your Web browser, or
+glizen.com/radfordneal/fbm.software.html via your Web browser, or
 using 'wget'.  Or alternatively, you can get it from the gitlab
 repository at gitlab.com/radfordneal/fbm.  It should be saved in a
 file with a name of the form 'fbm.YYYY-MM-DD.tar'.  You should then

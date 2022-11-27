@@ -7,6 +7,6 @@ if echo $PATH | grep -q bin-fbm; then
   echo A bin-fbm directory is already in PATH
 else
   pth=\$PATH=\$PATH:`pwd`/bin-fbm
-  echo export \$PATH=\$PATH:`pwd`/bin-fbm >> ~/.bashrc
+  echo export PATH=\$PATH:`pwd`/bin-fbm >> ~/.bashrc
   echo Added command to .bashrc to add $pth to PATH
 fi

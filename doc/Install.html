@@ -117,24 +117,28 @@ You can pass one or two arguments to make-all.  A first argument of
 "dbl" or "flt" specifies the precision used for arithmetic (in some
 modules, currently only neural networks) for the version of the
 programs compiled.  The default with no arguments is "flt" (if you
-haven't changed the default).  A second argument of "gpu" causes
+haven't changed the default), for neural networks (other modules
+currently always use 'dbl').  A second argument of "gpu" causes
 versions of some programs that make use of a GPU to be compiled (in
 addition to the versions that use only the CPU).  This requires that a
-suitable GPU be present, and that suitable software be installed.
+suitable GPU be present, and that suitable CUDA software be installed.
 
 
 Using the programs.
 
 Once you have successfully compiled the programs, you should put the
 'bin-fbm' directory (within the main directory for this software) in
-your search path (the PATH environment variable).  How this is done
-depends on the shell program you are using.  This directory contains
-symbolic links to all the programs making up this software.
+your search path (the PATH environment variable).  This directory
+contains symbolic links to all the programs making up this software.
+How this is done depends on the shell program you are using, but if
+you are using 'bash', the set-PATH script will add a command to add
+this directory to PATH to your .bashrc file (run when a new bash shell
+is started).
 
 See <A HREF="Using.html">Using.doc</A> for more information on how to use the programs once you
 have installed them, including on how to switch between versions that
-use a GPU or not, or that use 32-bit or 64-bit floating-point
-arithmetic.
+use a GPU or not, or that use 32-bit (flt) or 64-bit (dbl)
+floating-point arithmetic.
 
 
 Multiple architectures.

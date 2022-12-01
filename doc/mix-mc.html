@@ -45,6 +45,10 @@ application specific sampling operations:
        This operation is not allowed for models with an infinite
        number of components.  
 
+       Any components that are currently associated with no training
+       cases have new values for their parameters drawn from the
+       prior before the Gibbs sampling scan.
+
    gibbs-ext-indicators [ N ]
 
        Applies the method of Gibbs sampling with extra components 
@@ -88,6 +92,9 @@ application specific sampling operations:
        on the relative probability of the case with respect to the new 
        and the old components.  This operation is possible with both
        finite and infinite models.  N defaults to one.
+
+       If the proposed component is not currently associated with any
+       training case, its parameters are drawn from the prior.
 
    met1-indicators [ N ]
 

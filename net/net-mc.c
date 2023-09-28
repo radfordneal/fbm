@@ -1137,6 +1137,9 @@ void mc_app_initialize
         max_cases_per_launch = (N_train + n_launches - 1) / n_launches;
         max_blocks_per_launch = (max_cases_per_launch + BLKCASES-1) / BLKCASES;
         max_cases_per_launch = max_blocks_per_launch * BLKCASES;
+        if (max_cases_per_launch>N_train)
+        { max_cases_per_launch = N_train;
+        }
         if (show_info)
         { printf ("With %d cases, need %d launches, max %d blocks/launch\n",
                   N_train, n_launches, max_blocks_per_launch);
@@ -3185,6 +3188,9 @@ static void net_training_cases_gpu
   max_cases = (n + launches - 1) / launches;
   max_blocks = (max_cases + BLKCASES - 1) / BLKCASES;
   max_cases = max_blocks * BLKCASES;
+  if (max_cases>n)
+  { max_cases = n;
+  }
 
   if (max_cases>max_cases_per_launch) abort();
 

@@ -1,3 +1,10 @@
+Cleanup:
+
+** Finish xcmds example.
+
+** More use of adaptive MCMC in examples?
+
+
 Bugs:
 
 ** k quantity sometimes negative, with very long total run (not long individual
@@ -26,8 +33,13 @@ Lenovo: net-tbl -f -h tkmDb full1.log :10
 
 Desirable features:
 
-** More complete output for net-spec with "sizes", giving not just 
-   parameters, but parameter offsets, and total connections.
+** Put back in non-one-to-one activation functions (eg, sin, square),
+   storing value before activation function applied in extra memory 
+   when necessary.
 
-** Add group numbers to net-spec output.
+** Make product operation more general.
 
+
+Optimization:
+
+** Allow gradient groups of 8?

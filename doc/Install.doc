@@ -77,8 +77,8 @@ Here are some reasons that you might need to customize things:
      in make.include.
 
   4) If compiling versions of (some of) the programs to use a GPU, 
-     you may want to modify the --gpu-architecture option for nvcc,
-     as explained in make.include. 
+     you may want to modify the options for nvcc, as explained in
+     make.include.
 
   5) You might want to change the default for whether floating-point
      arithmetic (in some neural network modules) is performed in
@@ -115,10 +115,14 @@ You can pass one or two arguments to make-all.  A first argument of
 modules, currently only neural networks) for the version of the
 programs compiled.  The default with no arguments is "flt" (if you
 haven't changed the default), for neural networks (other modules
-currently always use 'dbl').  A second argument of "gpu" causes
-versions of some programs that make use of a GPU to be compiled (in
-addition to the versions that use only the CPU).  This requires that a
-suitable GPU be present, and that suitable CUDA software be installed.
+currently always use 'dbl').  
+
+A second argument of "gpu" causes versions of some programs (currently
+only in the neural network module) to be compile that make use of a
+GPU (in addition to the versions that use only the CPU).  This
+requires that a suitable GPU be present, and that suitable CUDA
+software be installed.  The make.include file may need to be edited to
+set appropriate compilation options for using CUDA with your GPU.
 
 
 Using the programs.

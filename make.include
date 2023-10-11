@@ -43,9 +43,25 @@ LFLAGS = $(SANITIZE)
 # with other versions as well.  Several versions of the commands are
 # given below; all but one should be commented out.  A version
 # tailored to your specific environment might be desirable.
-
+#
 # Note that various combinations of Linux version, CUDA version,
 # NVIDIA driver version, and gcc version may produce problems.
+
+
+# Settings that should work with CUDA 11.5 to at least 12.2, compiling
+# for all non-deprecated architectures, plus a virtual architecture
+# that will work for later architectures.  The -DUSE_SLEEF_CUDA option
+# may be commented out, since it may not be faster. 
+#
+# THIS VERSION WON'T WORK FOR A GPU WITH COMPUTE CAPABILITY 3.5 OR 3.7,
+# AND MAYBE 5.0.
+
+NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
+         --threads=0 --gpu-architecture=all \
+         --ptxas-options=-v \
+         -ccbin=g++ \
+         -DUSE_SIMD_INTRINSICS -DUSE_FMA \
+         -DUSE_SLEEF -Xcompiler -ffp-contract=off # -DUSE_SLEEF_CUDA
 
 
 # Settings that should work for CUDA 11.4 up to 11.8, for GPUs of
@@ -58,25 +74,26 @@ LFLAGS = $(SANITIZE)
 # created, as necessary if a driver supporting Kepler GPUs is used with
 # a CUDA version that isn't compatible with that driver.	
 #
-# THIS VERSION WON'T WORK IF YOU ARE USING CUDA 12.0 OR LATER.
-
-NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
-         --Wno-deprecated-gpu-targets \
-         --generate-code=arch=compute_35,code=compute_35 \
-         --generate-code=arch=compute_35,code=sm_35 \
-         --ptxas-options=-v \
-         -ccbin=g++ \
-         -DUSE_SIMD_INTRINSICS -DUSE_FMA \
-         -DUSE_SLEEF -Xcompiler -ffp-contract=off # -DUSE_SLEEF_CUDA
-
-
-# Settings that should work with CUDA 11.5 to at least 12.2, compiling
-# for all non-deprecated architectures, plus a virtual architecture
-# that will work for later architectures.  The -DUSE_SLEEF_CUDA option
-# may be commented out, since it may not be faster. 
+# THIS VERSION WON'T WORK IF YOU ARE USING CUDA 12.0 OR LATER, WHICH DON'T
+# SUPPORT GPUS WITH COMPUTE CAPABILITY 3.5.
 
 # NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
-#          --threads=0 --gpu-architecture=all \
+#          --Wno-deprecated-gpu-targets \
+#          --generate-code=arch=compute_35,code=compute_35 \
+#          --generate-code=arch=compute_35,code=sm_35 \
+#          --ptxas-options=-v \
+#          -ccbin=g++ \
+#          -DUSE_SIMD_INTRINSICS -DUSE_FMA \
+#          -DUSE_SLEEF -Xcompiler -ffp-contract=off # -DUSE_SLEEF_CUDA
+
+
+# Example of a tailored version, designed for a GPU with compute
+# capability 5.0, but compatible with GPUs of more recent
+# architectures via JIT.
+
+# NVCC_OPTIONS = -g -O3 -Xcompiler -march=native -Xcompiler -mtune=native \
+#          --generate-code=arch=compute_50,code=compute_50 \
+#          --generate-code=arch=compute_50,code=sm_50 \
 #          --ptxas-options=-v \
 #          -ccbin=g++ \
 #          -DUSE_SIMD_INTRINSICS -DUSE_FMA \
